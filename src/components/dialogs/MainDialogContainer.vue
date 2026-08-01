@@ -188,40 +188,44 @@
             backgroundClip: 'padding-box'
         };
 
-        if (userStore.userDialog.publicProfileRef?.backgroundType === 'gradient') {
-            const bgTopColor = getReadableProfileThemeColor(
-                `#${userStore.userDialog.publicProfileRef?.backgroundGradientTop}`,
-                'var(--background)',
-                !appearanceSettingsStore.isDarkMode
-            );
-            const bgBottomColor = getReadableProfileThemeColor(
-                `#${userStore.userDialog.publicProfileRef?.backgroundGradientBottom}`,
-                'var(--background)',
-                !appearanceSettingsStore.isDarkMode
-            );
-            return {
-                ...userDialogBaseStyle,
-                backgroundImage: `linear-gradient(180deg, ${bgTopColor}, ${bgBottomColor})`
-            };
-        }
-        if (userStore.userDialog.publicProfileRef?.backgroundType === 'texture') {
-            const bg = profileBackgrounds.find(
-                (b) => b.id === userStore.userDialog.publicProfileRef?.backgroundTextureId
-            );
-            if (!bg) {
-                return userDialogBaseStyle;
+        // 仅在开启"显示玩家资料自定义背景"时应用 VRC 自定义背景（渐变 / 纹理），
+        // 关闭时使用默认背景规则
+        if (appearanceSettingsStore.displayVRCProfileBackgrounds) {
+            if (userStore.userDialog.publicProfileRef?.backgroundType === 'gradient') {
+                const bgTopColor = getReadableProfileThemeColor(
+                    `#${userStore.userDialog.publicProfileRef?.backgroundGradientTop}`,
+                    'var(--background)',
+                    !appearanceSettingsStore.isDarkMode
+                );
+                const bgBottomColor = getReadableProfileThemeColor(
+                    `#${userStore.userDialog.publicProfileRef?.backgroundGradientBottom}`,
+                    'var(--background)',
+                    !appearanceSettingsStore.isDarkMode
+                );
+                return {
+                    ...userDialogBaseStyle,
+                    backgroundImage: `linear-gradient(180deg, ${bgTopColor}, ${bgBottomColor})`
+                };
             }
-            const opacity = -appearanceSettingsStore.profileBackgroundOpacity + 1; // Invert the opacity value
-            const textureOverlay = appearanceSettingsStore.isDarkMode
-                ? `rgba(0, 0, 0, ${opacity})`
-                : `rgba(255, 255, 255, ${opacity})`;
-            return {
-                ...userDialogBaseStyle,
-                backgroundImage: `linear-gradient(${textureOverlay}, ${textureOverlay}), url(${bg.url})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'top center',
-                backgroundRepeat: 'no-repeat'
-            };
+            if (userStore.userDialog.publicProfileRef?.backgroundType === 'texture') {
+                const bg = profileBackgrounds.find(
+                    (b) => b.id === userStore.userDialog.publicProfileRef?.backgroundTextureId
+                );
+                if (!bg) {
+                    return userDialogBaseStyle;
+                }
+                const opacity = -appearanceSettingsStore.profileBackgroundOpacity + 1; // Invert the opacity value
+                const textureOverlay = appearanceSettingsStore.isDarkMode
+                    ? `rgba(0, 0, 0, ${opacity})`
+                    : `rgba(255, 255, 255, ${opacity})`;
+                return {
+                    ...userDialogBaseStyle,
+                    backgroundImage: `linear-gradient(${textureOverlay}, ${textureOverlay}), url(${bg.url})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'top center',
+                    backgroundRepeat: 'no-repeat'
+                };
+            }
         }
         return userDialogBaseStyle;
     });

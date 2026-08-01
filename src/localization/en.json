@@ -1093,7 +1093,12 @@
                     "table_entries_settings": "Table Entries Settings",
                     "table_entries_settings_description": "Control how many items are loaded for lists and searches.",
                     "toggle_pointer_on_hover": "Toggle Pointer on Hover",
-                    "toggle_pointer_on_hover_description": "Show a pointer cursor when hovering over interactive elements."
+                    "toggle_pointer_on_hover_description": "Show a pointer cursor when hovering over interactive elements.",
+                    "vrc_profile_themes": "Display VRChat Profile Themes",
+                    "vrc_profile_backgrounds": "Display Player Profile Backgrounds",
+                    "vrc_profile_backgrounds_opacity": "Profile Background Opacity",
+                    "use_advanced_material": "Use Advanced Material (Beta)",
+                    "use_advanced_material_description": "Add frosted-glass blur and edge highlights to dialogs, popovers and menus, with ambient lighting at the bottom of the main window."
                 },
                 "display": {
                     "header": "Display"
@@ -3451,4 +3456,3 @@
         "view_primary": "Primary Account"
     }
 }
-

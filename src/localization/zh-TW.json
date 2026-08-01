@@ -906,7 +906,12 @@
                     "table_density_comfortable": "舒適",
                     "table_density_compact": "緊湊",
                     "table_entries_settings": "表格最大列數",
-                    "table_entries_settings_description": "控制清單與搜尋載入的項目數量。"
+                    "table_entries_settings_description": "控制清單與搜尋載入的項目數量。",
+                    "vrc_profile_themes": "顯示個人資料主題",
+                    "vrc_profile_backgrounds": "顯示個人資料背景",
+                    "vrc_profile_backgrounds_opacity": "背景不透明度",
+                    "use_advanced_material": "使用進階材質（Beta）",
+                    "use_advanced_material_description": "為對話方塊、彈出選單與彈出式視窗加上磨砂玻璃模糊與邊緣高光，並在主視窗底部加入環境光影。"
                 },
                 "display": {
                     "header": "顯示"

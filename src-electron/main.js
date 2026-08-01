@@ -305,6 +305,21 @@ ipcMain.handle('app:getOverlayWindow', () => {
     return false;
 });
 
+// 捕获当前可见窗口画面（弹窗光影映射：弹窗显示前捕获界面作为光源参考）
+ipcMain.handle('app:capturePage', async () => {
+    try {
+        if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.webContents) {
+            return null;
+        }
+        const image = await mainWindow.webContents.capturePage();
+        if (image.isEmpty()) return null;
+        return image.toDataURL();
+    } catch (e) {
+        console.error('app:capturePage error:', e);
+        return null;
+    }
+});
+
 ipcMain.handle(
     'app:updateVr',
     (event, active, hmdOverlay, wristOverlay, menuButton, overlayHand) => {

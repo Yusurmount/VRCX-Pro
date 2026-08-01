@@ -1,6 +1,6 @@
 <template>
     <div
-        class="shrink-0 h-[22px] flex items-center bg-sidebar border-t border-border text-xs select-none overflow-hidden"
+        class="x-status-bar shrink-0 h-[22px] flex items-center bg-sidebar border-t border-border text-xs select-none overflow-hidden"
         style="font-family: var(--font-mono-cjk)"
         @contextmenu.prevent>
         <ContextMenu>
@@ -31,13 +31,19 @@
                                     v-for="[id, session] in allSessions"
                                     :key="id"
                                     class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-accent text-xs"
-                                    :class="{ 'bg-accent': currentViewMode === `account:${id}` || (id === primaryId && currentViewMode === 'primary') }"
+                                    :class="{
+                                        'bg-accent':
+                                            currentViewMode === `account:${id}` ||
+                                            (id === primaryId && currentViewMode === 'primary')
+                                    }"
                                     @click="selectViewMode(id)">
                                     <span
                                         class="inline-block size-2 rounded-full shrink-0"
                                         :style="{ background: getAccountColor(id) }" />
                                     {{ session.label || session.userInfo?.displayName || id }}
-                                    <span v-if="id === primaryId" class="text-muted-foreground ml-auto text-[10px]">★</span>
+                                    <span v-if="id === primaryId" class="text-muted-foreground ml-auto text-[10px]"
+                                        >★</span
+                                    >
                                 </div>
                             </PopoverContent>
                         </Popover>
@@ -317,10 +323,7 @@
                             </div>
                         </TooltipWrapper>
 
-                        <TooltipWrapper
-                            v-if="visibility.profileInfoSync"
-                            :content="infoFetchTooltip"
-                            side="top">
+                        <TooltipWrapper v-if="visibility.profileInfoSync" :content="infoFetchTooltip" side="top">
                             <div
                                 class="flex items-center gap-1 px-2 h-[22px] whitespace-nowrap border-r border-border cursor-pointer hover:bg-accent"
                                 @click="runSilentInfoFetch">
@@ -330,8 +333,18 @@
                                     class="size-3 shrink-0 animate-spin"
                                     viewBox="0 0 16 16"
                                     fill="none">
-                                    <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" class="text-muted-foreground/30" />
-                                    <path d="M14 8a6 6 0 0 0-6-6" stroke="#eab308" stroke-width="2" stroke-linecap="round" />
+                                    <circle
+                                        cx="8"
+                                        cy="8"
+                                        r="6"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        class="text-muted-foreground/30" />
+                                    <path
+                                        d="M14 8a6 6 0 0 0-6-6"
+                                        stroke="#eab308"
+                                        stroke-width="2"
+                                        stroke-linecap="round" />
                                 </svg>
                                 <!-- Done: green check -->
                                 <svg
@@ -340,16 +353,17 @@
                                     viewBox="0 0 16 16"
                                     fill="none">
                                     <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5" />
-                                    <path d="M5 8.5l2 2 4-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path
+                                        d="M5 8.5l2 2 4-4.5"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round" />
                                 </svg>
                                 <!-- Idle: grey circle -->
-                                <span
-                                    v-else
-                                    class="inline-block size-2 rounded-full shrink-0 bg-status-offline-alt" />
+                                <span v-else class="inline-block size-2 rounded-full shrink-0 bg-status-offline-alt" />
                                 <span class="text-[10px] text-foreground">{{ t('status_bar.info_sync') }}</span>
-                                <span
-                                    v-if="infoFetchState.status === 'running'"
-                                    class="text-[10px] text-foreground">
+                                <span v-if="infoFetchState.status === 'running'" class="text-[10px] text-foreground">
                                     {{ infoFetchState.done }}/{{ infoFetchState.total }}
                                 </span>
                             </div>

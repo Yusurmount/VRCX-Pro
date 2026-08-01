@@ -1,0 +1,277 @@
+/*
+ * 高级材质（Beta）
+ *
+ * 包裹式视觉增强：所有效果通过 <html class="use-advanced-material"> 开关控制，
+ * 不修改任何组件源码。主题色跟随系统当前配色方案（--primary / --popover /
+ * --sidebar 等 CSS 变量由 themes/*.css 按所选颜色方案注入）。
+ *
+ * 性能约束：全界面无任何实时滤镜。底部光影由 canvas 一次性渲染
+ * 高斯模糊后固化为静态位图；弹层为静态半透明背景 + 实时光源光斑，
+ * 避免重复光栅化；主骨架半透明不引入动画。
+ *
+ * 弹窗光影：弹窗显示前经 IPC 捕获用户当前可见界面，分块分析提取
+ * 彩色光源（颜色 + 位置）注入 --am-blob-* 变量，光影基于实际可见
+ * 内容动态生成，而非预设主题色。
+ */
+
+/* ------------------------------------------------------------------ */
+/* 弹窗 / 弹出菜单 / 提示窗：内嵌光影晕染 + 边缘高光                       */
+/* 光斑颜色来自捕获界面提取的彩色光源（--am-blob-color），位置由 JS 按    */
+/* 光源在视口中的位置与弹窗自身矩形投影（--am-blob-x / --am-blob-y，     */
+/* 相对弹窗自身的百分比），弹窗出现在不同位置、界面内容变化时随动。        */
+/* ------------------------------------------------------------------ */
+html.use-advanced-material
+    :is(
+        [data-slot='dialog-content'],
+        [data-slot='popover-content'],
+        [data-slot='dropdown-menu-content'],
+        [data-slot='dropdown-menu-sub-content'],
+        [data-slot='select-content'],
+        [data-slot='context-menu-content'],
+        [data-slot='context-menu-sub-content'],
+        [data-slot='alert-dialog-content'],
+        [data-slot='sheet-content']
+    ) {
+    background:
+        /* 白色柔光：光源位置由捕获界面实时注入（--am-blob-x/y），
+           多段 stop 平滑衰减，避免低强度渐变出现色彩断层 */
+        radial-gradient(
+            45% 55% at var(--am-blob-x, 35%) var(--am-blob-y, 60%),
+            color-mix(in oklab, white 4%, transparent) 0%,
+            color-mix(in oklab, white 2.8%, transparent) 35%,
+            color-mix(in oklab, white 1.6%, transparent) 60%,
+            color-mix(in oklab, white 0.6%, transparent) 80%,
+            transparent 100%
+        ),
+        var(--popover);
+    border-color: color-mix(in oklab, var(--foreground) 12%, transparent);
+    box-shadow:
+        /* 顶部内高光：柔化扩范围，降低强度 */
+        inset 0 1px 12px -6px
+            color-mix(in oklab, var(--foreground) 6%, transparent),
+        /* 主题色边缘描边：柔化降低强度 */
+        inset 0 0 0 1px color-mix(in oklab, var(--primary) 5%, transparent),
+        /* 深投影 */
+        0 6px 20px -6px color-mix(in oklab, var(--foreground) 22%, transparent),
+        /* 白色柔和外发光（与光晕一致的光影过渡） */
+        0 0 16px -5px color-mix(in oklab, white 12%, transparent);
+}
+
+/* Tooltip：保持组件反转配色（bg-foreground 亮底 + text-background 深字），
+   仅用 background-image 叠加光源位置驱动的低强度白色柔光，
+   不覆盖 background-color，避免文字与背景同色系不可见 */
+html.use-advanced-material [data-slot='tooltip-content'] {
+    background-image: radial-gradient(
+        40% 50% at var(--am-blob-x, 35%) var(--am-blob-y, 60%),
+        color-mix(in oklab, white 4%, transparent) 0%,
+        color-mix(in oklab, white 2.8%, transparent) 35%,
+        color-mix(in oklab, white 1.6%, transparent) 60%,
+        color-mix(in oklab, white 0.6%, transparent) 80%,
+        transparent 100%
+    );
+    box-shadow:
+        inset 0 1px 10px -5px
+            color-mix(in oklab, var(--foreground) 5%, transparent),
+        0 3px 10px -2px color-mix(in oklab, var(--foreground) 24%, transparent),
+        0 0 12px -4px color-mix(in oklab, white 10%, transparent);
+}
+
+/* Toast（vue-sonner） */
+html.use-advanced-material [data-sonner-toast] {
+    background: var(--popover);
+    border-color: color-mix(in oklab, var(--foreground) 12%, transparent);
+    box-shadow:
+        inset 0 1px 10px -5px
+            color-mix(in oklab, var(--foreground) 5%, transparent),
+        0 5px 14px -4px color-mix(in oklab, var(--foreground) 20%, transparent),
+        0 0 8px -3px color-mix(in oklab, var(--primary) 12%, transparent);
+}
+
+/* Noty 通知条（notification 类型做半透明磨砂，alert/success/error 保留类型色） */
+html.use-advanced-material .noty_bar {
+    box-shadow:
+        inset 0 1px 10px -5px
+            color-mix(in oklab, var(--foreground) 5%, transparent),
+        0 5px 14px -4px color-mix(in oklab, var(--foreground) 20%, transparent);
+}
+
+html.use-advanced-material .noty_theme__mint.noty_type__notification {
+    background: var(--popover);
+    border-color: color-mix(in oklab, var(--foreground) 12%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* 主界面骨架：半透明透出底部光影（左导航 / 中间内容 / 右侧面板三板块）   */
+/* ------------------------------------------------------------------ */
+html.use-advanced-material [data-sidebar='sidebar'],
+html.use-advanced-material [data-slot='sidebar-inset'] {
+    background-color: color-mix(in oklab, var(--sidebar) 66%, transparent);
+}
+
+/* 右侧好友栏（x-aside-container）：底层 sidebar-inset 已提供单层 66%
+   半透明，本容器透明避免双层叠加（66%+66%≈88% 近似遮挡），
+   与中间内容区 .x-container 的处理方式一致 */
+html.use-advanced-material .x-aside-container {
+    background: transparent !important;
+}
+
+/* 底部状态栏：保持不透明原样，提升到底部光影画布（z-index:0）之上，
+   避免亮色光斑叠加在状态栏上形成高光 */
+html.use-advanced-material .x-status-bar {
+    position: relative;
+    z-index: 1;
+}
+
+/* 中间内容区根容器：globals.css 中 .x-container 为不透明实背景（浅色
+   --background / 深色 --sidebar）。若改为半透明会与 sidebar-inset 的
+   66% 背景双层叠加，底部光影透出比例骤降（约 12%）近似遮挡。
+   因此这里改为完全透明，由下层 sidebar-inset 单层 66% 半透明直接
+   透出底部光影，与左侧边栏一致。
+   注意：globals.css 的 `html.dark .x-container` 与本规则特异性同为
+   (0,2,1) 且声明在后，会覆盖本规则，故需单独提高深色模式特异性 */
+html.use-advanced-material .x-container {
+    background: transparent !important;
+}
+
+html.use-advanced-material html.dark .x-container {
+    background: transparent !important;
+}
+
+/* 中间内容区内部的实色容器（卡片/面板、sticky 表头/分组条）统一半透明，
+   避免遮挡底部光影。bg-card 支持 Tailwind 不透明度变体（如 bg-card/80），
+   sticky 定位元素含 bg-background/bg-muted 等实背景，均须属性前缀匹配 */
+html.use-advanced-material .x-container [class*='bg-card'],
+html.use-advanced-material .x-container [class*='sticky'] {
+    background-color: color-mix(in oklab, var(--card) 66%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* 控件：悬停边缘高光 + 按钮统一半透明                                    */
+/* ------------------------------------------------------------------ */
+
+/* 悬停边缘高光：轻微主题色描边 + 柔和外发光。聚焦 / 禁用时不叠加，          */
+/* 避免覆盖 focus ring 与 disabled 状态                                   */
+html.use-advanced-material
+    [data-slot='button']:hover:not(:focus-visible):not(:disabled):not(
+        [data-disabled]
+    ),
+html.use-advanced-material
+    [data-slot='switch']:hover:not(:focus-visible):not(:disabled),
+html.use-advanced-material
+    [data-slot='checkbox']:hover:not(:focus-visible):not(:disabled),
+html.use-advanced-material
+    [data-slot='input']:hover:not(:focus-visible):not(:disabled),
+html.use-advanced-material
+    [data-slot='textarea']:hover:not(:focus-visible):not(:disabled) {
+    box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, var(--primary) 30%, transparent),
+        0 0 8px -2px color-mix(in oklab, var(--primary) 22%, transparent);
+}
+
+/* 按钮背景统一 66% 半透明（原各 variant 透明度不一：bg-primary 实底、
+   dark:bg-input/30 半透明等），悬停时提亮至 80% 提供反馈 */
+html.use-advanced-material [data-slot='button'].bg-primary {
+    background-color: color-mix(
+        in oklab,
+        var(--primary) 66%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material
+    [data-slot='button'].bg-primary:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]) {
+    background-color: color-mix(
+        in oklab,
+        var(--primary) 80%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material [data-slot='button'].bg-secondary {
+    background-color: color-mix(
+        in oklab,
+        var(--secondary) 66%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material
+    [data-slot='button'].bg-secondary:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]) {
+    background-color: color-mix(
+        in oklab,
+        var(--secondary) 80%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material [data-slot='button'].bg-destructive {
+    background-color: color-mix(
+        in oklab,
+        var(--destructive) 66%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material
+    [data-slot='button'].bg-destructive:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]) {
+    background-color: color-mix(
+        in oklab,
+        var(--destructive) 80%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material [data-slot='button'].bg-background {
+    background-color: color-mix(
+        in oklab,
+        var(--background) 66%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material
+    [data-slot='button'].bg-background:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]) {
+    background-color: color-mix(
+        in oklab,
+        var(--background) 80%,
+        transparent
+    ) !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* 顶部标签栏（TabsUnderline 下划线式标签）：悬停强调                    */
+/* ------------------------------------------------------------------ */
+
+/* 悬停时底部出现淡主题色下划线雏形（提示可切换），与 active 的完整
+   指示条呼应，叠加组件自带的 hover 文字提亮 */
+html.use-advanced-material
+    .border-b
+    [role='tab']:hover:not(:focus-visible):not(:disabled):not([data-disabled]) {
+    box-shadow: inset 0 -2px 0
+        color-mix(in oklab, var(--primary) 35%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* 鼠标高光（实体背景层）：白色圆形模糊跟随鼠标                          */
+/* ------------------------------------------------------------------ */
+
+/* 光晕透明度注册为可过渡属性：命中时 --am-a 由 0→1 平滑淡入，
+   切换/离开时 1→0 平滑淡出，避免 background-image 突变产生割裂感 */
+@property --am-a {
+    syntax: '<number>';
+    inherits: false;
+    initial-value: 0;
+}
+
+/* 高光渲染在命中实体的背景层：background-image 位于 background-color
+   之上、内容之下，实体自身盖住高光（介于控件与背景之间）。
+   位置由 JS 写入 --am-mx/--am-my（相对实体百分比），透明度由 --am-a 控制 */
+html.use-advanced-material .am-glow-on {
+    background-image: radial-gradient(
+        260px circle at var(--am-mx, 50%) var(--am-my, 50%),
+        rgba(255, 255, 255, calc(0.09 * var(--am-a))),
+        transparent 70%
+    );
+    transition: --am-a 0.18s ease;
+}

@@ -1,0 +1,695 @@
+<template>
+    <div v-if="visible" aria-hidden="true" class="am-background">
+        <canvas ref="canvasRef" class="am-canvas"></canvas>
+    </div>
+</template>
+
+<script setup>
+    import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+    import { storeToRefs } from 'pinia';
+
+    import { useAppearanceSettingsStore } from '@/stores';
+
+    const appearanceSettingsStore = useAppearanceSettingsStore();
+    const { useAdvancedMaterial: visible } = storeToRefs(appearanceSettingsStore);
+
+    const canvasRef = ref(null);
+
+    let themeObserver = null;
+    let resizeObserver = null;
+    let popoverObserver = null;
+    let xcObserver = null;
+
+    // 鼠标高光：白色圆形模糊渲染在"当前实体"的背景层（background-image
+    // 位于 background-color 之上、内容之下），实体自身盖住高光，光晕介于
+    // 控件与背景之间。命中实体写入相对坐标并置 --am-a 1（平滑淡入），
+    // 切换/离开时旧实体置 --am-a 0 平滑淡出后移除类，空白区无光。
+    const entitySelector = [
+        '[data-slot]',
+        "[role='tab']",
+        "[role='tablist']",
+        "[role='menuitem']",
+        "[role='button']",
+        "[role='checkbox']",
+        "[role='switch']",
+        'button',
+        'a',
+        'input',
+        'textarea',
+        'select',
+        '[class*="bg-card"]',
+        '.x-container'
+    ].join(', ');
+    let glowRaf = 0;
+    let glowEl = null;
+    let lastGlowEl = null;
+    let glowX = 0;
+    let glowY = 0;
+    let glowFadeTimer = 0;
+
+    function onGlowMove(e) {
+        glowX = e.clientX;
+        glowY = e.clientY;
+        const t = e.target;
+        glowEl = null;
+        if (t?.closest) {
+            // 头像 / 图片 / 文本框：不显示高光
+            if (
+                !t.closest(
+                    "img, [data-slot='avatar'], [data-slot='avatar-image'], [data-slot='avatar-fallback'], .avatar, input, textarea"
+                )
+            ) {
+                // 纯文本（不在交互控件内）不显示高光；控件内部文字仍触发控件高光
+                const textEl = t.closest('p, span, td, th, label, h1, h2, h3, h4, h5, h6, li, em, strong, small');
+                if (!textEl || textEl.closest('button, a, [role], [data-slot]')) {
+                    glowEl = t.closest(entitySelector) || null;
+                }
+            }
+        }
+        if (glowRaf) return;
+        glowRaf = requestAnimationFrame(() => {
+            glowRaf = 0;
+            if (lastGlowEl && lastGlowEl !== glowEl) {
+                // 旧实体淡出，过渡完成后移除类
+                lastGlowEl.style.setProperty('--am-a', '0');
+                clearTimeout(glowFadeTimer);
+                glowFadeTimer = setTimeout(() => {
+                    if (lastGlowEl && lastGlowEl.style.getPropertyValue('--am-a') === '0') {
+                        lastGlowEl.classList.remove('am-glow-on');
+                    }
+                }, 220);
+            }
+            lastGlowEl = glowEl;
+            if (!glowEl) return;
+            const rect = glowEl.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+            glowEl.style.setProperty('--am-mx', (((glowX - rect.left) / rect.width) * 100).toFixed(2) + '%');
+            glowEl.style.setProperty('--am-my', (((glowY - rect.top) / rect.height) * 100).toFixed(2) + '%');
+            glowEl.classList.add('am-glow-on');
+            glowEl.style.setProperty('--am-a', '1');
+        });
+    }
+
+    // oklch → sRGB（canvas gradient 的 addColorStop / fillStyle 仅接受 sRGB 颜色，
+    // 不支持 CSS Color 4 的 oklch）。支持 L 百分比或小数、C 百分比(相对 0.4)或小数、H 角度。
+    function oklchToRgb(str) {
+        const match = str.match(/oklch\(\s*([\d.]+%?)\s+([\d.]+%?)\s+([\d.]+)(?:\s*\/\s*[^)]+)?\s*\)/);
+        if (!match) return { r: 16, g: 179, b: 232 };
+        const L = match[1].endsWith('%') ? parseFloat(match[1]) / 100 : parseFloat(match[1]);
+        let C = parseFloat(match[2]);
+        if (match[2].endsWith('%')) C = (C / 100) * 0.4;
+        const H = parseFloat(match[3]);
+
+        // oklch → oklab
+        const a = C * Math.cos((H * Math.PI) / 180);
+        const b = C * Math.sin((H * Math.PI) / 180);
+        // oklab → linear sRGB
+        const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+        const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+        const s_ = L - 0.0894841775 * a - 1.291485548 * b;
+        const l = l_ ** 3;
+        const m = m_ ** 3;
+        const s = s_ ** 3;
+        let r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+        let g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+        let bl = -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s;
+        // linear sRGB → gamma sRGB
+        const lin = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
+        r = lin(r);
+        g = lin(g);
+        bl = lin(bl);
+        const clamp = (c) => Math.round(Math.min(255, Math.max(0, c * 255)));
+        return { r: clamp(r), g: clamp(g), b: clamp(bl) };
+    }
+
+    // 将主题颜色解析为 canvas 可用的 sRGB 颜色字符串。
+    // oklch 手动转换为 sRGB；其余格式交给浏览器计算为 sRGB。
+    function parseColor(value) {
+        const v = (value || '').trim();
+        if (!v) return 'rgb(16, 179, 232)';
+        if (v.startsWith('oklch')) {
+            const { r, g, b } = oklchToRgb(v);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+        const probe = document.createElement('div');
+        probe.style.color = v;
+        probe.style.display = 'none';
+        document.body.appendChild(probe);
+        const computed = getComputedStyle(probe).color;
+        document.body.removeChild(probe);
+        return computed;
+    }
+
+    // 为 sRGB 颜色字符串追加 alpha，转为 rgba()
+    function withAlpha(color, alpha) {
+        const rgb = color.match(/rgba?\(([^)]+)\)/);
+        if (rgb) {
+            const parts = rgb[1].split(',').map((part) => part.trim());
+            return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${alpha.toFixed(3)})`;
+        }
+        return color;
+    }
+
+    // 圆形光源的高斯模糊静态结果 = 径向高斯分布。
+    // 用 createRadialGradient 按高斯曲线精确采样渲染，规避 ctx.filter
+    // 在 Electron 环境不稳定的问题；模糊只计算一次，画布即为静态位图。
+    function drawOrb(ctx, cx, cy, radius, color, alpha) {
+        const sigma = radius / 3; // 高斯标准差：半径处强度衰减至约 1%
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+        const stops = 12;
+        for (let i = 0; i <= stops; i++) {
+            const t = i / stops;
+            const intensity = Math.exp(-((t * radius) ** 2) / (2 * sigma * sigma));
+            grad.addColorStop(t, withAlpha(color, intensity));
+        }
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // 底部光影：离屏 canvas 一次性真实模糊，drawImage 固化为静态位图，
+    // 之后无任何实时滤镜。ctx.filter 能力探测失败时回退为渐变模拟（drawOrb）。
+    function render() {
+        const canvas = canvasRef.value;
+        if (!canvas) return;
+        // 光斑为低细节模糊背景，限制 dpr 避免超大位图占用内存
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        canvas.style.width = `${w}px`;
+        canvas.style.height = `${h}px`;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+
+        const styles = getComputedStyle(document.documentElement);
+        const primary = parseColor(styles.getPropertyValue('--primary'));
+        const accent = parseColor(styles.getPropertyValue('--accent'));
+        const ring = parseColor(styles.getPropertyValue('--ring'));
+        const background = parseColor(styles.getPropertyValue('--background') || 'rgb(12, 14, 18)');
+
+        const maxDim = Math.max(w, h);
+        const isLight = document.documentElement.dataset.theme === 'light';
+        // 色块组（混合层次：圆形光斑 + 圆角矩形色块，深浅叠加，光影晕染）
+        const blobs = [
+            {
+                shape: 'circle',
+                x: w * 0.12,
+                y: h * 1.06,
+                r: maxDim * 0.34,
+                color: primary,
+                alpha: 0.85,
+                blur: maxDim * 0.1
+            },
+            {
+                shape: 'circle',
+                x: w * 0.9,
+                y: h * 1.05,
+                r: maxDim * 0.26,
+                color: accent,
+                alpha: 0.75,
+                blur: maxDim * 0.09
+            },
+            {
+                shape: 'rect',
+                x: w * 0.28,
+                y: h * 0.82,
+                bw: maxDim * 0.28,
+                bh: maxDim * 0.16,
+                color: ring,
+                alpha: 0.6,
+                blur: maxDim * 0.06
+            },
+            {
+                shape: 'circle',
+                x: w * 0.55,
+                y: h * 0.9,
+                r: maxDim * 0.12,
+                color: primary,
+                alpha: 0.5,
+                blur: maxDim * 0.07
+            }
+        ];
+
+        // 离屏 canvas：纯色背景 + 色块 + 一次性真实模糊
+        const off = document.createElement('canvas');
+        off.width = canvas.width;
+        off.height = canvas.height;
+        const octx = off.getContext('2d');
+        if (!octx) {
+            fallbackDraw(ctx, w, h, maxDim, primary, accent, ring);
+            return;
+        }
+        octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        // ctx.filter 能力探测：blur 后红点边缘应有扩散像素
+        let filterOk = false;
+        try {
+            octx.filter = 'blur(8px)';
+            octx.fillStyle = 'rgb(255, 0, 0)';
+            octx.fillRect(0, 0, 3, 3);
+            octx.filter = 'none';
+            const probe = octx.getImageData(8, 2, 1, 1).data;
+            filterOk = probe[3] > 0;
+            octx.clearRect(0, 0, w, h);
+        } catch {
+            filterOk = false;
+        }
+        if (!filterOk) {
+            fallbackDraw(ctx, w, h, maxDim, primary, accent, ring);
+            return;
+        }
+
+        // 纯色背景（跟随主题明暗，半透明让下层略微透出）
+        octx.globalAlpha = isLight ? 0.65 : 0.6;
+        octx.fillStyle = background;
+        octx.fillRect(0, 0, w, h);
+        octx.globalAlpha = 1;
+
+        // 各色块独立 blur 半径，一次性绘制（模糊只发生这一次）
+        for (const b of blobs) {
+            octx.save();
+            octx.filter = `blur(${Math.round(b.blur)}px)`;
+            octx.globalAlpha = b.alpha;
+            octx.fillStyle = b.color;
+            if (b.shape === 'circle') {
+                octx.beginPath();
+                octx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+                octx.fill();
+            } else {
+                const r = Math.min(b.bw, b.bh) / 4;
+                octx.beginPath();
+                octx.moveTo(b.x + r, b.y);
+                octx.arcTo(b.x + b.bw, b.y, b.x + b.bw, b.y + b.bh, r);
+                octx.arcTo(b.x + b.bw, b.y + b.bh, b.x, b.y + b.bh, r);
+                octx.arcTo(b.x, b.y + b.bh, b.x, b.y, r);
+                octx.arcTo(b.x, b.y, b.x + b.bw, b.y, r);
+                octx.closePath();
+                octx.fill();
+            }
+            octx.restore();
+        }
+        octx.filter = 'none';
+
+        // 固化：离屏结果一次性绘制到主 canvas（静态位图）
+        ctx.drawImage(off, 0, 0, w, h);
+    }
+
+    // ctx.filter 不可用时的回退路径：径向渐变按高斯曲线采样模拟模糊静态结果
+    function fallbackDraw(ctx, w, h, maxDim, primary, accent, ring) {
+        drawOrb(ctx, w * 0.12, h * 1.06, maxDim * 0.34, primary, 0.48);
+        drawOrb(ctx, w * 0.9, h * 1.05, maxDim * 0.26, accent, 0.4);
+        drawOrb(ctx, w * 0.32, h * 0.92, maxDim * 0.14, ring, 0.26);
+    }
+
+    // 弹窗光影映射：弹窗显示前实时捕获当前可见界面，分块分析提取最亮
+    // 区域作为光源位置，按物理规律投影到弹窗内生成低强度白色柔光晕染。
+    // 光晕落点随弹窗位置/界面内容变化而移动，非固定预设位置。
+    const popoverSelector = [
+        "[data-slot='dialog-content']",
+        "[data-slot='popover-content']",
+        "[data-slot='dropdown-menu-content']",
+        "[data-slot='dropdown-menu-sub-content']",
+        "[data-slot='select-content']",
+        "[data-slot='context-menu-content']",
+        "[data-slot='context-menu-sub-content']",
+        "[data-slot='alert-dialog-content']",
+        "[data-slot='sheet-content']",
+        "[data-slot='tooltip-content']"
+    ].join(', ');
+
+    const processedPopovers = new WeakSet();
+
+    // 主进程捕获当前可见窗口画面（返回 PNG dataURL）
+    function capturePage() {
+        try {
+            return window.electron?.capturePage?.() || Promise.resolve(null);
+        } catch {
+            return Promise.resolve(null);
+        }
+    }
+
+    // 将捕获画面缩略后分块分析：优先提取亮度足够且饱和度最高的块作为
+    // 光源位置（避免选中白色/灰色高亮内容）；若界面无彩色内容则回退到
+    // 最亮块。返回光源在视口中的归一化坐标。
+    function analyzeFrame(dataUrl) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                try {
+                    const W = 128;
+                    const H = Math.max(1, Math.round((img.height / img.width) * W));
+                    const c = document.createElement('canvas');
+                    c.width = W;
+                    c.height = H;
+                    const ctx = c.getContext('2d');
+                    ctx.drawImage(img, 0, 0, W, H);
+                    const d = ctx.getImageData(0, 0, W, H).data;
+                    const grid = 8;
+                    const bw = W / grid;
+                    const bh = H / grid;
+                    let colored = null; // 彩色光源（饱和度优先）
+                    let brightest = null; // 最亮块（兜底）
+                    for (let gy = 0; gy < grid; gy++) {
+                        for (let gx = 0; gx < grid; gx++) {
+                            let r = 0,
+                                g = 0,
+                                b = 0,
+                                cnt = 0;
+                            const x0 = Math.floor(gx * bw),
+                                x1 = Math.floor((gx + 1) * bw);
+                            const y0 = Math.floor(gy * bh),
+                                y1 = Math.floor((gy + 1) * bh);
+                            for (let y = y0; y < y1; y += 2) {
+                                for (let x = x0; x < x1; x += 2) {
+                                    const i = (y * W + x) * 4;
+                                    r += d[i];
+                                    g += d[i + 1];
+                                    b += d[i + 2];
+                                    cnt++;
+                                }
+                            }
+                            if (!cnt) continue;
+                            r /= cnt;
+                            g /= cnt;
+                            b /= cnt;
+                            const mx = Math.max(r, g, b);
+                            const mn = Math.min(r, g, b);
+                            const sat = mx > 0 ? (mx - mn) / mx : 0;
+                            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                            const info = { x: (gx + 0.5) / grid, y: (gy + 0.5) / grid };
+                            if (!brightest || lum > brightest.lum) {
+                                brightest = { lum, ...info };
+                            }
+                            // 亮度足够（排除暗部）且饱和度高的块 = 彩色光源
+                            if (lum > 40 && sat > 0.12 && (!colored || sat > colored.sat)) {
+                                colored = { sat, ...info };
+                            }
+                        }
+                    }
+                    const light = colored || brightest;
+                    resolve(light ? { light: { x: light.x, y: light.y } } : null);
+                } catch {
+                    resolve(null);
+                }
+            };
+            img.onerror = () => resolve(null);
+            img.src = dataUrl;
+        });
+    }
+
+    async function applyPopoverBlob(el) {
+        if (processedPopovers.has(el)) return;
+        processedPopovers.add(el);
+        const rect = el.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        // 弹窗显示前捕获当前可见界面作为光源参考
+        const dataUrl = await capturePage();
+        const analysis = dataUrl ? await analyzeFrame(dataUrl) : null;
+        if (!analysis?.light) return; // 捕获/分析失败保持 CSS 默认
+        // 光源（归一化视口坐标）投影到弹窗：光晕落在朝向光源的一侧。
+        // 允许中心超出弹窗范围（-30%~130%），光源在弹窗外时从边缘透入光，
+        // 弹窗位置不同或光源不同时晕染随之变化。
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const srcX = analysis.light.x * vw;
+        const srcY = analysis.light.y * vh;
+        const pctX = Math.min(130, Math.max(-30, ((srcX - rect.left) / rect.width) * 100));
+        const pctY = Math.min(130, Math.max(-30, ((srcY - rect.top) / rect.height) * 100));
+        // 白色柔光：仅注入光源投影位置（颜色统一为低强度白色），弹窗位置或
+        // 光源变化时光晕落点随之移动
+        el.style.setProperty('--am-blob-x', pctX.toFixed(0) + '%');
+        el.style.setProperty('--am-blob-y', pctY.toFixed(0) + '%');
+    }
+
+    function applyAllPopoverBlobs() {
+        document.querySelectorAll(popoverSelector).forEach(applyPopoverBlob);
+    }
+
+    // 中间内容区（.x-container）与右侧好友栏（.x-aside-container）兜底：
+    // CSS 规则可能被 globals.css 的同特异性后声明规则覆盖，内联样式
+    // 优先级最高，直接置为透明由下层 sidebar-inset 单层半透明透出光影。
+    const patchedXc = [];
+
+    function applyXcTransparent() {
+        document.querySelectorAll('.x-container, .x-aside-container').forEach((el) => {
+            if (patchedXc.some((p) => p.el === el)) return;
+            const hadInline = el.style.getPropertyValue('background-color') !== '';
+            const prev = hadInline ? el.style.getPropertyValue('background-color') : '';
+            el.style.setProperty('background-color', 'transparent', 'important');
+            patchedXc.push({ el, hadInline, prev });
+        });
+    }
+
+    function restoreXc() {
+        for (const p of patchedXc) {
+            if (p.hadInline) p.el.style.setProperty('background-color', p.prev);
+            else p.el.style.removeProperty('background-color');
+        }
+        patchedXc.length = 0;
+    }
+
+    onMounted(() => {
+        render();
+        // 明暗模式 / 配色方案变化时重绘，使静态位图匹配当前主题
+        themeObserver = new MutationObserver(render);
+        themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme', 'data-theme-color']
+        });
+        resizeObserver = new ResizeObserver(() => {
+            render();
+            applyAllPopoverBlobs();
+        });
+        resizeObserver.observe(document.documentElement);
+        // 弹窗光影映射：监听弹窗挂载，按位置注入光斑 CSS 变量
+        popoverObserver = new MutationObserver((records) => {
+            for (const record of records) {
+                for (const node of record.addedNodes) {
+                    if (node.nodeType !== 1) continue;
+                    if (node.matches?.(popoverSelector)) applyPopoverBlob(node);
+                    node.querySelectorAll?.(popoverSelector).forEach(applyPopoverBlob);
+                }
+            }
+        });
+        popoverObserver.observe(document.body, { childList: true, subtree: true });
+        applyAllPopoverBlobs();
+
+        // 中间内容区透明兜底：初始扫描 + 路由切换新增 .x-container 时跟进
+        applyXcTransparent();
+        xcObserver = new MutationObserver(() => applyXcTransparent());
+        xcObserver.observe(document.body, { childList: true, subtree: true });
+
+        // 操作区鼠标泛影：跟随鼠标更新光晕位置
+        window.addEventListener('mousemove', onGlowMove, { passive: true });
+
+        // #region temp-obstruction-diag 临时诊断：定位 .x-container 内不透明背景元素（定位后删除）
+        const diagPoll = setInterval(() => {
+            const xc = document.querySelector('.x-container');
+            if (!xc) return; // 等待内容页出现
+            clearInterval(diagPoll);
+            try {
+                const results = [];
+                document.querySelectorAll('.x-container').forEach((root) => {
+                    const els = [root, ...root.querySelectorAll('*')];
+                    els.forEach((el) => {
+                        const rect = el.getBoundingClientRect();
+                        if (rect.width * rect.height < 4000) return;
+                        if (rect.width < 40 || rect.height < 40) return;
+                        const bg = getComputedStyle(el).backgroundColor;
+                        if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') return;
+                        const m = bg.match(/[\d.]+/g);
+                        const alpha = m && m.length >= 4 ? parseFloat(m[3]) : 1;
+                        if (alpha < 0.15) return;
+                        results.push({
+                            tag: el.tagName,
+                            cls: String(el.className?.baseVal ?? el.className).slice(0, 120),
+                            bg,
+                            w: Math.round(rect.width),
+                            h: Math.round(rect.height),
+                            x: Math.round(rect.x),
+                            y: Math.round(rect.y)
+                        });
+                    });
+                });
+                const ruleInfo = [];
+                const htmlCls = document.documentElement.className || '';
+                const computed = getComputedStyle(xc).backgroundColor;
+                const asideEl = document.querySelector('.x-aside-container');
+                const asideBg = asideEl ? getComputedStyle(asideEl).backgroundColor : 'n/a';
+                // inline style 覆盖测试：确认层叠中是否存在更高优先级（!important 等）
+                const test = {};
+                try {
+                    const st = xc.style;
+                    st.backgroundColor = 'rgba(1,2,3,0.5)';
+                    test.inlineOklch = getComputedStyle(xc).backgroundColor;
+                    st.backgroundColor = 'transparent';
+                    test.inlineTransparent = getComputedStyle(xc).backgroundColor;
+                    st.backgroundColor = '';
+                    // CSP 检测：<style> 元素是否被 CSP 阻止
+                    const metaCsp = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+                    test.cspMeta = metaCsp ? metaCsp.content.slice(0, 120) : 'none';
+                    // constructable stylesheet（adoptedStyleSheets）测试
+                    try {
+                        const cs = new CSSStyleSheet();
+                        cs.insertRule(
+                            'html.use-advanced-material html.dark .x-container { background-color: rgb(255,0,255) !important; }'
+                        );
+                        document.adoptedStyleSheets.push(cs);
+                        test.constructable = getComputedStyle(xc).backgroundColor;
+                        document.adoptedStyleSheets = document.adoptedStyleSheets.filter((s) => s !== cs);
+                    } catch (e) {
+                        test.constructableErr = String(e);
+                    }
+                    // 动态 <style> 测试（区分 CSP 是否阻止）
+                    const tmp = document.createElement('style');
+                    tmp.textContent =
+                        'html.use-advanced-material html.dark .x-container { background-color: rgb(255,0,0) !important; }';
+                    document.head.appendChild(tmp);
+                    test.styleElImportant = getComputedStyle(xc).backgroundColor;
+                    tmp.textContent = 'html.use-advanced-material html.dark .x-container { background: rgb(0,0,255); }';
+                    test.styleElNormalBg = getComputedStyle(xc).backgroundColor;
+                    tmp.remove();
+                    // 层叠模拟：收集所有匹配规则按特异性+顺序排序
+                    const matched = [];
+                    let si = 0;
+                    const specOf = (sel) => {
+                        let a = 0,
+                            b = 0,
+                            c = 0;
+                        sel.replace(/[#.][\w-]+|\[[^\]]+\]|::[\w-]+|:\w+/g, (m) => {
+                            if (m[0] === '#') a++;
+                            else if (m[0] === '.') b++;
+                            else if (m[0] === '[') b++;
+                            else c++;
+                            return m;
+                        });
+                        const types = (sel.replace(/[#.][\w-]+|\[[^\]]+\]/g, '').match(/[a-zA-Z][\w-]*/g) || []).length;
+                        return [a, b, c + types];
+                    };
+                    for (const sheet of document.styleSheets) {
+                        let rules;
+                        try {
+                            rules = sheet.cssRules;
+                        } catch {
+                            si++;
+                            continue;
+                        }
+                        for (let i = 0; i < rules.length; i++) {
+                            const r = rules[i];
+                            if (!r.selectorText || !xc.matches(r.selectorText)) continue;
+                            if (!r.style.background && !r.style.backgroundColor) continue;
+                            matched.push({
+                                si,
+                                i,
+                                sel: r.selectorText.slice(0, 100),
+                                bg: r.style.background,
+                                bgc: r.style.backgroundColor,
+                                spec: specOf(r.selectorText).join('.')
+                            });
+                        }
+                        si++;
+                    }
+                    test.cascadeTop = matched.slice(0, 8);
+                } catch (e) {
+                    test.err = String(e);
+                }
+                for (const sheet of document.styleSheets) {
+                    let rules;
+                    try {
+                        rules = sheet.cssRules;
+                    } catch {
+                        continue;
+                    }
+                    for (let i = 0; i < rules.length; i++) {
+                        const r = rules[i];
+                        if (r.selectorText && r.selectorText.includes('.x-container')) {
+                            let bgPriority = '';
+                            let bgColorPriority = '';
+                            try {
+                                bgPriority = r.style.getPropertyPriority('background');
+                                bgColorPriority = r.style.getPropertyPriority('background-color');
+                            } catch {}
+                            ruleInfo.push({
+                                sel: r.selectorText.slice(0, 120),
+                                cssText: String(r.cssText || '').slice(0, 160),
+                                matches: typeof xc.matches === 'function' && xc.matches(r.selectorText),
+                                bgPriority,
+                                bgColorPriority
+                            });
+                        }
+                    }
+                }
+                fetch('http://127.0.0.1:7780/', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        type: 'obstruct',
+                        ts: Date.now(),
+                        count: results.length,
+                        items: results.slice(0, 30),
+                        htmlClass: htmlCls,
+                        computedXcBg: computed,
+                        computedAsideBg: asideBg,
+                        inlineTest: test,
+                        xcRules: ruleInfo.slice(0, 30),
+                        hash: window.location.hash || window.location.pathname
+                    })
+                }).catch(() => {});
+            } catch (e) {
+                fetch('http://127.0.0.1:7780/', {
+                    method: 'POST',
+                    body: JSON.stringify({ type: 'obstruct-err', err: String(e) })
+                }).catch(() => {});
+            }
+        }, 1500);
+        // #endregion
+    });
+
+    // 开关开启时 canvas 经 v-if 重建，onMounted 不会再次触发，
+    // 需在 DOM 挂载后主动重绘
+    watch(visible, (on) => {
+        if (on) {
+            nextTick(render);
+        }
+    });
+
+    onBeforeUnmount(() => {
+        themeObserver?.disconnect();
+        resizeObserver?.disconnect();
+        popoverObserver?.disconnect();
+        xcObserver?.disconnect();
+        window.removeEventListener('mousemove', onGlowMove);
+        cancelAnimationFrame(glowRaf);
+        clearTimeout(glowFadeTimer);
+        restoreXc();
+    });
+</script>
+
+<style scoped>
+    .am-background {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .am-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* 浅色主题下调低环境光强度，避免过曝 */
+    :root[data-theme='light'] .am-canvas {
+        opacity: 0.75;
+    }
+</style>

@@ -61,6 +61,9 @@ export const useAppearanceSettingsStore = defineStore(
         const customFontFamily = ref('');
         const appCjkFontPack = ref(APP_CJK_FONT_PACK_DEFAULT_KEY);
         const displayVRCPlusIconsAsAvatar = ref(false);
+        const displayVRCProfileThemes = ref(false);
+        const displayVRCProfileBackgrounds = ref(false);
+        const profileBackgroundOpacity = ref(0.5);
         const hideNicknames = ref(false);
         const showInstanceIdInLocation = ref(false);
         const isAgeGatedInstancesVisible = ref(false);
@@ -119,6 +122,7 @@ export const useAppearanceSettingsStore = defineStore(
         const isDataTableStriped = ref(false);
         const accessibleStatusIndicators = ref(false);
         const useOfficialStatusColors = ref(true);
+        const useAdvancedMaterial = ref(false);
         const showNewDashboardButton = ref(true);
         const tableLimitsDialog = ref({
             visible: false,
@@ -150,6 +154,9 @@ export const useAppearanceSettingsStore = defineStore(
             const [
                 appLanguageConfig,
                 displayVRCPlusIconsAsAvatarConfig,
+                displayVRCProfileThemesConfig,
+                displayVRCProfileBackgroundsConfig,
+                profileBackgroundOpacityConfig,
                 hideNicknamesConfig,
                 showInstanceIdInLocationConfig,
                 isAgeGatedInstancesVisibleConfig,
@@ -188,6 +195,12 @@ export const useAppearanceSettingsStore = defineStore(
             ] = await Promise.all([
                 configRepository.getString('VRCX_appLanguage'),
                 configRepository.getBool('displayVRCPlusIconsAsAvatar', true),
+                configRepository.getBool('VRCX_displayVRCProfileThemes', true),
+                configRepository.getBool(
+                    'VRCX_displayVRCProfileBackgrounds',
+                    false
+                ),
+                configRepository.getFloat('VRCX_profileBackgroundOpacity', 0.5),
                 configRepository.getBool('VRCX_hideNicknames', false),
                 configRepository.getBool(
                     'VRCX_showInstanceIdInLocation',
@@ -308,6 +321,10 @@ export const useAppearanceSettingsStore = defineStore(
 
             displayVRCPlusIconsAsAvatar.value =
                 displayVRCPlusIconsAsAvatarConfig;
+            displayVRCProfileThemes.value = displayVRCProfileThemesConfig;
+            displayVRCProfileBackgrounds.value =
+                displayVRCProfileBackgroundsConfig;
+            profileBackgroundOpacity.value = profileBackgroundOpacityConfig;
             hideNicknames.value = hideNicknamesConfig;
             showInstanceIdInLocation.value = showInstanceIdInLocationConfig;
             isAgeGatedInstancesVisible.value = isAgeGatedInstancesVisibleConfig;
@@ -382,6 +399,12 @@ export const useAppearanceSettingsStore = defineStore(
 
             applyAccessibleStatusClass();
             applyOfficialStatusColorsClass();
+
+            useAdvancedMaterial.value = await configRepository.getBool(
+                'VRCX_useAdvancedMaterial',
+                false
+            );
+            applyAdvancedMaterialClass();
 
             await configRepository.remove('VRCX_navWidth');
 
@@ -614,6 +637,39 @@ export const useAppearanceSettingsStore = defineStore(
                 'displayVRCPlusIconsAsAvatar',
                 displayVRCPlusIconsAsAvatar.value
             );
+        }
+
+        /**
+         * 显示 VRC 玩家资料主题色：开启时资料卡图标 / 按钮 / 副文字颜色
+         * 跟随玩家在 VRChat 中设置的主题色，关闭则使用默认颜色（仅本地生效）
+         */
+        function setDisplayVRCProfileThemes() {
+            displayVRCProfileThemes.value = !displayVRCProfileThemes.value;
+            configRepository.setBool(
+                'VRCX_displayVRCProfileThemes',
+                displayVRCProfileThemes.value
+            );
+        }
+
+        /**
+         * 显示 VRC 玩家资料自定义背景：开启显示玩家在 VRChat 中设置的自定义
+         * 背景（渐变 / 纹理），关闭则使用默认背景规则（仅本地生效）
+         */
+        function setDisplayVRCProfileBackgrounds() {
+            displayVRCProfileBackgrounds.value =
+                !displayVRCProfileBackgrounds.value;
+            configRepository.setBool(
+                'VRCX_displayVRCProfileBackgrounds',
+                displayVRCProfileBackgrounds.value
+            );
+        }
+
+        /**
+         * @param {number} value - 纹理背景的暗化程度（0~1）
+         */
+        function setProfileBackgroundOpacity(value) {
+            profileBackgroundOpacity.value = value;
+            configRepository.setFloat('VRCX_profileBackgroundOpacity', value);
         }
         /**
          *
@@ -988,6 +1044,29 @@ export const useAppearanceSettingsStore = defineStore(
         /**
          *
          */
+        function applyAdvancedMaterialClass() {
+            const classList = document.documentElement.classList;
+            classList.toggle(
+                'use-advanced-material',
+                useAdvancedMaterial.value
+            );
+        }
+
+        /**
+         *
+         */
+        function setUseAdvancedMaterial() {
+            useAdvancedMaterial.value = !useAdvancedMaterial.value;
+            configRepository.setBool(
+                'VRCX_useAdvancedMaterial',
+                useAdvancedMaterial.value
+            );
+            applyAdvancedMaterialClass();
+        }
+
+        /**
+         *
+         */
         function setShowNewDashboardButton() {
             showNewDashboardButton.value = !showNewDashboardButton.value;
             configRepository.setBool(
@@ -1199,6 +1278,9 @@ export const useAppearanceSettingsStore = defineStore(
             appFontFamily,
             appCjkFontPack,
             displayVRCPlusIconsAsAvatar,
+            displayVRCProfileThemes,
+            displayVRCProfileBackgrounds,
+            profileBackgroundOpacity,
             hideNicknames,
             showInstanceIdInLocation,
             isAgeGatedInstancesVisible,
@@ -1233,6 +1315,7 @@ export const useAppearanceSettingsStore = defineStore(
             isDataTableStriped,
             accessibleStatusIndicators,
             useOfficialStatusColors,
+            useAdvancedMaterial,
             showNewDashboardButton,
             tableLimitsDialog,
             TABLE_MAX_SIZE_MIN,
@@ -1242,6 +1325,9 @@ export const useAppearanceSettingsStore = defineStore(
 
             setAppLanguage,
             setDisplayVRCPlusIconsAsAvatar,
+            setDisplayVRCProfileThemes,
+            setDisplayVRCProfileBackgrounds,
+            setProfileBackgroundOpacity,
             setHideNicknames,
             setShowInstanceIdInLocation,
             setIsAgeGatedInstancesVisible,
@@ -1270,6 +1356,7 @@ export const useAppearanceSettingsStore = defineStore(
             toggleStripedDataTable,
             toggleAccessibleStatusIndicators,
             toggleOfficialStatusColors,
+            setUseAdvancedMaterial,
             setShowNewDashboardButton,
             setTableDensity,
             setTrustColor,
