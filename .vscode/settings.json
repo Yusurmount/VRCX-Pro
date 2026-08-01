@@ -5,7 +5,7 @@
     "i18n-ally.dirStructure": "file",
     "i18n-ally.namespace": false,
     "i18n-ally.pathMatcher": "{locale}.json",
-    "i18n-ally.sourceLanguage": "en",
+    "i18n-ally.sourceLanguage": "zh-CN",
     "i18n-ally.indent": 4,
     "oxc.fmt.configPath": ".oxfmtrc.json",
     "editor.defaultFormatter": "oxc.oxc-vscode",
