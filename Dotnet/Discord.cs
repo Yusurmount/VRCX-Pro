@@ -16,7 +16,6 @@ namespace VRCX
         private readonly Timer _timer;
         private bool _active;
         private string _discordAppId;
-        private const string VrcxUrl = "https://vrcx.app";
 
         static Discord()
         {
@@ -173,7 +172,6 @@ namespace VRCX
 
                 _presence.Assets.LargeImageKey = largeKey;
                 _presence.Assets.LargeImageText = largeText;
-                _presence.Assets.LargeImageUrl = VrcxUrl;
 
                 _presence.Assets.SmallImageKey = smallKey;
                 _presence.Assets.SmallImageText = smallText;

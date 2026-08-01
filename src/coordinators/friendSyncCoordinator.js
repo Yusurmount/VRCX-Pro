@@ -3,6 +3,7 @@ import { toast } from 'vue-sonner';
 import { AppDebug } from '../services/appConfig';
 import { migrateMemos } from './memoCoordinator';
 import { syncFriendSearchIndex } from './searchIndexCoordinator';
+import { runSilentInfoFetch } from './infoFetchCoordinator';
 import { reconnectWebSocket } from '../services/websocket';
 import { useAuthStore } from '../stores/auth';
 import { useFriendStore } from '../stores/friend';
@@ -26,6 +27,9 @@ export async function runRefreshFriendsListFlow() {
     }
     await friendStore.refreshFriends();
     reconnectWebSocket();
+
+    // L4 末尾：静默执行信息补全（bio + 隐私状态），不阻塞主流程
+    runSilentInfoFetch();
 }
 
 /**
@@ -71,4 +75,7 @@ export async function runInitFriendsListFlow(t) {
         migrateMemos();
         friendStore.migrateFriendLog(userId);
     }
+
+    // 静默执行信息抓取补全（bio + 隐私状态），不阻塞主流程
+    runSilentInfoFetch();
 }

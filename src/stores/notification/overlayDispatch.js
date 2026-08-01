@@ -102,7 +102,7 @@ export function createOverlayDispatch({
             parseFloat(advancedSettingsStore.notificationOpacity.toString()) /
             100;
         const text = toNotificationText(result.title, result.body, noty.type);
-        AppApi.XSNotification('VRCX', text, timeout, opacity, image);
+        AppApi.XSNotification('VRCX-Pro', text, timeout, opacity, image);
     }
 
     /**
@@ -135,7 +135,7 @@ export function createOverlayDispatch({
         AppApi.OVRTNotification(
             playOvrtHudNotifications,
             playOvrtWristNotifications,
-            'VRCX',
+            'VRCX-Pro',
             text,
             timeout,
             opacity,
@@ -193,7 +193,7 @@ export function createOverlayDispatch({
      * @param {string} image
      */
     function desktopNotification(displayName, message, image) {
-        if (WINDOWS) {
+        if (typeof CefSharp !== 'undefined') {
             AppApi.DesktopNotification(displayName, message, image);
         } else {
             window.electron.desktopNotification(displayName, message, image);

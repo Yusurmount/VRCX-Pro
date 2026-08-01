@@ -108,6 +108,10 @@ export default defineConfig(({ mode }) => {
     const nightly =
         mode === 'development' || version.split('-').at(-1).length === 7;
 
+    // 目标平台：优先使用显式声明的 PLATFORM（如 npm scripts 里的 cross-env），
+    // 未声明时回退到宿主机平台，保证环境识别在任何启动方式下都正确。
+    const targetPlatform = process.env.PLATFORM || process.platform;
+
     return {
         base: '',
         plugins: [
@@ -164,8 +168,8 @@ export default defineConfig(({ mode }) => {
             ]
         },
         define: {
-            LINUX: JSON.stringify(process.env.PLATFORM === 'linux'),
-            WINDOWS: JSON.stringify(process.env.PLATFORM === 'windows'),
+            LINUX: JSON.stringify(targetPlatform === 'linux'),
+            WINDOWS: JSON.stringify(targetPlatform === 'windows'),
             VERSION: JSON.stringify(version),
             NIGHTLY: JSON.stringify(nightly)
         },

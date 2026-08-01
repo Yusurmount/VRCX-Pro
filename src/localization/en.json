@@ -15,6 +15,7 @@
             "delete": "Delete",
             "remove": "Remove",
             "reset": "Reset",
+            "back": "Back",
             "view_details": "View Details",
             "configure": "Configure",
             "refresh": "Refresh",
@@ -28,19 +29,7 @@
             "d": "d",
             "h": "h",
             "m": "m",
-            "s": "s",
-            "year": "year",
-            "month": "month",
-            "day": "day",
-            "hour": "hour",
-            "minute": "minute",
-            "second": "second",
-            "years": "years",
-            "months": "months",
-            "days": "days",
-            "hours": "hours",
-            "minutes": "minutes",
-            "seconds": "seconds"
+            "s": "s"
         },
         "days": {
             "sunday": "Sunday",
@@ -115,7 +104,14 @@
             "confirm": "Confirm",
             "cancel": "Cancel",
             "restore_default": "Restore Default",
-            "restore_default_confirm": "Restore navigation to its default order?"
+            "restore_default_confirm": "Restore navigation to its default order?",
+            "add_folder": "Add Folder",
+            "folder_available": "Available",
+            "folder_selected": "Selected",
+            "folder_selected_empty": "No folders selected",
+            "invalid_folder": "Invalid Folder",
+            "remove_from_folder": "Remove from Folder",
+            "save": "Save"
         }
     },
     "dashboard": {
@@ -232,6 +228,20 @@
             "past_notifications": "Last 24 hours",
             "no_new_notifications": "No new notifications in the past 24 hours",
             "no_unseen_notifications": "No unread notifications"
+        },
+        "search_recently_met": "Recently Met",
+        "search_recently_joined": "Recently Joined Worlds",
+        "tracked_nonfriends": {
+            "tab_label": "Tracked",
+            "empty": "No tracked non-friends yet. Click \"+\" to add one by user ID, or use the \"⋯\" menu in any user's profile.",
+            "remove_tooltip": "Remove from tracking",
+            "add_button": "Add +",
+            "add_dialog_title": "Track a User",
+            "add_dialog_hint": "Enter the user ID manually (usr_xxx...), or open any user's profile in VRCX-jirai and use the \"⋯\" → \"Track\" option.",
+            "add_input_placeholder": "usr_xxx...",
+            "add_verify_error": "Could not retrieve user data. Please check the ID and try again.",
+            "add_confirm_question": "Is this user \"{name}\"?",
+            "add_back": "Back"
         }
     },
     "view": {
@@ -244,6 +254,7 @@
             "proxy_settings": "Proxy Settings",
             "settings": "Settings",
             "language": "Language",
+            "loginSelected": "Login {count} selected accounts",
             "field": {
                 "username": "Username or Email",
                 "password": "Password",
@@ -314,6 +325,61 @@
                 "filter_placeholder": "Filter",
                 "chatbox_blacklist": "Chatbox Blacklist",
                 "status_tooltip": "VRCX Companion Status"
+            },
+            "filter": {
+                "title": "Advanced Filter",
+                "toolbar_button": "Filter",
+                "preset_placeholder": "Select a preset…",
+                "save_preset": "Save as preset",
+                "delete_preset": "Delete preset",
+                "delete_preset_title": "Delete preset",
+                "delete_preset_message": "Delete preset \"{name}\"?",
+                "preset_name_title": "Save preset",
+                "preset_name_description": "Enter a name for this preset.",
+                "preset_name_invalid": "Name must be 1-50 characters.",
+                "reset": "Reset",
+                "apply": "Apply",
+                "cancel": "Cancel",
+                "relationship": "Relationship",
+                "friends": "Friends",
+                "non_friends": "Non-friends",
+                "level": "Trust Level",
+                "level_unknown": "Unknown",
+                "keyword": "Keyword",
+                "search_name": "Display name",
+                "search_bio": "Bio",
+                "keyword_placeholder": "Keyword…",
+                "groups": "Groups",
+                "group_combine": "Match",
+                "group_combine_and": "All conditions",
+                "group_combine_or": "Any condition",
+                "group_joined": "Joined",
+                "group_not_joined": "Not joined",
+                "group_search_placeholder": "Search by group ID or name…",
+                "group_no_results": "No groups found",
+                "group_add": "Add condition",
+                "group_remove": "Remove condition",
+                "mutual": "Common Friends",
+                "mutual_any": "Only show players sharing at least one common friend with you.",
+                "mutual_target_placeholder": "Select a friend (optional)…",
+                "room_history": "Room History",
+                "first_join": "First joined",
+                "first_join_from": "From",
+                "first_join_to": "To",
+                "session_count": "Session count",
+                "session_count_unit": "times",
+                "comparison_gte": "≥",
+                "comparison_eq": "=",
+                "comparison_lte": "≤",
+                "online_duration": "Online duration",
+                "duration_min": "Min",
+                "duration_max": "Max",
+                "duration_unit": "min",
+                "platform": "Platform",
+                "platform_pc": "PC",
+                "platform_android": "Android",
+                "platform_ios": "iOS",
+                "platform_unknown": "Unknown"
             }
         },
         "my_avatars": {
@@ -478,8 +544,7 @@
                     "transfer": "Group Transfer",
                     "queueReady": "Queue Ready",
                     "event": {
-                        "created": "Group Event Created",
-                        "starting": "Group Event Starting"
+                        "created": "Group Event Created"
                     }
                 },
                 "moderation": {
@@ -606,6 +671,40 @@
                     "user_opted_out": "This user has disabled mutual friends sharing. Existing data has been preserved.",
                     "refresh_error": "Failed to refresh mutual friends data",
                     "last_fetched": "Last fetched"
+                },
+                "tracked_nonfriend": {
+                    "track_tooltip": "Track this non-friend",
+                    "untrack_tooltip": "Stop tracking this non-friend",
+                    "track_hint": "Right-click a node in the graph to select it",
+                    "added": "Now tracking {name}",
+                    "removed": "Stopped tracking {name}",
+                    "show_tooltip": "Show tracked non-friends in graph",
+                    "hide_tooltip": "Hide tracked non-friends in graph"
+                },
+                "manual_relations": {
+                    "button_tooltip": "Manual friendship relations",
+                    "dialog_title": "Manual Friend Relations",
+                    "tab_list": "Relations",
+                    "tab_add": "Add",
+                    "tab_suggest": "Suggestions",
+                    "list_empty": "No manual relations added yet.",
+                    "user_a": "Person A",
+                    "user_b": "Person B",
+                    "user_placeholder": "Select a person...",
+                    "user_search": "Search friends...",
+                    "add_button": "Add Connection",
+                    "already_exists": "This relation already exists.",
+                    "suggest_description": "Based on mutual friend data, these pairs may have a friendship relationship that is not yet captured.",
+                    "suggest_button": "Run Analysis",
+                    "suggest_score": "Score: {score}",
+                    "suggest_confirm": "Add",
+                    "suggest_dismiss": "Skip",
+                    "suggest_none": "No suggestions found. Try fetching mutual friend data first."
+                },
+                "legend": {
+                    "mutual": "Mutual Relationship",
+                    "manual": "Manual Relation",
+                    "non_friend": "Includes Non-friend"
                 }
             },
             "playtime_trend": {
@@ -648,6 +747,49 @@
                 },
                 "no_friend_data": "No friend visit data",
                 "friend_visits": "{count} visits"
+            },
+            "two_person_relationship": {
+                "header": "Duo Relationship",
+                "tips": {
+                    "description": "Analyzes your game log database to find instances where two friends were present in the same room. Even if you weren't there, it reconstructs their shared moments from their individual join/leave records."
+                },
+                "select_friend_a": "Select Friend A",
+                "select_friend_b": "Select Friend B",
+                "search_friend": "Search friends...",
+                "swap_friends": "Swap friends",
+                "total_coexistence_time": "Total co-presence time",
+                "shared_instances": "Shared instances",
+                "no_data": "No shared instance records found",
+                "no_friend_selected": "Select two friends to view their shared instances",
+                "coexistence_time": "Co-presence time",
+                "instance_count": "Shared instance count",
+                "meet_count": "{count} encounters",
+                "settings": "Settings",
+                "show_self_presence": "Show my presence indicator",
+                "self_present": "Present",
+                "self_not_present": "Absent",
+                "instance_creator": "Creator",
+                "max_player_count": "Peak players",
+                "initiator_leftPlayer": "Left Follow",
+                "initiator_rightPlayer": "Right Follow",
+                "initiator_mutual": "Mutual",
+                "initiator_unknown": "Unknown"
+            },
+            "relationship_timeline": {
+                "header": "Relationship Timeline",
+                "refresh": "Refresh",
+                "top_n_friends": "Top {n} friends",
+                "others": "Others",
+                "days_per_unit": "days/unit",
+                "tips": {
+                    "description": "Shows how your relationships with friends have evolved over time as a 100% stacked area chart. Each band represents a friend's share of your total social activity. Use the scale slider (bottom-right) to adjust time granularity, and drag the bottom bar to scroll through time."
+                },
+                "settings": {
+                    "header": "Settings",
+                    "top_friends": "Top friends",
+                    "show_others": "Show Others",
+                    "show_friends_only": "Friends Only"
+                }
             }
         },
         "tools": {
@@ -681,8 +823,10 @@
                 "header": "Pictures",
                 "screenshot": "Screenshot Manager",
                 "screenshot_description": "View and manage screenshot metadata",
-                "gallery": "Inventory",
-                "gallery_description": "Manage images and inventory"
+                "gallery": "Image Manager",
+                "gallery_description": "Manage images and inventory",
+                "inventory": "Inventory",
+                "inventory_description": "Manage item inventory"
             },
             "shortcuts": {
                 "header": "Shortcuts",
@@ -699,7 +843,19 @@
                 "vrchat_config_description": "Open VRChat config.json settings",
                 "launch_options_description": "Edit VRChat launch options",
                 "registry_backup": "VRChat Registry Backup",
-                "registry_backup_description": "Create or restore a VRChat registry backup"
+                "registry_backup_description": "Create or restore a VRChat registry backup",
+                "info_completion": "Profile Info Sync & Completion",
+                "info_completion_description": "Scan and fetch the latest profiles for all friends and tracked users, saving new or updated bios and status to the database.",
+                "info_completion_hint": "Ready to scan {count} targets.",
+                "info_completion_start": "Start Sync",
+                "info_completion_again": "Sync Again",
+                "info_completion_cancel": "Cancel",
+                "info_completion_close": "Close",
+                "info_completion_progress": "Scanning {current} / {total}...",
+                "info_completion_done": "Done — saved {updated} updates from {total} targets.",
+                "info_completion_tooltip_running": "Syncing Info {done}/{total} (Bio +{bio}, Status +{status})",
+                "info_completion_tooltip_done": "Sync Done: Updated {bio} bios, {status} statuses (Click to re-sync)",
+                "info_completion_tooltip_idle": "Profile Info Sync (Click to start)"
             },
             "other": {
                 "header": "Other",
@@ -818,7 +974,12 @@
                     "disable_gpu_acceleration_tooltip": "Only change this option if you know what you're doing, may fix issues with UI, requires restarting VRCX",
                     "disable_vr_overlay_gpu_acceleration": "Disable VR Overlay GPU Acceleration",
                     "proxy": "Proxy Settings",
-                    "startup_linux": "Add \"--startup\" arg to startup VRCX.desktop file to start VRCX minimized at system startup"
+                    "startup_linux": "Add \"--startup\" arg to startup VRCX.desktop file to start VRCX minimized at system startup",
+                    "restore_defaults": "Restore Default Settings",
+                    "restore_defaults_confirm_title": "Restore Default Settings",
+                    "restore_defaults_confirm_description": "Are you sure you want to restore all preference settings to their default values? This will not affect your user data or other settings.",
+                    "restore_defaults_success": "Preferences have been restored to default values.",
+                    "restore_defaults_restart_notice": "Some changes (GPU acceleration, proxy, etc.) may require an application restart to take effect."
                 },
                 "favorites": {
                     "header": "Favorite Groups Filter",
@@ -854,7 +1015,8 @@
                     "auto_change_status_groups": "Only count friends from",
                     "auto_change_status_groups_placeholder": "Choose Groups",
                     "auto_accept_invite_groups": "Only accept from",
-                    "auto_accept_invite_groups_placeholder": "Choose Groups"
+                    "auto_accept_invite_groups_placeholder": "Choose Groups",
+                    "auto_invite_request_accept_off": "Off"
                 },
                 "legal_notice": {
                     "header": "Legal Notice",
@@ -903,7 +1065,6 @@
                     "zoom": "Zoom",
                     "vrcplus_profile_icons": "VRChat+ Profile Icons",
                     "vrcplus_profile_icons_description": "Use VRChat+ exclusive profile icons when available.",
-                    "vrc_profile_themes": "VRChat Profile Themes",
                     "show_instance_id": "Show Instance ID",
                     "show_status_bar": "Show Status Bar",
                     "age_gated_instances": "Show Age-Gated Instances",
@@ -923,14 +1084,16 @@
                     "striped_data_table_mode": "Striped Tables",
                     "accessible_status_indicators": "Accessible Status Indicators",
                     "accessible_status_indicators_description": "Use shapes in addition to color to distinguish statuses.",
+                    "use_official_status_colors": "Use Official Status Colors",
+                    "use_official_status_colors_description": "Match VRChat's official status colors.",
                     "table_density": "Table Density",
                     "table_density_standard": "Standard",
                     "table_density_comfortable": "Comfortable",
                     "table_density_compact": "Compact",
                     "table_entries_settings": "Table Entries Settings",
                     "table_entries_settings_description": "Control how many items are loaded for lists and searches.",
-                    "vrc_profile_backgrounds": "VRChat Profile Backgrounds",
-                    "vrc_profile_backgrounds_opacity": "Profile Background Opacity"
+                    "toggle_pointer_on_hover": "Toggle Pointer on Hover",
+                    "toggle_pointer_on_hover_description": "Show a pointer cursor when hovering over interactive elements."
                 },
                 "display": {
                     "header": "Display"
@@ -969,7 +1132,14 @@
                         "last_seen": "Last Seen",
                         "time_in_instance": "Time in Instance",
                         "placeholder": "Sort Order"
-                    }
+                    },
+                    "group_by_instance": "Group by Instance",
+                    "group_by_instance_tooltip": "Group friends by the instance they are in",
+                    "header": "Friends List",
+                    "hide_friends_in_same_instance": "Hide Friends in Same Instance",
+                    "hide_friends_in_same_instance_tooltip": "Hide friends who are in the same instance as you",
+                    "split_favorite_friends": "Split Favorite Friends",
+                    "split_favorite_friends_tooltip": "Show favorite friends in a separate section"
                 },
                 "user_dialog": {
                     "header": "User Dialog",
@@ -1275,6 +1445,73 @@
                         "description": "Open or set the folder for VRChat content such as Prints and Stickers.",
                         "set_folder": "Set Folder",
                         "reset_override": "Reset"
+                    },
+                    "db_export": {
+                        "button": "Export Database",
+                        "description": "Export all database data (user config, history, cache, etc.) to a JSON file.",
+                        "confirm_title": "Export Database Data",
+                        "confirm_message": "This will export all database data including feed history, game logs, cached data, favorites, notes, and all other application data. Sensitive authentication information will not be included. Continue?",
+                        "confirm_not_encrypted": "The exported file is not encrypted. It contains readable data in JSON format. Please handle it with care and avoid sharing it with untrusted parties.",
+                        "exporting": "Exporting database... ({current}/{total} tables)",
+                        "success": "Database exported successfully to:\n{path}",
+                        "error": "Export failed: {error}",
+                        "error_cancelled": "Export cancelled."
+                    },
+                    "db_import": {
+                        "button": "Import Database",
+                        "description": "Import database data from a previously exported JSON file. Only files from the same account are accepted.",
+                        "strategy_title": "Import Strategy",
+                        "strategy_description": "Choose how to handle records during import, then select a backup file.",
+                        "strategy_conflict_label": "For existing records (conflict)",
+                        "strategy_overwrite": "Overwrite",
+                        "strategy_overwrite_desc": "Replace existing data with data from the backup file",
+                        "strategy_skip_existing": "Skip",
+                        "strategy_skip_existing_desc": "Keep existing data unchanged",
+                        "strategy_new_label": "For new records (no conflict)",
+                        "strategy_add": "Add",
+                        "strategy_add_desc": "Insert new records from the backup file",
+                        "strategy_skip_new": "Skip",
+                        "strategy_skip_new_desc": "Do not import new records",
+                        "select_file": "Select Backup File",
+                        "confirm_title": "Confirm Import",
+                        "confirm_message": "The file has been validated. Please review the import summary and strategy below before proceeding.",
+                        "progress_title": "Importing Database",
+                        "summary_tables": "Tables",
+                        "summary_records": "Total Records",
+                        "reading": "Reading import file...",
+                        "importing": "Importing data... ({progress}%)",
+                        "success": "Import completed successfully.\n{importedCount} records imported across {tablesProcessed} tables.",
+                        "report_title": "Import Results",
+                        "report_overwritten": "Overwritten",
+                        "report_added": "Added",
+                        "report_skipped_existing": "Skipped (existing)",
+                        "report_skipped_new": "Skipped (new)",
+                        "report_total": "Total Processed",
+                        "report_details": "Per-table breakdown",
+                        "error": "Import failed: {error}",
+                        "error_cancelled": "Import cancelled.",
+                        "error_invalid_format": "Invalid file format. Please select a valid VRCX database backup file.",
+                        "error_missing_metadata": "File is missing metadata. It may be corrupted or not a valid VRCX backup.",
+                        "error_version_mismatch": "Unsupported file version. Expected version {version}.",
+                        "error_missing_tables": "File contains no table data.",
+                        "error_user_mismatch": "This backup file belongs to a different account and cannot be imported.",
+                        "error_invalid_json": "Invalid JSON file. Please select a valid VRCX database backup file.",
+                        "import_log_title": "Import Log",
+                        "import_log_empty": "No import records."
+                    },
+                    "db_reset": {
+                        "button": "Reset Database",
+                        "warning_title": "Reset Database",
+                        "warning_alert": "This operation is irreversible! All user data will be permanently deleted.",
+                        "warning_description": "This will delete ALL user data from the database, including:",
+                        "warning_items": "Feed history, game logs, notifications, favorites, notes/memos, avatar history, friend logs, cache data, and all other application data.",
+                        "warning_confirmation": "This action CANNOT be undone. It is strongly recommended to back up your database before proceeding.",
+                        "input_label": "Type the following to confirm: {required}",
+                        "input_placeholder": "Enter confirmation text",
+                        "input_error": "Confirmation text does not match. Please try again.",
+                        "in_progress": "Resetting database...",
+                        "success": "Database has been reset successfully. Restarting...",
+                        "error": "Database reset failed: {error}"
                     }
                 },
                 "photon": {
@@ -1376,12 +1613,13 @@
                 "logout": "Logout",
                 "edit_note_memo": "Edit Note and Memo",
                 "reset_home": "Reset Home",
-                "edit_profile": "Edit Profile"
+                "track_stranger": "Track This User",
+                "untrack_stranger": "Stop Tracking This User",
+                "favorite_tooltip": "Add to Favorites",
+                "unfavorite_tooltip": "Remove from Favorites"
             },
             "info": {
                 "header": "Info",
-                "vrcx_info": "VRCX Info",
-                "vrcx_info_tooltip": "VRCX info may be inaccurate",
                 "launch_invite_tooltip": "Launch/Invite",
                 "self_invite_tooltip": "Invite Yourself",
                 "open_in_vrchat_tooltip": "Open in VRChat",
@@ -1431,12 +1669,12 @@
                 "instance_age_restricted_tooltip": "In an age-restricted instance",
                 "close_instance": "Close Instance",
                 "instance_age_gated": "Age Gated",
-                "instance_role_restricted": "Role Restricted",
                 "open_previous_instance": "Open Previous Instances",
                 "show_mutual_friends": "Show Mutual Friends",
                 "show_discord_connections": "Show Discord Connections",
                 "instance_minimum_avatar_performance": "Minimum Avatar Performance",
-                "current_instance": "Current Instance"
+                "bio_diff_toggle": "Toggle bio diff",
+                "instance_closed": "Instance Closed"
             },
             "groups": {
                 "header": "Groups",
@@ -1552,6 +1790,18 @@
                 "header": "Edit Note And Memo",
                 "cancel": "Cancel",
                 "confirm": "Confirm"
+            },
+            "status_distribution": {
+                "header": "Status Distribution",
+                "refresh_hint": "Refresh status distribution data",
+                "loading": "Loading status data...",
+                "days_per_unit": "days/unit",
+                "status": {
+                    "active": "Online",
+                    "join_me": "Join Me",
+                    "ask_me": "Ask Me",
+                    "busy": "Do Not Disturb"
+                }
             }
         },
         "world": {
@@ -1751,9 +2001,7 @@
                 "moderation_tools": "Moderation Tools",
                 "leave": "Leave Group",
                 "block": "Block Group",
-                "unblock": "Unblock Group",
-                "unsubscribe_event": "Unsubscribe From Event Announcements",
-                "subscribe_event": "Subscribe To Event Announcements"
+                "unblock": "Unblock Group"
             },
             "info": {
                 "header": "Info",
@@ -1849,24 +2097,6 @@
             "pronouns_placeholder": "Please input your pronouns",
             "update": "Update"
         },
-        "edit_profile": {
-            "banner": "Banner",
-            "banner_color": "Banner Color",
-            "banner_type_color": "Color",
-            "banner_type_avatar_banner": "Avatar Image",
-            "banner_type_custom_image": "Custom Image",
-            "icon": "Icon",
-            "profile_theme": "Profile Theme",
-            "theme_name_placeholder": "Theme name",
-            "create_theme": "Create Theme",
-            "delete_theme": "Delete Theme",
-            "profile_background": "Profile Background",
-            "profile_background_type_none": "None",
-            "profile_background_type_image": "Image",
-            "profile_background_type_gradient": "Gradient",
-            "gradient_top": "Gradient Top",
-            "gradient_bottom": "Gradient Bottom"
-        },
         "new_instance": {
             "header": "New Instance",
             "access_type": "Access Type",
@@ -1887,12 +2117,11 @@
             "region_jp": "Japan",
             "content_emoji": "Emoji",
             "content_stickers": "Stickers",
-            "content_pedestals": "Sharing Pedestals",
+            "content_pedestals": "Pedestals",
             "content_prints": "Prints",
             "content_drones": "Drones",
             "content_items": "Items",
             "content_third_person": "Third Person",
-            "content_prop_movement": "Props that Modify Player Movement",
             "world_id": "World ID",
             "instance_id": "Instance ID",
             "instance_id_placeholder": "Random",
@@ -2119,7 +2348,10 @@
             "emoji": "Emoji",
             "redeem": "Redeem",
             "create_animated_emoji": "Animated Emoji Generator",
-            "crop_image": "Confirm Upload"
+            "crop_image": "Confirm Upload",
+            "drop_to_add": "Release to add",
+            "drop_to_upload": "Drop to upload",
+            "drop_to_upload_hint": "Drag and drop an image into this panel to upload"
         },
         "image_crop": {
             "rotate_left": "Rotate Left",
@@ -2386,8 +2618,7 @@
                 "description": "Description",
                 "export_to_calendar": "Export to Calendar",
                 "download_ics": "Download .ics",
-                "copied_event_link": "Calendar event URL copied to clipboard",
-                "repeating_event_tooltip": "Repeating Event"
+                "copied_event_link": "Calendar event URL copied to clipboard"
             },
             "featured_events": "Featured Events"
         },
@@ -2469,6 +2700,18 @@
         "avatar_database_provider": {
             "header": "Avatar Database Provider",
             "add_provider": "Add Provider"
+        },
+        "close": "Close",
+        "refresh": "Refresh",
+        "data_export": {
+            "description": "Select format and save to file",
+            "format": "Format",
+            "record_count": "{count} records",
+            "no_data": "No data to export",
+            "cancel": "Cancel",
+            "export": "Export",
+            "success": "Export successful",
+            "error": "Export failed: {error}"
         }
     },
     "confirm": {
@@ -2775,8 +3018,7 @@
             "joined": "Group joined",
             "join_request_sent": "Group join request sent",
             "visibility_updated": "Group visibility updated",
-            "subscription_updated": "Group subscription updated",
-            "event_announcement_updated": "Group event announcements updated"
+            "subscription_updated": "Group subscription updated"
         },
         "invite": {
             "self_sent": "Self invite sent",
@@ -2851,7 +3093,8 @@
             "invalid_config": "Invalid JSON in config.json"
         },
         "gamelog": {
-            "vrchat_must_be_closed": "VRChat needs to be closed before this option can be changed"
+            "vrchat_must_be_closed": "VRChat needs to be closed before this option can be changed",
+            "recommended_pair": "💡 {nameA} and {nameB} may be friends (Score: {score})."
         },
         "copy_failed": "Copy failed",
         "error": "Error"
@@ -2875,8 +3118,6 @@
         "trust_level": "Trust level is now {trustLevel}",
         "display_name": "changed their name to {displayName}",
         "group_announcement_title": "Group Announcement",
-        "group_event_created_title": "Group Event Created",
-        "group_event_starting_title": "Group Event Starting",
         "group_informative_title": "Group Informative",
         "group_invite_title": "Group Invite",
         "group_join_request_title": "Group Join Request",
@@ -3151,7 +3392,7 @@
                 "support": "Support VRCX"
             },
             "releases": {
-                "2026_05_03": {
+                "2026_04_05": {
                     "title": "Explore New Features",
                     "subtitle": "A few useful features you might not notice",
                     "items": {
@@ -3203,6 +3444,11 @@
         "clocks_label": "Clocks",
         "clocks_none": "None",
         "timezone": "Timezone",
-        "now_playing": "Now Playing"
+        "now_playing": "Now Playing",
+        "info_sync": "Sync",
+        "view_mode": "View Mode",
+        "view_merged": "Merged View",
+        "view_primary": "Primary Account"
     }
 }
+

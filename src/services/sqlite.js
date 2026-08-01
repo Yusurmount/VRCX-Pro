@@ -1,24 +1,17 @@
 import { i18n } from '../plugins/i18n';
-import { openExternalLink } from '../shared/utils';
 import { useModalStore } from '../stores';
 
 // requires binding of SQLite
 class SQLiteService {
     handleSQLiteError(e) {
-        if (typeof e.message === 'string' && !window.isVrOverlay) {
+        if (typeof e.message === 'string') {
             const modalStore = useModalStore();
             if (e.message.includes('database disk image is malformed')) {
                 modalStore
-                    .confirm({
+                    .alert({
                         description:
-                            'Please repair or delete your database file by following these instructions.',
+                            'Your database file is corrupted. Please repair or delete your database file by renaming the "%AppData%\\VRCX" folder or deleting the database file to reset VRCX.',
                         title: 'Your database is corrupted'
-                    })
-                    .then(({ ok }) => {
-                        if (!ok) return;
-                        openExternalLink(
-                            'https://github.com/vrcx-team/VRCX/wiki#how-to-repair-vrcx-database'
-                        );
                     })
                     .catch(() => {});
             }
@@ -50,7 +43,7 @@ class SQLiteService {
 
     async execute(callback, sql, args = null) {
         try {
-            if (LINUX) {
+            if (typeof CefSharp === 'undefined') {
                 if (args) {
                     args = new Map(Object.entries(args));
                 }
@@ -72,7 +65,7 @@ class SQLiteService {
 
     async executeNonQuery(sql, args = null) {
         try {
-            if (LINUX && args) {
+            if (typeof CefSharp === 'undefined' && args) {
                 args = new Map(Object.entries(args));
             }
             return await SQLite.ExecuteNonQuery(sql, args);

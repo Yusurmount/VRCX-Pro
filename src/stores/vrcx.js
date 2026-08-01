@@ -96,7 +96,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
      */
     async function init() {
         try {
-            if (LINUX) {
+            if (typeof CefSharp === 'undefined') {
                 try {
                     window.electron.ipcRenderer.on(
                         'launch-command',
@@ -131,7 +131,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
                     });
                 } catch (err) {
                     console.error(
-                        'Failed to register Linux IPC handlers:',
+                        'Failed to register Electron IPC handlers:',
                         err
                     );
                 }
@@ -233,7 +233,16 @@ export const useVrcxStore = defineStore('Vrcx', () => {
                 `Updating database from ${state.databaseVersion} to ${databaseVersion}...`
             );
             try {
-                await database.upgradeDatabaseVersion(); // Migrations
+                await database.cleanLegendFromFriendLog(); // fix friendLog spammed with crap
+                await database.fixGameLogTraveling(); // fix bug with gameLog location being set as traveling
+                await database.fixNegativeGPS(); // fix GPS being a negative value due to VRCX bug with traveling
+                await database.fixBrokenLeaveEntries(); // fix user instance timer being higher than current user location timer
+                await database.fixBrokenGroupInvites(); // fix notification v2 in wrong table
+                await database.fixBrokenNotifications(); // fix notifications being null
+                await database.fixBrokenGroupChange(); // fix spam group left & name change
+                await database.fixCancelFriendRequestTypo(); // fix CancelFriendRequst typo
+                await database.fixBrokenGameLogDisplayNames(); // fix gameLog display names "DisplayName (userId)"
+                await database.upgradeDatabaseVersion(); // update database version
                 await database.vacuum(); // succ
                 await database.optimize();
                 await configRepository.setInt(
@@ -365,7 +374,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
      *
      */
     async function saveVRCXWindowOption() {
-        if (LINUX) {
+        if (typeof CefSharp === 'undefined') {
             VRCXStorage.Set('VRCX_LocationX', state.locationX.toString());
             VRCXStorage.Set('VRCX_LocationY', state.locationY.toString());
             VRCXStorage.Set('VRCX_SizeWidth', state.sizeWidth.toString());
@@ -383,7 +392,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
         if (advancedSettingsStore.screenshotHelper) {
             const location = parseLocation(locationStore.lastLocation.location);
             const metadata = {
-                application: 'VRCX',
+                application: 'VRCX-Pro',
                 version: 1,
                 author: {
                     id: userStore.currentUser.id,
@@ -719,7 +728,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
     async function backupVrcRegistry(name) {
         let regJson;
         try {
-            if (WINDOWS) {
+            if (typeof CefSharp !== 'undefined') {
                 regJson = await AppApi.GetVRChatRegistry();
             } else {
                 regJson = await AppApi.GetVRChatRegistryJson();

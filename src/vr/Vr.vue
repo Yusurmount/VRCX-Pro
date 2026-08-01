@@ -1594,7 +1594,7 @@
 
         window.$vr.vrState = vrState;
 
-        if (LINUX) {
+        if (typeof CefSharp === 'undefined') {
             updateVrElectronLoop();
         }
         refreshCustomScript();

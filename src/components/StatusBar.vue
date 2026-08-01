@@ -6,6 +6,42 @@
         <ContextMenu>
             <ContextMenuTrigger as-child>
                 <div class="flex items-center w-full h-full px-2">
+                    <!-- Multi-account view mode switcher (only when secondary sessions are active) -->
+                    <template v-if="hasSecondarySessions">
+                        <Popover v-model:open="viewModePopoverOpen">
+                            <PopoverTrigger as-child>
+                                <div
+                                    class="flex items-center gap-1 px-2 h-[22px] whitespace-nowrap border-r border-border cursor-pointer hover:bg-accent shrink-0"
+                                    :title="t('status_bar.view_mode')">
+                                    <span
+                                        class="inline-block size-2 rounded-full shrink-0"
+                                        :style="{ background: viewModeColor }" />
+                                    <span class="text-[11px] text-foreground">{{ viewModeLabel }}</span>
+                                </div>
+                            </PopoverTrigger>
+                            <PopoverContent side="top" class="w-48 p-1">
+                                <div
+                                    class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-accent text-xs"
+                                    :class="{ 'bg-accent': isMergedView }"
+                                    @click="selectViewMode('merged')">
+                                    <span class="inline-block size-2 rounded-full bg-foreground/40" />
+                                    {{ t('status_bar.view_merged') }}
+                                </div>
+                                <div
+                                    v-for="[id, session] in allSessions"
+                                    :key="id"
+                                    class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-accent text-xs"
+                                    :class="{ 'bg-accent': currentViewMode === `account:${id}` || (id === primaryId && currentViewMode === 'primary') }"
+                                    @click="selectViewMode(id)">
+                                    <span
+                                        class="inline-block size-2 rounded-full shrink-0"
+                                        :style="{ background: getAccountColor(id) }" />
+                                    {{ session.label || session.userInfo?.displayName || id }}
+                                    <span v-if="id === primaryId" class="text-muted-foreground ml-auto text-[10px]">★</span>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    </template>
                     <!-- Left section -->
                     <div
                         class="flex items-center flex-1 min-w-0 overflow-hidden [&>*:first-child]:pl-0.5"
@@ -14,7 +50,7 @@
                             -webkit-mask-image: linear-gradient(to right, black calc(100% - 20px), transparent 100%);
                         ">
                         <TooltipWrapper
-                            v-if="!isLinux && visibility.proxy"
+                            v-if="visibility.proxy"
                             :content="
                                 vrcxStore.proxyServer
                                     ? `${t('status_bar.proxy')}: ${vrcxStore.proxyServer}`
@@ -260,13 +296,16 @@
                                         :step="1"
                                         :format-options="{ maximumFractionDigits: 0 }"
                                         class="w-20"
-                                        @click.stop>
+                                        @click.stop
+                                        @update:modelValue="setZoomLevel">
                                         <NumberFieldContent>
                                             <NumberFieldDecrement />
                                             <NumberFieldInput
                                                 ref="zoomInputRef"
                                                 class="h-[18px] text-[11px] px-0.5 text-center"
-                                                @blur="setZoomLevel" />
+                                                @blur="zoomEditing = false"
+                                                @keydown.enter="zoomEditing = false"
+                                                @keydown.escape="zoomEditing = false" />
                                             <NumberFieldIncrement />
                                         </NumberFieldContent>
                                     </NumberField>
@@ -275,6 +314,44 @@
                                     <span class="text-[10px] text-foreground">{{ t('status_bar.zoom') }}</span>
                                     <span class="text-[10px] text-foreground">{{ zoomLevel }}%</span>
                                 </template>
+                            </div>
+                        </TooltipWrapper>
+
+                        <TooltipWrapper
+                            v-if="visibility.profileInfoSync"
+                            :content="infoFetchTooltip"
+                            side="top">
+                            <div
+                                class="flex items-center gap-1 px-2 h-[22px] whitespace-nowrap border-r border-border cursor-pointer hover:bg-accent"
+                                @click="runSilentInfoFetch">
+                                <!-- Running: yellow spinner -->
+                                <svg
+                                    v-if="infoFetchState.status === 'running'"
+                                    class="size-3 shrink-0 animate-spin"
+                                    viewBox="0 0 16 16"
+                                    fill="none">
+                                    <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" class="text-muted-foreground/30" />
+                                    <path d="M14 8a6 6 0 0 0-6-6" stroke="#eab308" stroke-width="2" stroke-linecap="round" />
+                                </svg>
+                                <!-- Done: green check -->
+                                <svg
+                                    v-else-if="infoFetchState.status === 'done'"
+                                    class="size-3 shrink-0 text-green-500"
+                                    viewBox="0 0 16 16"
+                                    fill="none">
+                                    <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5" />
+                                    <path d="M5 8.5l2 2 4-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <!-- Idle: grey circle -->
+                                <span
+                                    v-else
+                                    class="inline-block size-2 rounded-full shrink-0 bg-status-offline-alt" />
+                                <span class="text-[10px] text-foreground">{{ t('status_bar.info_sync') }}</span>
+                                <span
+                                    v-if="infoFetchState.status === 'running'"
+                                    class="text-[10px] text-foreground">
+                                    {{ infoFetchState.done }}/{{ infoFetchState.total }}
+                                </span>
                             </div>
                         </TooltipWrapper>
 
@@ -320,6 +397,12 @@
                     @select.prevent
                     @update:model-value="toggleVisibility('ws')">
                     WebSocket
+                </ContextMenuCheckboxItem>
+                <ContextMenuCheckboxItem
+                    :model-value="visibility.profileInfoSync"
+                    @select.prevent
+                    @update:model-value="toggleVisibility('profileInfoSync')">
+                    {{ t('view.tools.system_tools.info_completion') }}
                 </ContextMenuCheckboxItem>
                 <ContextMenuCheckboxItem
                     :model-value="visibility.nowPlaying"
@@ -412,6 +495,7 @@
     import { useI18n } from 'vue-i18n';
     import { openExternalLink } from '@/shared/utils/appActions';
     import { wsState } from '@/services/websocket';
+    import { infoFetchState, runSilentInfoFetch } from '@/coordinators/infoFetchCoordinator';
 
     import dayjs from 'dayjs';
     import timezone from 'dayjs/plugin/timezone';
@@ -427,14 +511,55 @@
     } from './statusBarUtils';
 
     import configRepository from '../services/config';
+    import { accountHub } from '../services/accountHub.js';
 
     dayjs.extend(utc);
     dayjs.extend(timezone);
 
     const { t } = useI18n();
 
+    // ── Multi-account view mode switcher ────────────────────────────────────────
+    const viewModePopoverOpen = ref(false);
+
+    const hasSecondarySessions = computed(() => accountHub.hasSecondarySessions);
+    const isMergedView = computed(() => accountHub.isMergedView);
+    const currentViewMode = computed(() => accountHub.viewMode);
+    const primaryId = computed(() => accountHub.primaryId);
+    const allSessions = computed(() => [...accountHub.sessions.entries()]);
+
+    function getAccountColor(userId) {
+        return accountHub.getAccountColor(userId);
+    }
+
+    const viewModeLabel = computed(() => {
+        const mode = accountHub.viewMode;
+        if (mode === 'merged') return t('status_bar.view_merged');
+        if (mode === 'primary') {
+            const s = accountHub.sessions.get(accountHub.primaryId);
+            return s?.label || t('status_bar.view_primary');
+        }
+        const id = mode.replace('account:', '');
+        const s = accountHub.sessions.get(id);
+        return s?.label || id.slice(0, 6);
+    });
+
+    const viewModeColor = computed(() => {
+        const mode = accountHub.viewMode;
+        if (mode === 'merged') return 'var(--color-foreground, #888)';
+        const id = mode === 'primary' ? accountHub.primaryId : mode.replace('account:', '');
+        return accountHub.getAccountColor(id);
+    });
+
+    function selectViewMode(idOrMerged) {
+        if (idOrMerged === 'merged') {
+            accountHub.switchToMerged();
+        } else {
+            accountHub.switchToAccount(idOrMerged);
+        }
+        viewModePopoverOpen.value = false;
+    }
+
     const isMacOS = computed(() => navigator.platform.includes('Mac'));
-    const isLinux = computed(() => LINUX);
 
     const gameStore = useGameStore();
     const gameLogStore = useGameLogStore();
@@ -618,6 +743,24 @@
         return `WebSocket: ${state}`;
     });
 
+    const infoFetchTooltip = computed(() => {
+        if (infoFetchState.status === 'running') {
+            return t('view.tools.system_tools.info_completion_tooltip_running', {
+                done: infoFetchState.done,
+                total: infoFetchState.total,
+                bio: infoFetchState.bioUpdated,
+                status: infoFetchState.statusUpdated
+            });
+        }
+        if (infoFetchState.status === 'done') {
+            return t('view.tools.system_tools.info_completion_tooltip_done', {
+                bio: infoFetchState.bioUpdated,
+                status: infoFetchState.statusUpdated
+            });
+        }
+        return t('view.tools.system_tools.info_completion_tooltip_idle');
+    });
+
     const appUptimeText = computed(() => {
         const elapsedSeconds = Math.floor((now.value - vrcxStore.appStartAt) / 1000);
         return formatAppUptime(elapsedSeconds);
@@ -718,19 +861,9 @@
         drawSparkline();
     });
 
-    const zoomLevel = ref(100);
-    const zoomEditing = ref(false);
-    const zoomInputRef = ref(null);
-    let cleanupWheel = null;
-
     onBeforeUnmount(() => {
         clearTimeout(serversHoverTimer);
-        if (cleanupWheel) {
-            cleanupWheel();
-        }
     });
-
-    initGetZoomLevel();
 
     watch(
         () => visibility.ws,
@@ -743,34 +876,45 @@
         }
     );
 
-    async function initGetZoomLevel() {
-        const handleWheel = (event) => {
-            if (event.ctrlKey) {
-                getZoomLevel();
-            }
-        };
-        window.addEventListener('wheel', handleWheel);
-        cleanupWheel = () => {
-            window.removeEventListener('wheel', handleWheel);
-        };
-        getZoomLevel();
+    const zoomLevel = ref(100);
+    const zoomEditing = ref(false);
+    const zoomInputRef = ref(null);
+
+    if (!isMacOS.value) {
+        initZoom();
     }
 
-    async function getZoomLevel() {
-        zoomLevel.value = Math.round(((await AppApi.GetZoom()) + 10) * 10);
+    /**
+     *
+     */
+    async function initZoom() {
+        try {
+            zoomLevel.value = ((await AppApi.GetZoom()) + 10) * 10;
+        } catch {
+            // AppApi not available
+        }
     }
 
+    /**
+     *
+     */
     function setZoomLevel() {
-        zoomEditing.value = false;
-        AppApi.SetZoom(zoomLevel.value / 10 - 10);
+        try {
+            AppApi.SetZoom(zoomLevel.value / 10 - 10);
+        } catch {
+            // AppApi not available
+        }
     }
 
+    /**
+     *
+     */
     async function toggleZoomEdit() {
         if (zoomEditing.value) {
             zoomEditing.value = false;
             return;
         }
-        await getZoomLevel();
+        await initZoom();
         zoomEditing.value = true;
         await nextTick();
         zoomInputRef.value?.$el?.focus?.();

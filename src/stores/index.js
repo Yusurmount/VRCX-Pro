@@ -5,6 +5,7 @@ import { useAdvancedSettingsStore } from './settings/advanced';
 import { useActivityStore } from './activity';
 import { useAppearanceSettingsStore } from './settings/appearance';
 import { useAuthStore } from './auth';
+import { useAutoFollowStore } from './autoFollow';
 import { useAvatarProviderStore } from './avatarProvider';
 import { useAvatarStore } from './avatar';
 import { useChartsStore } from './charts';
@@ -23,6 +24,7 @@ import { useInstanceStore } from './instance';
 import { useInviteStore } from './invite';
 import { useLaunchStore } from './launch';
 import { useLocationStore } from './location';
+import { useManualRelationsStore } from './manualRelations';
 import { useModalStore } from './modal';
 import { useModerationStore } from './moderation';
 import { useNotificationStore } from './notification';
@@ -32,6 +34,7 @@ import { useSearchStore } from './search';
 import { useSharedFeedStore } from './sharedFeed';
 import { useUiStore } from './ui';
 import { useToolsStore } from './tools';
+import { useTrackedNonFriendsStore } from './trackedNonFriends';
 import { useUpdateLoopStore } from './updateLoop';
 import { useUserStore } from './user';
 import { useVRCXUpdaterStore } from './vrcxUpdater';
@@ -157,12 +160,16 @@ export function createGlobalStores() {
         charts: useChartsStore(),
         dashboard: useDashboardStore(),
         modal: useModalStore(),
-        quickSearch: useQuickSearchStore()
+        quickSearch: useQuickSearchStore(),
+        autoFollow: useAutoFollowStore(),
+        manualRelations: useManualRelationsStore(),
+        trackedNonFriends: useTrackedNonFriendsStore()
     };
 }
 
 export {
     useAuthStore,
+    useAutoFollowStore,
     useAvatarStore,
     useAvatarProviderStore,
     useFavoriteStore,
@@ -176,6 +183,7 @@ export {
     useInviteStore,
     useLaunchStore,
     useLocationStore,
+    useManualRelationsStore,
     useModerationStore,
     useNotificationStore,
     usePhotonStore,
@@ -190,6 +198,7 @@ export {
     useNotificationsSettingsStore,
     useWristOverlaySettingsStore,
     useToolsStore,
+    useTrackedNonFriendsStore,
     useUiStore,
     useUserStore,
     useVrStore,

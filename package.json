@@ -1,19 +1,20 @@
 {
-    "name": "VRCX",
+    "name": "vrcx-pro",
+    "version": "2026.03.28",
     "private": true,
     "description": "Friendship management tool for VRChat",
     "keywords": [
         "vrchat"
     ],
-    "homepage": "https://github.com/vrcx-team/VRCX#readme",
+    "homepage": "https://github.com/Yusurmount/VRCX-Pro#readme",
     "bugs": {
-        "url": "https://github.com/vrcx-team/VRCX/issues"
+        "url": "https://github.com/Yusurmount/VRCX-Pro/issues"
     },
     "license": "MIT",
     "author": "VRCX Team",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/vrcx-team/VRCX.git"
+        "url": "git+https://github.com/Yusurmount/VRCX-Pro.git"
     },
     "main": "src-electron/main.js",
     "scripts": {
@@ -39,7 +40,8 @@
     },
     "dependencies": {
         "hazardous": "^0.3.0",
-        "node-api-dotnet": "^0.9.21"
+        "node-api-dotnet": "^0.9.21",
+        "xlsx": "^0.18.5"
     },
     "devDependencies": {
         "@dnd-kit/vue": "^0.5.0",
@@ -118,7 +120,7 @@
     },
     "build": {
         "appId": "app.vrcx",
-        "productName": "VRCX",
+        "productName": "VRCX-Pro",
         "icon": "images/VRCX.png",
         "files": [
             "build/html/**/*",

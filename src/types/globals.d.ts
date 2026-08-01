@@ -29,7 +29,6 @@ declare global {
         gameLogService: any;
         crypto: any;
         sqliteService: any;
-        isVrOverlay: boolean;
         interopApi: {
             callDotNetMethod: (
                 className: any,
@@ -43,7 +42,17 @@ declare global {
             getNoUpdater: () => Promise<boolean>;
             setTrayIconNotification: (notify: boolean) => Promise<void>;
             openFileDialog: () => Promise<string>;
+            openJsonFileDialog: () => Promise<string>;
             openDirectoryDialog: () => Promise<string>;
+            saveFileDialog: (
+                defaultName: string,
+                formatLabel?: string
+            ) => Promise<string>;
+            writeFile: (
+                filePath: string,
+                buffer: ArrayBuffer
+            ) => Promise<boolean>;
+            readFile: (filePath: string) => Promise<string>;
             desktopNotification: (
                 displayName: string,
                 body?: string,
@@ -68,11 +77,11 @@ declare global {
             restartApp: () => Promise<void>;
             getOverlayWindow: () => Promise<boolean>;
             updateVr: (
-                active: boolean,
-                hmdOverlay: boolean,
-                wristOverlay: boolean,
-                menuButton: boolean,
-                overlayHand: number
+                active: bool,
+                hmdOverlay: bool,
+                wristOverlay: bool,
+                menuButton: bool,
+                overlayHand: int
             ) => Promise<void>;
             ipcRenderer: {
                 on(
@@ -243,6 +252,14 @@ declare global {
             defaultExt?: string,
             defaultFilter?: string
         ): Promise<string>;
+        SaveFileSelectorDialog(
+            defaultPath?: string,
+            defaultExt?: string,
+            defaultFilter?: string
+        ): Promise<string>;
+        ReadFileText(filePath: string): string;
+        WriteFileBytes(filePath: string, data: ArrayBuffer): void;
+        WriteFileText(filePath: string, text: string): void;
 
         // Game Handler
         OnProcessStateChanged(monitoredProcess: any): Promise<void>;
@@ -422,3 +439,4 @@ declare global {
 }
 
 export {};
+

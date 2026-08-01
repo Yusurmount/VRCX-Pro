@@ -1,3 +1,8 @@
+const REPOSITORY = 'Yusurmount/VRCX-Pro';
+const GITHU_API_URL = 'https://api.github.com/repos/Yusurmount/VRCX-Pro';
+const GITHUB_RELEASES_URL =
+    'https://github.com/Yusurmount/VRCX-Pro/releases/latest';
+
 const VRChatScreenshotResolutions = [
     { name: '1280x720 (720p)', width: 1280, height: 720 },
     { name: '1920x1080 (1080p Default)', width: '', height: '' },
@@ -16,13 +21,13 @@ const VRChatCameraResolutions = [
 const branches = {
     Stable: {
         name: 'Stable',
-        urlReleases: 'https://api0.vrcx.app/releases/stable',
-        urlLatest: 'https://api0.vrcx.app/releases/stable/latest'
+        urlReleases: `${GITHU_API_URL}/releases`,
+        urlLatest: `${GITHU_API_URL}/releases/latest`
     },
     Nightly: {
         name: 'Nightly',
-        urlReleases: 'https://api0.vrcx.app/releases/nightly',
-        urlLatest: 'https://api0.vrcx.app/releases/nightly/latest'
+        urlReleases: `${GITHU_API_URL}/releases`,
+        urlLatest: `${GITHU_API_URL}/releases/latest`
     }
     // LinuxTest: {
     //     name: 'LinuxTest',
@@ -38,10 +43,13 @@ const TABLE_MAX_SIZE_MAX = 10000;
 const SEARCH_LIMIT_MIN = 10000;
 const SEARCH_LIMIT_MAX = 100000;
 
-const DEFAULT_MAX_TABLE_SIZE = 500;
+const DEFAULT_MAX_TABLE_SIZE = -1;
 const DEFAULT_SEARCH_LIMIT = 50000;
 
 export {
+    REPOSITORY,
+    GITHU_API_URL,
+    GITHUB_RELEASES_URL,
     VRChatScreenshotResolutions,
     VRChatCameraResolutions,
     branches,

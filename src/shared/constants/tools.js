@@ -158,6 +158,16 @@ const toolDefinitions = [
         action: { type: 'dialog', dialogKey: 'auto-change-status' }
     },
     {
+        key: 'info-completion',
+        category: 'system',
+        iconKey: 'database',
+        navIcon: 'ri-database-2-line',
+        titleKey: 'view.tools.system_tools.info_completion',
+        descriptionKey: 'view.tools.system_tools.info_completion_description',
+        navEligible: true,
+        action: { type: 'dialog', dialogKey: 'infoCompletion' }
+    },
+    {
         key: 'group-calendar',
         category: 'group',
         iconKey: 'calendar',

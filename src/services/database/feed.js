@@ -47,6 +47,86 @@ const feed = {
         );
     },
 
+    async getLastBioChangeForUser(userId) {
+        let result = null;
+        await sqliteService.execute(
+            (row) => {
+                result = {
+                    bio: row[0],
+                    previousBio: row[1],
+                    createdAt: row[2]
+                };
+            },
+            `SELECT bio, previous_bio, created_at FROM ${dbVars.userPrefix}_feed_bio WHERE user_id = @userId ORDER BY id DESC LIMIT 1`,
+            {
+                '@userId': userId
+            }
+        );
+        return result;
+    },
+
+    async searchBiosByContent(query, limit = 10) {
+        const results = [];
+        const searchLike = `%${query}%`;
+        await sqliteService.execute(
+            (row) => {
+                results.push({
+                    userId: row[0],
+                    displayName: row[1],
+                    bio: row[2]
+                });
+            },
+            `SELECT fb.user_id, fb.display_name, fb.bio FROM ${dbVars.userPrefix}_feed_bio fb
+             WHERE fb.id IN (SELECT MAX(id) FROM ${dbVars.userPrefix}_feed_bio GROUP BY user_id)
+             AND fb.bio LIKE @searchLike
+             LIMIT @limit`,
+            {
+                '@searchLike': searchLike,
+                '@limit': limit
+            }
+        );
+        return results;
+    },
+
+    async getLastStatusChangeForUser(userId) {
+        let result = null;
+        await sqliteService.execute(
+            (row) => {
+                result = {
+                    status: row[0],
+                    statusDescription: row[1],
+                    previousStatus: row[2],
+                    previousStatusDescription: row[3],
+                    createdAt: row[4]
+                };
+            },
+            `SELECT status, status_description, previous_status, previous_status_description, created_at FROM ${dbVars.userPrefix}_feed_status WHERE user_id = @userId ORDER BY id DESC LIMIT 1`,
+            {
+                '@userId': userId
+            }
+        );
+        return result;
+    },
+
+    async getRecentBioChangesForUser(userId, limit = 50) {
+        const results = [];
+        await sqliteService.execute(
+            (row) => {
+                results.push({
+                    bio: row[0],
+                    previousBio: row[1],
+                    createdAt: row[2]
+                });
+            },
+            `SELECT bio, previous_bio, created_at FROM ${dbVars.userPrefix}_feed_bio WHERE user_id = @userId ORDER BY id DESC LIMIT @limit`,
+            {
+                '@userId': userId,
+                '@limit': limit
+            }
+        );
+        return results;
+    },
+
     addAvatarToDatabase(entry) {
         sqliteService.executeNonQuery(
             `INSERT OR IGNORE INTO ${dbVars.userPrefix}_feed_avatar (created_at, user_id, display_name, owner_id, avatar_name, current_avatar_image_url, current_avatar_thumbnail_image_url, previous_current_avatar_image_url, previous_current_avatar_thumbnail_image_url) VALUES (@created_at, @user_id, @display_name, @owner_id, @avatar_name, @current_avatar_image_url, @current_avatar_thumbnail_image_url, @previous_current_avatar_image_url, @previous_current_avatar_thumbnail_image_url)`,
@@ -101,6 +181,77 @@ const feed = {
                 '@group_name': entry.groupName
             }
         );
+    },
+
+    /**
+     * Returns all status change records for a specific user, ordered by time.
+     * Used to build the status distribution chart in the user dialog.
+     *
+     * @param {string} userId
+     * @returns {Promise<Array<{createdAt: string, status: string}>>}
+     */
+    async getStatusHistoryForUser(userId) {
+        const results = [];
+        await sqliteService.execute(
+            (row) => {
+                results.push({
+                    createdAt: row[0],
+                    status: row[1]
+                });
+            },
+            `SELECT created_at, status FROM ${dbVars.userPrefix}_feed_status WHERE user_id = @userId ORDER BY created_at ASC`,
+            { '@userId': userId }
+        );
+        return results;
+    },
+
+    /**
+     * Returns all online/offline records for a specific user, ordered by time.
+     * Used to calculate actual duration spent in each status.
+     *
+     * @param {string} userId
+     * @returns {Promise<Array<{createdAt: string, type: 'Online'|'Offline'}>>}
+     */
+    async getOnlineOfflineHistoryForUser(userId) {
+        const results = [];
+        await sqliteService.execute(
+            (row) => {
+                results.push({
+                    createdAt: row[0],
+                    type: row[1]
+                });
+            },
+            `SELECT created_at, type FROM ${dbVars.userPrefix}_feed_online_offline WHERE user_id = @userId ORDER BY created_at ASC`,
+            { '@userId': userId }
+        );
+        return results;
+    },
+
+    /**
+     * Returns the most recent timestamp at which a friend arrived at the given
+     * location, as recorded in the GPS feed table.  Works for both real
+     * instances and "private" / "private:private" locations.
+     *
+     * @param {string} userId
+     * @param {string} location
+     * @returns {Promise<number|null>} Unix timestamp (ms) or null
+     */
+    async getLastGPSArrivalTimeForUser(userId, location) {
+        let arrivalTime = null;
+        await sqliteService.execute(
+            (row) => {
+                const ts = Date.parse(row[0]);
+                if (!isNaN(ts)) {
+                    arrivalTime = ts;
+                }
+            },
+            `SELECT created_at FROM ${dbVars.userPrefix}_feed_gps WHERE user_id = @userId AND location = @location ORDER BY id DESC LIMIT 1`,
+            {
+                '@userId': userId,
+                '@location': location
+            }
+        );
+        return arrivalTime;
     },
 
     async searchFeedDatabase(
@@ -600,6 +751,9 @@ const feed = {
      * @returns {Promise<Array>} Ranked list of hot worlds
      */
     async getHotWorlds(days = 30, limit = 30) {
+        if (!dbVars.userPrefix) {
+            return [];
+        }
         const halfDays = Math.floor(days / 2);
         const results = [];
         await sqliteService.execute(
@@ -693,6 +847,9 @@ const feed = {
      * @returns {Promise<Array>} List of friends who visited
      */
     async getHotWorldFriendDetail(worldId, days = 30) {
+        if (!dbVars.userPrefix) {
+            return [];
+        }
         const results = [];
         await sqliteService.execute(
             (dbRow) => {

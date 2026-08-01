@@ -632,7 +632,6 @@ namespace VRCX
 
             // 2025.05.04 22:38:12 Error      -  Attempted to play an untrusted URL (Domain: localhost) that is not allowlisted for public instances. If this URL is needed for the world to work, the domain needs to be added to the world's Video Player Allowed Domains list on the website.
             const string youtubeBotError = "Sign in to confirm";
-            const string youtubeBotErrorFixUrl = "[VRCX] Fix error with this: https://github.com/EllyVR/VRCVideoCacher";
 
             if (line.Contains("[Video Playback] ERROR: "))
             {
@@ -641,7 +640,7 @@ namespace VRCX
                     return true;
 
                 if (data.Contains(youtubeBotError))
-                    data = $"{youtubeBotErrorFixUrl}\n{data}";
+                    data = $"[VRCX] YouTube sign-in error: This is caused by YouTube's anti-bot protection. Video playback may be limited." + Environment.NewLine + data;
 
                 AppendLog(new[]
                 {

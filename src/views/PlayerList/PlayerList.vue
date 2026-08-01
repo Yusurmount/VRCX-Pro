@@ -171,18 +171,36 @@
                     auto-height
                     :loading="false"
                     :show-pagination="false"
-                    :on-row-click="handlePlayerListRowClick" />
+                    :on-row-click="handlePlayerListRowClick">
+                    <template #toolbar>
+                        <div class="flex items-center justify-end">
+                            <Button size="sm" variant="outline" @click="filterDialogOpen = true">
+                                <Filter class="size-4" />
+                                <span class="ml-1.5">{{ t('view.player_list.filter.toolbar_button') }}</span>
+                                <Badge v-if="activeFilterCount > 0" variant="secondary" class="ml-1.5">
+                                    {{ activeFilterCount }}
+                                </Badge>
+                            </Button>
+                        </div>
+                    </template>
+                </DataTableLayout>
             </div>
         </div>
         <ChatboxBlacklistDialog
             :chatbox-blacklist-dialog="chatboxBlacklistDialog"
             @delete-chatbox-user-blacklist="deleteChatboxUserBlacklist" />
+        <PlayerListFilterDialog
+            v-if="filterDialogOpen"
+            v-model:open="filterDialogOpen"
+            :initial-state="activeFilter"
+            :group-search-list="groupSearchList"
+            @apply="handleApplyFilter" />
     </div>
 </template>
 
 <script setup>
     import { computed, onActivated, onMounted, ref, watch } from 'vue';
-    import { Apple, Home, Image, Monitor, Smartphone } from 'lucide-vue-next';
+    import { Apple, Filter, Home, Image, Monitor, Smartphone } from 'lucide-vue-next';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
 
@@ -194,13 +212,24 @@
         usePhotonStore,
         useUserStore
     } from '../../stores';
-    import { commaNumber, formatDateFilter } from '../../shared/utils';
+    import { commaNumber, createRateLimiter, executeWithBackoff, formatDateFilter } from '../../shared/utils';
     import { Badge } from '../../components/ui/badge';
+    import { Button } from '../../components/ui/button';
     import { DataTableLayout } from '../../components/ui/data-table';
     import { createColumns } from './columns.jsx';
     import { useVrcxVueTable } from '../../lib/table/useVrcxVueTable';
+    import { database } from '../../services/database';
+    import { groupRequest } from '../../api';
+    import {
+        cloneFilterState,
+        countActiveFilters,
+        createDefaultFilterState,
+        matchesPlayerFilters,
+        normalizeRoomPlayerStats
+    } from './playerListFilters';
 
     import ChatboxBlacklistDialog from './dialogs/ChatboxBlacklistDialog.vue';
+    import PlayerListFilterDialog from './dialogs/PlayerListFilterDialog.vue';
     import Timer from '../../components/Timer.vue';
     import { showUserDialog, lookupUser } from '../../coordinators/userCoordinator';
     import { showWorldDialog } from '../../coordinators/worldCoordinator';
@@ -306,10 +335,147 @@
         })
     );
 
+    // --- Advanced filter ---
+    const filterDialogOpen = ref(false);
+    const activeFilter = ref(createDefaultFilterState());
+    const roomPlayerStats = ref(new Map());
+    const mutualSnapshot = ref(new Map());
+    const playerGroupMap = ref(new Map());
+    const groupSearchList = ref([]);
+    const groupDetails = new Map();
+    const groupFetching = ref(false);
+    const groupRateLimiter = createRateLimiter({ limitPerInterval: 5, intervalMs: 1000 });
+
+    const activeFilterCount = computed(() => countActiveFilters(activeFilter.value));
+
+    const filteredPlayerListData = computed(() => {
+        if (activeFilterCount.value === 0) {
+            return currentInstanceUsersData.value;
+        }
+        const runtime = {
+            roomPlayerStats: roomPlayerStats.value,
+            mutualSnapshot: mutualSnapshot.value,
+            playerGroupMap: playerGroupMap.value,
+            now: Date.now()
+        };
+        return currentInstanceUsersData.value.filter((row) => matchesPlayerFilters(row, activeFilter.value, runtime));
+    });
+
+    /**
+     * Fetch the groups every player in the room has joined (deduplicated) so
+     * the filter dialog can offer them as selectable candidates, and the
+     * matching logic can tell whether a player joined a chosen group.
+     */
+    async function loadFilterGroupsData() {
+        const users = currentInstanceUsersData.value;
+        const seen = new Set();
+        const toFetch = [];
+        for (const row of users) {
+            const userId = row?.ref?.id;
+            if (userId && !playerGroupMap.value.has(userId) && !seen.has(userId)) {
+                seen.add(userId);
+                toFetch.push(userId);
+            }
+        }
+        if (toFetch.length === 0 || groupFetching.value) {
+            return;
+        }
+        groupFetching.value = true;
+        try {
+            let index = 0;
+            const worker = async () => {
+                while (index < toFetch.length) {
+                    const userId = toFetch[index++];
+                    const groupIds = new Set();
+                    try {
+                        const args = await groupRateLimiter.schedule(() =>
+                            executeWithBackoff(
+                                () => groupRequest.getGroups({ userId }),
+                                {
+                                    maxRetries: 4,
+                                    baseDelay: 1000,
+                                    shouldRetry: (err) =>
+                                        err?.status === 429 || (err?.message ?? '').includes('429')
+                                }
+                            )
+                        );
+                        for (const group of args?.json ?? []) {
+                            if (!group?.id) continue;
+                            groupIds.add(group.id);
+                            if (!groupDetails.has(group.id)) {
+                                groupDetails.set(group.id, {
+                                    id: group.id,
+                                    name: group.name,
+                                    shortCode: group.shortCode ?? '',
+                                    discriminator: group.discriminator ?? ''
+                                });
+                            }
+                        }
+                        playerGroupMap.value.set(userId, groupIds);
+                    } catch {
+                        // fall back to nameplate group
+                    }
+                    playerGroupMap.value = new Map(playerGroupMap.value);
+                    groupSearchList.value = Array.from(groupDetails.values()).sort((a, b) =>
+                        (a.name ?? '').localeCompare(b.name ?? '')
+                    );
+                }
+            };
+            await Promise.all(Array.from({ length: Math.min(5, Math.max(toFetch.length, 1)) }, worker));
+        } finally {
+            groupFetching.value = false;
+        }
+    }
+
+    function resetFilterGroupsData() {
+        playerGroupMap.value = new Map();
+        groupSearchList.value = [];
+        groupDetails.clear();
+    }
+
+    async function loadFilterRuntimeData() {
+        const locationTag = currentInstanceLocation.value?.tag;
+        try {
+            const [playersMap, mutuals] = await Promise.all([
+                locationTag ? database.getPlayersFromInstance(locationTag) : Promise.resolve(new Map()),
+                database.getMutualGraphSnapshot()
+            ]);
+            roomPlayerStats.value = normalizeRoomPlayerStats(playersMap);
+            mutualSnapshot.value = mutuals ?? new Map();
+        } catch (err) {
+            console.error('[PlayerList] Failed to load filter runtime data', err);
+            roomPlayerStats.value = new Map();
+            mutualSnapshot.value = new Map();
+        }
+    }
+
+    function handleApplyFilter(state) {
+        activeFilter.value = cloneFilterState(state ?? createDefaultFilterState());
+    }
+
+    watch(
+        () => currentInstanceLocation.value?.tag,
+        () => {
+            resetFilterGroupsData();
+            loadFilterRuntimeData();
+            loadFilterGroupsData();
+        },
+        { immediate: true }
+    );
+
+    watch(
+        () => filterDialogOpen.value,
+        (value) => {
+            if (value) {
+                loadFilterGroupsData();
+            }
+        }
+    );
+
     const { table: playerListTable } = useVrcxVueTable({
         persistKey: 'playerList',
         get data() {
-            return currentInstanceUsersData.value;
+            return filteredPlayerListData.value;
         },
         columns: playerListColumns,
         enablePagination: false,

@@ -61,9 +61,6 @@ export const useAppearanceSettingsStore = defineStore(
         const customFontFamily = ref('');
         const appCjkFontPack = ref(APP_CJK_FONT_PACK_DEFAULT_KEY);
         const displayVRCPlusIconsAsAvatar = ref(false);
-        const displayVRCProfileThemes = ref(false);
-        const displayVRCProfileBackgrounds = ref(false);
-        const profileBackgroundOpacity = ref(0.2);
         const hideNicknames = ref(false);
         const showInstanceIdInLocation = ref(false);
         const isAgeGatedInstancesVisible = ref(false);
@@ -114,16 +111,18 @@ export const useAppearanceSettingsStore = defineStore(
                 'friend-list',
                 'charts-instance',
                 'charts-mutual',
-                'charts-hot-worlds'
+                'charts-hot-worlds',
+                'charts-two-person'
             ].includes(currentRouteName);
         });
 
         const isDataTableStriped = ref(false);
         const accessibleStatusIndicators = ref(false);
+        const useOfficialStatusColors = ref(true);
         const showNewDashboardButton = ref(true);
         const tableLimitsDialog = ref({
             visible: false,
-            maxTableSize: 500,
+            maxTableSize: -1,
             searchLimit: 5000
         });
 
@@ -143,8 +142,7 @@ export const useAppearanceSettingsStore = defineStore(
          *
          */
         async function initAppearanceSettings() {
-            const { initThemeMode, isDarkMode: initDarkMode } =
-                await getThemeMode(configRepository);
+            const { initThemeMode } = await getThemeMode(configRepository);
             const fallbackDarkTheme =
                 THEME_CONFIG[initThemeMode]?.isDark === true
                     ? initThemeMode
@@ -152,9 +150,6 @@ export const useAppearanceSettingsStore = defineStore(
             const [
                 appLanguageConfig,
                 displayVRCPlusIconsAsAvatarConfig,
-                displayVRCProfileThemesConfig,
-                displayVRCProfileBackgroundsConfig,
-                profileBackgroundOpacityConfig,
                 hideNicknamesConfig,
                 showInstanceIdInLocationConfig,
                 isAgeGatedInstancesVisibleConfig,
@@ -184,6 +179,7 @@ export const useAppearanceSettingsStore = defineStore(
                 navIsCollapsedConfig,
                 dataTableStripedConfig,
                 accessibleStatusIndicatorsConfig,
+                useOfficialStatusColorsConfig,
                 showNewDashboardButtonConfig,
                 appFontFamilyConfig,
                 customFontFamilyConfig,
@@ -192,12 +188,6 @@ export const useAppearanceSettingsStore = defineStore(
             ] = await Promise.all([
                 configRepository.getString('VRCX_appLanguage'),
                 configRepository.getBool('displayVRCPlusIconsAsAvatar', true),
-                configRepository.getBool('VRCX_displayVRCProfileThemes', true),
-                configRepository.getBool(
-                    'VRCX_displayVRCProfileBackgrounds',
-                    false
-                ),
-                configRepository.getFloat('VRCX_profileBackgroundOpacity', 0.2),
                 configRepository.getBool('VRCX_hideNicknames', false),
                 configRepository.getBool(
                     'VRCX_showInstanceIdInLocation',
@@ -264,6 +254,7 @@ export const useAppearanceSettingsStore = defineStore(
                     'VRCX_accessibleStatusIndicators',
                     false
                 ),
+                configRepository.getBool('VRCX_useOfficialStatusColors', true),
                 configRepository.getBool('VRCX_showNewDashboardButton', true),
                 configRepository.getString(
                     'VRCX_fontFamily',
@@ -292,7 +283,10 @@ export const useAppearanceSettingsStore = defineStore(
             }
 
             themeMode.value = initThemeMode;
-            isDarkMode.value = initDarkMode;
+            {
+                const { isDark } = changeAppThemeStyle(initThemeMode);
+                isDarkMode.value = isDark;
+            }
             lastDarkTheme.value = resolveLastDarkTheme(
                 lastDarkThemeConfig,
                 fallbackDarkTheme
@@ -314,10 +308,6 @@ export const useAppearanceSettingsStore = defineStore(
 
             displayVRCPlusIconsAsAvatar.value =
                 displayVRCPlusIconsAsAvatarConfig;
-            displayVRCProfileThemes.value = displayVRCProfileThemesConfig;
-            displayVRCProfileBackgrounds.value =
-                displayVRCProfileBackgroundsConfig;
-            profileBackgroundOpacity.value = profileBackgroundOpacityConfig;
             hideNicknames.value = hideNicknamesConfig;
             showInstanceIdInLocation.value = showInstanceIdInLocationConfig;
             isAgeGatedInstancesVisible.value = isAgeGatedInstancesVisibleConfig;
@@ -387,9 +377,11 @@ export const useAppearanceSettingsStore = defineStore(
             isNavCollapsed.value = navIsCollapsedConfig;
             isDataTableStriped.value = dataTableStripedConfig;
             accessibleStatusIndicators.value = accessibleStatusIndicatorsConfig;
+            useOfficialStatusColors.value = useOfficialStatusColorsConfig;
             showNewDashboardButton.value = showNewDashboardButtonConfig;
 
             applyAccessibleStatusClass();
+            applyOfficialStatusColorsClass();
 
             await configRepository.remove('VRCX_navWidth');
 
@@ -491,7 +483,7 @@ export const useAppearanceSettingsStore = defineStore(
                 console.warn('No user colour data found');
                 return;
             }
-            if (LINUX) {
+            if (typeof CefSharp === 'undefined') {
                 // @ts-ignore
                 dictObject = Object.fromEntries(dictObject);
             }
@@ -623,38 +615,6 @@ export const useAppearanceSettingsStore = defineStore(
                 displayVRCPlusIconsAsAvatar.value
             );
         }
-
-        /**
-         *
-         */
-        function setDisplayVRCProfileThemes() {
-            displayVRCProfileThemes.value = !displayVRCProfileThemes.value;
-            configRepository.setBool(
-                'VRCX_displayVRCProfileThemes',
-                displayVRCProfileThemes.value
-            );
-        }
-
-        /**
-         *
-         */
-        function setDisplayVRCProfileBackgrounds() {
-            displayVRCProfileBackgrounds.value =
-                !displayVRCProfileBackgrounds.value;
-            configRepository.setBool(
-                'VRCX_displayVRCProfileBackgrounds',
-                displayVRCProfileBackgrounds.value
-            );
-        }
-
-        /**
-         *
-         */
-        function setProfileBackgroundOpacity(value) {
-            profileBackgroundOpacity.value = value;
-            configRepository.setFloat('VRCX_profileBackgroundOpacity', value);
-        }
-
         /**
          *
          */
@@ -1004,6 +964,30 @@ export const useAppearanceSettingsStore = defineStore(
         /**
          *
          */
+        function applyOfficialStatusColorsClass() {
+            const classList = document.documentElement.classList;
+            classList.remove('vrcx-status-colors');
+
+            if (!useOfficialStatusColors.value) {
+                classList.add('vrcx-status-colors');
+            }
+        }
+
+        /**
+         *
+         */
+        function toggleOfficialStatusColors() {
+            useOfficialStatusColors.value = !useOfficialStatusColors.value;
+            configRepository.setBool(
+                'VRCX_useOfficialStatusColors',
+                useOfficialStatusColors.value
+            );
+            applyOfficialStatusColorsClass();
+        }
+
+        /**
+         *
+         */
         function setShowNewDashboardButton() {
             showNewDashboardButton.value = !showNewDashboardButton.value;
             configRepository.setBool(
@@ -1110,6 +1094,7 @@ export const useAppearanceSettingsStore = defineStore(
             if (!Number.isFinite(n)) {
                 return null;
             }
+            if (n === -1) return -1;
             if (n < min || n > max) {
                 return null;
             }
@@ -1121,7 +1106,7 @@ export const useAppearanceSettingsStore = defineStore(
          */
         function showTableLimitsDialog() {
             tableLimitsDialog.value.maxTableSize = Number(
-                vrcxStore.maxTableSize ?? 500
+                vrcxStore.maxTableSize ?? -1
             );
             tableLimitsDialog.value.searchLimit = Number(
                 vrcxStore.searchLimit ?? 50000
@@ -1214,9 +1199,6 @@ export const useAppearanceSettingsStore = defineStore(
             appFontFamily,
             appCjkFontPack,
             displayVRCPlusIconsAsAvatar,
-            displayVRCProfileThemes,
-            displayVRCProfileBackgrounds,
-            profileBackgroundOpacity,
             hideNicknames,
             showInstanceIdInLocation,
             isAgeGatedInstancesVisible,
@@ -1250,6 +1232,7 @@ export const useAppearanceSettingsStore = defineStore(
             isNavCollapsed,
             isDataTableStriped,
             accessibleStatusIndicators,
+            useOfficialStatusColors,
             showNewDashboardButton,
             tableLimitsDialog,
             TABLE_MAX_SIZE_MIN,
@@ -1259,9 +1242,6 @@ export const useAppearanceSettingsStore = defineStore(
 
             setAppLanguage,
             setDisplayVRCPlusIconsAsAvatar,
-            setDisplayVRCProfileThemes,
-            setDisplayVRCProfileBackgrounds,
-            setProfileBackgroundOpacity,
             setHideNicknames,
             setShowInstanceIdInLocation,
             setIsAgeGatedInstancesVisible,
@@ -1289,6 +1269,7 @@ export const useAppearanceSettingsStore = defineStore(
             setRandomUserColours,
             toggleStripedDataTable,
             toggleAccessibleStatusIndicators,
+            toggleOfficialStatusColors,
             setShowNewDashboardButton,
             setTableDensity,
             setTrustColor,

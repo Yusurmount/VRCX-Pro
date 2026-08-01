@@ -14,8 +14,7 @@
                             <ToggleGroupItem
                                 value="sessions"
                                 class="px-2"
-                                :class="sessionsViewMode === 'sessions' && 'bg-accent text-accent-foreground'"
-                                :ariaLabel="t('view.game_log.sessions.switch_to_sessions')">
+                                :class="sessionsViewMode === 'sessions' && 'bg-accent text-accent-foreground'">
                                 <Logs class="size-4" />
                             </ToggleGroupItem>
                         </TooltipWrapper>
@@ -23,8 +22,7 @@
                             <ToggleGroupItem
                                 value="table"
                                 class="px-2"
-                                :class="sessionsViewMode === 'table' && 'bg-accent text-accent-foreground'"
-                                :ariaLabel="t('view.game_log.sessions.switch_to_table')">
+                                :class="sessionsViewMode === 'table' && 'bg-accent text-accent-foreground'">
                                 <Table2 class="size-4" />
                             </ToggleGroupItem>
                         </TooltipWrapper>
@@ -55,8 +53,7 @@
                                     <ToggleGroupItem
                                         value="sessions"
                                         class="px-2"
-                                        :class="sessionsViewMode === 'sessions' && 'bg-accent text-accent-foreground'"
-                                        :ariaLabel="t('view.game_log.sessions.switch_to_sessions')">
+                                        :class="sessionsViewMode === 'sessions' && 'bg-accent text-accent-foreground'">
                                         <Logs class="size-4" />
                                     </ToggleGroupItem>
                                 </TooltipWrapper>
@@ -64,8 +61,7 @@
                                     <ToggleGroupItem
                                         value="table"
                                         class="px-2"
-                                        :class="sessionsViewMode === 'table' && 'bg-accent text-accent-foreground'"
-                                        :ariaLabel="t('view.game_log.sessions.switch_to_table')">
+                                        :class="sessionsViewMode === 'table' && 'bg-accent text-accent-foreground'">
                                         <Table2 class="size-4" />
                                     </ToggleGroupItem>
                                 </TooltipWrapper>
@@ -76,15 +72,13 @@
                                         variant="outline"
                                         size="sm"
                                         :model-value="gameLogTable.vip"
-                                        :ariaLabel="t('view.feed.favorites_only_tooltip')"
                                         @update:modelValue="
                                             (v) => {
                                                 gameLogTable.vip = v;
                                                 gameLogTableLookup();
                                             }
                                         ">
-                                        <Star fill="currentColor" v-if="gameLogTable.vip" />
-                                        <Star v-else />
+                                        <Star />
                                     </Toggle>
                                 </div>
                             </TooltipWrapper>
@@ -124,26 +118,37 @@
                             style="flex: 0.4"
                             @keyup.enter="gameLogTableLookup"
                             @change="gameLogTableLookup" />
+                        <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showExportDialog = true">
+                            <Download class="h-4 w-4" />
+                        </Button>
                     </div>
                 </template>
             </DataTableLayout>
         </template>
+        <DataExportDialog
+            v-model:visible="showExportDialog"
+            :title="t('view.game_log.header')"
+            default-file-name="game-log"
+            :sheet-name="t('view.game_log.header')"
+            :get-data="getExportData" />
     </div>
 </template>
 
 <script setup>
     import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { computed, ref } from 'vue';
-    import { Logs, Star, Table2 } from 'lucide-vue-next';
+    import { Logs, Star, Table2, Download } from 'lucide-vue-next';
     import { Toggle } from '@/components/ui/toggle';
     import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
 
     import { useAppearanceSettingsStore, useGameLogStore, useModalStore, useVrcxStore } from '../../stores';
+    import { Button } from '../../components/ui/button';
     import { DataTableLayout } from '../../components/ui/data-table';
     import { InputGroupField } from '../../components/ui/input-group';
     import { TooltipWrapper } from '../../components/ui/tooltip';
+    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
     import { createColumns } from './columns.jsx';
     import { database } from '../../services/database';
     import { removeFromArray } from '../../shared/utils';
@@ -155,6 +160,12 @@
     const appearanceSettingsStore = useAppearanceSettingsStore();
     const vrcxStore = useVrcxStore();
     const modalStore = useModalStore();
+
+    const showExportDialog = ref(false);
+
+    function getExportData() {
+        return gameLogTableData.value ?? [];
+    }
 
     /**
      *
@@ -222,7 +233,7 @@
      * @param row
      */
     function getGameLogRowId(row) {
-        if (row?.rowId != null) return `row:${row.rowId}:${row?.type ?? ''}`;
+        if (row?.rowId != null) return `row:${row.rowId}`;
 
         const type = row?.type ?? '';
         const createdAt = row?.created_at ?? row?.createdAt ?? row?.dt ?? '';
@@ -230,7 +241,7 @@
         const displayName = row?.displayName ?? '';
         const location = row?.location ?? '';
 
-        return `${type}:${createdAt}:${userId}:${displayName}:${location}:${Date.now()}`;
+        return `${type}:${createdAt}:${userId}:${displayName}:${location}`;
     }
 
     const { table, pagination } = useVrcxVueTable({

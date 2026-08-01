@@ -16,6 +16,9 @@
                 @search="searchFriendFavorites"
                 @import="handleFriendImportClick"
                 @export="handleFriendExportClick" />
+            <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showExportDialog = true">
+                <Download class="h-4 w-4" />
+            </Button>
             <ResizablePanelGroup
                 ref="splitterGroupRef"
                 direction="horizontal"
@@ -39,7 +42,6 @@
                                         variant="ghost"
                                         size="icon-sm"
                                         :disabled="isFavoriteLoading"
-                                        :ariaLabel="t('view.favorite.refresh_favorites_tooltip')"
                                         @click.stop="handleRefreshFavorites">
                                         <Spinner v-if="isFavoriteLoading" />
                                         <RefreshCw v-else />
@@ -77,7 +79,6 @@
                                                         class="rounded-full"
                                                         variant="ghost"
                                                         size="icon-sm"
-                                                        :ariaLabel="t('nav_tooltip.manage')"
                                                         @click.stop>
                                                         <MoreHorizontal />
                                                     </Button>
@@ -132,7 +133,6 @@
                                     class="rounded-full"
                                     size="icon-sm"
                                     variant="ghost"
-                                    :ariaLabel="t('common.actions.refresh')"
                                     @click.stop="getLocalFriendFavorites"
                                     ><RefreshCcw />
                                 </Button>
@@ -332,11 +332,17 @@
             </ResizablePanelGroup>
         </div>
         <FriendExportDialog v-model:friendExportDialogVisible="friendExportDialogVisible" />
+        <DataExportDialog
+            v-model:visible="showExportDialog"
+            :title="t('view.favorites.friends')"
+            default-file-name="favorite-friends"
+            sheet-name="Favorite Friends"
+            :get-data="getExportData" />
     </div>
 </template>
 
 <script setup>
-    import { Ellipsis, MoreHorizontal, Plus, RefreshCcw, RefreshCw, User } from 'lucide-vue-next';
+    import { Download, Ellipsis, MoreHorizontal, Plus, RefreshCcw, RefreshCw, User } from 'lucide-vue-next';
     import { computed, ref, watch } from 'vue';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import { Button } from '@/components/ui/button';
@@ -380,6 +386,7 @@
     import FavoritesFriendItem from './components/FavoritesFriendItem.vue';
     import FavoritesToolbar from './components/FavoritesToolbar.vue';
     import FriendExportDialog from './dialogs/FriendExportDialog.vue';
+    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
 
     const { userImage } = useUserDisplay();
     const friendGroupVisibilityOptions = ref(['public', 'friends', 'private']);
@@ -462,6 +469,25 @@
     });
 
     const friendExportDialogVisible = ref(false);
+    const showExportDialog = ref(false);
+
+    /**
+     *
+     */
+    function getExportData() {
+        const result = [];
+        for (const [groupName, userIds] of Object.entries(localFriendFavorites.value)) {
+            for (const userId of userIds) {
+                const user = cachedUsers.value.get(userId);
+                result.push({
+                    groupId: groupName,
+                    userId,
+                    displayName: user?.displayName || userId
+                });
+            }
+        }
+        return result;
+    }
     const friendFavoriteSearch = ref('');
     const friendFavoriteSearchResults = ref([]);
     const friendEditMode = ref(false);

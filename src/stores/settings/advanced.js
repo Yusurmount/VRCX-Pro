@@ -71,7 +71,6 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
     const vrcRegistryAutoBackup = ref(true);
     const vrcRegistryAskRestore = ref(true);
     const sentryErrorReporting = ref(false);
-
     watch(
         () => watchState.isLoggedIn,
         () => {
@@ -118,7 +117,7 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
             saveInstanceEmojiConfig,
             vrcRegistryAutoBackupConfig,
             vrcRegistryAskRestoreConfig,
-            sentryErrorReportingConfig
+            sentryErrorReportingConfig,
         ] = await Promise.all([
             configRepository.getBool('enablePrimaryPassword', false),
             configRepository.getString('VRCX_bioLanguage'),
@@ -167,7 +166,7 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
             configRepository.getBool('VRCX_saveInstanceEmoji', false),
             configRepository.getBool('VRCX_vrcRegistryAutoBackup', true),
             configRepository.getBool('VRCX_vrcRegistryAskRestore', true),
-            configRepository.getString('VRCX_SentryEnabled', '')
+            configRepository.getString('VRCX_SentryEnabled', ''),
         ]);
 
         if (!bioLanguageConfig || !languageCodes.includes(bioLanguageConfig)) {
@@ -884,7 +883,7 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
             'Content-Type': 'application/json',
             Referer: 'https://vrcx.app',
             'HTTP-Referer': 'https://vrcx.app',
-            'X-Title': 'VRCX'
+            'X-Title': 'VRCX-Pro'
         };
         const keyToUse = overrides?.key ?? translationApiKey.value;
         if (keyToUse) {
@@ -1040,7 +1039,7 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
 
         state.folderSelectorDialogVisible = true;
         let newFolder = '';
-        if (WINDOWS) {
+        if (typeof CefSharp !== 'undefined') {
             newFolder = await AppApi.OpenFolderSelectorDialog(oldPath);
         } else {
             newFolder = await window.electron.openDirectoryDialog();

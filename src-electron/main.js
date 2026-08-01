@@ -14,8 +14,9 @@ const {
 const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const https = require('https');
+const crypto = require('crypto');
 
-//app.disableHardwareAcceleration();
+app.disableHardwareAcceleration();
 
 const bundledDotNetPath = path.join(process.resourcesPath, 'dotnet-runtime');
 if (fs.existsSync(bundledDotNetPath)) {
@@ -37,8 +38,8 @@ if (fs.existsSync(bundledDotNetPath)) {
 if (!isDotNetInstalled()) {
     app.whenReady().then(() => {
         dialog.showErrorBox(
-            'VRCX',
-            'Please install .NET 9.0 Runtime "dotnet-runtime-9.0" to run VRCX.'
+            'VRCX-Pro',
+            'Please install .NET 9.0 Runtime "dotnet-runtime-9.0" to run VRCX-Pro.'
         );
         app.quit();
     });
@@ -189,6 +190,21 @@ ipcMain.handle('dialog:openFile', async () => {
     return null;
 });
 
+ipcMain.handle('dialog:openJsonFile', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openFile'],
+        filters: [
+            { name: 'VRCX Database Backup', extensions: ['json'] },
+            { name: 'All Files', extensions: ['*'] }
+        ]
+    });
+
+    if (!result.canceled && result.filePaths.length > 0) {
+        return result.filePaths[0];
+    }
+    return null;
+});
+
 ipcMain.handle('dialog:openDirectory', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
         properties: ['openDirectory']
@@ -198,6 +214,44 @@ ipcMain.handle('dialog:openDirectory', async () => {
         return result.filePaths[0];
     }
     return null;
+});
+
+ipcMain.handle('dialog:saveFile', async (_event, defaultName, formatLabel) => {
+    const ext = path.extname(defaultName);
+    const filters = [];
+    if (formatLabel) {
+        filters.push({ name: formatLabel, extensions: [ext.replace('.', '')] });
+    }
+    filters.push({ name: 'All Files', extensions: ['*'] });
+
+    const result = await dialog.showSaveDialog(mainWindow, {
+        defaultPath: defaultName,
+        filters
+    });
+
+    if (!result.canceled && result.filePath) {
+        return result.filePath;
+    }
+    return null;
+});
+
+ipcMain.handle('app:writeFile', async (_event, filePath, buffer) => {
+    try {
+        fs.writeFileSync(filePath, Buffer.from(buffer));
+        return true;
+    } catch (e) {
+        console.error('app:writeFile error:', e);
+        throw e;
+    }
+});
+
+ipcMain.handle('app:readFile', async (_event, filePath) => {
+    try {
+        return fs.readFileSync(filePath, 'utf-8');
+    } catch (e) {
+        console.error('app:readFile error:', e);
+        throw e;
+    }
 });
 
 ipcMain.handle('notification:showNotification', (event, title, body, icon) => {
@@ -271,6 +325,9 @@ ipcMain.handle(
 ipcMain.handle('app:getArch', () => {
     return process.arch.toString();
 });
+ipcMain.handle('app:getGpuFeatureStatus', () => {
+    return app.getGPUFeatureStatus();
+});
 ipcMain.handle('app:getClipboardText', () => {
     return clipboard.readText();
 });
@@ -281,6 +338,61 @@ ipcMain.handle('app:getNoUpdater', () => {
 
 ipcMain.handle('app:setTrayIconNotification', (event, notify) => {
     setTrayIconNotification(notify);
+});
+
+// ── Machine-bound credential encryption (M-4) ──
+// Generates a machine-specific encryption key stored in userData directory.
+// Used to encrypt credentials when no primary password is set.
+
+const MACHINE_KEY_PATH = path.join(
+    app.getPath('userData'),
+    '.vrcx_machine_key'
+);
+
+function getOrCreateMachineKey() {
+    try {
+        if (fs.existsSync(MACHINE_KEY_PATH)) {
+            const key = fs.readFileSync(MACHINE_KEY_PATH, 'utf-8').trim();
+            if (key.length >= 32) return Buffer.from(key, 'hex');
+        }
+    } catch (e) {
+        console.error('Error reading machine key:', e.message);
+    }
+    // Generate a new key
+    const key = crypto.randomBytes(32);
+    try {
+        fs.writeFileSync(MACHINE_KEY_PATH, key.toString('hex'), {
+            mode: 0o600
+        });
+    } catch (e) {
+        console.error('Error writing machine key:', e.message);
+    }
+    return key;
+}
+
+ipcMain.handle('app:machineEncrypt', async (_event, plaintext) => {
+    const key = getOrCreateMachineKey();
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+    let encrypted = cipher.update(plaintext, 'utf-8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+});
+
+ipcMain.handle('app:machineDecrypt', async (_event, encryptedData) => {
+    try {
+        const key = getOrCreateMachineKey();
+        const parts = encryptedData.split(':');
+        const iv = Buffer.from(parts[0], 'hex');
+        const encrypted = parts[1];
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        let decrypted = decipher.update(encrypted, 'hex', 'utf-8');
+        decrypted += decipher.final('utf-8');
+        return decrypted;
+    } catch (e) {
+        console.error('Machine decrypt error:', e.message);
+        throw e;
+    }
 });
 
 function tryRelaunchWithArgs(args) {
@@ -322,11 +434,13 @@ function createWindow() {
     const width = parseInt(VRCXStorage.Get('VRCX_SizeWidth')) || 1920;
     const height = parseInt(VRCXStorage.Get('VRCX_SizeHeight')) || 1080;
     const zoomLevel = parseFloat(VRCXStorage.Get('VRCX_ZoomLevel')) || 0;
+    const windowTitle = `VRCX-Pro+${fs.readFileSync(path.join(rootDir, 'Version'), 'utf8').trim()}`;
     mainWindow = new BrowserWindow({
         x,
         y,
         width,
         height,
+        title: windowTitle,
         icon: path.join(rootDir, 'images/VRCX.png'),
         autoHideMenuBar: true,
         titleBarStyle: 'hiddenInset',
@@ -545,7 +659,7 @@ function createTray() {
             }
         },
         {
-            label: 'Quit VRCX',
+            label: 'Quit VRCX-Pro',
             type: 'normal',
             click: function () {
                 appIsQuitting = true;
@@ -553,7 +667,7 @@ function createTray() {
             }
         }
     ]);
-    tray.setToolTip('VRCX');
+    tray.setToolTip('VRCX-Pro');
     tray.setContextMenu(contextMenu);
 
     tray.on('click', () => {
@@ -661,7 +775,7 @@ async function createDesktopFile() {
             fs.mkdirSync(iconDir, { recursive: true });
         }
         const iconUrl =
-            'https://raw.githubusercontent.com/vrcx-team/VRCX/master/images/VRCX.png';
+            'https://raw.githubusercontent.com/Yusurmount/VRCX-Pro/master/images/VRCX.png';
         await downloadIcon(iconUrl, iconPath)
             .then(() => {
                 console.log('Icon downloaded and saved to:', iconPath);
@@ -679,9 +793,9 @@ async function createDesktopFile() {
     );
 
     const dotDesktop = {
-        Name: 'VRCX',
+        Name: 'VRCX-Pro',
         Version: version,
-        Comment: 'Friendship management tool for VRChat',
+        Comment: 'Friendship management tool for VRChat (VRCX-Pro)',
         Exec: `${appImagePath} --ozone-platform-hint=auto %U`,
         Icon: 'VRCX',
         Type: 'Application',
@@ -810,13 +924,13 @@ function getVersion() {
         const version = versionFile.split('-');
         console.log('Version:', versionFile);
         if (version.length > 0 && version[version.length - 1].length == 7) {
-            return `VRCX (Linux) Nightly ${versionFile}`;
+            return `VRCX-Pro (Linux) Nightly ${versionFile}`;
         } else {
-            return `VRCX (Linux) ${versionFile}`;
+            return `VRCX-Pro (Linux) ${versionFile}`;
         }
     } catch (err) {
         console.error('Error reading Version:', err);
-        return 'VRCX (Linux) Nightly Build';
+        return 'VRCX-Pro (Linux) Nightly Build';
     }
 }
 
@@ -907,6 +1021,39 @@ function applyWindowState() {
 }
 
 app.whenReady().then(() => {
+    // #region debug-point A:gpu-status
+    try {
+        const __dbgPayload = JSON.stringify({
+            sessionId: 'dialog-blur-lag',
+            runId: 'pre-fix',
+            hypothesisId: 'A',
+            location: 'main.js:whenReady',
+            msg: '[DEBUG] gpu feature status',
+            data: {
+                gpu: app.getGPUFeatureStatus(),
+                platform: process.platform,
+                electron: process.versions.electron
+            },
+            ts: Date.now()
+        });
+        const __dbgReq = require('http').request(
+            {
+                hostname: '127.0.0.1',
+                port: 7777,
+                path: '/event',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(__dbgPayload)
+                }
+            },
+            () => {}
+        );
+        __dbgReq.on('error', () => {});
+        __dbgReq.write(__dbgPayload);
+        __dbgReq.end();
+    } catch {}
+    // #endregion
     createWindow();
     createTray();
     installVRCX();

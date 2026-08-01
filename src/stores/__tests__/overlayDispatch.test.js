@@ -263,7 +263,7 @@ describe('displayXSNotification', () => {
             'friendOnline'
         );
         expect(AppApi.XSNotification).toHaveBeenCalledWith(
-            'VRCX',
+            'VRCX-Pro',
             'Title: Body',
             5, // 5000ms / 1000
             0.8, // 80 / 100

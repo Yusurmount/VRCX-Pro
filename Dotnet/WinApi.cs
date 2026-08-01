@@ -8,10 +8,10 @@ namespace VRCX
 {
     public static class WinApi
     {
-        private static List<(List<string>, string, string)> CpuErrorMessages = new List<(List<string>, string, string)>()
+        private static List<(List<string>, string)> CpuErrorMessages = new List<(List<string>, string)>()
         {
-            (["Intel", "Core", "-13"], "VRCX has detected that you're using a 13th or 14th generation Intel CPU.\nThese CPUs are known to have issues which can lead to crashes.\nThis crash was unlikely caused by VRCX itself, therefore limited support can be offered.\nWould you like to open a link with more information?", "https://alderongames.com/intel-crashes"),
-            (["Intel", "Core", "-14"], "VRCX has detected that you're using a 13th or 14th generation Intel CPU.\nThese CPUs are known to have issues which can lead to crashes.\nThis crash was unlikely caused by VRCX itself, therefore limited support can be offered.\nWould you like to open a link with more information?", "https://alderongames.com/intel-crashes"),
+            (["Intel", "Core", "-13"], "VRCX has detected that you're using a 13th or 14th generation Intel CPU.\nThese CPUs are known to have stability issues which can lead to crashes in many applications, including VRCX.\nThis issue is hardware-related and not caused by VRCX."),
+            (["Intel", "Core", "-14"], "VRCX has detected that you're using a 13th or 14th generation Intel CPU.\nThese CPUs are known to have stability issues which can lead to crashes in many applications, including VRCX.\nThis issue is hardware-related and not caused by VRCX."),
         };
 
         [DllImport("kernel32.dll", SetLastError = false)]
@@ -85,7 +85,7 @@ namespace VRCX
             return Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0\")?.GetValue("ProcessorNameString").ToString() ?? null;
         }
 
-        internal static (string, string)? GetCpuErrorMessage()
+        internal static string? GetCpuErrorMessage()
         {
             string cpuName = GetCpuName();
             if (cpuName == null)
@@ -94,7 +94,7 @@ namespace VRCX
             foreach (var errorInfo in CpuErrorMessages)
             {
                 if (errorInfo.Item1.All(cpuName.Contains))
-                    return (errorInfo.Item2, errorInfo.Item3);
+                    return errorInfo.Item2;
             }
 
             return null;

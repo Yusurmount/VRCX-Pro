@@ -107,11 +107,25 @@ const navDefinitions = [
         routeName: 'charts-mutual'
     },
     {
+        key: 'charts-two-person',
+        icon: 'ri-user-heart-line',
+        tooltip: 'view.charts.two_person_relationship.header',
+        labelKey: 'view.charts.two_person_relationship.header',
+        routeName: 'charts-two-person'
+    },
+    {
         key: 'charts-hot-worlds',
         icon: 'ri-fire-line',
         tooltip: 'view.charts.hot_worlds.tab_label',
         labelKey: 'view.charts.hot_worlds.tab_label',
         routeName: 'charts-hot-worlds'
+    },
+    {
+        key: 'charts-timeline',
+        icon: 'ri-time-line',
+        tooltip: 'view.charts.relationship_timeline.header',
+        labelKey: 'view.charts.relationship_timeline.header',
+        routeName: 'charts-timeline'
     },
     {
         key: 'tools',

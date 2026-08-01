@@ -35,6 +35,9 @@
                     <RefreshCw v-else />
                 </Button>
             </TooltipWrapper>
+            <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showExportDialog = true">
+                <Download class="h-4 w-4" />
+            </Button>
         </div>
 
         <DataTableLayout
@@ -44,6 +47,12 @@
             :page-sizes="pageSizes"
             :total-items="totalItems"
             :on-page-size-change="handlePageSizeChange" />
+        <DataExportDialog
+            v-model:visible="showExportDialog"
+            :title="t('view.moderation.header')"
+            default-file-name="moderation-list"
+            :sheet-name="t('view.moderation.header')"
+            :get-data="getExportData" />
     </div>
 </template>
 
@@ -52,7 +61,7 @@
     import { computed, ref, watch } from 'vue';
     import { Button } from '@/components/ui/button';
     import { InputGroupField } from '@/components/ui/input-group';
-    import { RefreshCw } from 'lucide-vue-next';
+    import { RefreshCw, Download } from 'lucide-vue-next';
     import { Spinner } from '@/components/ui/spinner';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
@@ -60,6 +69,8 @@
     import { useAppearanceSettingsStore, useModalStore, useModerationStore, useVrcxStore } from '../../stores';
     import { runRefreshPlayerModerationsFlow as refreshPlayerModerations } from '../../coordinators/moderationCoordinator';
     import { DataTableLayout } from '../../components/ui/data-table';
+    import { TooltipWrapper } from '../../components/ui/tooltip';
+    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
     import { createColumns } from './columns.jsx';
     import { moderationTypes } from '../../shared/constants';
     import { playerModerationRequest } from '../../api';
@@ -75,6 +86,12 @@
     const modalStore = useModalStore();
 
     const moderationRef = ref(null);
+
+    const showExportDialog = ref(false);
+
+    function getExportData() {
+        return playerModerationTable.value.data ?? [];
+    }
 
     async function init() {
         playerModerationTable.value.filters[0].value = JSON.parse(

@@ -10,8 +10,7 @@
                     <ToggleGroupItem
                         value="grid"
                         class="px-2"
-                        :class="viewMode === 'grid' && 'bg-accent text-accent-foreground'"
-                        :ariaLabel="t('view.my_avatars.grid_view')">
+                        :class="viewMode === 'grid' && 'bg-accent text-accent-foreground'">
                         <LayoutGrid class="size-4" />
                     </ToggleGroupItem>
                 </TooltipWrapper>
@@ -19,8 +18,7 @@
                     <ToggleGroupItem
                         value="table"
                         class="px-2"
-                        :class="viewMode === 'table' && 'bg-accent text-accent-foreground'"
-                        :ariaLabel="t('view.my_avatars.table_view')">
+                        :class="viewMode === 'table' && 'bg-accent text-accent-foreground'">
                         <List class="size-4" />
                     </ToggleGroupItem>
                 </TooltipWrapper>
@@ -130,11 +128,7 @@
 
             <DropdownMenu v-if="viewMode === 'grid'">
                 <DropdownMenuTrigger as-child>
-                    <Button
-                        class="rounded-full"
-                        size="icon-sm"
-                        variant="ghost"
-                        :ariaLabel="t('view.settings.appearance.appearance.header')">
+                    <Button class="rounded-full" size="icon-sm" variant="ghost">
                         <SettingsIcon class="size-4" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -164,13 +158,11 @@
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button
-                size="icon-sm"
-                variant="ghost"
-                :disabled="isLoading"
-                @click="refreshAvatars"
-                :ariaLabel="t('view.charts.instance_activity.refresh')">
+            <Button size="icon-sm" variant="ghost" :disabled="isLoading" @click="refreshAvatars">
                 <RefreshCw :class="{ 'animate-spin': isLoading }" />
+            </Button>
+            <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showExportDialog = true">
+                <Download class="h-4 w-4" />
             </Button>
         </div>
 
@@ -255,7 +247,7 @@
                 :style="{ height: `${virtualizer?.getTotalSize?.() ?? 0}px` }">
                 <div
                     v-for="vItem in virtualItems"
-                    :key="vItem.row?.key ?? String(vItem.virtualItem.index)"
+                    :key="String(vItem.virtualItem.key)"
                     class="absolute left-0 top-0 w-full box-border pb-2"
                     :data-index="vItem.virtualItem.index"
                     :ref="virtualizer.measureElement"
@@ -269,6 +261,7 @@
                         <MyAvatarCard
                             v-for="avatar in vItem.row.items"
                             :key="avatar.id"
+                            v-memo="[currentAvatarId, cardScale]"
                             :avatar="avatar"
                             :current-avatar-id="currentAvatarId"
                             :card-scale="cardScale"
@@ -301,12 +294,19 @@
             :avatar-id="manageTagsAvatar?.id || ''"
             :initial-tags="manageTagsAvatar?.$tags || []"
             @save="onSaveTags" />
+        <DataExportDialog
+            v-model:visible="showExportDialog"
+            :title="t('view.my_avatars.header')"
+            default-file-name="my-avatars"
+            sheet-name="My Avatars"
+            :get-data="getExportData" />
     </div>
 </template>
 
 <script setup>
     import {
         Check,
+        Download,
         Eye,
         Image as ImageIcon,
         LayoutGrid,
@@ -324,7 +324,7 @@
     import { useI18n } from 'vue-i18n';
     import { useVirtualizer } from '@tanstack/vue-virtual';
 
-    import { useAppearanceSettingsStore, useModalStore, useUserStore } from '../../stores';
+    import { useAppearanceSettingsStore, useAvatarStore, useModalStore, useUserStore } from '../../stores';
     import { ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '../../components/ui/context-menu';
     import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../../components/ui/dropdown-menu';
     import { Field, FieldContent, FieldLabel } from '../../components/ui/field';
@@ -357,12 +357,14 @@
     import { useVrcxVueTable } from '../../lib/table/useVrcxVueTable';
 
     import ImageCropDialog from '../../components/dialogs/ImageCropDialog.vue';
+    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
     import ManageTagsDialog from './ManageTagsDialog.vue';
     import MyAvatarCard from './components/MyAvatarCard.vue';
     import configRepository from '../../services/config.js';
 
     const { t } = useI18n();
     const appearanceSettingsStore = useAppearanceSettingsStore();
+    const avatarStore = useAvatarStore();
     const modalStore = useModalStore();
 
     const { currentUser } = storeToRefs(useUserStore());
@@ -386,6 +388,23 @@
     const changeImageAvatarRef = ref(null);
     const manageTagsOpen = ref(false);
     const manageTagsAvatar = ref(null);
+    const showExportDialog = ref(false);
+
+    /**
+     *
+     */
+    function getExportData() {
+        return avatars.value.map((avatar) => ({
+            id: avatar.id,
+            name: avatar.name,
+            releaseStatus: avatar.releaseStatus,
+            platform: ['pc', 'android', 'ios']
+                .filter((p) => getPlatformInfo(avatar.unityPackages)[p]?.platform)
+                .join(', '),
+            created_at: avatar.created_at,
+            updated_at: avatar.updated_at
+        }));
+    }
 
     const allTags = computed(() => {
         const tagSet = new Set();
@@ -731,7 +750,6 @@
     const virtualizer = useVirtualizer(
         computed(() => ({
             count: gridRows.value.length,
-            getItemKey: (index) => gridRows.value[index]?.key ?? `avatar-row:${index}`,
             getScrollElement: () => gridScrollRef.value,
             estimateSize: (index) => estimateRowHeight(gridRows.value[index]?.items?.length ?? 0),
             overscan: 5
@@ -749,13 +767,7 @@
     watch(gridContainerRefEl, (el) => {
         gridContainerRef.value = el;
     });
-
-    const gridLayoutSignature = computed(() => {
-        const firstRowItems = gridRows.value[0]?.items?.length ?? 0;
-        return `${filteredAvatars.value.length}:${firstRowItems}:${cardScale.value}:${cardSpacing.value}`;
-    });
-
-    watch(gridLayoutSignature, () => {
+    watch([cardScale, cardSpacing, gridRows], () => {
         nextTick(() => {
             updateContainerWidth();
             virtualizer.value?.measure?.();

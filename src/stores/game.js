@@ -102,7 +102,7 @@ export const useGameStore = defineStore('Game', () => {
      * @returns {Promise<unknown>} Registry key value.
      */
     async function getVRChatRegistryKey(key) {
-        if (LINUX) {
+        if (typeof CefSharp === 'undefined') {
             return AppApi.GetVRChatRegistryKeyString(key);
         }
         return AppApi.GetVRChatRegistryKey(key);

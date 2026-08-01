@@ -46,10 +46,23 @@ contextBridge.exposeInMainWorld('electron', {
     getArch: () => ipcRenderer.invoke('app:getArch'),
     getClipboardText: () => ipcRenderer.invoke('app:getClipboardText'),
     getNoUpdater: () => ipcRenderer.invoke('app:getNoUpdater'),
+    getGpuFeatureStatus: () => ipcRenderer.invoke('app:getGpuFeatureStatus'),
     setTrayIconNotification: (notify) =>
         ipcRenderer.invoke('app:setTrayIconNotification', notify),
     openFileDialog: () => ipcRenderer.invoke('dialog:openFile'),
+    openJsonFileDialog: () =>
+        ipcRenderer.invoke('dialog:openJsonFile'),
     openDirectoryDialog: () => ipcRenderer.invoke('dialog:openDirectory'),
+    saveFileDialog: (defaultName, formatLabel) =>
+        ipcRenderer.invoke('dialog:saveFile', defaultName, formatLabel),
+    writeFile: (filePath, buffer) =>
+        ipcRenderer.invoke('app:writeFile', filePath, buffer),
+    readFile: (filePath) =>
+        ipcRenderer.invoke('app:readFile', filePath),
+    machineEncrypt: (plaintext) =>
+        ipcRenderer.invoke('app:machineEncrypt', plaintext),
+    machineDecrypt: (encryptedData) =>
+        ipcRenderer.invoke('app:machineDecrypt', encryptedData),
     onWindowPositionChanged: (callback) =>
         registerManagedListener('setWindowPosition', callback),
     onWindowSizeChanged: (callback) =>

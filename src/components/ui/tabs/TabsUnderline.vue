@@ -79,7 +79,7 @@
 
     const triggerClass = computed(() => {
         return [
-            'relative inline-flex cursor-pointer h-10 items-center justify-center px-3 text-sm font-medium',
+            'relative inline-flex cursor-pointer h-10 items-center justify-center px-3 text-sm font-medium whitespace-nowrap',
             'text-muted-foreground transition-colors hover:text-foreground',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background',
             'disabled:pointer-events-none disabled:opacity-50',
@@ -91,7 +91,7 @@
 
     const listClass = computed(() => {
         return [
-            'relative flex w-full items-center gap-1 border-b border-border',
+            'relative flex w-full items-center gap-1 border-b border-border overflow-x-auto',
             variant.value === 'pill' ? 'rounded-full bg-muted p-1' : '',
             sticky.value ? 'sticky top-0 z-10 bg-background' : '',
             background.value ? 'pl-2 rounded-xl bg-muted/80 overflow-hidden' : ''

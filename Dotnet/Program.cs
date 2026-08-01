@@ -175,16 +175,10 @@ namespace VRCX
             catch (SQLiteException e)
             {
                 logger.Fatal(e, "Unhandled SQLite Exception, closing.");
-                var messageBoxResult = MessageBox.Show(
+                MessageBox.Show(
                     "A fatal database error has occured.\n" +
-                    "Please try to repair your database by following the steps in the provided repair guide, or alternatively rename your \"%AppData%\\VRCX\" folder to reset VRCX. " +
-                    "If the issue still persists after following the repair guide please join the Discord (https://vrcx.app/discord) for further assistance. " +
-                    "Would you like to open the webpage for database repair steps?\n" +
-                    e, "Database error", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
-                if (messageBoxResult == DialogResult.Yes)
-                {
-                    AppApiInstance.OpenLink("https://github.com/vrcx-team/VRCX/wiki#how-to-repair-vrcx-database");
-                }
+                    "Please try to repair your database by renaming your \"%AppData%\\VRCX\" folder to reset VRCX.\n" +
+                    e, "Database error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             #endregion
@@ -194,20 +188,12 @@ namespace VRCX
                 var cpuError = WinApi.GetCpuErrorMessage();
                 if (cpuError != null)
                 {
-                    var messageBoxResult = MessageBox.Show(cpuError.Value.Item1, "Potentially Faulty CPU Detected",
-                        MessageBoxButtons.YesNo, MessageBoxIcon.Error);
-                    if (messageBoxResult == DialogResult.Yes)
-                    {
-                        AppApiInstance.OpenLink(cpuError.Value.Item2);
-                    }
+                    MessageBox.Show(cpuError, "Potentially Faulty CPU Detected",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
 
                 logger.Fatal(e, "Unhandled Exception, program dying");
-                var result = MessageBox.Show(e.ToString(), $"{Version} crashed, open Discord for support?", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
-                if (result == DialogResult.Yes)
-                {
-                    AppApiInstance.OpenLink("https://vrcx.app/discord");
-                }
+                MessageBox.Show(e.ToString(), $"{Version} crashed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Environment.Exit(0);
             }
         }

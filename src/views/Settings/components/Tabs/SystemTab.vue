@@ -10,7 +10,9 @@
                 </div>
             </div>
 
-            <div class="flex flex-col gap-0.5 px-1 py-1 cursor-pointer" @click="checkForVRCXUpdate">
+            <div
+                class="flex flex-col gap-0.5 px-1 py-1 cursor-pointer"
+                @click="openExternalLink('https://github.com/Yusurmount/VRCX-Pro/releases')">
                 <div class="flex-1">
                     <span class="block truncate font-medium text-sm leading-[18px]">{{
                         t('view.settings.general.general.latest_app_version')
@@ -19,9 +21,7 @@
                         v-if="latestAppVersion"
                         class="block truncate text-xs text-muted-foreground"
                         v-text="latestAppVersion"></span>
-                    <span v-else class="block truncate text-xs text-muted-foreground">{{
-                        t('view.settings.general.general.latest_app_version_refresh')
-                    }}</span>
+                    <span v-else class="block truncate text-xs text-muted-foreground">Click to view releases</span>
                 </div>
             </div>
 
@@ -33,15 +33,6 @@
                     <span v-once class="block truncate text-xs text-muted-foreground">{{ links.github }}</span>
                 </div>
             </div>
-
-            <div class="flex flex-col gap-0.5 px-1 py-1 cursor-pointer" @click="openExternalLink(links.discord)">
-                <div class="flex-1">
-                    <span class="block truncate font-medium text-sm leading-[18px]">{{
-                        t('view.settings.general.general.support')
-                    }}</span>
-                    <span v-once class="block truncate text-xs text-muted-foreground">{{ links.discord }}</span>
-                </div>
-            </div>
         </SettingsGroup>
 
         <SettingsGroup :title="t('view.settings.general.vrcx_updater.header')">
@@ -49,9 +40,13 @@
                 <Button size="sm" variant="outline" @click="showChangeLogDialog">{{
                     t('view.settings.general.vrcx_updater.change_log')
                 }}</Button>
-                <Button v-if="!noUpdater" size="sm" variant="outline" @click="showVRCXUpdateDialog()">{{
-                    t('view.settings.general.vrcx_updater.change_build')
-                }}</Button>
+                <Button
+                    v-if="!noUpdater"
+                    size="sm"
+                    variant="outline"
+                    @click="openExternalLink('https://github.com/Yusurmount/VRCX-Pro/releases')"
+                    >{{ t('view.settings.general.vrcx_updater.change_build') }}</Button
+                >
             </div>
 
             <template v-if="!noUpdater">
@@ -81,43 +76,28 @@
 
         <SettingsGroup :title="t('view.settings.general.application.header')">
             <SettingsItem v-if="!isLinux" :label="t('view.settings.general.application.startup')">
-                <Switch
-                    :model-value="isStartAtWindowsStartup"
-                    :ariaLabel="t('view.settings.general.application.startup')"
-                    @update:modelValue="setIsStartAtWindowsStartup" />
+                <Switch :model-value="isStartAtWindowsStartup" @update:modelValue="setIsStartAtWindowsStartup" />
             </SettingsItem>
 
             <SettingsItem v-if="!isLinux" :label="t('view.settings.general.application.minimized')">
-                <Switch
-                    :model-value="isStartAsMinimizedState"
-                    :ariaLabel="t('view.settings.general.application.minimized')"
-                    @update:modelValue="setIsStartAsMinimizedState" />
+                <Switch :model-value="isStartAsMinimizedState" @update:modelValue="setIsStartAsMinimizedState" />
             </SettingsItem>
             <SettingsItem
                 v-else
                 :label="t('view.settings.general.application.minimized')"
                 :description="t('view.settings.general.application.startup_linux')">
-                <Switch
-                    :model-value="isStartAsMinimizedState"
-                    :ariaLabel="t('view.settings.general.application.minimized')"
-                    @update:modelValue="setIsStartAsMinimizedState" />
+                <Switch :model-value="isStartAsMinimizedState" @update:modelValue="setIsStartAsMinimizedState" />
             </SettingsItem>
 
             <SettingsItem v-if="!isMacOS" :label="t('view.settings.general.application.tray')">
-                <Switch
-                    :model-value="isCloseToTray"
-                    :ariaLabel="t('view.settings.general.application.tray')"
-                    @update:modelValue="setIsCloseToTray" />
+                <Switch :model-value="isCloseToTray" @update:modelValue="setIsCloseToTray" />
             </SettingsItem>
 
             <SettingsItem
                 v-if="!isLinux"
                 :label="t('view.settings.general.application.disable_gpu_acceleration')"
                 :description="t('view.settings.general.application.disable_gpu_acceleration_tooltip')">
-                <Switch
-                    :model-value="disableGpuAcceleration"
-                    :ariaLabel="t('view.settings.general.application.disable_gpu_acceleration')"
-                    @update:modelValue="setDisableGpuAcceleration" />
+                <Switch :model-value="disableGpuAcceleration" @update:modelValue="setDisableGpuAcceleration" />
             </SettingsItem>
 
             <SettingsItem
@@ -134,15 +114,22 @@
                     t('view.settings.general.application.proxy')
                 }}</Button>
             </SettingsItem>
+
+            <SettingsItem :label="t('view.settings.general.application.restore_defaults')">
+                <Button size="sm" variant="outline" @click="restoreDefaultPreferences">
+                    <RotateCcw class="h-4 w-4 mr-1" />
+                    {{ t('view.settings.general.application.restore_defaults') }}
+                </Button>
+            </SettingsItem>
         </SettingsGroup>
 
         <SettingsGroup :title="t('view.settings.general.contributors.header')">
             <div>
                 <img
-                    src="https://contrib.rocks/image?repo=vrcx-team/VRCX"
+                    src="https://contrib.rocks/image?repo=Yusurmount/VRCX-Pro"
                     alt="Contributors"
                     class="cursor-pointer"
-                    @click="openExternalLink('https://github.com/vrcx-team/VRCX/graphs/contributors')" />
+                    @click="openExternalLink('https://github.com/Yusurmount/VRCX-Pro/graphs/contributors')" />
             </div>
         </SettingsGroup>
 
@@ -175,11 +162,13 @@
     import { computed, defineAsyncComponent, ref } from 'vue';
     import { Button } from '@/components/ui/button';
     import { Switch } from '@/components/ui/switch';
+    import { RotateCcw } from 'lucide-vue-next';
+    import { toast } from 'vue-sonner';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
 
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-    import { useGeneralSettingsStore, useVRCXUpdaterStore } from '@/stores';
+    import { useGeneralSettingsStore, useModalStore, useVrcxStore, useVRCXUpdaterStore } from '@/stores';
     import { links } from '@/shared/constants';
     import { openExternalLink } from '@/shared/utils';
 
@@ -190,6 +179,8 @@
 
     const generalSettingsStore = useGeneralSettingsStore();
     const vrcxUpdaterStore = useVRCXUpdaterStore();
+    const modalStore = useModalStore();
+    const vrcxStore = useVrcxStore();
 
     const {
         isStartAtWindowsStartup,
@@ -227,4 +218,54 @@
     function openOSSDialog() {
         ossDialog.value = true;
     }
+
+    /**
+     * Restore all preference settings to their default values.
+     * This only resets settings in the "首选项" (Application) section.
+     */
+    async function restoreDefaultPreferences() {
+        const { ok } = await modalStore.confirm({
+            title: t('view.settings.general.application.restore_defaults_confirm_title'),
+            description: t('view.settings.general.application.restore_defaults_confirm_description'),
+            confirmText: t('common.actions.reset'),
+            cancelText: t('common.actions.cancel')
+        });
+        if (!ok) return;
+
+        // Reset isStartAtWindowsStartup -> false
+        if (isStartAtWindowsStartup.value) {
+            generalSettingsStore.setIsStartAtWindowsStartup();
+        }
+
+        // Reset isStartAsMinimizedState -> false
+        if (isStartAsMinimizedState.value) {
+            generalSettingsStore.setIsStartAsMinimizedState();
+        }
+
+        // Reset isCloseToTray -> false
+        if (isCloseToTray.value) {
+            generalSettingsStore.setIsCloseToTray();
+        }
+
+        // Reset disableGpuAcceleration -> false
+        if (disableGpuAcceleration.value) {
+            generalSettingsStore.setDisableGpuAcceleration();
+        }
+
+        // Reset disableVrOverlayGpuAcceleration -> false
+        if (disableVrOverlayGpuAcceleration.value) {
+            generalSettingsStore.setDisableVrOverlayGpuAcceleration();
+        }
+
+        // Reset proxy server -> ''
+        if (vrcxStore.proxyServer) {
+            vrcxStore.setProxyServer('');
+            await VRCXStorage.Set('VRCX_ProxyServer', '');
+            await VRCXStorage.Save();
+        }
+
+        toast.success(t('view.settings.general.application.restore_defaults_success'));
+        toast.info(t('view.settings.general.application.restore_defaults_restart_notice'), { duration: 5000 });
+    }
 </script>
+

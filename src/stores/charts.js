@@ -8,11 +8,14 @@ import { createRateLimiter, executeWithBackoff } from '../shared/utils';
 import { database } from '../services/database';
 import { useFriendStore } from './friend';
 import { useUserStore } from './user';
+import { useTrackedNonFriendsStore } from './trackedNonFriends';
 import { userRequest } from '../api';
 
 function createDefaultFetchState() {
     return {
-        processedFriends: 0
+        processedFriends: 0,
+        processedTrackedNonFriends: 0,
+        totalTrackedNonFriends: 0
     };
 }
 
@@ -32,6 +35,7 @@ function isValidMutualIdentifier(value) {
 export const useChartsStore = defineStore('Charts', () => {
     const friendStore = useFriendStore();
     const userStore = useUserStore();
+    const trackedNonFriendsStore = useTrackedNonFriendsStore();
 
     const { t } = useI18n();
 
@@ -213,6 +217,9 @@ export const useChartsStore = defineStore('Charts', () => {
             await database.upsertMutualGraphMeta(friendId, {
                 optedOut: false
             });
+            // Also persist to _OLD tables so the data survives restarts
+            await database.updateMutualsForFriendInOld(friendId, mutualIds);
+            await database.updateFriendFetchTimeInOld(friendId);
 
             return { success: true, mutuals, optedOut: false };
         } catch (err) {
@@ -255,11 +262,17 @@ export const useChartsStore = defineStore('Charts', () => {
         mutualGraphStatus.needsRefetch = false;
         mutualGraphStatus.cancelRequested = false;
         mutualGraphStatus.hasFetched = false;
-        Object.assign(mutualGraphFetchState, { processedFriends: 0 });
+        Object.assign(mutualGraphFetchState, { processedFriends: 0, processedTrackedNonFriends: 0, totalTrackedNonFriends: 0 });
 
         const friendSnapshot = Array.from(friendStore.friends.values());
         const mutualMap = new Map();
         const metaEntries = new Map();
+
+        // Pre-calculate tracked non-friends total to show combined progress from the start
+        const trackedIdsSnapshot = Array.from(trackedNonFriendsStore.trackedSet)
+            .filter((id) => !friendStore.friends.has(id));
+        mutualGraphFetchState.totalTrackedNonFriends = trackedIdsSnapshot.length;
+        mutualGraphFetchState.processedTrackedNonFriends = 0;
 
         let cancelled = false;
 
@@ -308,6 +321,54 @@ export const useChartsStore = defineStore('Charts', () => {
                 }
             }
 
+            // Also fetch mutuals for tracked non-friends (silently skip on 403/404)
+            if (!cancelled) {
+                const trackedIds = trackedIdsSnapshot;
+                for (let ti = 0; ti < trackedIds.length; ti++) {
+                    const trackedId = trackedIds[ti];
+                    if (isCancelled()) {
+                        cancelled = true;
+                        break;
+                    }
+                    
+                    const trackedEntry = trackedNonFriendsStore.trackedList.find(item => item.userId === trackedId);
+                    const trackedName = trackedEntry?.displayName || trackedId;
+
+                    try {
+                        if (rateLimiter) await rateLimiter.wait();
+                        const mutuals = await fetchMutualFriendsForUser(trackedId, {
+                            rateLimiter,
+                            isCancelled
+                        });
+                        if (isCancelled()) {
+                            cancelled = true;
+                            break;
+                        }
+                        mutualMap.set(trackedId, { 
+                            friend: { id: trackedId, displayName: trackedName }, 
+                            mutuals 
+                        });
+                        metaEntries.set(trackedId, { optedOut: false });
+                    } catch (err) {
+                        if ((err?.message || '') === 'cancelled' || isCancelled()) {
+                            cancelled = true;
+                            break;
+                        }
+                        const status = err?.status;
+                        if (status === 403 || status === 404) {
+                            metaEntries.set(trackedId, { optedOut: true });
+                        } else {
+                            console.warn(
+                                '[MutualNetworkGraph] Skipping tracked non-friend due to fetch error',
+                                trackedId,
+                                err
+                            );
+                        }
+                    }
+                    mutualGraphFetchState.processedTrackedNonFriends = ti + 1;
+                }
+            }
+
             if (cancelled) {
                 mutualGraphStatus.hasFetched = false;
                 showInfoMessage(
@@ -349,6 +410,9 @@ export const useChartsStore = defineStore('Charts', () => {
                     entries.set(normalizedFriendId, ids);
                 });
                 await database.saveMutualGraphSnapshot(entries);
+                await database.mergeMutualLinksToOld(entries);
+                const fetchedFriendIds = Array.from(entries.keys());
+                await database.bulkUpdateFriendFetchTimesInOld(fetchedFriendIds);
             } catch (persistErr) {
                 console.error(
                     '[MutualNetworkGraph] Failed to cache data',

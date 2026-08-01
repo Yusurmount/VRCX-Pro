@@ -1,7 +1,8 @@
 import { HueToHex } from './base/ui';
 import { convertFileUrlToImageUrl } from './common';
-import { languageMappings } from '../constants';
+import { languageMappings } from '../constants/language';
 import { removeEmojis } from './base/string';
+import { timeToText } from './base/format';
 
 const THEME_COLOR_LIMITS = Object.freeze({
     darkMinLuminance: 0.42,
@@ -397,6 +398,22 @@ function parseUserUrl(user) {
 }
 
 /**
+ *
+ * @param {object} ref
+ * @returns {string}
+ */
+function userOnlineFor(ref) {
+    if (ref.state === 'online' && ref.$online_for) {
+        return timeToText(Date.now() - ref.$online_for);
+    } else if (ref.state === 'active' && ref.$active_for) {
+        return timeToText(Date.now() - ref.$active_for);
+    } else if (ref.$offline_for) {
+        return timeToText(Date.now() - ref.$offline_for);
+    }
+    return '-';
+}
+
+/**
  * Find a user object from cachedUsers by displayName.
  * @param {Map} cachedUsers
  * @param {string} displayName
@@ -427,6 +444,7 @@ function findUserByDisplayName(
 
 export {
     userOnlineForTimestamp,
+    userOnlineFor,
     languageClass,
     getNameColour,
     getReadableProfileThemeColor,

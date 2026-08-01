@@ -6,8 +6,7 @@ import { useI18n } from 'vue-i18n';
 import {
     getEmojiFileName,
     getPrintFileName,
-    getPrintLocalDate,
-    openExternalLink
+    getPrintLocalDate
 } from '../shared/utils';
 import {
     inventoryRequest,
@@ -589,17 +588,10 @@ export const useGalleryStore = defineStore('Gallery', () => {
         } catch (e) {
             if (e.message.includes('Could not find file')) {
                 modalStore
-                    .confirm({
+                    .alert({
                         description:
-                            'Windows has blocked VRCX from creating files on your system. Please allow VRCX to create files to save emojis, would you like to see instructions on how to fix this?',
-                        title: 'Failed to create emoji folder',
-                        cancelText: 'Ignore'
-                    })
-                    .then(({ ok }) => {
-                        if (!ok) return;
-                        openExternalLink(
-                            'https://www.youtube.com/watch?v=1mwmmCdA4D8&t=213s'
-                        );
+                            'Windows has blocked VRCX from creating files on your system. Please check Windows security settings and allow VRCX to create files to save emojis.',
+                        title: 'Failed to create emoji folder'
                     })
                     .catch(() => {});
             }

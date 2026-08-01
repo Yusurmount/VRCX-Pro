@@ -19,6 +19,9 @@
                 @search="searchWorldFavorites"
                 @import="handleWorldImportClick"
                 @export="handleWorldExportClick" />
+            <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showDataExportDialog = true">
+                <Download class="h-4 w-4" />
+            </Button>
             <ResizablePanelGroup
                 ref="splitterGroupRef"
                 direction="horizontal"
@@ -42,7 +45,6 @@
                                         variant="ghost"
                                         size="icon-sm"
                                         :disabled="isFavoriteLoading"
-                                        :ariaLabel="t('view.favorite.refresh_favorites_tooltip')"
                                         @click.stop="handleRefreshFavorites">
                                         <Spinner v-if="isFavoriteLoading" />
                                         <RefreshCw v-else />
@@ -80,7 +82,6 @@
                                                         class="rounded-full"
                                                         variant="ghost"
                                                         size="icon-sm"
-                                                        :ariaLabel="t('nav_tooltip.manage')"
                                                         @click.stop>
                                                         <MoreHorizontal />
                                                     </Button>
@@ -150,7 +151,6 @@
                                     class="rounded-full"
                                     size="icon-sm"
                                     variant="ghost"
-                                    :ariaLabel="t('common.actions.refresh')"
                                     v-if="!refreshingLocalFavorites"
                                     @click.stop="refreshLocalWorldFavorites"
                                     ><RefreshCcw
@@ -345,12 +345,18 @@
             </ResizablePanelGroup>
         </div>
         <WorldExportDialog v-model:worldExportDialogVisible="worldExportDialogVisible" />
+        <DataExportDialog
+            v-model:visible="showDataExportDialog"
+            :title="t('view.favorites.worlds')"
+            default-file-name="favorite-worlds"
+            sheet-name="Favorite Worlds"
+            :get-data="getExportData" />
     </div>
 </template>
 
 <script setup>
     import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-    import { Ellipsis, MoreHorizontal, Plus, RefreshCcw, RefreshCw } from 'lucide-vue-next';
+    import { Download, Ellipsis, MoreHorizontal, Plus, RefreshCcw, RefreshCw } from 'lucide-vue-next';
     import { Button } from '@/components/ui/button';
     import { DataTableEmpty } from '@/components/ui/data-table';
     import { InputGroupField } from '@/components/ui/input-group';
@@ -391,6 +397,7 @@
     import FavoritesToolbar from './components/FavoritesToolbar.vue';
     import FavoritesWorldItem from './components/FavoritesWorldItem.vue';
     import WorldExportDialog from './dialogs/WorldExportDialog.vue';
+    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
 
     import * as workerTimers from 'worker-timers';
 
@@ -478,6 +485,27 @@
         setDragging: splitterSetDragging
     } = useFavoritesSplitter({ configKey: 'VRCX_FavoritesWorldSplitter' });
     const worldExportDialogVisible = ref(false);
+    const showDataExportDialog = ref(false);
+
+    /**
+     *
+     */
+    function getExportData() {
+        const result = [];
+        for (const [groupName, worlds] of Object.entries(localWorldFavorites.value)) {
+            for (const world of worlds) {
+                result.push({ groupId: groupName, worldId: world.id });
+            }
+        }
+        for (const fav of favoriteWorlds.value) {
+            result.push({
+                groupKey: fav.groupKey,
+                worldId: fav.id,
+                worldName: fav.ref?.name || fav.name || ''
+            });
+        }
+        return result;
+    }
     const worldFavoriteSearch = ref('');
     const worldFavoriteSearchResults = ref([]);
     const worldGroupPlaceholders = WORLD_GROUP_PLACEHOLDERS;

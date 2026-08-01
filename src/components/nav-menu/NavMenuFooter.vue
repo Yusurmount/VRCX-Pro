@@ -13,19 +13,6 @@
                         <DropdownMenuItem @click="emit('show-changelog')">
                             <span>{{ t('nav_menu.changelog') }}</span>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuLabel>{{ t('nav_menu.resources') }}</DropdownMenuLabel>
-                        <DropdownMenuItem @click="emit('support-link', 'wiki')">
-                            <span>{{ t('nav_menu.wiki') }}</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuLabel>{{ t('nav_menu.get_help') }}</DropdownMenuLabel>
-                        <DropdownMenuItem @click="emit('support-link', 'github')">
-                            <span>{{ t('nav_menu.github') }}</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem @click="emit('support-link', 'discord')">
-                            <span>{{ t('nav_menu.discord') }}</span>
-                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </SidebarMenuItem>

@@ -387,6 +387,74 @@ const gameLog = {
         return ref;
     },
 
+    async getLastJoinTimeForUserAtLocation(input, location) {
+        let joinTime = null;
+        await sqliteService.execute(
+            (row) => {
+                const ts = Date.parse(row[0]);
+                if (!isNaN(ts)) {
+                    joinTime = ts;
+                }
+            },
+            `SELECT created_at FROM gamelog_join_leave WHERE type = 'OnPlayerJoined' AND (user_id = @userId OR display_name = @displayName) AND location = @location ORDER BY id DESC LIMIT 1`,
+            {
+                '@userId': input.id,
+                '@displayName': input.displayName,
+                '@location': location
+            }
+        );
+        return joinTime;
+    },
+
+    async getRecentlyMetUsers(currentUserId, limit = 8) {
+        const results = [];
+        await sqliteService.execute(
+            (row) => {
+                results.push({
+                    displayName: row[0],
+                    userId: row[1],
+                    lastSeen: row[2]
+                });
+            },
+            `SELECT display_name, user_id, MAX(created_at) AS last_seen
+             FROM gamelog_join_leave
+             WHERE (type = 'OnPlayerJoined' OR type = 'OnPlayerLeft')
+               AND user_id != @currentUserId
+               AND user_id IS NOT NULL
+               AND user_id != ''
+             GROUP BY user_id
+             ORDER BY MAX(id) DESC
+             LIMIT @limit`,
+            {
+                '@currentUserId': currentUserId,
+                '@limit': limit
+            }
+        );
+        return results;
+    },
+
+    async getRecentlyJoinedLocations(limit = 10) {
+        const results = [];
+        await sqliteService.execute(
+            (row) => {
+                results.push({
+                    worldId: row[0],
+                    worldName: row[1],
+                    location: row[2],
+                    lastVisited: row[3]
+                });
+            },
+            `SELECT world_id, world_name, location, MAX(created_at) AS last_visited
+             FROM gamelog_location
+             WHERE world_id IS NOT NULL AND world_id != ''
+             GROUP BY world_id
+             ORDER BY MAX(id) DESC
+             LIMIT @limit`,
+            { '@limit': limit }
+        );
+        return results;
+    },
+
     async getJoinCount(input) {
         var ref = {
             joinCount: '',
@@ -1598,6 +1666,234 @@ const gameLog = {
         return result;
     },
 
+    /**
+     * Get shared instance history between two friends
+     * @param {string} friendAUserId - The first friend's user ID
+     * @param {string} friendBUserId - The second friend's user ID
+     * @returns {Promise<Array<{location: string, friendALeave: string, friendATime: number, friendBLeave: string, friendBTime: number}>>}
+     */
+    async getCoInstanceHistoryBetweenFriends(friendAUserId, friendBUserId) {
+        if (!dbVars.userPrefix) {
+            return [];
+        }
+        const results = [];
+        const dedupeKeys = new Set();
+        const appendResult = (row) => {
+            const key = `${row.location}|${row.friendALeave}|${row.friendATime}|${row.friendBLeave}|${row.friendBTime}`;
+            if (dedupeKeys.has(key)) {
+                return;
+            }
+            dedupeKeys.add(key);
+            results.push(row);
+        };
+        await sqliteService.execute(
+            (row) => {
+                appendResult({
+                    location: row[0],
+                    friendALeave: row[1],
+                    friendATime: row[2],
+                    friendBLeave: row[3],
+                    friendBTime: row[4]
+                });
+            },
+            `SELECT
+                a.location,
+                a.created_at AS friend_a_leave,
+                a.time AS friend_a_time,
+                b.created_at AS friend_b_leave,
+                b.time AS friend_b_time
+            FROM gamelog_join_leave a
+            INNER JOIN gamelog_join_leave b
+                ON a.location = b.location
+            WHERE a.type = 'OnPlayerLeft'
+                AND b.type = 'OnPlayerLeft'
+                AND a.user_id = @friendAUserId
+                AND b.user_id = @friendBUserId
+                AND a.location NOT IN ('', 'traveling', 'private', 'private:private')
+                AND b.location NOT IN ('', 'traveling', 'private', 'private:private')
+                AND a.time > 0
+                AND b.time > 0
+                AND strftime('%Y-%m-%dT%H:%M:%SZ', a.created_at, '-' || (a.time * 1.0 / 1000) || ' seconds') < b.created_at
+                AND strftime('%Y-%m-%dT%H:%M:%SZ', b.created_at, '-' || (b.time * 1.0 / 1000) || ' seconds') < a.created_at
+            ORDER BY a.created_at DESC`,
+            {
+                '@friendAUserId': friendAUserId,
+                '@friendBUserId': friendBUserId
+            }
+        );
+
+        const getInferredLocationSessions = async (userId) => {
+            const sessions = [];
+            await sqliteService.execute(
+                (row) => {
+                    sessions.push({
+                        location: row[0],
+                        // feed rows only store the end timestamp and duration
+                        // (ms), so created_at is treated as leaveAt.
+                        leaveAt: row[1],
+                        // `time` in feed rows is duration in milliseconds.
+                        time: row[2]
+                    });
+                },
+                `SELECT location, created_at, time
+                 FROM (
+                     SELECT previous_location AS location, created_at, time
+                     FROM ${dbVars.userPrefix}_feed_gps
+                     WHERE user_id = @userId
+                       AND previous_location NOT IN ('', 'offline', 'traveling', 'private', 'private:private')
+                       AND time > 0
+                     UNION ALL
+                     SELECT location, created_at, time
+                     FROM ${dbVars.userPrefix}_feed_online_offline
+                     WHERE user_id = @userId
+                       AND type = 'Offline'
+                       AND location NOT IN ('', 'offline', 'traveling', 'private', 'private:private')
+                       AND time > 0
+                 )
+                 ORDER BY created_at DESC`,
+                {
+                    '@userId': userId
+                }
+            );
+            return sessions;
+        };
+
+        const [friendASessions, friendBSessions] = await Promise.all([
+            getInferredLocationSessions(friendAUserId),
+            getInferredLocationSessions(friendBUserId)
+        ]);
+
+        const sessionsBByLocation = new Map();
+        for (const session of friendBSessions) {
+            if (!sessionsBByLocation.has(session.location)) {
+                sessionsBByLocation.set(session.location, []);
+            }
+            sessionsBByLocation.get(session.location).push(session);
+        }
+
+        for (const sessionA of friendASessions) {
+            const sessionBList = sessionsBByLocation.get(sessionA.location);
+            if (!sessionBList || sessionBList.length === 0) {
+                continue;
+            }
+            const sessionALeaveMs = new Date(sessionA.leaveAt).getTime();
+            const sessionAJoinMs = sessionALeaveMs - sessionA.time;
+            for (const sessionB of sessionBList) {
+                const sessionBLeaveMs = new Date(sessionB.leaveAt).getTime();
+                const sessionBJoinMs = sessionBLeaveMs - sessionB.time;
+                if (
+                    sessionAJoinMs < sessionBLeaveMs &&
+                    sessionBJoinMs < sessionALeaveMs
+                ) {
+                    appendResult({
+                        location: sessionA.location,
+                        friendALeave: sessionA.leaveAt,
+                        friendATime: sessionA.time,
+                        friendBLeave: sessionB.leaveAt,
+                        friendBTime: sessionB.time
+                    });
+                }
+            }
+        }
+
+        results.sort((a, b) => {
+            if (a.friendALeave < b.friendALeave) return 1;
+            if (a.friendALeave > b.friendALeave) return -1;
+            return 0;
+        });
+        return results;
+    },
+
+    /**
+     * Get self (current user) presence records for a list of locations.
+     * Returns a map from location → array of { selfLeave: string, selfTime: number }.
+     * @param {string} userId - The current user's ID
+     * @param {string[]} locations - Array of location strings
+     * @returns {Promise<Map<string, Array<{selfLeave: string, selfTime: number}>>>}
+     */
+    async getSelfPresenceForLocations(userId, locations) {
+        if (!locations || locations.length === 0) return new Map();
+        const result = new Map();
+        const params = { '@userId': userId };
+        const placeholders = locations.map((loc, i) => {
+            params[`@loc${i}`] = loc;
+            return `@loc${i}`;
+        });
+        await sqliteService.execute(
+            (row) => {
+                const loc = row[0];
+                if (!result.has(loc)) result.set(loc, []);
+                result.get(loc).push({ selfLeave: row[1], selfTime: row[2] || 0 });
+            },
+            `SELECT location, created_at, time
+             FROM gamelog_join_leave
+             WHERE user_id = @userId
+               AND location IN (${placeholders.join(', ')})
+               AND type = 'OnPlayerLeft'
+               AND time > 0`,
+            params
+        );
+        return result;
+    },
+
+    /**
+     * Get maximum concurrent player count for a list of locations using
+     * a sweep-line algorithm over all OnPlayerLeft records.
+     * @param {string[]} locations - Array of location strings
+     * @returns {Promise<Map<string, number>>}
+     */
+    async getMaxPlayerCountForLocations(locations) {
+        if (!locations || locations.length === 0) return new Map();
+        const entries = [];
+        const params = {};
+        const placeholders = locations.map((loc, i) => {
+            params[`@loc${i}`] = loc;
+            return `@loc${i}`;
+        });
+        await sqliteService.execute(
+            (row) => {
+                entries.push({ location: row[0], createdAt: row[1], time: row[2] || 0 });
+            },
+            `SELECT location, created_at, time
+             FROM gamelog_join_leave
+             WHERE location IN (${placeholders.join(', ')})
+               AND type = 'OnPlayerLeft'
+               AND time > 0
+             ORDER BY location`,
+            params
+        );
+
+        // Group by location
+        const byLocation = new Map();
+        for (const entry of entries) {
+            if (!byLocation.has(entry.location)) byLocation.set(entry.location, []);
+            byLocation.get(entry.location).push(entry);
+        }
+
+        // Sweep-line: find peak concurrent count per location
+        const result = new Map();
+        for (const [location, playerEntries] of byLocation.entries()) {
+            const events = [];
+            for (const entry of playerEntries) {
+                const leaveMs = new Date(entry.createdAt).getTime();
+                const joinMs = leaveMs - entry.time;
+                events.push([joinMs, 1]);   // player joins
+                events.push([leaveMs, -1]); // player leaves
+            }
+            // Sort by time ascending; ties: joins (+1) before leaves (-1) so that
+            // a player arriving at the exact moment another departs still counts.
+            events.sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+            let current = 0;
+            let max = 0;
+            for (const [, delta] of events) {
+                current += delta;
+                if (current > max) max = current;
+            }
+            result.set(location, max);
+        }
+        return result;
+    },
+
     async getInstanceJoinHistory() {
         var oneWeekAgo = new Date(Date.now() - 604800000).toJSON();
         var instances = new Map();
@@ -1696,6 +1992,46 @@ const gameLog = {
                 '@location': input.location
             }
         );
+    },
+
+
+    /**
+     * Get per-friend per-day relationship data for the relationship timeline chart.
+     * Returns rows of (userId, displayName, day, totalTimeMs, joinCount) for all friends
+     * the current user has co-existed with in any logged instance.
+     * @returns {Promise<Array<{userId: string, displayName: string, day: string, totalTime: number, joinCount: number}>>}
+     */
+    async getRelationshipTimelineData() {
+        const results = [];
+        await sqliteService.execute(
+            (row) => {
+                results.push({
+                    userId: row[0],
+                    displayName: row[1],
+                    day: row[2],
+                    totalTime: row[3],
+                    joinCount: row[4]
+                });
+            },
+            `SELECT
+                user_id,
+                display_name,
+                date(created_at) AS day,
+                SUM(time) AS total_time,
+                COUNT(DISTINCT location) AS joinCount
+            FROM gamelog_join_leave
+            WHERE type = 'OnPlayerLeft'
+                AND user_id != ''
+                AND user_id != @currentUserId
+                AND time > 0
+                AND location NOT IN ('', 'traveling')
+            GROUP BY user_id, day
+            ORDER BY day ASC`,
+            {
+                '@currentUserId': dbVars.userId
+            }
+        );
+        return results;
     },
 
     // ── Sessions view queries (read-only, no existing behavior changed) ──
@@ -1840,6 +2176,7 @@ const gameLog = {
             }
         );
         return data;
+
     }
 };
 

@@ -127,9 +127,6 @@
                                                 </ContextMenuItem>
                                             </ContextMenuSubContent>
                                         </ContextMenuSub>
-                                        <ContextMenuItem @click="openEditProfileFromSidebar">
-                                            {{ t('dialog.user.actions.edit_profile') }}
-                                        </ContextMenuItem>
                                     </ContextMenuContent>
                                 </ContextMenu>
                             </template>
@@ -202,13 +199,22 @@
             </div>
         </div>
         <BackToTop :virtualizer="virtualizer" :target="scrollViewportRef" :tooltip="false" />
-        <EditProfileDialog :edit-profile-dialog="editProfileDialog" />
+
+<!-- <div class="absolute bottom-5 right-[70px] z-10">
+            <button
+                class="auto-follow-btn"
+                :class="{ 'auto-follow-btn--active': autoFollowStore.isActive }"
+                @click="toggleAutoFollow">
+                {{ autoFollowStore.isActive ? '跟随中 ■' : '自动跟随' }}
+                <Navigation class="w-3.5 h-3.5 ml-1.5" />
+            </button>
+        </div> -->
     </div>
 </template>
 
 <script setup>
     import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
-    import { ChevronDown, Clock, User } from 'lucide-vue-next';
+    import { ChevronDown, Clock, Navigation, User } from 'lucide-vue-next';
     import { storeToRefs } from 'pinia';
     import { toast } from 'vue-sonner';
     import { useI18n } from 'vue-i18n';
@@ -235,7 +241,8 @@
         useGameStore,
         useLaunchStore,
         useLocationStore,
-        useUserStore
+        useUserStore,
+        useAutoFollowStore
     } from '../../../stores';
     import { buildFriendRow, buildInstanceHeaderRow, buildToggleRow, estimateRowSize } from '../friendsSidebarUtils';
     import { getFriendsSortFunction, isRealInstance } from '../../../shared/utils';
@@ -249,14 +256,26 @@
     import BackToTop from '../../../components/BackToTop.vue';
     import FriendItem from './FriendItem.vue';
     import Location from '../../../components/Location.vue';
-    import EditProfileDialog from '../../../components/dialogs/UserDialog/EditProfileDialog.vue';
     import configRepository from '../../../services/config';
     import { useStatusPresets } from '../../../components/dialogs/UserDialog/composables/useStatusPresets';
+    import { accountHub } from '../../../services/accountHub.js';
+    import { mergeFriends } from '../../../services/aggregatedView.js';
 
     import '@/styles/status-icon.css';
     import { showUserDialog } from '../../../coordinators/userCoordinator';
+    import { openAutoFollowDialog } from '../../../coordinators/autoFollowCoordinator';
 
     const { t } = useI18n();
+
+    const autoFollowStore = useAutoFollowStore();
+
+    function toggleAutoFollow() {
+        if (autoFollowStore.isActive) {
+            autoFollowStore.stopFollow();
+        } else {
+            openAutoFollowDialog();
+        }
+    }
 
     const friendStore = useFriendStore();
     const {
@@ -265,7 +284,8 @@
         onlineFriends,
         activeFriends,
         offlineFriends,
-        friendsInSameInstance
+        friendsInSameInstance,
+        sortedFriends
     } = storeToRefs(friendStore);
     const appearanceSettingsStore = useAppearanceSettingsStore();
     const {
@@ -278,14 +298,13 @@
         sidebarSortMethods
     } = storeToRefs(appearanceSettingsStore);
     const { gameLogDisabled } = storeToRefs(useAdvancedSettingsStore());
-    const userStore = useUserStore();
-    const { showSendBoopDialog, showEditProfileDialog } = userStore;
+    const { showSendBoopDialog } = useUserStore();
     const launchStore = useLaunchStore();
     const { favoriteFriendGroups, groupedByGroupKeyFavoriteFriends, localFriendFavorites } =
         storeToRefs(useFavoriteStore());
     const { lastLocation, lastLocationDestination } = storeToRefs(useLocationStore());
     const { isGameRunning } = storeToRefs(useGameStore());
-    const { currentUser, editProfileDialog } = storeToRefs(userStore);
+    const { currentUser } = storeToRefs(useUserStore());
     const { checkCanInvite, checkCanInviteSelf } = useInviteChecks();
     const { userImage, userStatusClass } = useUserDisplay();
     const { presets: statusPresets, getStatusClass: presetStatusClass } = useStatusPresets();
@@ -524,7 +543,95 @@
         }
     }
 
+    function buildMergedRows() {
+        const rows = [];
+
+        rows.push(
+            buildToggleRow({
+                key: 'me-header',
+                label: t('side_panel.me'),
+                expanded: isFriendsGroupMe.value,
+                headerPadding: '0 0 5px',
+                onClick: toggleFriendsGroupMe
+            })
+        );
+
+        if (isFriendsGroupMe.value) {
+            rows.push({ type: 'me-item', key: `me:${currentUser.value?.id ?? 'me'}` });
+        }
+
+        const mergedMap = mergeFriends(sortedFriends.value);
+        const online = [];
+        const active = [];
+        const offline = [];
+
+        for (const ctx of mergedMap.values()) {
+            const state = ctx.state || 'offline';
+            if (state === 'online') online.push(ctx);
+            else if (state === 'active') active.push(ctx);
+            else offline.push(ctx);
+        }
+
+        if (online.length) {
+            rows.push(
+                buildToggleRow({
+                    key: 'merged-online-header',
+                    label: t('side_panel.online'),
+                    count: online.length,
+                    expanded: isOnlineFriends.value,
+                    onClick: toggleOnlineFriends
+                })
+            );
+            if (isOnlineFriends.value) {
+                online.forEach((friend, idx) => {
+                    rows.push(buildFriendRow(friend, `merged-online:${friend?.id ?? idx}`));
+                });
+            }
+        }
+
+        if (active.length) {
+            rows.push(
+                buildToggleRow({
+                    key: 'merged-active-header',
+                    label: t('side_panel.active'),
+                    count: active.length,
+                    expanded: isActiveFriends.value,
+                    onClick: toggleActiveFriends
+                })
+            );
+            if (isActiveFriends.value) {
+                active.forEach((friend, idx) => {
+                    rows.push(buildFriendRow(friend, `merged-active:${friend?.id ?? idx}`));
+                });
+            }
+        }
+
+        if (offline.length) {
+            rows.push(
+                buildToggleRow({
+                    key: 'merged-offline-header',
+                    label: t('side_panel.offline'),
+                    count: offline.length,
+                    expanded: isOfflineFriends.value,
+                    onClick: toggleOfflineFriends
+                })
+            );
+            if (isOfflineFriends.value) {
+                offline.forEach((friend, idx) => {
+                    rows.push(buildFriendRow(friend, `merged-offline:${friend?.id ?? idx}`));
+                });
+            }
+        }
+
+        return rows;
+    }
+
     const virtualRows = computed(() => {
+        // In merged view, show aggregated friends from all accounts
+        if (accountHub.isMergedView && accountHub.hasSecondarySessions) {
+            return buildMergedRows();
+        }
+
         const rows = [];
 
         rows.push(
@@ -790,10 +897,6 @@
             });
     }
 
-    function openEditProfileFromSidebar() {
-        showEditProfileDialog();
-    }
-
     const canInviteToMyLocation = computed(() => checkCanInvite(lastLocation.value.location));
 
     /**
@@ -885,3 +988,42 @@
             });
     }
 </script>
+
+<style scoped>
+    .auto-follow-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        border-radius: 9999px;
+        border: none;
+        background: rgba(59, 130, 246, 0.4);
+        backdrop-filter: blur(4px);
+        color: white;
+        font-size: 13px;
+        font-weight: 500;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .auto-follow-btn:hover {
+        background: rgba(59, 130, 246, 0.55);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .auto-follow-btn:active {
+        transform: scale(0.96);
+    }
+
+    .auto-follow-btn--active {
+        background: rgba(249, 115, 22, 0.5);
+    }
+
+    .auto-follow-btn--active:hover {
+        background: rgba(249, 115, 22, 0.65);
+    }
+</style>
+
+

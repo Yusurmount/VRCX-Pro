@@ -20,15 +20,13 @@
                                         variant="outline"
                                         size="sm"
                                         :model-value="friendsListSearchFilterVIP"
-                                        :ariaLabel="t('view.friend_list.favorites_only_tooltip')"
                                         @update:modelValue="
                                             (v) => {
                                                 friendsListSearchFilterVIP = v;
                                                 friendsListSearchChange();
                                             }
                                         ">
-                                        <Star fill="currentColor" v-if="friendsListSearchFilterVIP" />
-                                        <Star v-else />
+                                        <Star />
                                     </Toggle>
                                 </div>
                             </TooltipWrapper>
@@ -77,7 +75,6 @@
                                 <span class="name mr-2 text-xs">{{ t('view.friend_list.bulk_unfriend') }}</span>
                                 <Switch
                                     v-model="friendsListBulkUnfriendMode"
-                                    :ariaLabel="t('view.friend_list.bulk_unfriend')"
                                     @update:modelValue="toggleFriendsListBulkUnfriendMode" />
                             </div>
                             <div class="flex items-center">
@@ -103,6 +100,9 @@
                                 <Button variant="outline" @click="friendsListLoadUsers">{{
                                     t('view.friend_list.load')
                                 }}</Button>
+                                <Button variant="outline" size="sm" class="ml-2" @click="showExportDialog = true">
+                                    <Download class="h-4 w-4" />
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -132,6 +132,12 @@
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <DataExportDialog
+                v-model:visible="showExportDialog"
+                :title="t('view.friend_list.header')"
+                default-file-name="friend-list"
+                :sheet-name="t('view.friend_list.header')"
+                :get-data="getExportData" />
         </div>
     </div>
 </template>
@@ -143,12 +149,11 @@
     import { Button } from '@/components/ui/button';
     import { InputGroupField } from '@/components/ui/input-group';
     import { Progress } from '@/components/ui/progress';
-    import { Star } from 'lucide-vue-next';
+    import { Loader2, Download, Star } from 'lucide-vue-next';
     import { storeToRefs } from 'pinia';
     import { toast } from 'vue-sonner';
     import { useI18n } from 'vue-i18n';
     import { useRoute } from 'vue-router';
-    import { Loader2 } from 'lucide-vue-next';
 
     import {
         useAppearanceSettingsStore,
@@ -167,6 +172,7 @@
     import { localeIncludes } from '../../shared/utils';
     import removeConfusables, { removeWhitespace } from '../../services/confusables';
     import { useVrcxVueTable } from '../../lib/table/useVrcxVueTable';
+    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
     import { showUserDialog } from '../../coordinators/userCoordinator';
     import { confirmDeleteFriend, handleFriendDelete } from '../../coordinators/friendRelationshipCoordinator';
     import { useUserDisplay } from '../../composables/useUserDisplay';
@@ -186,6 +192,31 @@
     const { userImage } = useUserDisplay();
 
     const { stringComparer, friendsListSearch } = storeToRefs(useSearchStore());
+    const userStore = useUserStore();
+    const { cachedUsers, state: userState } = storeToRefs(userStore);
+
+    const showExportDialog = ref(false);
+
+    function getExportData() {
+        const result = [];
+        for (const [userId, friendRef] of friends.value) {
+            const user = cachedUsers.value.get(userId);
+            const notes = userState.value.notes?.get(userId);
+            result.push({
+                userId,
+                displayName: friendRef.name ?? '',
+                status: user?.status ?? friendRef.state ?? '',
+                statusDescription: user?.statusDescription ?? '',
+                bio: user?.bio ?? '',
+                friendNumber: friendRef.ref ?? '',
+                memo: friendRef.memo ?? '',
+                note: notes ?? '',
+                isVIP: friendRef.isVIP ?? false,
+                trustLevel: user?.tags?.find((t) => t.startsWith('system_trust'))?.replace('system_trust_', '') ?? ''
+            });
+        }
+        return result;
+    }
 
     const friendsListSearchFilters = ref([]);
     const friendsListBulkUnfriendMode = ref(false);

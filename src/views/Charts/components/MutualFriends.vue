@@ -60,6 +60,38 @@
                     </VirtualCombobox>
                 </div>
                 <div class="ml-auto flex items-center gap-2">
+                    <div v-if="graphReady" class="mr-4 hidden items-center gap-4 text-xs font-medium text-muted-foreground sm:flex">
+                        <div class="flex items-center gap-1.5">
+                            <div class="size-2 rounded-full" :style="{ backgroundColor: isDarkMode ? '#64748b' : '#94a3b8' }"></div>
+                            <span>{{ t('view.charts.mutual_friend.legend.mutual') }}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="size-2 rounded-full" :style="{ backgroundColor: isDarkMode ? '#31543d' : '#dcfce7' }"></div>
+                            <span>{{ t('view.charts.mutual_friend.legend.manual') }}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="size-2 rounded-full" :style="{ backgroundColor: isDarkMode ? '#543131' : '#fee2e2' }"></div>
+                            <span>{{ t('view.charts.mutual_friend.legend.non_friend') }}</span>
+                        </div>
+                    </div>
+                    <TooltipWrapper :content="t('view.charts.mutual_friend.manual_relations.button_tooltip')" side="top">
+                        <Button class="rounded-full" size="icon" variant="ghost" @click="isManualRelationsDialogOpen = true">
+                            <LinkIcon />
+                        </Button>
+                    </TooltipWrapper>
+                    <TooltipWrapper
+                        :content="showNonFriends
+                            ? t('view.charts.mutual_friend.tracked_nonfriend.hide_tooltip')
+                            : t('view.charts.mutual_friend.tracked_nonfriend.show_tooltip')"
+                        side="top">
+                        <Button
+                            class="rounded-full"
+                            size="icon"
+                            :variant="showNonFriends ? 'secondary' : 'ghost'"
+                            @click="toggleShowNonFriends">
+                            <UsersIcon />
+                        </Button>
+                    </TooltipWrapper>
                     <Sheet>
                         <SheetTrigger as-child>
                             <div>
@@ -227,9 +259,11 @@
                     <div
                         v-if="isFetching"
                         class="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] items-center rounded-md bg-transparent p-3 w-70">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="mr-1">{{ t('view.charts.mutual_friend.progress.friends_processed') }}</span>
-                            <strong>{{ fetchState.processedFriends }} / {{ totalFriends }}</strong>
+                        <div class="flex flex-col text-sm mb-1">
+                            <div class="flex justify-between">
+                                <span class="mr-1">{{ progressLabel }}</span>
+                                <strong>{{ currentProgressCount }} / {{ totalFriends }}+{{ fetchState.totalTrackedNonFriends || 0 }}</strong>
+                            </div>
                         </div>
                         <Progress :model-value="progressPercent" class="h-3" />
                     </div>
@@ -272,6 +306,7 @@
         </div>
         <BackToTop target="#chart" :right="30" :bottom="30" />
     </div>
+    <ManualRelationsDialog v-model:open="isManualRelationsDialogOpen" />
 </template>
 
 <script setup>
@@ -292,8 +327,10 @@
     import {
         Check as CheckIcon,
         EyeOff as EyeOffIcon,
+        Link as LinkIcon,
         RefreshCw as RefreshCwIcon,
         Settings,
+        Users as UsersIcon,
         User as UserIcon
     } from 'lucide-vue-next';
     import { Button } from '@/components/ui/button';
@@ -301,6 +338,7 @@
     import { Slider } from '@/components/ui/slider';
     import { Spinner } from '@/components/ui/spinner';
     import { VirtualCombobox } from '@/components/ui/virtual-combobox';
+    import TooltipWrapper from '@/components/ui/tooltip/TooltipWrapper.vue';
     import { createNodeBorderProgram } from '@sigma/node-border';
     import { storeToRefs } from 'pinia';
     import { toast } from 'vue-sonner';
@@ -326,8 +364,12 @@
     import { showUserDialog } from '../../../coordinators/userCoordinator';
     import { database } from '../../../services/database';
     import { watchState } from '../../../services/watchState';
+    import { useTrackedNonFriendsStore } from '../../../stores/trackedNonFriends';
+    import { useManualRelationsStore } from '../../../stores/manualRelations';
 
     import configRepository from '../../../services/config';
+
+    import ManualRelationsDialog from './ManualRelationsDialog.vue';
 
     const { userImage, userStatusClass } = useUserDisplay();
     const { t } = useI18n();
@@ -336,26 +378,25 @@
     const modalStore = useModalStore();
     const chartsStore = useChartsStore();
     const appearanceStore = useAppearanceSettingsStore();
+    const trackedNonFriendsStore = useTrackedNonFriendsStore();
+    const manualRelationsStore = useManualRelationsStore();
     const { friends } = storeToRefs(friendStore);
     const { currentUser } = storeToRefs(userStore);
     const { isDarkMode } = storeToRefs(appearanceStore);
+    const { trackedSet: trackedNonFriendSet } = storeToRefs(trackedNonFriendsStore);
+    const { relationsList: manualRelationsList } = storeToRefs(manualRelationsStore);
     const cachedUsers = userStore.cachedUsers;
 
     const fetchState = chartsStore.mutualGraphFetchState;
     const status = chartsStore.mutualGraphStatus;
 
+    const isManualRelationsDialogOpen = ref(false);
+
     const MAX_LABEL_NAME_LENGTH = 20;
 
     const COLORS_PALETTE = [
-        '#5470c6',
-        '#91cc75',
-        '#fac858',
-        '#ee6666',
-        '#73c0de',
-        '#3ba272',
-        '#fc8452',
-        '#9a60b4',
-        '#ea7ccc'
+        '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc',
+        '#d94e5d', '#eac736', '#50a3ba', '#f2d643', '#ffb980', '#0098d9', '#ff8c00', '#ff00ff', '#1e90ff'
     ];
 
     const NodeBorderProgram = createNodeBorderProgram({
@@ -564,9 +605,14 @@
             ? t('view.charts.mutual_friend.actions.fetch_again')
             : t('view.charts.mutual_friend.actions.start_fetch')
     );
+    const totalProgressCount = computed(() => totalFriends.value + (fetchState.totalTrackedNonFriends || 0));
+    const currentProgressCount = computed(() => fetchState.processedFriends + (fetchState.processedTrackedNonFriends || 0));
     const progressPercent = computed(() =>
-        totalFriends.value ? Math.min(100, Math.round((fetchState.processedFriends / totalFriends.value) * 100)) : 0
+        totalProgressCount.value ? Math.min(100, Math.round((currentProgressCount.value / totalProgressCount.value) * 100)) : 0
     );
+    const progressLabel = computed(() => {
+        return "正在拉取共同好友关系网...";
+    });
 
     const canvasBackground = computed(() => 'transparent');
 
@@ -575,6 +621,7 @@
     const contextMenuNodeId = ref(null);
     const graphMeta = ref(new Map());
     const isRefreshingNode = ref(false);
+    const showNonFriends = ref(true);
 
     const EXCLUDED_FRIENDS_KEY = 'VRCX_MutualGraphExcludedFriends';
     const excludedFriendIds = useLocalStorage(EXCLUDED_FRIENDS_KEY, []);
@@ -585,6 +632,16 @@
                 await applyGraph(lastMutualMap);
             } catch (err) {
                 console.error('[MutualNetworkGraph] Failed to apply graph after exclude change', err);
+            }
+        }
+    });
+
+    watch(manualRelationsList, async () => {
+        if (lastMutualMap) {
+            try {
+                await applyGraph(lastMutualMap);
+            } catch (err) {
+                console.error('[MutualNetworkGraph] Failed to apply graph after manual-relations change', err);
             }
         }
     });
@@ -862,8 +919,14 @@
         const nodeDegree = new Map();
         const nodeNames = new Map();
 
+        function isNonFriend(id) {
+            if (!friends.value) return false;
+            return !friends.value.has(id);
+        }
+
         function ensureNode(id, name) {
             if (!id || excludeSet.has(id)) return;
+            if (!showNonFriends.value && isNonFriend(id)) return;
             if (!graph.hasNode(id)) {
                 graph.addNode(id);
                 nodeDegree.set(id, 0);
@@ -874,6 +937,7 @@
         function addEdge(source, target) {
             if (!source || !target || source === target) return;
             if (excludeSet.has(source) || excludeSet.has(target)) return;
+            if (!showNonFriends.value && (isNonFriend(source) || isNonFriend(target))) return;
             const [a, b] = [source, target].sort();
             const key = `${a}__${b}`;
             if (graph.hasEdge(key)) return;
@@ -884,7 +948,7 @@
 
         for (const [friendId, { friend, mutuals }] of mutualMap.entries()) {
             const friendRef = friend?.ref || cachedUsers.get(friendId);
-            const friendName = friendRef?.displayName;
+            const friendName = friend?.displayName || friendRef?.displayName;
             ensureNode(friendId, friendName || friendId);
 
             for (const mutual of mutuals) {
@@ -896,6 +960,29 @@
             }
         }
 
+        // Inject manual-relation edges (may introduce nodes not in mutualMap)
+        for (const rel of manualRelationsList.value) {
+            const { userIdA, userIdB } = rel;
+            if (!userIdA || !userIdB) continue;
+            const refA = cachedUsers.get(userIdA);
+            const refB = cachedUsers.get(userIdB);
+            ensureNode(userIdA, refA?.displayName || userIdA);
+            ensureNode(userIdB, refB?.displayName || userIdB);
+            if (!excludeSet.has(userIdA) && !excludeSet.has(userIdB)) {
+                if (graph.hasNode(userIdA) && graph.hasNode(userIdB)) {
+                    const [a, b] = [userIdA, userIdB].sort();
+                    const key = `${a}__${b}`;
+                    if (!graph.hasEdge(key)) {
+                        graph.addEdgeWithKey(key, a, b, { size: 0.75, manualRelation: true });
+                        nodeDegree.set(a, (nodeDegree.get(a) || 0) + 1);
+                        nodeDegree.set(b, (nodeDegree.get(b) || 0) + 1);
+                    } else {
+                        graph.setEdgeAttribute(key, 'manualRelation', true);
+                    }
+                }
+            }
+        }
+
         const nodeIds = graph.nodes();
         const maxDegree = nodeIds.reduce((max, id) => Math.max(max, nodeDegree.get(id) || 0), 0);
 
@@ -903,7 +990,13 @@
             const degree = nodeDegree.get(id) || 0;
             const size = 4 + (maxDegree ? (degree / maxDegree) * 18 : 0);
             const label = truncateLabelText(nodeNames.get(id) || id);
-            const attrs = { label, size, type: 'border' };
+            const isFriend = friends.value?.has ? friends.value.has(id) : false;
+            const attrs = {
+                label,
+                size,
+                type: 'border',
+                nonFriend: !isFriend
+            };
             if (meta?.has(id)) {
                 const m = meta.get(id);
                 attrs.optedOut = m.optedOut;
@@ -939,8 +1032,12 @@
         const DEFAULT_LABEL_THRESHOLD = 10;
 
         const labelColor = isDarkMode.value ? '#e2e8f0' : '#111827';
-        const EDGE_BASE = isDarkMode.value ? '#334155' : '#94a3b8';
-        const EDGE_ACTIVE = isDarkMode.value ? '#bac1c9' : '#0f172a';
+        
+        // Simple dark/light logic - works well for both Dark and Midnight
+        const EDGE_BASE = isDarkMode.value ? '#64748b' : '#94a3b8'; // Regular mutual (Friend-Friend)
+        const EDGE_ACTIVE = isDarkMode.value ? '#facc15' : '#0f172a'; // Active focus (Yellow in dark mode)
+        const EDGE_MANUAL = isDarkMode.value ? '#31543d' : '#dcfce7'; // Darker Greenish / Light Greenish
+        const EDGE_NONFRIEND = isDarkMode.value ? '#543131' : '#fee2e2'; // Darker Reddish / Light Reddish
 
         let cameraState = null;
 
@@ -1037,7 +1134,11 @@
         let neighbors = new Set();
 
         const rebuildNeighbors = (node) => {
-            neighbors = node ? new Set(graph.neighbors(node)) : new Set();
+            try {
+                neighbors = node && graph.hasNode(node) ? new Set(graph.neighbors(node)) : new Set();
+            } catch {
+                neighbors = new Set();
+            }
         };
 
         sigmaInstance.setSetting('nodeReducer', (node, data) => {
@@ -1047,8 +1148,16 @@
                 res.borderColor = '#9ca3af';
             }
 
+            // Non-friends: grey
+            if (data.nonFriend) {
+                res.color = '#9ca3af';
+                res.labelColor = '#9ca3af';
+            }
+
             if (!hovered) {
-                res.color = data.optedOut ? '#d1d5db' : data.color;
+                if (!data.nonFriend) {
+                    res.color = data.optedOut ? '#d1d5db' : data.color;
+                }
                 res.zIndex = 1;
                 return res;
             }
@@ -1083,21 +1192,46 @@
 
         sigmaInstance.setSetting('edgeReducer', (edge, data) => {
             const res = { ...data };
+            const isManual = data.manualRelation === true;
 
-            if (!hovered) {
-                res.hidden = false;
-                res.color = EDGE_BASE;
-                res.size = data.size || 1;
+            // Safety: graph.extremities() throws if the edge no longer exists
+            // in the captured graph reference (can happen during rebuild races).
+            let extremities;
+            try {
+                extremities = graph.extremities(edge);
+            } catch {
                 return res;
             }
 
-            const [s, t] = graph.extremities(edge);
-            const active = s === hovered || t === hovered;
+            // Any edge connected to at least one non-friend node
+            let isNonFriendEdge = false;
+            try {
+                isNonFriendEdge = extremities.some(n => graph.hasNode(n) && graph.getNodeAttribute(n, 'nonFriend'));
+            } catch {
+                // node may have been dropped during rebuild
+            }
+
+            if (!hovered) {
+                res.hidden = false;
+                if (isNonFriendEdge) {
+                    res.color = EDGE_NONFRIEND;
+                    res.size = 0.6;
+                } else if (isManual) {
+                    res.color = EDGE_MANUAL;
+                    res.size = 0.6;
+                } else {
+                    res.color = EDGE_BASE;
+                    res.size = data.size || 1;
+                }
+                return res;
+            }
+
+            const active = extremities[0] === hovered || extremities[1] === hovered;
 
             if (active) {
                 res.hidden = false;
                 res.color = EDGE_ACTIVE;
-                res.size = data.size || 1;
+                res.size = isNonFriendEdge || isManual ? 1.2 : 2.0;
                 return res;
             }
 
@@ -1154,7 +1288,7 @@
 
         try {
             const [snapshot, meta] = await Promise.all([
-                database.getMutualGraphSnapshot(),
+                database.getMutualGraphSnapshotFromOld(),
                 database.getMutualGraphMeta()
             ]);
             graphMeta.value = meta;
@@ -1173,19 +1307,32 @@
             }
 
             const mutualMap = new Map();
+            let loadedTrackedCount = 0;
             snapshot.forEach((mutualIds, friendId) => {
                 if (!friendId) return;
                 const friendEntry = friends.value?.get ? friends.value.get(friendId) : undefined;
                 const fallbackRef = friendEntry?.ref || cachedUsers.get(friendId);
+                const isTracked = trackedNonFriendSet.value.has(friendId);
+                
+                let displayName = null;
+                if (isTracked) {
+                    const trackedEntry = trackedNonFriendsStore.trackedList.find(t => t.userId === friendId);
+                    displayName = trackedEntry?.displayName;
+                    loadedTrackedCount++;
+                }
 
                 let normalizedMutuals = Array.isArray(mutualIds) ? mutualIds : [];
                 normalizedMutuals = normalizedMutuals.filter((id) => id != 'usr_00000000-0000-0000-0000-000000000000');
 
                 mutualMap.set(friendId, {
-                    friend: friendEntry || (fallbackRef ? { id: friendId, ref: fallbackRef } : { id: friendId }),
+                    friend: friendEntry || (fallbackRef ? { id: friendId, ref: fallbackRef } : { id: friendId, displayName }),
                     mutuals: normalizedMutuals.map((id) => ({ id }))
                 });
             });
+
+            if (loadedTrackedCount > 0) {
+                console.log(`[MutualNetworkGraph] Loaded snapshot with ${loadedTrackedCount} tracked non-friends`);
+            }
 
             if (!mutualMap.size) {
                 await promptInitialFetch();
@@ -1342,6 +1489,23 @@
             toast.error(t('view.charts.mutual_friend.context_menu.refresh_error'), { duration: 4000 });
         } finally {
             isRefreshingNode.value = false;
+        }
+    }
+
+    /**
+     * Toggle visibility of non-friends in the graph and rebuild layout.
+     */
+    async function toggleShowNonFriends() {
+        showNonFriends.value = !showNonFriends.value;
+        if (!lastMutualMap) {
+            // When no mutual map has been built yet, only refresh current view state.
+            sigmaInstance?.refresh();
+            return;
+        }
+        try {
+            await applyGraph(lastMutualMap);
+        } catch (err) {
+            console.error('[MutualNetworkGraph] Failed to re-apply graph after non-friend toggle', err);
         }
     }
 </script>
