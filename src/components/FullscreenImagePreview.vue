@@ -1,8 +1,7 @@
 <template>
     <Dialog v-model:open="open">
         <DialogPortal :to="portalTo">
-            <RekaDialogOverlay
-                :class="cn('fixed inset-0 bg-background/80', !disableGpuAcceleration && gpuCompositingEnabled && 'backdrop-blur-sm')" />
+            <RekaDialogOverlay :class="cn('fixed inset-0 bg-background/80')" />
 
             <RekaDialogContent
                 class="fixed inset-0 p-6 sm:p-10 border-0 bg-transparent shadow-none outline-none"
@@ -121,7 +120,6 @@
     import { cn } from '@/lib/utils';
     import { storeToRefs } from 'pinia';
     import { toast } from 'vue-sonner';
-    import { useGeneralSettingsStore } from '@/stores/settings/general';
     import { useI18n } from 'vue-i18n';
 
     import { extractFileId } from '../shared/utils';
@@ -129,15 +127,6 @@
 
     const galleryStore = useGalleryStore();
     const { fullscreenImageDialog } = storeToRefs(galleryStore);
-    const { disableGpuAcceleration } = storeToRefs(useGeneralSettingsStore());
-
-    // 与 DialogOverlay 一致：软件渲染（Electron 强制 disableHardwareAcceleration）下禁用背景模糊避免掉帧
-    const gpuCompositingEnabled = ref(!window.electron);
-    try {
-        window.electron?.getGpuFeatureStatus?.().then((status) => {
-            gpuCompositingEnabled.value = status?.gpu_compositing === 'enabled';
-        });
-    } catch {}
     const { t } = useI18n();
 
     const viewerEl = ref(null);

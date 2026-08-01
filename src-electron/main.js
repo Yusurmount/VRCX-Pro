@@ -325,9 +325,6 @@ ipcMain.handle(
 ipcMain.handle('app:getArch', () => {
     return process.arch.toString();
 });
-ipcMain.handle('app:getGpuFeatureStatus', () => {
-    return app.getGPUFeatureStatus();
-});
 ipcMain.handle('app:getClipboardText', () => {
     return clipboard.readText();
 });
@@ -1021,39 +1018,6 @@ function applyWindowState() {
 }
 
 app.whenReady().then(() => {
-    // #region debug-point A:gpu-status
-    try {
-        const __dbgPayload = JSON.stringify({
-            sessionId: 'dialog-blur-lag',
-            runId: 'pre-fix',
-            hypothesisId: 'A',
-            location: 'main.js:whenReady',
-            msg: '[DEBUG] gpu feature status',
-            data: {
-                gpu: app.getGPUFeatureStatus(),
-                platform: process.platform,
-                electron: process.versions.electron
-            },
-            ts: Date.now()
-        });
-        const __dbgReq = require('http').request(
-            {
-                hostname: '127.0.0.1',
-                port: 7777,
-                path: '/event',
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(__dbgPayload)
-                }
-            },
-            () => {}
-        );
-        __dbgReq.on('error', () => {});
-        __dbgReq.write(__dbgPayload);
-        __dbgReq.end();
-    } catch {}
-    // #endregion
     createWindow();
     createTray();
     installVRCX();
