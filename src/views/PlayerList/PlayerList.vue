@@ -389,15 +389,11 @@
                     const groupIds = new Set();
                     try {
                         const args = await groupRateLimiter.schedule(() =>
-                            executeWithBackoff(
-                                () => groupRequest.getGroups({ userId }),
-                                {
-                                    maxRetries: 4,
-                                    baseDelay: 1000,
-                                    shouldRetry: (err) =>
-                                        err?.status === 429 || (err?.message ?? '').includes('429')
-                                }
-                            )
+                            executeWithBackoff(() => groupRequest.getGroups({ userId }), {
+                                maxRetries: 4,
+                                baseDelay: 1000,
+                                shouldRetry: (err) => err?.status === 429 || (err?.message ?? '').includes('429')
+                            })
                         );
                         for (const group of args?.json ?? []) {
                             if (!group?.id) continue;

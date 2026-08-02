@@ -15,8 +15,11 @@ Write-Host "Building .Net..." -ForegroundColor Green
 dotnet build Dotnet\VRCX-Cef.csproj -p:Configuration=Release -p:WarningLevel=0 -p:Platform=x64 -p:RestorePackagesConfig=true -t:"Restore;Clean;Build" -m --self-contained
 
 Write-Host "Building Node.js..." -ForegroundColor Green
-Remove-Item -Path "node_modules" -Force -Recurse -ErrorAction SilentlyContinue
-npm ci --loglevel=error
+if (-not (Test-Path "node_modules")) {
+    npm ci --loglevel=error
+} else {
+    Write-Host "node_modules exists, skipping npm ci (delete node_modules to force reinstall)" -ForegroundColor Yellow
+}
 $ErrorActionPreference = "Continue"
 npm run prod
 $ErrorActionPreference = "Stop"
@@ -31,7 +34,7 @@ New-Item -ItemType Junction -Path "build\Cef\html" -Target "build\html"
 # cd ..\..\
 
 Write-Host "Creating Installer..." -ForegroundColor Green
-$version = Get-Content -Path "Version" -Raw
+$version = (Get-Content -Path "Version" -Raw).Trim()
 cd "Installer"
 Out-File -FilePath "version_define.nsh" -Encoding UTF8 -InputObject "!define PRODUCT_VERSION_FROM_FILE `"$version.0`""
 $nsisPath = "C:\Program Files (x86)\NSIS\makensis.exe"

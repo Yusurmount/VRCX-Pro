@@ -15,15 +15,19 @@
                     :key="zone.tab"
                     :data-tab="zone.tab"
                     class="feed-zone-element flex flex-col items-center justify-center p-6 w-[28%] aspect-square rounded-2xl border-2 border-dashed border-primary/40 bg-card/80 text-foreground transition-all duration-300 pointer-events-none"
-                    :class="{ 'border-primary border-solid bg-primary/20 text-primary scale-[1.05] shadow-[0_12px_30px_-10px_rgba(var(--primary-rgb),0.5)]': hoveredZone === zone.tab }">
+                    :class="{
+                        'border-primary border-solid bg-primary/20 text-primary scale-[1.05] shadow-[0_12px_30px_-10px_rgba(var(--primary-rgb),0.5)]':
+                            hoveredZone === zone.tab
+                    }">
                     <Upload class="size-8 mb-2" />
                     <span class="text-sm font-semibold text-center">{{ zone.label }}</span>
-                    <span class="text-xs opacity-70 mt-1 text-center">{{ t('dialog.gallery_icons.drop_to_upload') }}</span>
+                    <span class="text-xs opacity-70 mt-1 text-center">{{
+                        t('dialog.gallery_icons.drop_to_upload')
+                    }}</span>
                 </div>
             </div>
         </div>
         <DataTableLayout
-
             :table="table"
             :loading="feedTable.loading"
             auto-height
@@ -197,7 +201,12 @@
         let found = '';
         for (const el of elements) {
             const rect = el.getBoundingClientRect();
-            if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+            if (
+                e.clientX >= rect.left &&
+                e.clientX <= rect.right &&
+                e.clientY >= rect.top &&
+                e.clientY <= rect.bottom
+            ) {
                 found = el.getAttribute('data-tab');
                 break;
             }
@@ -371,4 +380,3 @@
         pointer-events: none;
     }
 </style>
-

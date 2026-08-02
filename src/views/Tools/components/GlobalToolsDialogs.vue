@@ -11,9 +11,7 @@
     <AutoChangeStatusDialog
         :isAutoChangeStatusDialogVisible="autoChangeStatus"
         @close="closeDialog('autoChangeStatus')" />
-    <ProfileCompletionDialog
-        :visible="infoCompletion"
-        @close="closeDialog('infoCompletion')" />
+    <ProfileCompletionDialog :visible="infoCompletion" @close="closeDialog('infoCompletion')" />
 </template>
 
 <script setup>

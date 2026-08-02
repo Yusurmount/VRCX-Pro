@@ -54,7 +54,10 @@ describe('relationshipTimelineUtils', () => {
     });
 
     it('uses per-bucket topN and allows legend to exceed N via union', () => {
-        const aggregation = aggregateFriendDaysToBuckets(createFriendDaysMap(), 1);
+        const aggregation = aggregateFriendDaysToBuckets(
+            createFriendDaysMap(),
+            1
+        );
         const chart = buildPerBucketTopNPercentageSeries({
             aggregation,
             friendCount: 2,
@@ -69,8 +72,14 @@ describe('relationshipTimelineUtils', () => {
         expect(seriesNames[0]).toBe('Others');
         expect(seriesNames.slice(1).sort()).toEqual(['Alice', 'Bob', 'Carol']);
 
-        const bucket0Total = chart.series.reduce((sum, item) => sum + item.data[0], 0);
-        const bucket1Total = chart.series.reduce((sum, item) => sum + item.data[1], 0);
+        const bucket0Total = chart.series.reduce(
+            (sum, item) => sum + item.data[0],
+            0
+        );
+        const bucket1Total = chart.series.reduce(
+            (sum, item) => sum + item.data[1],
+            0
+        );
         expect(bucket0Total).toBeCloseTo(100, 2);
         expect(bucket1Total).toBeCloseTo(100, 2);
 

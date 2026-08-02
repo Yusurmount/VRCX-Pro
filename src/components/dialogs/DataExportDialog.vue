@@ -43,95 +43,102 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { toast } from 'vue-sonner';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-vue-next';
-import { exportJSON, exportExcel } from '@/services/export';
+    import { computed, ref, watch } from 'vue';
+    import { useI18n } from 'vue-i18n';
+    import { toast } from 'vue-sonner';
+    import {
+        Dialog,
+        DialogContent,
+        DialogDescription,
+        DialogFooter,
+        DialogHeader,
+        DialogTitle
+    } from '@/components/ui/dialog';
+    import { Button } from '@/components/ui/button';
+    import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+    import { Loader2 } from 'lucide-vue-next';
+    import { exportJSON, exportExcel } from '@/services/export';
 
-const { t } = useI18n();
+    const { t } = useI18n();
 
-const props = defineProps({
-    visible: {
-        type: Boolean,
-        required: true
-    },
-    /** 对话框标题 */
-    title: {
-        type: String,
-        required: true
-    },
-    /** 默认导出文件名（不含扩展名） */
-    defaultFileName: {
-        type: String,
-        required: true
-    },
-    /** Excel 工作表名 */
-    sheetName: {
-        type: String,
-        default: 'Data'
-    },
-    /** 获取导出数据的函数，返回数组 */
-    getData: {
-        type: Function,
-        required: true
-    }
-});
+    const props = defineProps({
+        visible: {
+            type: Boolean,
+            required: true
+        },
+        /** 对话框标题 */
+        title: {
+            type: String,
+            required: true
+        },
+        /** 默认导出文件名（不含扩展名） */
+        defaultFileName: {
+            type: String,
+            required: true
+        },
+        /** Excel 工作表名 */
+        sheetName: {
+            type: String,
+            default: 'Data'
+        },
+        /** 获取导出数据的函数，返回数组 */
+        getData: {
+            type: Function,
+            required: true
+        }
+    });
 
-const emit = defineEmits(['update:visible']);
+    const emit = defineEmits(['update:visible']);
 
-const isVisible = computed({
-    get: () => props.visible,
-    set: (v) => emit('update:visible', v)
-});
+    const isVisible = computed({
+        get: () => props.visible,
+        set: (v) => emit('update:visible', v)
+    });
 
-const exportFormat = ref('json');
-const exporting = ref(false);
-const previewData = ref([]);
+    const exportFormat = ref('json');
+    const exporting = ref(false);
+    const previewData = ref([]);
 
-watch(
-    () => props.visible,
-    (v) => {
-        if (v) {
-            exportFormat.value = 'json';
-            exporting.value = false;
-            // 延迟计算数据，避免阻塞 UI
-            try {
-                previewData.value = props.getData() ?? [];
-            } catch (e) {
-                console.error('DataExportDialog getData error:', e);
-                previewData.value = [];
+    watch(
+        () => props.visible,
+        (v) => {
+            if (v) {
+                exportFormat.value = 'json';
+                exporting.value = false;
+                // 延迟计算数据，避免阻塞 UI
+                try {
+                    previewData.value = props.getData() ?? [];
+                } catch (e) {
+                    console.error('DataExportDialog getData error:', e);
+                    previewData.value = [];
+                }
             }
         }
-    }
-);
+    );
 
-async function handleExport() {
-    if (exporting.value || previewData.value.length === 0) {
-        return;
-    }
-    exporting.value = true;
-    try {
-        let result;
-        if (exportFormat.value === 'json') {
-            result = await exportJSON(previewData.value, props.defaultFileName);
-        } else {
-            result = await exportExcel(previewData.value, props.defaultFileName, props.sheetName);
+    async function handleExport() {
+        if (exporting.value || previewData.value.length === 0) {
+            return;
         }
-        if (result.success) {
-            toast.success(t('dialog.data_export.success'));
-            isVisible.value = false;
-        } else if (result.error !== 'cancelled') {
-            toast.error(t('dialog.data_export.error', { error: result.error }));
+        exporting.value = true;
+        try {
+            let result;
+            if (exportFormat.value === 'json') {
+                result = await exportJSON(previewData.value, props.defaultFileName);
+            } else {
+                result = await exportExcel(previewData.value, props.defaultFileName, props.sheetName);
+            }
+            if (result.success) {
+                toast.success(t('dialog.data_export.success'));
+                isVisible.value = false;
+            } else if (result.error !== 'cancelled') {
+                toast.error(t('dialog.data_export.error', { error: result.error }));
+            }
+        } catch (e) {
+            console.error('handleExport error:', e);
+            toast.error(t('dialog.data_export.error', { error: e.message }));
+        } finally {
+            exporting.value = false;
         }
-    } catch (e) {
-        console.error('handleExport error:', e);
-        toast.error(t('dialog.data_export.error', { error: e.message }));
-    } finally {
-        exporting.value = false;
     }
-}
 </script>

@@ -22,11 +22,20 @@ import * as workerTimers from 'worker-timers';
 // ── Utility ────────────────────────────────────────────────────────────────────
 
 function isVagueLoc(loc) {
-    return !loc || loc === 'private' || (typeof loc === 'string' && loc.startsWith('offline'));
+    return (
+        !loc ||
+        loc === 'private' ||
+        (typeof loc === 'string' && loc.startsWith('offline'))
+    );
 }
 
 function isDetailedLoc(loc) {
-    return loc && loc !== 'private' && !(typeof loc === 'string' && loc.startsWith('offline')) && loc !== ':';
+    return (
+        loc &&
+        loc !== 'private' &&
+        !(typeof loc === 'string' && loc.startsWith('offline')) &&
+        loc !== ':'
+    );
 }
 
 function nowIso() {
@@ -64,7 +73,10 @@ export class AccountSession {
         // Apply saved cookies first (fast-path: skip full login)
         if (savedEntry.cookies) {
             try {
-                webApiService.setSecondaryCookies(this.userId, savedEntry.cookies);
+                webApiService.setSecondaryCookies(
+                    this.userId,
+                    savedEntry.cookies
+                );
             } catch {
                 // ignore – will try fresh login below
             }
@@ -75,8 +87,14 @@ export class AccountSession {
         try {
             currentUser = await this._requestRaw('auth/user');
             // Ensure the cookie actually belongs to this secondary account
-            if (currentUser && !currentUser.error && currentUser.id !== this.userId) {
-                console.warn(`[accountSession] Cookie mismatch for ${this.userId}, forcing fresh login.`);
+            if (
+                currentUser &&
+                !currentUser.error &&
+                currentUser.id !== this.userId
+            ) {
+                console.warn(
+                    `[accountSession] Cookie mismatch for ${this.userId}, forcing fresh login.`
+                );
                 currentUser = null;
                 // We should clear the bad cookies from the secondary client
                 try {
@@ -88,10 +106,17 @@ export class AccountSession {
         }
 
         // Fresh login if cookies expired / missing
-        if (!currentUser || currentUser.error || currentUser.requiresTwoFactorAuth) {
-            const { username, password, endpoint, websocket } = savedEntry.loginParams ?? {};
+        if (
+            !currentUser ||
+            currentUser.error ||
+            currentUser.requiresTwoFactorAuth
+        ) {
+            const { username, password, endpoint, websocket } =
+                savedEntry.loginParams ?? {};
             if (!username || !password) {
-                throw new Error(`Secondary account ${this.userId}: no credentials available`);
+                throw new Error(
+                    `Secondary account ${this.userId}: no credentials available`
+                );
             }
             const endpointToUse = endpoint || AppDebug.endpointDomainVrchat;
             const wsToUse = websocket || AppDebug.websocketDomainVrchat;
@@ -107,8 +132,12 @@ export class AccountSession {
             this._wsEndpoint = wsToUse;
             this._apiEndpoint = endpointToUse;
         } else {
-            this._apiEndpoint = savedEntry.loginParams?.endpoint || AppDebug.endpointDomainVrchat;
-            this._wsEndpoint = savedEntry.loginParams?.websocket || AppDebug.websocketDomainVrchat;
+            this._apiEndpoint =
+                savedEntry.loginParams?.endpoint ||
+                AppDebug.endpointDomainVrchat;
+            this._wsEndpoint =
+                savedEntry.loginParams?.websocket ||
+                AppDebug.websocketDomainVrchat;
         }
 
         if (!currentUser || !currentUser.id) {
@@ -142,7 +171,11 @@ export class AccountSession {
             this._pollTimer = null;
         }
         if (this._ws) {
-            try { this._ws.close(); } catch { /* ignore */ }
+            try {
+                this._ws.close();
+            } catch {
+                /* ignore */
+            }
             this._ws = null;
         }
         webApiService.destroySecondaryClient(this.userId);
@@ -170,8 +203,14 @@ export class AccountSession {
             }
             init.url = url.toString();
         } else if (init.method !== 'GET' && !options.uploadImage) {
-            init.headers = { 'Content-Type': 'application/json;charset=utf-8', ...init.headers };
-            init.body = init.params === Object(init.params) ? JSON.stringify(init.params) : '{}';
+            init.headers = {
+                'Content-Type': 'application/json;charset=utf-8',
+                ...init.headers
+            };
+            init.body =
+                init.params === Object(init.params)
+                    ? JSON.stringify(init.params)
+                    : '{}';
         }
 
         const response = await webApiService.executeAs(this.userId, init);
@@ -216,7 +255,14 @@ export class AccountSession {
         );
     }
 
-    _writeGPS(userId, displayName, location, worldName, previousLocation, groupName) {
+    _writeGPS(
+        userId,
+        displayName,
+        location,
+        worldName,
+        previousLocation,
+        groupName
+    ) {
         const p = this.userPrefix;
         sqliteService.executeNonQuery(
             `INSERT OR IGNORE INTO ${p}_feed_gps (created_at, user_id, display_name, location, world_name, previous_location, time, group_name) VALUES (@ca, @uid, @dn, @loc, @wn, @pl, @t, @gn)`,
@@ -233,7 +279,14 @@ export class AccountSession {
         );
     }
 
-    _writeOnlineOffline(userId, displayName, type, location, worldName, groupName) {
+    _writeOnlineOffline(
+        userId,
+        displayName,
+        type,
+        location,
+        worldName,
+        groupName
+    ) {
         const p = this.userPrefix;
         sqliteService.executeNonQuery(
             `INSERT OR IGNORE INTO ${p}_feed_online_offline (created_at, user_id, display_name, type, location, world_name, time, group_name) VALUES (@ca, @uid, @dn, @t, @loc, @wn, @tm, @gn)`,
@@ -254,20 +307,27 @@ export class AccountSession {
 
     async _loadFriends() {
         try {
-            const online = await this._requestRaw('auth/user/friends', { params: { n: 100, offset: 0 } });
+            const online = await this._requestRaw('auth/user/friends', {
+                params: { n: 100, offset: 0 }
+            });
             if (Array.isArray(online)) {
                 for (const user of online) {
                     this._applyFriendUser(user, 'online');
                 }
             }
-            const offline = await this._requestRaw('auth/user/friends', { params: { n: 100, offset: 0, offline: true } });
+            const offline = await this._requestRaw('auth/user/friends', {
+                params: { n: 100, offset: 0, offline: true }
+            });
             if (Array.isArray(offline)) {
                 for (const user of offline) {
                     this._applyFriendUser(user, 'offline');
                 }
             }
         } catch (e) {
-            console.warn(`[AccountSession:${this.userId}] _loadFriends error`, e);
+            console.warn(
+                `[AccountSession:${this.userId}] _loadFriends error`,
+                e
+            );
         }
     }
 
@@ -298,48 +358,57 @@ export class AccountSession {
     _connectWS() {
         if (this._ws !== null || this._destroyed) return;
 
-        this._requestRaw('auth').then((authData) => {
-            if (!authData || !authData.token || this._destroyed) return;
-            const wsBase = this._wsEndpoint || AppDebug.websocketDomain;
-            const socket = new WebSocket(`${wsBase}/?auth=${authData.token}`);
-            socket.onopen = () => {
-                if (AppDebug.debugWebSocket) {
-                    console.log(`[WS:secondary:${this.userId}] connected`);
-                }
-            };
-            socket.onclose = () => {
-                if (this._ws === socket) {
-                    this._ws = null;
-                }
-                if (!this._destroyed) {
-                    workerTimers.setTimeout(() => {
-                        if (!this._destroyed && this._ws === null) {
-                            this._connectWS();
-                        }
-                    }, 10000);
-                }
-            };
-            socket.onerror = () => {
-                socket.onclose(new CloseEvent('close', { code: 1006 }));
-            };
-            socket.onmessage = ({ data }) => {
-                try {
-                    let json;
-                    try {
-                        json = JSON.parse(data);
-                        json.content = JSON.parse(json.content);
-                    } catch { /* ignore */ }
-                    if (json) {
-                        this._handleWsMessage(json);
+        this._requestRaw('auth')
+            .then((authData) => {
+                if (!authData || !authData.token || this._destroyed) return;
+                const wsBase = this._wsEndpoint || AppDebug.websocketDomain;
+                const socket = new WebSocket(
+                    `${wsBase}/?auth=${authData.token}`
+                );
+                socket.onopen = () => {
+                    if (AppDebug.debugWebSocket) {
+                        console.log(`[WS:secondary:${this.userId}] connected`);
                     }
-                } catch (e) {
-                    console.error(`[WS:secondary:${this.userId}]`, e);
-                }
-            };
-            this._ws = socket;
-        }).catch((e) => {
-            console.warn(`[AccountSession:${this.userId}] WS auth failed`, e);
-        });
+                };
+                socket.onclose = () => {
+                    if (this._ws === socket) {
+                        this._ws = null;
+                    }
+                    if (!this._destroyed) {
+                        workerTimers.setTimeout(() => {
+                            if (!this._destroyed && this._ws === null) {
+                                this._connectWS();
+                            }
+                        }, 10000);
+                    }
+                };
+                socket.onerror = () => {
+                    socket.onclose(new CloseEvent('close', { code: 1006 }));
+                };
+                socket.onmessage = ({ data }) => {
+                    try {
+                        let json;
+                        try {
+                            json = JSON.parse(data);
+                            json.content = JSON.parse(json.content);
+                        } catch {
+                            /* ignore */
+                        }
+                        if (json) {
+                            this._handleWsMessage(json);
+                        }
+                    } catch (e) {
+                        console.error(`[WS:secondary:${this.userId}]`, e);
+                    }
+                };
+                this._ws = socket;
+            })
+            .catch((e) => {
+                console.warn(
+                    `[AccountSession:${this.userId}] WS auth failed`,
+                    e
+                );
+            });
     }
 
     _handleWsMessage({ type, content }) {
@@ -358,9 +427,23 @@ export class AccountSession {
                 const prevLoc = prev?.ref?.location || '';
                 this._applyFriendUser(user, 'online');
                 if (isDetailedLoc(user.location)) {
-                    this._writeGPS(user.id, user.displayName, user.location, '', prevLoc, '');
+                    this._writeGPS(
+                        user.id,
+                        user.displayName,
+                        user.location,
+                        '',
+                        prevLoc,
+                        ''
+                    );
                 }
-                this._writeOnlineOffline(user.id, user.displayName || '', 'Online', user.location, '', '');
+                this._writeOnlineOffline(
+                    user.id,
+                    user.displayName || '',
+                    'Online',
+                    user.location,
+                    '',
+                    ''
+                );
                 break;
             }
             case 'friend-active': {
@@ -380,7 +463,14 @@ export class AccountSession {
                     const prevLoc = ctx.ref?.location || '';
                     ctx.state = 'offline';
                     ctx.ref.location = 'offline';
-                    this._writeOnlineOffline(content.userId, ctx.ref?.displayName || '', 'Offline', prevLoc, '', '');
+                    this._writeOnlineOffline(
+                        content.userId,
+                        ctx.ref?.displayName || '',
+                        'Offline',
+                        prevLoc,
+                        '',
+                        ''
+                    );
                 }
                 break;
             }
@@ -402,7 +492,14 @@ export class AccountSession {
                 const prevLoc = prev?.ref?.location || '';
                 this._applyFriendUser(user, 'online');
                 if (isDetailedLoc(user.location) && user.location !== prevLoc) {
-                    this._writeGPS(user.id, user.displayName || user.id, user.location, '', prevLoc, '');
+                    this._writeGPS(
+                        user.id,
+                        user.displayName || user.id,
+                        user.location,
+                        '',
+                        prevLoc,
+                        ''
+                    );
                 }
                 break;
             }
@@ -422,11 +519,14 @@ export class AccountSession {
     _startPolling() {
         if (this._pollTimer !== null) return;
         // Poll friends list every 5 minutes
-        this._pollTimer = workerTimers.setInterval(() => {
-            if (!this._destroyed) {
-                this._loadFriends().catch(() => {});
-            }
-        }, 5 * 60 * 1000);
+        this._pollTimer = workerTimers.setInterval(
+            () => {
+                if (!this._destroyed) {
+                    this._loadFriends().catch(() => {});
+                }
+            },
+            5 * 60 * 1000
+        );
     }
 }
 

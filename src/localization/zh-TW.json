@@ -1251,6 +1251,14 @@
                         "purge_complete": "角色資料清除成功。重新啟動…",
                         "purge_failed": "清除失敗： {error}"
                     },
+                    "db_import": {
+                        "strategy_compat_label": "相容性選項",
+                        "strategy_allow_user_mismatch": "允許不同帳號",
+                        "strategy_allow_user_mismatch_desc": "允許匯入從其他 VRChat 帳號匯出的備份檔案",
+                        "confirm_user_mismatch_notice": "此備份由其他帳號匯出。匯入後資料將與目前帳號的資料混合。",
+                        "report_skipped_tables": "以下資料表因目前資料庫中不存在而被跳過：",
+                        "error_user_mismatch_hint": "此備份由其他帳號匯出。請返回並在相容性選項中開啟「允許不同帳號」後再嘗試匯入。"
+                    },
                     "user_generated_content": {
                         "header": "用戶生成內容",
                         "folder": "開啟資料夾",

@@ -40,10 +40,15 @@ export const useAutoFollowStore = defineStore('AutoFollow', () => {
             },
             async (newLocation) => {
                 if (!isActive.value || !newLocation) return;
-                
-                if (isRealInstance(newLocation) && newLocation !== locationStore.lastLocation.location) {
-                    toast.info(`自动跟随: ${targetFriendName.value} 切换了房间，准备加入...`);
-                    
+
+                if (
+                    isRealInstance(newLocation) &&
+                    newLocation !== locationStore.lastLocation.location
+                ) {
+                    toast.info(
+                        `自动跟随: ${targetFriendName.value} 切换了房间，准备加入...`
+                    );
+
                     if (!gameStore.isGameNoVR || gameStore.isSteamVRRunning) {
                         launchStore.tryOpenInstanceInVrc(newLocation, null);
                     } else {

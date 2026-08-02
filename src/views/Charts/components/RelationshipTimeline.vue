@@ -19,7 +19,8 @@
                 </div>
 
                 <div class="flex items-center gap-2 flex-wrap">
-                    <div class="flex items-center justify-between px-0.5 h-[30px] in-[.is-compact-table]:h-[24px]! in-[.is-comfortable-table]:h-[26px]!">
+                    <div
+                        class="flex items-center justify-between px-0.5 h-[30px] in-[.is-compact-table]:h-[24px]! in-[.is-comfortable-table]:h-[26px]!">
                         <span class="shrink-0 text-sm in-[.is-compact-table]:text-xs!">
                             {{ t('view.charts.relationship_timeline.settings.top_friends') }}
                         </span>
@@ -37,21 +38,19 @@
                             </span>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between px-0.5 h-[30px] in-[.is-compact-table]:h-[24px]! in-[.is-comfortable-table]:h-[26px]! gap-2">
+                    <div
+                        class="flex items-center justify-between px-0.5 h-[30px] in-[.is-compact-table]:h-[24px]! in-[.is-comfortable-table]:h-[26px]! gap-2">
                         <span class="shrink-0 text-sm in-[.is-compact-table]:text-xs!">
                             {{ t('view.charts.relationship_timeline.settings.show_others') }}
                         </span>
-                        <Switch
-                            v-model="showOthers"
-                            @update:modelValue="debouncedRebuildChart" />
+                        <Switch v-model="showOthers" @update:modelValue="debouncedRebuildChart" />
                     </div>
-                    <div class="flex items-center justify-between px-0.5 h-[30px] in-[.is-compact-table]:h-[24px]! in-[.is-comfortable-table]:h-[26px]! gap-2">
+                    <div
+                        class="flex items-center justify-between px-0.5 h-[30px] in-[.is-compact-table]:h-[24px]! in-[.is-comfortable-table]:h-[26px]! gap-2">
                         <span class="shrink-0 text-sm in-[.is-compact-table]:text-xs!">
                             {{ t('view.charts.relationship_timeline.settings.show_friends_only') }}
                         </span>
-                        <Switch
-                            v-model="showFriendsOnly"
-                            @update:modelValue="debouncedRebuildChart" />
+                        <Switch v-model="showFriendsOnly" @update:modelValue="debouncedRebuildChart" />
                     </div>
                     <TooltipWrapper :content="t('view.charts.relationship_timeline.refresh')" side="top">
                         <Button
@@ -145,14 +144,14 @@
     const friendCount = ref(5);
     const friendCountModel = computed({
         get: () => [friendCount.value],
-        set: (v) => { friendCount.value = v[0]; }
+        set: (v) => {
+            friendCount.value = v[0];
+        }
     });
     const showOthers = ref(false);
     const showFriendsOnly = ref(false);
     const scaleSlider = ref(51);
-    const bucketDays = computed(() =>
-        Math.max(1, Math.round(Math.pow(90, scaleSlider.value / 100)))
-    );
+    const bucketDays = computed(() => Math.max(1, Math.round(Math.pow(90, scaleSlider.value / 100))));
 
     const hasData = computed(() => rawRows.value.length > 0);
     const dataZoomRange = ref(null);
@@ -183,9 +182,7 @@
         (rows) => {
             const map = new Map();
             for (const row of rows) {
-                const epochDay = Math.floor(
-                    new Date(row.day + 'T00:00:00Z').getTime() / 86400000
-                );
+                const epochDay = Math.floor(new Date(row.day + 'T00:00:00Z').getTime() / 86400000);
                 let entry = map.get(row.userId);
                 if (!entry) {
                     entry = { displayName: row.displayName, days: new Map() };
@@ -251,9 +248,7 @@
         const endIdx = Math.ceil((end / 100) * (bucketCount - 1));
         return series
             .filter(
-                (s) =>
-                    Array.isArray(s.data) &&
-                    s.data.some((v, i) => i >= startIdx && i <= endIdx && Number(v) > 0)
+                (s) => Array.isArray(s.data) && s.data.some((v, i) => i >= startIdx && i <= endIdx && Number(v) > 0)
             )
             .map((s) => s.name);
     }
@@ -261,18 +256,9 @@
     function buildEChartsOption(chartData) {
         const { xLabels, series, bucketCount } = chartData;
         const isDark = isDarkMode.value;
-        const zoomRange = computeZoomRange(
-            bucketCount,
-            dataZoomRange.value,
-            DEFAULT_VISIBLE_BUCKETS
-        );
+        const zoomRange = computeZoomRange(bucketCount, dataZoomRange.value, DEFAULT_VISIBLE_BUCKETS);
 
-        const legendData = computeLegendData(
-            series,
-            zoomRange.start,
-            zoomRange.end,
-            bucketCount
-        );
+        const legendData = computeLegendData(series, zoomRange.start, zoomRange.end, bucketCount);
 
         return {
             backgroundColor: 'transparent',
@@ -284,9 +270,7 @@
                 },
                 formatter(params) {
                     const header = `<div style="margin-bottom:6px;font-weight:600;font-size:12px">${params[0]?.axisValue}</div>`;
-                    const items = params
-                        .filter((p) => p.value > 0)
-                        .sort((a, b) => b.value - a.value);
+                    const items = params.filter((p) => p.value > 0).sort((a, b) => b.value - a.value);
                     if (!items.length) return '';
                     const rows = items
                         .map((p) => {
@@ -428,9 +412,7 @@
             if (legendSelected[allSeries[i].name] === false) continue;
             const rawVal = allSeries[i].data?.[xIndex];
             const value =
-                rawVal != null && typeof rawVal === 'object'
-                    ? Number(rawVal.value) || 0
-                    : Number(rawVal) || 0;
+                rawVal != null && typeof rawVal === 'object' ? Number(rawVal.value) || 0 : Number(rawVal) || 0;
             cumulative += value;
             if (foundIdx === -1 && yDataValue <= cumulative) {
                 foundIdx = i;
@@ -468,11 +450,7 @@
         disposeChart();
 
         chartDomElement = chartDomRef.value;
-        echartsInstance = echarts.init(
-            chartDomElement,
-            isDarkMode.value ? 'dark' : null,
-            { renderer: 'canvas' }
-        );
+        echartsInstance = echarts.init(chartDomElement, isDarkMode.value ? 'dark' : null, { renderer: 'canvas' });
 
         resizeObserver = new ResizeObserver((entries) => {
             for (const entry of entries) {

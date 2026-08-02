@@ -26,16 +26,13 @@ const trackedNonFriends = {
     async getTrackedNonFriends() {
         const results = [];
         if (!dbVars.userPrefix) return results;
-        await sqliteService.execute(
-            (row) => {
-                results.push({
-                    userId: row[0],
-                    displayName: row[1],
-                    addedAt: row[2]
-                });
-            },
-            `SELECT user_id, display_name, added_at FROM ${dbVars.userPrefix}_tracked_nonfriends ORDER BY added_at DESC`
-        );
+        await sqliteService.execute((row) => {
+            results.push({
+                userId: row[0],
+                displayName: row[1],
+                addedAt: row[2]
+            });
+        }, `SELECT user_id, display_name, added_at FROM ${dbVars.userPrefix}_tracked_nonfriends ORDER BY added_at DESC`);
         return results;
     },
 

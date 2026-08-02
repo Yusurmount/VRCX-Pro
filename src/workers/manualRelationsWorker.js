@@ -26,7 +26,9 @@ function compute(payload) {
         const creatorId = parsed.userId;
 
         // 先把会话预过滤为候选用户，避免在双重循环里反复做 candidatesSet 判断
-        const candidateSessions = sessions.filter((s) => candidatesSet.has(s.userId));
+        const candidateSessions = sessions.filter((s) =>
+            candidatesSet.has(s.userId)
+        );
         const F = candidateSessions.length;
         if (F < 2) continue; // 不足两个候选用户，直接跳过该位置
 
@@ -40,16 +42,24 @@ function compute(payload) {
                 const sessB = candidateSessions[j];
                 if (sessA.userId === sessB.userId) continue;
 
-                const overlapStart = Math.max(sessA.leaveAt - sessA.time, sessB.leaveAt - sessB.time);
+                const overlapStart = Math.max(
+                    sessA.leaveAt - sessA.time,
+                    sessB.leaveAt - sessB.time
+                );
                 const overlapEnd = Math.min(sessA.leaveAt, sessB.leaveAt);
 
                 if (overlapEnd > overlapStart) {
                     const [id1, id2] = [sessA.userId, sessB.userId].sort();
                     const key = `${id1}|${id2}`;
 
-                    const isStrictPrivate = parsed.accessType === 'invite' || parsed.accessType === 'private';
+                    const isStrictPrivate =
+                        parsed.accessType === 'invite' ||
+                        parsed.accessType === 'private';
                     let hardMatch = false;
-                    if (isStrictPrivate && (creatorId === id1 || creatorId === id2)) {
+                    if (
+                        isStrictPrivate &&
+                        (creatorId === id1 || creatorId === id2)
+                    ) {
                         hardMatch = true;
                     }
 
@@ -57,7 +67,11 @@ function compute(payload) {
                     for (const m of mySess) {
                         const myStart = m.leaveAt - m.time;
                         const myEnd = m.leaveAt;
-                        if (Math.min(myEnd, overlapEnd) - Math.max(myStart, overlapStart) > 0) {
+                        if (
+                            Math.min(myEnd, overlapEnd) -
+                                Math.max(myStart, overlapStart) >
+                            0
+                        ) {
                             mePresent = true;
                             break;
                         }
@@ -78,24 +92,30 @@ function compute(payload) {
                         const state = locPairs.get(key);
                         state.hardMatch = state.hardMatch || hardMatch;
                         state.mePresent = state.mePresent || mePresent;
-                        state.overlapStart = Math.min(state.overlapStart, overlapStart);
-                        state.overlapEnd = Math.max(state.overlapEnd, overlapEnd);
+                        state.overlapStart = Math.min(
+                            state.overlapStart,
+                            overlapStart
+                        );
+                        state.overlapEnd = Math.max(
+                            state.overlapEnd,
+                            overlapEnd
+                        );
                     }
                 }
             }
         }
 
         const instanceWeightMap = {
-            'invite': 1.0,
+            invite: 1.0,
             'invite+': 1.0,
-            'private': 1.0,
-            'friends': 1.8,
+            private: 1.0,
+            friends: 1.8,
             'friends+': 1.2,
-            'hidden': 1.2,
-            'group': 1.0,
-            'groupPublic': 1.0,
-            'groupPlus': 1.0,
-            'public': 0.5
+            hidden: 1.2,
+            group: 1.0,
+            groupPublic: 1.0,
+            groupPlus: 1.0,
+            public: 0.5
         };
 
         for (const [key, state] of locPairs.entries()) {
@@ -143,19 +163,26 @@ function compute(payload) {
 
             if (state.hardMatch) stats.hardMatch = true;
 
-            stats.firstMeeting = Math.min(stats.firstMeeting, state.overlapStart);
+            stats.firstMeeting = Math.min(
+                stats.firstMeeting,
+                state.overlapStart
+            );
             stats.lastMeeting = Math.max(stats.lastMeeting, state.overlapEnd);
 
             const [idA, idB] = key.split('|');
             if (
                 state.creatorId === idA &&
-                (state.accessType === 'friends' || state.accessType === 'friends+' || state.accessType === 'hidden')
+                (state.accessType === 'friends' ||
+                    state.accessType === 'friends+' ||
+                    state.accessType === 'hidden')
             ) {
                 stats.hostedByA = true;
             }
             if (
                 state.creatorId === idB &&
-                (state.accessType === 'friends' || state.accessType === 'friends+' || state.accessType === 'hidden')
+                (state.accessType === 'friends' ||
+                    state.accessType === 'friends+' ||
+                    state.accessType === 'hidden')
             ) {
                 stats.hostedByB = true;
             }
@@ -172,7 +199,10 @@ function compute(payload) {
         if (!mutualSet || mutualSet.size === 0) continue;
         for (const mutualId of mutualSet) {
             if (!candidatesSet.has(mutualId)) continue;
-            const [a, b] = friendId < mutualId ? [friendId, mutualId] : [mutualId, friendId];
+            const [a, b] =
+                friendId < mutualId
+                    ? [friendId, mutualId]
+                    : [mutualId, friendId];
             knownFriendsSet.add(`${a}|${b}`);
         }
     }
@@ -214,7 +244,10 @@ function compute(payload) {
 
         const effectiveStartDate = stats.firstMeeting;
         const effectiveEndDate = stats.lastMeeting;
-        const daysObservedSpan = Math.max(0, (effectiveEndDate - effectiveStartDate) / (1000 * 60 * 60 * 24));
+        const daysObservedSpan = Math.max(
+            0,
+            (effectiveEndDate - effectiveStartDate) / (1000 * 60 * 60 * 24)
+        );
         const daysObserved = Math.max(14, daysObservedSpan);
         const startDateStr = dayjs(effectiveStartDate).format('YYYY-MM-DD');
         const endDateStr = dayjs(effectiveEndDate).format('YYYY-MM-DD');
@@ -232,7 +265,10 @@ function compute(payload) {
             let multiplierFormula = '';
             let independentPct = 0;
 
-            const indepRatio = stats.count > 0 ? (stats.countMeAbsent + stats.countUnknown) / stats.count : 0;
+            const indepRatio =
+                stats.count > 0
+                    ? (stats.countMeAbsent + stats.countUnknown) / stats.count
+                    : 0;
             independentPct = Math.round(indepRatio * 100);
 
             if (indepRatio <= 0.08) {
@@ -279,7 +315,17 @@ function compute(payload) {
                 `独立权重影响: ${multiplierStr} \n[公式: ${multiplierFormula}]`;
         }
 
-        result.push({ userIdA: idA, userIdB: idB, nameA, nameB, score: finalScore, displayScore, tooltip, key, isAdded });
+        result.push({
+            userIdA: idA,
+            userIdB: idB,
+            nameA,
+            nameB,
+            score: finalScore,
+            displayScore,
+            tooltip,
+            key,
+            isAdded
+        });
     }
 
     result.sort((a, b) => b.score - a.score);

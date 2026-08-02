@@ -40,8 +40,7 @@
                     <pre
                         class="text-xs font-[inherit]"
                         style="display: inline-block; vertical-align: top; white-space: pre-wrap; margin: 0"
-                        >{{ post.text || '-' }}</pre
-                    >
+                        >{{ post.text || '-' }}</pre>
                     <br />
                     <div v-if="post.authorId" class="text-xs" style="float: right; margin-left: 6px">
                         <TooltipWrapper v-if="post.roleIds.length" side="top">

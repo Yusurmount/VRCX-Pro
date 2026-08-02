@@ -1,6 +1,10 @@
 import { reactive } from 'vue';
 import { database } from '../services/database';
-import { useFriendStore, useTrackedNonFriendsStore, useManualRelationsStore } from '../stores';
+import {
+    useFriendStore,
+    useTrackedNonFriendsStore,
+    useManualRelationsStore
+} from '../stores';
 import { userRequest } from '../api';
 
 /**
@@ -103,7 +107,9 @@ export async function runSilentInfoFetch() {
         return;
     }
 
-    console.log(`[InfoFetch] 开始抓取，共 ${targets.length} 个目标（好友 + 追踪非好友）`);
+    console.log(
+        `[InfoFetch] 开始抓取，共 ${targets.length} 个目标（好友 + 追踪非好友）`
+    );
 
     for (const target of targets) {
         if (cancelled) break;
@@ -119,10 +125,15 @@ export async function runSilentInfoFetch() {
             if (cancelled) break;
             await new Promise((r) => setTimeout(r, 500));
             try {
-                const result = await userRequest.getUser({ userId: target.userId });
+                const result = await userRequest.getUser({
+                    userId: target.userId
+                });
                 userJson = result.json;
             } catch (retryError) {
-                console.error(`[InfoFetch] Failed to fetch ${target.userId} after retry`, retryError);
+                console.error(
+                    `[InfoFetch] Failed to fetch ${target.userId} after retry`,
+                    retryError
+                );
             }
         }
 
@@ -155,7 +166,8 @@ export async function runSilentInfoFetch() {
 
                 const validStatuses = ['join me', 'active', 'ask me', 'busy'];
                 if (validStatuses.includes(currentStatus)) {
-                    const lastStatus = await database.getLastStatusChangeForUser(userId);
+                    const lastStatus =
+                        await database.getLastStatusChangeForUser(userId);
                     if (
                         !lastStatus ||
                         lastStatus.status !== currentStatus ||
@@ -168,7 +180,9 @@ export async function runSilentInfoFetch() {
                             status: currentStatus,
                             statusDescription: currentStatusDesc,
                             previousStatus: lastStatus ? lastStatus.status : '',
-                            previousStatusDescription: lastStatus ? lastStatus.statusDescription : ''
+                            previousStatusDescription: lastStatus
+                                ? lastStatus.statusDescription
+                                : ''
                         });
                         infoFetchState.statusUpdated++;
                     }
@@ -184,7 +198,7 @@ export async function runSilentInfoFetch() {
     if (!cancelled) {
         infoFetchState.status = 'computing';
         await useManualRelationsStore().computeSuggestions();
-        
+
         infoFetchState.status = 'done';
         console.log(
             `[InfoFetch] 完成：Bio 更新 ${infoFetchState.bioUpdated} 条，Status 更新 ${infoFetchState.statusUpdated} 条`

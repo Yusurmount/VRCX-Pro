@@ -60,29 +60,45 @@
                     </VirtualCombobox>
                 </div>
                 <div class="ml-auto flex items-center gap-2">
-                    <div v-if="graphReady" class="mr-4 hidden items-center gap-4 text-xs font-medium text-muted-foreground sm:flex">
+                    <div
+                        v-if="graphReady"
+                        class="mr-4 hidden items-center gap-4 text-xs font-medium text-muted-foreground sm:flex">
                         <div class="flex items-center gap-1.5">
-                            <div class="size-2 rounded-full" :style="{ backgroundColor: isDarkMode ? '#64748b' : '#94a3b8' }"></div>
+                            <div
+                                class="size-2 rounded-full"
+                                :style="{ backgroundColor: isDarkMode ? '#64748b' : '#94a3b8' }"></div>
                             <span>{{ t('view.charts.mutual_friend.legend.mutual') }}</span>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <div class="size-2 rounded-full" :style="{ backgroundColor: isDarkMode ? '#31543d' : '#dcfce7' }"></div>
+                            <div
+                                class="size-2 rounded-full"
+                                :style="{ backgroundColor: isDarkMode ? '#31543d' : '#dcfce7' }"></div>
                             <span>{{ t('view.charts.mutual_friend.legend.manual') }}</span>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <div class="size-2 rounded-full" :style="{ backgroundColor: isDarkMode ? '#543131' : '#fee2e2' }"></div>
+                            <div
+                                class="size-2 rounded-full"
+                                :style="{ backgroundColor: isDarkMode ? '#543131' : '#fee2e2' }"></div>
                             <span>{{ t('view.charts.mutual_friend.legend.non_friend') }}</span>
                         </div>
                     </div>
-                    <TooltipWrapper :content="t('view.charts.mutual_friend.manual_relations.button_tooltip')" side="top">
-                        <Button class="rounded-full" size="icon" variant="ghost" @click="isManualRelationsDialogOpen = true">
+                    <TooltipWrapper
+                        :content="t('view.charts.mutual_friend.manual_relations.button_tooltip')"
+                        side="top">
+                        <Button
+                            class="rounded-full"
+                            size="icon"
+                            variant="ghost"
+                            @click="isManualRelationsDialogOpen = true">
                             <LinkIcon />
                         </Button>
                     </TooltipWrapper>
                     <TooltipWrapper
-                        :content="showNonFriends
-                            ? t('view.charts.mutual_friend.tracked_nonfriend.hide_tooltip')
-                            : t('view.charts.mutual_friend.tracked_nonfriend.show_tooltip')"
+                        :content="
+                            showNonFriends
+                                ? t('view.charts.mutual_friend.tracked_nonfriend.hide_tooltip')
+                                : t('view.charts.mutual_friend.tracked_nonfriend.show_tooltip')
+                        "
                         side="top">
                         <Button
                             class="rounded-full"
@@ -262,7 +278,11 @@
                         <div class="flex flex-col text-sm mb-1">
                             <div class="flex justify-between">
                                 <span class="mr-1">{{ progressLabel }}</span>
-                                <strong>{{ currentProgressCount }} / {{ totalFriends }}+{{ fetchState.totalTrackedNonFriends || 0 }}</strong>
+                                <strong
+                                    >{{ currentProgressCount }} / {{ totalFriends }}+{{
+                                        fetchState.totalTrackedNonFriends || 0
+                                    }}</strong
+                                >
                             </div>
                         </div>
                         <Progress :model-value="progressPercent" class="h-3" />
@@ -395,8 +415,24 @@
     const MAX_LABEL_NAME_LENGTH = 20;
 
     const COLORS_PALETTE = [
-        '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc',
-        '#d94e5d', '#eac736', '#50a3ba', '#f2d643', '#ffb980', '#0098d9', '#ff8c00', '#ff00ff', '#1e90ff'
+        '#5470c6',
+        '#91cc75',
+        '#fac858',
+        '#ee6666',
+        '#73c0de',
+        '#3ba272',
+        '#fc8452',
+        '#9a60b4',
+        '#ea7ccc',
+        '#d94e5d',
+        '#eac736',
+        '#50a3ba',
+        '#f2d643',
+        '#ffb980',
+        '#0098d9',
+        '#ff8c00',
+        '#ff00ff',
+        '#1e90ff'
     ];
 
     const NodeBorderProgram = createNodeBorderProgram({
@@ -606,12 +642,16 @@
             : t('view.charts.mutual_friend.actions.start_fetch')
     );
     const totalProgressCount = computed(() => totalFriends.value + (fetchState.totalTrackedNonFriends || 0));
-    const currentProgressCount = computed(() => fetchState.processedFriends + (fetchState.processedTrackedNonFriends || 0));
+    const currentProgressCount = computed(
+        () => fetchState.processedFriends + (fetchState.processedTrackedNonFriends || 0)
+    );
     const progressPercent = computed(() =>
-        totalProgressCount.value ? Math.min(100, Math.round((currentProgressCount.value / totalProgressCount.value) * 100)) : 0
+        totalProgressCount.value
+            ? Math.min(100, Math.round((currentProgressCount.value / totalProgressCount.value) * 100))
+            : 0
     );
     const progressLabel = computed(() => {
-        return "正在拉取共同好友关系网...";
+        return '正在拉取共同好友关系网...';
     });
 
     const canvasBackground = computed(() => 'transparent');
@@ -1032,7 +1072,7 @@
         const DEFAULT_LABEL_THRESHOLD = 10;
 
         const labelColor = isDarkMode.value ? '#e2e8f0' : '#111827';
-        
+
         // Simple dark/light logic - works well for both Dark and Midnight
         const EDGE_BASE = isDarkMode.value ? '#64748b' : '#94a3b8'; // Regular mutual (Friend-Friend)
         const EDGE_ACTIVE = isDarkMode.value ? '#facc15' : '#0f172a'; // Active focus (Yellow in dark mode)
@@ -1206,7 +1246,7 @@
             // Any edge connected to at least one non-friend node
             let isNonFriendEdge = false;
             try {
-                isNonFriendEdge = extremities.some(n => graph.hasNode(n) && graph.getNodeAttribute(n, 'nonFriend'));
+                isNonFriendEdge = extremities.some((n) => graph.hasNode(n) && graph.getNodeAttribute(n, 'nonFriend'));
             } catch {
                 // node may have been dropped during rebuild
             }
@@ -1313,10 +1353,10 @@
                 const friendEntry = friends.value?.get ? friends.value.get(friendId) : undefined;
                 const fallbackRef = friendEntry?.ref || cachedUsers.get(friendId);
                 const isTracked = trackedNonFriendSet.value.has(friendId);
-                
+
                 let displayName = null;
                 if (isTracked) {
-                    const trackedEntry = trackedNonFriendsStore.trackedList.find(t => t.userId === friendId);
+                    const trackedEntry = trackedNonFriendsStore.trackedList.find((t) => t.userId === friendId);
                     displayName = trackedEntry?.displayName;
                     loadedTrackedCount++;
                 }
@@ -1325,7 +1365,9 @@
                 normalizedMutuals = normalizedMutuals.filter((id) => id != 'usr_00000000-0000-0000-0000-000000000000');
 
                 mutualMap.set(friendId, {
-                    friend: friendEntry || (fallbackRef ? { id: friendId, ref: fallbackRef } : { id: friendId, displayName }),
+                    friend:
+                        friendEntry ||
+                        (fallbackRef ? { id: friendId, ref: fallbackRef } : { id: friendId, displayName }),
                     mutuals: normalizedMutuals.map((id) => ({ id }))
                 });
             });

@@ -95,7 +95,11 @@ export const useAuthStore = defineStore('Auth', () => {
             twoFactorAuthDialogVisible.value = false;
             if (isLoggedIn) {
                 // Ignore watcher if we are in a hot-swapped secondary account context.
-                if (accountHub.primaryId && currentUser.id && currentUser.id !== accountHub.primaryId) {
+                if (
+                    accountHub.primaryId &&
+                    currentUser.id &&
+                    currentUser.id !== accountHub.primaryId
+                ) {
                     return;
                 }
 
@@ -479,24 +483,18 @@ export const useAuthStore = defineStore('Auth', () => {
                                 storedPassword
                             );
                     } catch (e) {
-                        console.error(
-                            'Failed to decrypt with machine key:',
-                            e
-                        );
+                        console.error('Failed to decrypt with machine key:', e);
                         continue;
                     }
                 }
-                security
-                    .encrypt(plaintext, key)
-                    .then((ct) => {
-                        credentialsToSave.value = {
-                            username:
-                                savedCredentials[userId].loginParams.username,
-                            password: ct,
-                            encryptionType: 'primary'
-                        };
-                        updateStoredUser(savedCredentials[userId].user);
-                    });
+                security.encrypt(plaintext, key).then((ct) => {
+                    credentialsToSave.value = {
+                        username: savedCredentials[userId].loginParams.username,
+                        password: ct,
+                        encryptionType: 'primary'
+                    };
+                    updateStoredUser(savedCredentials[userId].user);
+                });
             }
         }
     }
@@ -630,8 +628,14 @@ export const useAuthStore = defineStore('Auth', () => {
             await webApiService.setCookies(user.cookies);
             try {
                 const checkUser = await request('auth/user');
-                if (checkUser && !checkUser.error && checkUser.id !== user.user.id) {
-                    console.warn(`[auth] Corrupted cookie for ${user.user.id}, clearing.`);
+                if (
+                    checkUser &&
+                    !checkUser.error &&
+                    checkUser.id !== user.user.id
+                ) {
+                    console.warn(
+                        `[auth] Corrupted cookie for ${user.user.id}, clearing.`
+                    );
                     await webApiService.clearCookies();
                 }
             } catch (e) {
@@ -670,7 +674,10 @@ export const useAuthStore = defineStore('Auth', () => {
                 try {
                     password = await window.electron.machineDecrypt(password);
                 } catch (err) {
-                    console.error('Machine key decrypt failed in relogin:', err);
+                    console.error(
+                        'Machine key decrypt failed in relogin:',
+                        err
+                    );
                 }
             }
 

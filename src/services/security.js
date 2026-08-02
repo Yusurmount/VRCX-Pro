@@ -19,7 +19,8 @@ const KEY_LENGTH = 256;
  */
 async function deriveKey(password, salt) {
     const encoder = new TextEncoder();
-    const saltBytes = salt || window.crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+    const saltBytes =
+        salt || window.crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
 
     const keyMaterial = await window.crypto.subtle.importKey(
         'raw',
@@ -67,7 +68,9 @@ async function encrypt(plaintext, password) {
     );
 
     const ciphertext = new Uint8Array(cipher);
-    const result = new Uint8Array(salt.length + iv.length + ciphertext.byteLength);
+    const result = new Uint8Array(
+        salt.length + iv.length + ciphertext.byteLength
+    );
     result.set(salt, 0);
     result.set(iv, salt.length);
     result.set(ciphertext, salt.length + iv.length);

@@ -33,9 +33,7 @@
         </div>
 
         <!-- Loading -->
-        <div
-            v-if="isLoading && !hasData"
-            class="flex flex-col items-center justify-center flex-1 mt-8 gap-2">
+        <div v-if="isLoading && !hasData" class="flex flex-col items-center justify-center flex-1 mt-8 gap-2">
             <Spinner class="h-5 w-5" />
             <span class="text-sm text-muted-foreground">
                 {{ t('dialog.user.status_distribution.loading') }}
@@ -43,9 +41,7 @@
         </div>
 
         <!-- No data -->
-        <div
-            v-else-if="!isLoading && !hasData"
-            class="flex items-center justify-center flex-1 mt-8">
+        <div v-else-if="!isLoading && !hasData" class="flex items-center justify-center flex-1 mt-8">
             <DataTableEmpty type="nodata" />
         </div>
 
@@ -82,10 +78,10 @@
 
     // ─── Status colors matching VRChat official palette ──────────────────────────
     const STATUS_COLORS = {
-        active:   '#2ED319',
+        active: '#2ED319',
         'join me': '#00B8FF',
         'ask me': '#E97C03',
-        busy:     '#C80928'
+        busy: '#C80928'
     };
 
     // ─── Status keys in display order ────────────────────────────────────────────
@@ -103,9 +99,7 @@
     // Mapped to bucketDays = round(90 ^ (slider/100)).
     // 0 → 1 day/bucket, 51 → ~10 days, 100 → 90 days
     const scaleSlider = ref(51);
-    const bucketDays = computed(() =>
-        Math.max(1, Math.round(Math.pow(90, scaleSlider.value / 100)))
-    );
+    const bucketDays = computed(() => Math.max(1, Math.round(Math.pow(90, scaleSlider.value / 100))));
     const DEFAULT_VISIBLE_BUCKETS = 10;
 
     const hasData = computed(() => rawStatusRows.value.length > 0);
@@ -188,7 +182,7 @@
             // Fallback: If no online records, assume online whenever there's a status
             activeIntervals.push(...statusIntervals);
         } else {
-            // Optimization: Since both are sorted, we could do a two-pointer pass, 
+            // Optimization: Since both are sorted, we could do a two-pointer pass,
             // but for typical VRCX log sizes, nested loop with early break is often fine.
             for (const s of statusIntervals) {
                 for (const o of onlineIntervals) {
@@ -238,9 +232,7 @@
             }
         }
 
-        const xLabels = Array.from({ length: bucketCount }, (_, i) =>
-            bucketLabel(i, firstDay, bDays)
-        );
+        const xLabels = Array.from({ length: bucketCount }, (_, i) => bucketLabel(i, firstDay, bDays));
 
         const series = STATUS_KEYS.map((status) => ({
             name: t(`dialog.user.status_distribution.status.${status.replace(' ', '_')}`),
@@ -266,9 +258,7 @@
 
         // Default zoom to last DEFAULT_VISIBLE_BUCKETS buckets
         const zoomStart =
-            bucketCount <= DEFAULT_VISIBLE_BUCKETS
-                ? 0
-                : ((bucketCount - DEFAULT_VISIBLE_BUCKETS) / bucketCount) * 100;
+            bucketCount <= DEFAULT_VISIBLE_BUCKETS ? 0 : ((bucketCount - DEFAULT_VISIBLE_BUCKETS) / bucketCount) * 100;
 
         return {
             backgroundColor: 'transparent',
@@ -280,9 +270,7 @@
                 },
                 formatter(params) {
                     const header = `<div style="margin-bottom:6px;font-weight:600;font-size:12px">${params[0]?.axisValue}</div>`;
-                    const items = params
-                        .filter((p) => p.value > 0)
-                        .sort((a, b) => b.value - a.value);
+                    const items = params.filter((p) => p.value > 0).sort((a, b) => b.value - a.value);
                     if (!items.length) return '';
                     const rows = items
                         .map(
@@ -362,11 +350,7 @@
         if (!chartData) return;
 
         if (!echartsInstance) {
-            echartsInstance = echarts.init(
-                chartDomRef.value,
-                isDarkMode.value ? 'dark' : null,
-                { renderer: 'canvas' }
-            );
+            echartsInstance = echarts.init(chartDomRef.value, isDarkMode.value ? 'dark' : null, { renderer: 'canvas' });
             resizeObserver = new ResizeObserver((entries) => {
                 for (const entry of entries) {
                     echartsInstance?.resize({ width: entry.contentRect.width });

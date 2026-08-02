@@ -6,44 +6,22 @@
  * --sidebar 等 CSS 变量由 themes/*.css 按所选颜色方案注入）。
  *
  * 性能约束：全界面无任何实时滤镜。底部光影由 canvas 一次性渲染
- * 高斯模糊后固化为静态位图；弹层为静态半透明背景 + 实时光源光斑，
- * 避免重复光栅化；主骨架半透明不引入动画。
- *
- * 弹窗光影：弹窗显示前经 IPC 捕获用户当前可见界面，分块分析提取
- * 彩色光源（颜色 + 位置）注入 --am-blob-* 变量，光影基于实际可见
- * 内容动态生成，而非预设主题色。
+ * 高斯模糊后固化为静态位图；弹层为半透明深色遮罩 + 浏览器原生实时
+ * backdrop 模糊（菜单/弹窗 3px、大窗口 5px），由合成器处理。
  */
 
 /* ------------------------------------------------------------------ */
-/* 弹窗 / 弹出菜单 / 提示窗：内嵌光影晕染 + 边缘高光                       */
-/* 光斑颜色来自捕获界面提取的彩色光源（--am-blob-color），位置由 JS 按    */
-/* 光源在视口中的位置与弹窗自身矩形投影（--am-blob-x / --am-blob-y，     */
-/* 相对弹窗自身的百分比），弹窗出现在不同位置、界面内容变化时随动。        */
+/* 弹窗 / 弹出菜单 / 提示窗：实时 backdrop 模糊 + 半透明遮罩 + 边缘高光    */
+/* 菜单/弹窗类遮罩 66%、模糊 3px；大窗口类遮罩 80%、模糊 5px。             */
 /* ------------------------------------------------------------------ */
 html.use-advanced-material
     :is(
         [data-slot='dialog-content'],
-        [data-slot='popover-content'],
-        [data-slot='dropdown-menu-content'],
-        [data-slot='dropdown-menu-sub-content'],
-        [data-slot='select-content'],
-        [data-slot='context-menu-content'],
-        [data-slot='context-menu-sub-content'],
         [data-slot='alert-dialog-content'],
         [data-slot='sheet-content']
     ) {
-    background:
-        /* 白色柔光：光源位置由捕获界面实时注入（--am-blob-x/y），
-           多段 stop 平滑衰减，避免低强度渐变出现色彩断层 */
-        radial-gradient(
-            45% 55% at var(--am-blob-x, 35%) var(--am-blob-y, 60%),
-            color-mix(in oklab, white 4%, transparent) 0%,
-            color-mix(in oklab, white 2.8%, transparent) 35%,
-            color-mix(in oklab, white 1.6%, transparent) 60%,
-            color-mix(in oklab, white 0.6%, transparent) 80%,
-            transparent 100%
-        ),
-        var(--popover);
+    background-color: color-mix(in oklab, var(--popover) 80%, transparent);
+    backdrop-filter: blur(5px);
     border-color: color-mix(in oklab, var(--foreground) 12%, transparent);
     box-shadow:
         /* 顶部内高光：柔化扩范围，降低强度 */
@@ -53,22 +31,36 @@ html.use-advanced-material
         inset 0 0 0 1px color-mix(in oklab, var(--primary) 5%, transparent),
         /* 深投影 */
         0 6px 20px -6px color-mix(in oklab, var(--foreground) 22%, transparent),
-        /* 白色柔和外发光（与光晕一致的光影过渡） */
+        /* 白色柔和外发光 */
         0 0 16px -5px color-mix(in oklab, white 12%, transparent);
 }
 
-/* Tooltip：保持组件反转配色（bg-foreground 亮底 + text-background 深字），
-   仅用 background-image 叠加光源位置驱动的低强度白色柔光，
-   不覆盖 background-color，避免文字与背景同色系不可见 */
+html.use-advanced-material
+    :is(
+        [data-slot='dropdown-menu-content'],
+        [data-slot='dropdown-menu-sub-content'],
+        [data-slot='popover-content'],
+        [data-slot='select-content'],
+        [data-slot='context-menu-content'],
+        [data-slot='context-menu-sub-content'],
+        [data-sonner-toast]
+    ) {
+    background-color: color-mix(in oklab, var(--popover) 66%, transparent);
+    backdrop-filter: blur(3px);
+    border-color: color-mix(in oklab, var(--foreground) 12%, transparent);
+    box-shadow:
+        inset 0 1px 12px -6px
+            color-mix(in oklab, var(--foreground) 6%, transparent),
+        inset 0 0 0 1px color-mix(in oklab, var(--primary) 5%, transparent),
+        0 6px 20px -6px color-mix(in oklab, var(--foreground) 22%, transparent),
+        0 0 16px -5px color-mix(in oklab, white 12%, transparent);
+}
+
+/* Tooltip：保持 reka-ui 反转配色（bg-foreground 亮底 + text-background 深字），
+   背景改为半透明亮色以透出实时模糊，文字可读性不变 */
 html.use-advanced-material [data-slot='tooltip-content'] {
-    background-image: radial-gradient(
-        40% 50% at var(--am-blob-x, 35%) var(--am-blob-y, 60%),
-        color-mix(in oklab, white 4%, transparent) 0%,
-        color-mix(in oklab, white 2.8%, transparent) 35%,
-        color-mix(in oklab, white 1.6%, transparent) 60%,
-        color-mix(in oklab, white 0.6%, transparent) 80%,
-        transparent 100%
-    );
+    background-color: color-mix(in oklab, var(--foreground) 66%, transparent);
+    backdrop-filter: blur(3px);
     box-shadow:
         inset 0 1px 10px -5px
             color-mix(in oklab, var(--foreground) 5%, transparent),
@@ -76,10 +68,8 @@ html.use-advanced-material [data-slot='tooltip-content'] {
         0 0 12px -4px color-mix(in oklab, white 10%, transparent);
 }
 
-/* Toast（vue-sonner） */
+/* Toast（vue-sonner）边缘高光 */
 html.use-advanced-material [data-sonner-toast] {
-    background: var(--popover);
-    border-color: color-mix(in oklab, var(--foreground) 12%, transparent);
     box-shadow:
         inset 0 1px 10px -5px
             color-mix(in oklab, var(--foreground) 5%, transparent),
@@ -96,7 +86,8 @@ html.use-advanced-material .noty_bar {
 }
 
 html.use-advanced-material .noty_theme__mint.noty_type__notification {
-    background: var(--popover);
+    background-color: color-mix(in oklab, var(--popover) 66%, transparent);
+    backdrop-filter: blur(3px);
     border-color: color-mix(in oklab, var(--foreground) 12%, transparent);
 }
 

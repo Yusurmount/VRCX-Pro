@@ -17,7 +17,6 @@
 
     let themeObserver = null;
     let resizeObserver = null;
-    let popoverObserver = null;
     let xcObserver = null;
 
     // 鼠标高光：白色圆形模糊渲染在"当前实体"的背景层（background-image
@@ -310,130 +309,6 @@
         drawOrb(ctx, w * 0.32, h * 0.92, maxDim * 0.14, ring, 0.26);
     }
 
-    // 弹窗光影映射：弹窗显示前实时捕获当前可见界面，分块分析提取最亮
-    // 区域作为光源位置，按物理规律投影到弹窗内生成低强度白色柔光晕染。
-    // 光晕落点随弹窗位置/界面内容变化而移动，非固定预设位置。
-    const popoverSelector = [
-        "[data-slot='dialog-content']",
-        "[data-slot='popover-content']",
-        "[data-slot='dropdown-menu-content']",
-        "[data-slot='dropdown-menu-sub-content']",
-        "[data-slot='select-content']",
-        "[data-slot='context-menu-content']",
-        "[data-slot='context-menu-sub-content']",
-        "[data-slot='alert-dialog-content']",
-        "[data-slot='sheet-content']",
-        "[data-slot='tooltip-content']"
-    ].join(', ');
-
-    const processedPopovers = new WeakSet();
-
-    // 主进程捕获当前可见窗口画面（返回 PNG dataURL）
-    function capturePage() {
-        try {
-            return window.electron?.capturePage?.() || Promise.resolve(null);
-        } catch {
-            return Promise.resolve(null);
-        }
-    }
-
-    // 将捕获画面缩略后分块分析：优先提取亮度足够且饱和度最高的块作为
-    // 光源位置（避免选中白色/灰色高亮内容）；若界面无彩色内容则回退到
-    // 最亮块。返回光源在视口中的归一化坐标。
-    function analyzeFrame(dataUrl) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                try {
-                    const W = 128;
-                    const H = Math.max(1, Math.round((img.height / img.width) * W));
-                    const c = document.createElement('canvas');
-                    c.width = W;
-                    c.height = H;
-                    const ctx = c.getContext('2d');
-                    ctx.drawImage(img, 0, 0, W, H);
-                    const d = ctx.getImageData(0, 0, W, H).data;
-                    const grid = 8;
-                    const bw = W / grid;
-                    const bh = H / grid;
-                    let colored = null; // 彩色光源（饱和度优先）
-                    let brightest = null; // 最亮块（兜底）
-                    for (let gy = 0; gy < grid; gy++) {
-                        for (let gx = 0; gx < grid; gx++) {
-                            let r = 0,
-                                g = 0,
-                                b = 0,
-                                cnt = 0;
-                            const x0 = Math.floor(gx * bw),
-                                x1 = Math.floor((gx + 1) * bw);
-                            const y0 = Math.floor(gy * bh),
-                                y1 = Math.floor((gy + 1) * bh);
-                            for (let y = y0; y < y1; y += 2) {
-                                for (let x = x0; x < x1; x += 2) {
-                                    const i = (y * W + x) * 4;
-                                    r += d[i];
-                                    g += d[i + 1];
-                                    b += d[i + 2];
-                                    cnt++;
-                                }
-                            }
-                            if (!cnt) continue;
-                            r /= cnt;
-                            g /= cnt;
-                            b /= cnt;
-                            const mx = Math.max(r, g, b);
-                            const mn = Math.min(r, g, b);
-                            const sat = mx > 0 ? (mx - mn) / mx : 0;
-                            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-                            const info = { x: (gx + 0.5) / grid, y: (gy + 0.5) / grid };
-                            if (!brightest || lum > brightest.lum) {
-                                brightest = { lum, ...info };
-                            }
-                            // 亮度足够（排除暗部）且饱和度高的块 = 彩色光源
-                            if (lum > 40 && sat > 0.12 && (!colored || sat > colored.sat)) {
-                                colored = { sat, ...info };
-                            }
-                        }
-                    }
-                    const light = colored || brightest;
-                    resolve(light ? { light: { x: light.x, y: light.y } } : null);
-                } catch {
-                    resolve(null);
-                }
-            };
-            img.onerror = () => resolve(null);
-            img.src = dataUrl;
-        });
-    }
-
-    async function applyPopoverBlob(el) {
-        if (processedPopovers.has(el)) return;
-        processedPopovers.add(el);
-        const rect = el.getBoundingClientRect();
-        if (!rect.width || !rect.height) return;
-        // 弹窗显示前捕获当前可见界面作为光源参考
-        const dataUrl = await capturePage();
-        const analysis = dataUrl ? await analyzeFrame(dataUrl) : null;
-        if (!analysis?.light) return; // 捕获/分析失败保持 CSS 默认
-        // 光源（归一化视口坐标）投影到弹窗：光晕落在朝向光源的一侧。
-        // 允许中心超出弹窗范围（-30%~130%），光源在弹窗外时从边缘透入光，
-        // 弹窗位置不同或光源不同时晕染随之变化。
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const srcX = analysis.light.x * vw;
-        const srcY = analysis.light.y * vh;
-        const pctX = Math.min(130, Math.max(-30, ((srcX - rect.left) / rect.width) * 100));
-        const pctY = Math.min(130, Math.max(-30, ((srcY - rect.top) / rect.height) * 100));
-        // 白色柔光：仅注入光源投影位置（颜色统一为低强度白色），弹窗位置或
-        // 光源变化时光晕落点随之移动
-        el.style.setProperty('--am-blob-x', pctX.toFixed(0) + '%');
-        el.style.setProperty('--am-blob-y', pctY.toFixed(0) + '%');
-    }
-
-    function applyAllPopoverBlobs() {
-        document.querySelectorAll(popoverSelector).forEach(applyPopoverBlob);
-    }
-
     // 中间内容区（.x-container）与右侧好友栏（.x-aside-container）兜底：
     // CSS 规则可能被 globals.css 的同特异性后声明规则覆盖，内联样式
     // 优先级最高，直接置为透明由下层 sidebar-inset 单层半透明透出光影。
@@ -467,21 +342,8 @@
         });
         resizeObserver = new ResizeObserver(() => {
             render();
-            applyAllPopoverBlobs();
         });
         resizeObserver.observe(document.documentElement);
-        // 弹窗光影映射：监听弹窗挂载，按位置注入光斑 CSS 变量
-        popoverObserver = new MutationObserver((records) => {
-            for (const record of records) {
-                for (const node of record.addedNodes) {
-                    if (node.nodeType !== 1) continue;
-                    if (node.matches?.(popoverSelector)) applyPopoverBlob(node);
-                    node.querySelectorAll?.(popoverSelector).forEach(applyPopoverBlob);
-                }
-            }
-        });
-        popoverObserver.observe(document.body, { childList: true, subtree: true });
-        applyAllPopoverBlobs();
 
         // 中间内容区透明兜底：初始扫描 + 路由切换新增 .x-container 时跟进
         applyXcTransparent();
@@ -503,7 +365,6 @@
     onBeforeUnmount(() => {
         themeObserver?.disconnect();
         resizeObserver?.disconnect();
-        popoverObserver?.disconnect();
         xcObserver?.disconnect();
         window.removeEventListener('mousemove', onGlowMove);
         cancelAnimationFrame(glowRaf);

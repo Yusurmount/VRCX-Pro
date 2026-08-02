@@ -109,8 +109,10 @@ export default defineConfig(({ mode }) => {
         mode === 'development' || version.split('-').at(-1).length === 7;
 
     // 目标平台：优先使用显式声明的 PLATFORM（如 npm scripts 里的 cross-env），
-    // 未声明时回退到宿主机平台，保证环境识别在任何启动方式下都正确。
-    const targetPlatform = process.env.PLATFORM || process.platform;
+    // 未声明时回退到宿主机平台；win32 归一化为 windows，保证环境识别在任何启动方式下都正确。
+    const targetPlatform =
+        process.env.PLATFORM ||
+        (process.platform === 'win32' ? 'windows' : process.platform);
 
     return {
         base: '',
@@ -168,10 +170,12 @@ export default defineConfig(({ mode }) => {
             ]
         },
         define: {
-            LINUX: JSON.stringify(targetPlatform === 'linux'),
-            WINDOWS: JSON.stringify(targetPlatform === 'windows'),
+            // 布尔值必须以无引号的 'true'/'false' 代码字面量注入：
+            // JSON.stringify(false) 会得到字符串 "false"（truthy），导致平台误判。
+            LINUX: String(targetPlatform === 'linux'),
+            WINDOWS: String(targetPlatform === 'windows'),
             VERSION: JSON.stringify(version),
-            NIGHTLY: JSON.stringify(nightly)
+            NIGHTLY: String(nightly)
         },
         server: {
             port: 9000,

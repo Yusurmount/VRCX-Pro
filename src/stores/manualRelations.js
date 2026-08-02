@@ -11,7 +11,7 @@ export const useManualRelationsStore = defineStore('ManualRelations', () => {
     /** @type {import('vue').Ref<Set<string>>} */
     const relationsSet = ref(new Set());
     const isLoaded = ref(false);
-    
+
     /** @type {import('vue').Ref<Array<{userIdA: string, userIdB: string, score: number, key: string, nameA: string, nameB: string}>>} */
     const cachedSuggestions = ref([]);
     const ignoredSuggestionKeys = ref(new Set());
@@ -33,7 +33,9 @@ export const useManualRelationsStore = defineStore('ManualRelations', () => {
     async function loadManualRelations() {
         const rows = await database.getManualRelations();
         relationsList.value = rows;
-        relationsSet.value = new Set(rows.map((r) => pairKey(r.userIdA, r.userIdB)));
+        relationsSet.value = new Set(
+            rows.map((r) => pairKey(r.userIdA, r.userIdB))
+        );
         isLoaded.value = true;
     }
 
@@ -43,7 +45,11 @@ export const useManualRelationsStore = defineStore('ManualRelations', () => {
      * @param {string} userIdB
      * @param {string} [relationType]
      */
-    async function addManualRelation(userIdA, userIdB, relationType = 'friend') {
+    async function addManualRelation(
+        userIdA,
+        userIdB,
+        relationType = 'friend'
+    ) {
         await database.addManualRelation(userIdA, userIdB, relationType);
         await loadManualRelations();
     }
@@ -80,18 +86,19 @@ export const useManualRelationsStore = defineStore('ManualRelations', () => {
         const friendStore = useFriendStore();
         const userStore = useUserStore();
         const trackedNonFriendsStore = useTrackedNonFriendsStore();
-        
+
         isComputingSuggestions.value = true;
         let worker;
         try {
-            const {
-                eventsByLocation,
-                mySessions,
-                oldMutualSnapshot
-            } = await database.getCandidateCoInstances(userStore.currentUser?.id || '');
+            const { eventsByLocation, mySessions, oldMutualSnapshot } =
+                await database.getCandidateCoInstances(
+                    userStore.currentUser?.id || ''
+                );
 
             const myFriendsSet = new Set(friendStore.friends.keys());
-            const trackedSet = new Set(trackedNonFriendsStore.trackedList.map((x) => x.userId));
+            const trackedSet = new Set(
+                trackedNonFriendsStore.trackedList.map((x) => x.userId)
+            );
 
             // 只收集候选用户的显示名，避免把整个 cachedUsers 克隆给 worker
             const candidatesSet = new Set([...myFriendsSet, ...trackedSet]);
@@ -113,7 +120,10 @@ export const useManualRelationsStore = defineStore('ManualRelations', () => {
             // 重计算放到 Web Worker 里执行，避免 O(F²) 配对计算阻塞主线程导致 UI 卡顿
             const result = await new Promise((resolve, reject) => {
                 worker = new Worker(
-                    new URL('../workers/manualRelationsWorker.js', import.meta.url),
+                    new URL(
+                        '../workers/manualRelationsWorker.js',
+                        import.meta.url
+                    ),
                     { type: 'module' }
                 );
                 worker.onmessage = (e) => {
@@ -137,7 +147,10 @@ export const useManualRelationsStore = defineStore('ManualRelations', () => {
 
             cachedSuggestions.value = result;
         } catch (err) {
-            console.error('[ManualRelations] Suggestion calculation error', err);
+            console.error(
+                '[ManualRelations] Suggestion calculation error',
+                err
+            );
         } finally {
             if (worker) worker.terminate();
             isComputingSuggestions.value = false;

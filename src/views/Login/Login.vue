@@ -160,9 +160,7 @@
                             t('view.login.forgotPassword')
                         }}</a>
                     </p>
-                    <p>
-                        &copy; 2019-2026 VRCX Contributors
-                    </p>
+                    <p>&copy; 2019-2026 VRCX Contributors</p>
                     <p>{{ t('view.settings.general.legal_notice.info') }}</p>
                     <p>{{ t('view.settings.general.legal_notice.disclaimer1') }}</p>
                     <p>{{ t('view.settings.general.legal_notice.disclaimer2') }}</p>

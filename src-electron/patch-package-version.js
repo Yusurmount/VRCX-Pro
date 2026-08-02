@@ -8,13 +8,8 @@ const packageJsonPath = path.join(rootDir, 'package.json');
 let version = '';
 try {
     version = fs.readFileSync(versionFilePath, 'utf8').trim();
-    var index = version.indexOf('T');
-    if (index > 0) {
-        // Remove time part from version
-        version = version.substring(0, index).replaceAll('-', '.');
-    }
     if (!version || version === 'Nightly Build') {
-        version = new Date().toISOString().split('T')[0].replaceAll('-', '.');
+        version = '0.0.0';
     }
 } catch (err) {
     console.error('Error reading Version file:', err);

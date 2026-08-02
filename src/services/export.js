@@ -66,7 +66,9 @@ export async function saveFileViaDialog(defaultName, blob, formatLabel) {
 
         // CefSharp path
         if (AppApi?.SaveFileSelectorDialog && AppApi?.WriteFileBytes) {
-            const ext = defaultName.includes('.') ? defaultName.split('.').pop() : '';
+            const ext = defaultName.includes('.')
+                ? defaultName.split('.').pop()
+                : '';
             const filter = `${formatLabel ?? 'All Files'} (*.${ext})|*.${ext}|All files (*.*)|*.*`;
             const result = await AppApi.SaveFileSelectorDialog(
                 defaultName,
@@ -96,11 +98,7 @@ export async function saveFileViaDialog(defaultName, blob, formatLabel) {
  */
 export async function exportJSON(data, defaultName, space = 2) {
     const blob = toJsonBlob(data, space);
-    return saveFileViaDialog(
-        `${defaultName}.json`,
-        blob,
-        'JSON Files'
-    );
+    return saveFileViaDialog(`${defaultName}.json`, blob, 'JSON Files');
 }
 
 /**
@@ -112,11 +110,7 @@ export async function exportJSON(data, defaultName, space = 2) {
  */
 export async function exportExcel(data, defaultName, sheetName = 'Data') {
     const blob = dataToExcelBlob(data, sheetName);
-    return saveFileViaDialog(
-        `${defaultName}.xlsx`,
-        blob,
-        'Excel Files'
-    );
+    return saveFileViaDialog(`${defaultName}.xlsx`, blob, 'Excel Files');
 }
 
 /**
@@ -127,9 +121,5 @@ export async function exportExcel(data, defaultName, sheetName = 'Data') {
  */
 export async function exportExcelMultiSheet(sheets, defaultName) {
     const blob = toExcelBlob(sheets);
-    return saveFileViaDialog(
-        `${defaultName}.xlsx`,
-        blob,
-        'Excel Files'
-    );
+    return saveFileViaDialog(`${defaultName}.xlsx`, blob, 'Excel Files');
 }

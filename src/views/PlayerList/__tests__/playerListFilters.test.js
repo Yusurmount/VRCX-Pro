@@ -109,7 +109,13 @@ describe('normalizeRoomPlayerStats', () => {
         const raw = new Map([
             [
                 'Alice',
-                { created_at: '2026-07-01T10:00:00Z', displayName: 'Alice', userId: 'usr_a', time: 120000, count: 3 }
+                {
+                    created_at: '2026-07-01T10:00:00Z',
+                    displayName: 'Alice',
+                    userId: 'usr_a',
+                    time: 120000,
+                    count: 3
+                }
             ]
         ]);
         const stats = normalizeRoomPlayerStats(raw);
@@ -123,7 +129,16 @@ describe('normalizeRoomPlayerStats', () => {
     });
 
     test('falls back to displayName when userId missing', () => {
-        const raw = new Map([['Bob', { created_at: '2026-07-01T10:00:00Z', displayName: 'Bob', count: 1 }]]);
+        const raw = new Map([
+            [
+                'Bob',
+                {
+                    created_at: '2026-07-01T10:00:00Z',
+                    displayName: 'Bob',
+                    count: 1
+                }
+            ]
+        ]);
         expect(normalizeRoomPlayerStats(raw).has('Bob')).toBe(true);
     });
 
@@ -134,7 +149,17 @@ describe('normalizeRoomPlayerStats', () => {
     });
 
     test('treats invalid created_at as null firstJoin', () => {
-        const raw = new Map([['x', { displayName: 'x', userId: 'usr_x', created_at: 'not-a-date', count: 0 }]]);
+        const raw = new Map([
+            [
+                'x',
+                {
+                    displayName: 'x',
+                    userId: 'usr_x',
+                    created_at: 'not-a-date',
+                    count: 0
+                }
+            ]
+        ]);
         expect(normalizeRoomPlayerStats(raw).get('usr_x').firstJoin).toBe(null);
     });
 });
@@ -142,7 +167,9 @@ describe('normalizeRoomPlayerStats', () => {
 describe('matchesPlayerFilters — default state', () => {
     test('returns true for any row when state is null or empty', () => {
         expect(matchesPlayerFilters(makeRow(), null)).toBe(true);
-        expect(matchesPlayerFilters(makeRow(), createDefaultFilterState())).toBe(true);
+        expect(
+            matchesPlayerFilters(makeRow(), createDefaultFilterState())
+        ).toBe(true);
     });
 });
 
@@ -151,16 +178,24 @@ describe('matchesPlayerFilters — relationship', () => {
         const state = createDefaultFilterState();
         state.relationship.enabled = true;
         state.relationship.friends = true;
-        expect(matchesPlayerFilters(makeRow({ isFriend: true }), state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ isFriend: false }), state)).toBe(false);
+        expect(matchesPlayerFilters(makeRow({ isFriend: true }), state)).toBe(
+            true
+        );
+        expect(matchesPlayerFilters(makeRow({ isFriend: false }), state)).toBe(
+            false
+        );
     });
 
     test('matches non-friends only', () => {
         const state = createDefaultFilterState();
         state.relationship.enabled = true;
         state.relationship.nonFriends = true;
-        expect(matchesPlayerFilters(makeRow({ isFriend: false }), state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ isFriend: true }), state)).toBe(false);
+        expect(matchesPlayerFilters(makeRow({ isFriend: false }), state)).toBe(
+            true
+        );
+        expect(matchesPlayerFilters(makeRow({ isFriend: true }), state)).toBe(
+            false
+        );
     });
 
     test('matches either when both checked', () => {
@@ -168,8 +203,12 @@ describe('matchesPlayerFilters — relationship', () => {
         state.relationship.enabled = true;
         state.relationship.friends = true;
         state.relationship.nonFriends = true;
-        expect(matchesPlayerFilters(makeRow({ isFriend: true }), state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ isFriend: false }), state)).toBe(true);
+        expect(matchesPlayerFilters(makeRow({ isFriend: true }), state)).toBe(
+            true
+        );
+        expect(matchesPlayerFilters(makeRow({ isFriend: false }), state)).toBe(
+            true
+        );
     });
 });
 
@@ -178,23 +217,48 @@ describe('matchesPlayerFilters — level', () => {
         const state = createDefaultFilterState();
         state.level.enabled = true;
         state.level.levels.Trusted = true;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'a', $trustLevel: 'Trusted' } }), state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'a', $trustLevel: 'User' } }), state)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', $trustLevel: 'Trusted' } }),
+                state
+            )
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', $trustLevel: 'User' } }),
+                state
+            )
+        ).toBe(false);
     });
 
     test('maps "New User" to NewUser key', () => {
         const state = createDefaultFilterState();
         state.level.enabled = true;
         state.level.levels.NewUser = true;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'a', $trustLevel: 'New User' } }), state)).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', $trustLevel: 'New User' } }),
+                state
+            )
+        ).toBe(true);
     });
 
     test('treats unknown/missing trust level as Unknown', () => {
         const state = createDefaultFilterState();
         state.level.enabled = true;
         state.level.levels.Unknown = true;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'a', $trustLevel: undefined } }), state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'a', $trustLevel: 'WeirdLevel' } }), state)).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', $trustLevel: undefined } }),
+                state
+            )
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', $trustLevel: 'WeirdLevel' } }),
+                state
+            )
+        ).toBe(true);
     });
 });
 
@@ -204,7 +268,12 @@ describe('matchesPlayerFilters — keyword', () => {
         state.keyword.enabled = true;
         state.keyword.searchName = true;
         state.keyword.text = 'ALICE';
-        expect(matchesPlayerFilters(makeRow({ displayName: 'alice-in-wonderland' }), state)).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ displayName: 'alice-in-wonderland' }),
+                state
+            )
+        ).toBe(true);
     });
 
     test('matches bio when searchBio enabled', () => {
@@ -213,8 +282,18 @@ describe('matchesPlayerFilters — keyword', () => {
         state.keyword.searchName = false;
         state.keyword.searchBio = true;
         state.keyword.text = 'hello';
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'a', bio: 'Hello there' } }), state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'a', bio: 'nope' } }), state)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', bio: 'Hello there' } }),
+                state
+            )
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', bio: 'nope' } }),
+                state
+            )
+        ).toBe(false);
     });
 
     test('no match when neither field checked', () => {
@@ -223,14 +302,18 @@ describe('matchesPlayerFilters — keyword', () => {
         state.keyword.searchName = false;
         state.keyword.searchBio = false;
         state.keyword.text = 'hello';
-        expect(matchesPlayerFilters(makeRow({ displayName: 'hello' }), state)).toBe(false);
+        expect(
+            matchesPlayerFilters(makeRow({ displayName: 'hello' }), state)
+        ).toBe(false);
     });
 
     test('empty text never excludes', () => {
         const state = createDefaultFilterState();
         state.keyword.enabled = true;
         state.keyword.text = '   ';
-        expect(matchesPlayerFilters(makeRow({ displayName: 'anything' }), state)).toBe(true);
+        expect(
+            matchesPlayerFilters(makeRow({ displayName: 'anything' }), state)
+        ).toBe(true);
     });
 });
 
@@ -246,9 +329,15 @@ describe('matchesPlayerFilters — groups', () => {
             { groupId: groupA, joined: true },
             { groupId: groupB, joined: true }
         ];
-        expect(matchesPlayerFilters(makeRow({ groupOnNameplate: groupA }), state)).toBe(false);
-        expect(matchesPlayerFilters(makeRow({ groupOnNameplate: groupB }), state)).toBe(false);
-        expect(matchesPlayerFilters(makeRow({ groupOnNameplate: '' }), state)).toBe(false);
+        expect(
+            matchesPlayerFilters(makeRow({ groupOnNameplate: groupA }), state)
+        ).toBe(false);
+        expect(
+            matchesPlayerFilters(makeRow({ groupOnNameplate: groupB }), state)
+        ).toBe(false);
+        expect(
+            matchesPlayerFilters(makeRow({ groupOnNameplate: '' }), state)
+        ).toBe(false);
     });
 
     test('OR combine passes when any condition matches', () => {
@@ -259,9 +348,15 @@ describe('matchesPlayerFilters — groups', () => {
             { groupId: groupA, joined: true },
             { groupId: groupB, joined: true }
         ];
-        expect(matchesPlayerFilters(makeRow({ groupOnNameplate: groupA }), state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ groupOnNameplate: groupB }), state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ groupOnNameplate: '' }), state)).toBe(false);
+        expect(
+            matchesPlayerFilters(makeRow({ groupOnNameplate: groupA }), state)
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(makeRow({ groupOnNameplate: groupB }), state)
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(makeRow({ groupOnNameplate: '' }), state)
+        ).toBe(false);
     });
 
     test('"not joined" condition inverts the match', () => {
@@ -269,16 +364,27 @@ describe('matchesPlayerFilters — groups', () => {
         state.groups.enabled = true;
         state.groups.combine = 'AND';
         state.groups.conditions = [{ groupId: groupA, joined: false }];
-        expect(matchesPlayerFilters(makeRow({ groupOnNameplate: groupA }), state)).toBe(false);
-        expect(matchesPlayerFilters(makeRow({ groupOnNameplate: groupB }), state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ groupOnNameplate: '' }), state)).toBe(true);
+        expect(
+            matchesPlayerFilters(makeRow({ groupOnNameplate: groupA }), state)
+        ).toBe(false);
+        expect(
+            matchesPlayerFilters(makeRow({ groupOnNameplate: groupB }), state)
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(makeRow({ groupOnNameplate: '' }), state)
+        ).toBe(true);
     });
 
     test('ignores conditions without a groupId', () => {
         const state = createDefaultFilterState();
         state.groups.enabled = true;
-        state.groups.conditions = [{ groupId: '', joined: true }, { groupId: groupA, joined: true }];
-        expect(matchesPlayerFilters(makeRow({ groupOnNameplate: groupA }), state)).toBe(true);
+        state.groups.conditions = [
+            { groupId: '', joined: true },
+            { groupId: groupA, joined: true }
+        ];
+        expect(
+            matchesPlayerFilters(makeRow({ groupOnNameplate: groupA }), state)
+        ).toBe(true);
     });
 
     test('uses runtime.playerGroupMap to determine joined groups', () => {
@@ -293,9 +399,27 @@ describe('matchesPlayerFilters — groups', () => {
                 ['usr_no_groups', new Set()]
             ])
         });
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_joined' } }), state, runtime)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_other_group' } }), state, runtime)).toBe(false);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_no_groups' } }), state, runtime)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_joined' } }),
+                state,
+                runtime
+            )
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_other_group' } }),
+                state,
+                runtime
+            )
+        ).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_no_groups' } }),
+                state,
+                runtime
+            )
+        ).toBe(false);
     });
 
     test('"not joined" inverts when using runtime.playerGroupMap', () => {
@@ -309,8 +433,20 @@ describe('matchesPlayerFilters — groups', () => {
                 ['usr_not_joined', new Set([groupB])]
             ])
         });
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_joined' } }), state, runtime)).toBe(false);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_not_joined' } }), state, runtime)).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_joined' } }),
+                state,
+                runtime
+            )
+        ).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_not_joined' } }),
+                state,
+                runtime
+            )
+        ).toBe(true);
     });
 
     test('falls back to groupOnNameplate when playerGroupMap has no entry', () => {
@@ -321,8 +457,23 @@ describe('matchesPlayerFilters — groups', () => {
         const runtime = makeRuntime({
             playerGroupMap: new Map([['usr_other', new Set([groupB])]])
         });
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_unknown' }, groupOnNameplate: groupA }), state, runtime)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_unknown' }, groupOnNameplate: '' }), state, runtime)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({
+                    ref: { id: 'usr_unknown' },
+                    groupOnNameplate: groupA
+                }),
+                state,
+                runtime
+            )
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_unknown' }, groupOnNameplate: '' }),
+                state,
+                runtime
+            )
+        ).toBe(false);
     });
 });
 
@@ -336,9 +487,27 @@ describe('matchesPlayerFilters — mutual', () => {
                 ['usr_none', []]
             ])
         });
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_a' } }), state, runtime)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_none' } }), state, runtime)).toBe(false);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_missing' } }), state, runtime)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_a' } }),
+                state,
+                runtime
+            )
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_none' } }),
+                state,
+                runtime
+            )
+        ).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_missing' } }),
+                state,
+                runtime
+            )
+        ).toBe(false);
     });
 
     test('with a target, requires that specific mutual friend', () => {
@@ -351,8 +520,20 @@ describe('matchesPlayerFilters — mutual', () => {
                 ['usr_d', ['usr_c']]
             ])
         });
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_a' } }), state, runtime)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_d' } }), state, runtime)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_a' } }),
+                state,
+                runtime
+            )
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_d' } }),
+                state,
+                runtime
+            )
+        ).toBe(false);
     });
 });
 
@@ -361,16 +542,36 @@ describe('matchesPlayerFilters — platform', () => {
         const state = createDefaultFilterState();
         state.platform.enabled = true;
         state.platform.platforms.pc = true;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'a', $platform: 'standalonewindows' } }), state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'a', $platform: 'android' } }), state)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', $platform: 'standalonewindows' } }),
+                state
+            )
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', $platform: 'android' } }),
+                state
+            )
+        ).toBe(false);
     });
 
     test('treats missing/unknown platform as unknown', () => {
         const state = createDefaultFilterState();
         state.platform.enabled = true;
         state.platform.platforms.unknown = true;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'a', $platform: undefined } }), state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'a', $platform: 'quest-link' } }), state)).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', $platform: undefined } }),
+                state
+            )
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', $platform: 'quest-link' } }),
+                state
+            )
+        ).toBe(true);
     });
 });
 
@@ -397,14 +598,30 @@ describe('matchesPlayerFilters — room history', () => {
         state.roomHistory.firstJoin.to = '1970-01-01T00:00:02';
 
         const inRange = makeRuntime({
-            roomPlayerStats: new Map([['usr_a', { firstJoin: from + 1, joinCount: 0, totalTime: 0 }]])
+            roomPlayerStats: new Map([
+                ['usr_a', { firstJoin: from + 1, joinCount: 0, totalTime: 0 }]
+            ])
         });
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_a' }, timer: 0 }), state, inRange)).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_a' }, timer: 0 }),
+                state,
+                inRange
+            )
+        ).toBe(true);
 
         const belowRange = makeRuntime({
-            roomPlayerStats: new Map([['usr_a', { firstJoin: from - 1, joinCount: 0, totalTime: 0 }]])
+            roomPlayerStats: new Map([
+                ['usr_a', { firstJoin: from - 1, joinCount: 0, totalTime: 0 }]
+            ])
         });
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_a' }, timer: 0 }), state, belowRange)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_a' }, timer: 0 }),
+                state,
+                belowRange
+            )
+        ).toBe(false);
     });
 
     test('firstJoin takes the min of stats and current-session timer', () => {
@@ -414,18 +631,32 @@ describe('matchesPlayerFilters — room history', () => {
         state.roomHistory.firstJoin.enabled = true;
         state.roomHistory.firstJoin.to = '2026-07-01T00:00:00.800';
         const runtime = makeRuntime({
-            roomPlayerStats: new Map([['usr_a', { firstJoin: to + 200, joinCount: 0, totalTime: 0 }]]),
+            roomPlayerStats: new Map([
+                ['usr_a', { firstJoin: to + 200, joinCount: 0, totalTime: 0 }]
+            ]),
             now: to + 100_000
         });
         // timer earlier than recorded firstJoin -> min wins (to < to + 200)
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_a' }, timer: to }), state, runtime)).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_a' }, timer: to }),
+                state,
+                runtime
+            )
+        ).toBe(true);
     });
 
     test('firstJoin enabled but no data at all fails', () => {
         const state = createDefaultFilterState();
         state.roomHistory.enabled = true;
         state.roomHistory.firstJoin.enabled = true;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_x' }, timer: 0 }), state, makeRuntime())).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_x' }, timer: 0 }),
+                state,
+                makeRuntime()
+            )
+        ).toBe(false);
     });
 
     test('sessionCount comparisons', () => {
@@ -436,21 +667,39 @@ describe('matchesPlayerFilters — room history', () => {
         gte.roomHistory.sessionCount.enabled = true;
         gte.roomHistory.sessionCount.comparison = 'gte';
         gte.roomHistory.sessionCount.count = 3;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_a' }, timer: 0 }), gte, runtime)).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_a' }, timer: 0 }),
+                gte,
+                runtime
+            )
+        ).toBe(true);
 
         const eq = createDefaultFilterState();
         eq.roomHistory.enabled = true;
         eq.roomHistory.sessionCount.enabled = true;
         eq.roomHistory.sessionCount.comparison = 'eq';
         eq.roomHistory.sessionCount.count = 2;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_a' }, timer: 0 }), eq, runtime)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_a' }, timer: 0 }),
+                eq,
+                runtime
+            )
+        ).toBe(false);
 
         const lte = createDefaultFilterState();
         lte.roomHistory.enabled = true;
         lte.roomHistory.sessionCount.enabled = true;
         lte.roomHistory.sessionCount.comparison = 'lte';
         lte.roomHistory.sessionCount.count = 2;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_a' }, timer: 0 }), lte, runtime)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_a' }, timer: 0 }),
+                lte,
+                runtime
+            )
+        ).toBe(false);
     });
 
     test('sessionCount falls back to 1 for a present player with no stats', () => {
@@ -460,8 +709,20 @@ describe('matchesPlayerFilters — room history', () => {
         state.roomHistory.sessionCount.comparison = 'eq';
         state.roomHistory.sessionCount.count = 1;
         const runtime = makeRuntime();
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_x' }, timer: 50_000 }), state, runtime)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_x' }, timer: 0 }), state, runtime)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_x' }, timer: 50_000 }),
+                state,
+                runtime
+            )
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_x' }, timer: 0 }),
+                state,
+                runtime
+            )
+        ).toBe(false);
     });
 
     test('onlineDuration min/max including current session time', () => {
@@ -469,12 +730,27 @@ describe('matchesPlayerFilters — room history', () => {
         state.roomHistory.enabled = true;
         state.roomHistory.onlineDuration.enabled = true;
         // totalTime = 300_000 (stats) + (now 1_000_000 - timer 800_000) = 500_000 ms = ~8.33 min
-        const runtime = makeRuntime({ roomPlayerStats: baseStats, now: 1_000_000 });
+        const runtime = makeRuntime({
+            roomPlayerStats: baseStats,
+            now: 1_000_000
+        });
         state.roomHistory.onlineDuration.minMinutes = 8;
         state.roomHistory.onlineDuration.maxMinutes = 9;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_a' }, timer: 800_000 }), state, runtime)).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_a' }, timer: 800_000 }),
+                state,
+                runtime
+            )
+        ).toBe(true);
         state.roomHistory.onlineDuration.maxMinutes = 8;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_a' }, timer: 800_000 }), state, runtime)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_a' }, timer: 800_000 }),
+                state,
+                runtime
+            )
+        ).toBe(false);
     });
 
     test('onlineDuration with no data at all fails', () => {
@@ -482,7 +758,13 @@ describe('matchesPlayerFilters — room history', () => {
         state.roomHistory.enabled = true;
         state.roomHistory.onlineDuration.enabled = true;
         state.roomHistory.onlineDuration.minMinutes = 1;
-        expect(matchesPlayerFilters(makeRow({ ref: { id: 'usr_x' }, timer: 0 }), state, makeRuntime())).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'usr_x' }, timer: 0 }),
+                state,
+                makeRuntime()
+            )
+        ).toBe(false);
     });
 });
 
@@ -495,6 +777,11 @@ describe('matchesPlayerFilters — groups AND semantics', () => {
         state.keyword.text = 'alice';
         const row = makeRow({ displayName: 'Alice', isFriend: true });
         expect(matchesPlayerFilters(row, state)).toBe(true);
-        expect(matchesPlayerFilters(makeRow({ displayName: 'Alice', isFriend: false }), state)).toBe(false);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ displayName: 'Alice', isFriend: false }),
+                state
+            )
+        ).toBe(false);
     });
 });

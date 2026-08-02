@@ -116,14 +116,20 @@
                         </div>
                         <div v-if="state.groups.enabled" class="mt-2 flex flex-col gap-2 pl-6">
                             <div class="flex items-center gap-2">
-                                <span class="text-xs text-muted-foreground">{{ t('view.player_list.filter.group_combine') }}</span>
+                                <span class="text-xs text-muted-foreground">{{
+                                    t('view.player_list.filter.group_combine')
+                                }}</span>
                                 <Select v-model="state.groups.combine" class="w-44">
                                     <SelectTrigger size="sm">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="AND">{{ t('view.player_list.filter.group_combine_and') }}</SelectItem>
-                                        <SelectItem value="OR">{{ t('view.player_list.filter.group_combine_or') }}</SelectItem>
+                                        <SelectItem value="AND">{{
+                                            t('view.player_list.filter.group_combine_and')
+                                        }}</SelectItem>
+                                        <SelectItem value="OR">{{
+                                            t('view.player_list.filter.group_combine_or')
+                                        }}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -135,7 +141,11 @@
                                 <label class="flex items-center gap-2 text-sm">
                                     <Checkbox v-model="cond.joined" />
                                     <span class="w-16 shrink-0">
-                                        {{ cond.joined ? t('view.player_list.filter.group_joined') : t('view.player_list.filter.group_not_joined') }}
+                                        {{
+                                            cond.joined
+                                                ? t('view.player_list.filter.group_joined')
+                                                : t('view.player_list.filter.group_not_joined')
+                                        }}
                                     </span>
                                 </label>
                                 <div class="min-w-0 flex-1">
@@ -147,7 +157,10 @@
                                                 class="w-full justify-between"
                                                 role="combobox">
                                                 <span class="truncate">
-                                                    {{ cond.groupName || t('view.player_list.filter.group_search_placeholder') }}
+                                                    {{
+                                                        cond.groupName ||
+                                                        t('view.player_list.filter.group_search_placeholder')
+                                                    }}
                                                 </span>
                                                 <ChevronsUpDown class="size-4 shrink-0 opacity-60" />
                                             </Button>
@@ -170,7 +183,9 @@
                                                         >{{ group.shortCode }}.{{ group.discriminator }}</span
                                                     >
                                                 </button>
-                                                <div v-if="!getGroupResults(cond)?.length" class="p-2 text-sm opacity-60">
+                                                <div
+                                                    v-if="!getGroupResults(cond)?.length"
+                                                    class="p-2 text-sm opacity-60">
                                                     {{ t('view.player_list.filter.group_no_results') }}
                                                 </div>
                                             </div>
@@ -205,7 +220,9 @@
                             >
                         </div>
                         <div v-if="state.mutual.enabled" class="mt-2 pl-6">
-                            <p class="mb-2 text-xs text-muted-foreground">{{ t('view.player_list.filter.mutual_any') }}</p>
+                            <p class="mb-2 text-xs text-muted-foreground">
+                                {{ t('view.player_list.filter.mutual_any') }}
+                            </p>
                             <VirtualCombobox
                                 v-model="state.mutual.targetUserId"
                                 :groups="friendPickerGroups"
@@ -222,10 +239,16 @@
                                                 :src="userImage(item.user)"
                                                 loading="lazy" />
                                         </template>
-                                        <span class="flex-1 truncate" :style="item.user?.$userColour ? { color: item.user.$userColour } : {}">
+                                        <span
+                                            class="flex-1 truncate"
+                                            :style="item.user?.$userColour ? { color: item.user.$userColour } : {}">
                                             {{ item.label }}
                                         </span>
-                                        <Check :class="['ml-auto size-4 shrink-0', selected ? 'opacity-100' : 'opacity-0']" />
+                                        <Check
+                                            :class="[
+                                                'ml-auto size-4 shrink-0',
+                                                selected ? 'opacity-100' : 'opacity-0'
+                                            ]" />
                                     </div>
                                 </template>
                             </VirtualCombobox>
@@ -247,16 +270,22 @@
                             <div class="flex items-start gap-2">
                                 <Checkbox v-model="state.roomHistory.firstJoin.enabled" class="mt-1" />
                                 <div class="flex flex-col gap-1.5">
-                                    <span class="text-sm font-medium">{{ t('view.player_list.filter.first_join') }}</span>
+                                    <span class="text-sm font-medium">{{
+                                        t('view.player_list.filter.first_join')
+                                    }}</span>
                                     <div
                                         v-if="state.roomHistory.firstJoin.enabled"
                                         class="flex flex-wrap items-center gap-2">
-                                        <span class="text-xs text-muted-foreground">{{ t('view.player_list.filter.first_join_from') }}</span>
+                                        <span class="text-xs text-muted-foreground">{{
+                                            t('view.player_list.filter.first_join_from')
+                                        }}</span>
                                         <Input
                                             type="datetime-local"
                                             v-model="state.roomHistory.firstJoin.from"
                                             class="h-8 w-48" />
-                                        <span class="text-xs text-muted-foreground">{{ t('view.player_list.filter.first_join_to') }}</span>
+                                        <span class="text-xs text-muted-foreground">{{
+                                            t('view.player_list.filter.first_join_to')
+                                        }}</span>
                                         <Input
                                             type="datetime-local"
                                             v-model="state.roomHistory.firstJoin.to"
@@ -268,16 +297,26 @@
                             <div class="flex items-start gap-2">
                                 <Checkbox v-model="state.roomHistory.sessionCount.enabled" class="mt-1" />
                                 <div class="flex flex-col gap-1.5">
-                                    <span class="text-sm font-medium">{{ t('view.player_list.filter.session_count') }}</span>
-                                    <div v-if="state.roomHistory.sessionCount.enabled" class="flex flex-wrap items-center gap-2">
+                                    <span class="text-sm font-medium">{{
+                                        t('view.player_list.filter.session_count')
+                                    }}</span>
+                                    <div
+                                        v-if="state.roomHistory.sessionCount.enabled"
+                                        class="flex flex-wrap items-center gap-2">
                                         <Select v-model="state.roomHistory.sessionCount.comparison" class="w-20">
                                             <SelectTrigger size="sm">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="gte">{{ t('view.player_list.filter.comparison_gte') }}</SelectItem>
-                                                <SelectItem value="eq">{{ t('view.player_list.filter.comparison_eq') }}</SelectItem>
-                                                <SelectItem value="lte">{{ t('view.player_list.filter.comparison_lte') }}</SelectItem>
+                                                <SelectItem value="gte">{{
+                                                    t('view.player_list.filter.comparison_gte')
+                                                }}</SelectItem>
+                                                <SelectItem value="eq">{{
+                                                    t('view.player_list.filter.comparison_eq')
+                                                }}</SelectItem>
+                                                <SelectItem value="lte">{{
+                                                    t('view.player_list.filter.comparison_lte')
+                                                }}</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <Input
@@ -285,7 +324,9 @@
                                             min="1"
                                             v-model.number="state.roomHistory.sessionCount.count"
                                             class="h-8 w-20" />
-                                        <span class="text-xs text-muted-foreground">{{ t('view.player_list.filter.session_count_unit') }}</span>
+                                        <span class="text-xs text-muted-foreground">{{
+                                            t('view.player_list.filter.session_count_unit')
+                                        }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -293,23 +334,31 @@
                             <div class="flex items-start gap-2">
                                 <Checkbox v-model="state.roomHistory.onlineDuration.enabled" class="mt-1" />
                                 <div class="flex flex-col gap-1.5">
-                                    <span class="text-sm font-medium">{{ t('view.player_list.filter.online_duration') }}</span>
+                                    <span class="text-sm font-medium">{{
+                                        t('view.player_list.filter.online_duration')
+                                    }}</span>
                                     <div
                                         v-if="state.roomHistory.onlineDuration.enabled"
                                         class="flex flex-wrap items-center gap-2">
-                                        <span class="text-xs text-muted-foreground">{{ t('view.player_list.filter.duration_min') }}</span>
+                                        <span class="text-xs text-muted-foreground">{{
+                                            t('view.player_list.filter.duration_min')
+                                        }}</span>
                                         <Input
                                             type="number"
                                             min="0"
                                             v-model.number="state.roomHistory.onlineDuration.minMinutes"
                                             class="h-8 w-20" />
-                                        <span class="text-xs text-muted-foreground">{{ t('view.player_list.filter.duration_max') }}</span>
+                                        <span class="text-xs text-muted-foreground">{{
+                                            t('view.player_list.filter.duration_max')
+                                        }}</span>
                                         <Input
                                             type="number"
                                             min="0"
                                             v-model.number="state.roomHistory.onlineDuration.maxMinutes"
                                             class="h-8 w-20" />
-                                        <span class="text-xs text-muted-foreground">{{ t('view.player_list.filter.duration_unit') }}</span>
+                                        <span class="text-xs text-muted-foreground">{{
+                                            t('view.player_list.filter.duration_unit')
+                                        }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -327,7 +376,10 @@
                             >
                         </div>
                         <div v-if="state.platform.enabled" class="mt-2 flex flex-wrap items-center gap-4 pl-6">
-                            <label v-for="option in platformOptions" :key="option.key" class="flex items-center gap-2 text-sm">
+                            <label
+                                v-for="option in platformOptions"
+                                :key="option.key"
+                                class="flex items-center gap-2 text-sm">
                                 <Checkbox v-model="state.platform.platforms[option.key]" />
                                 {{ option.label }}
                             </label>
@@ -337,7 +389,9 @@
             </ScrollArea>
 
             <DialogFooter>
-                <Button variant="secondary" @click="handleOpenChange(false)">{{ t('view.player_list.filter.cancel') }}</Button>
+                <Button variant="secondary" @click="handleOpenChange(false)">{{
+                    t('view.player_list.filter.cancel')
+                }}</Button>
                 <Button @click="applyFilters">{{ t('view.player_list.filter.apply') }}</Button>
             </DialogFooter>
         </DialogContent>
@@ -360,11 +414,7 @@
     import { useUserDisplay } from '@/composables/useUserDisplay';
     import { useFriendStore, useModalStore } from '@/stores';
     import configRepository from '@/services/config';
-    import {
-        cloneFilterState,
-        createDefaultFilterState,
-        createPreset
-    } from '../playerListFilters';
+    import { cloneFilterState, createDefaultFilterState, createPreset } from '../playerListFilters';
 
     const props = defineProps({
         open: { type: Boolean, required: true },

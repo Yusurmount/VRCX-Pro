@@ -107,9 +107,7 @@
                     size="sm"
                     variant="outline"
                     @click="
-                        openExternalLink(
-                            'https://github.com/Yusurmount/VRCX-Pro/wiki/Launch-parameters-&-VRCX.json'
-                        )
+                        openExternalLink('https://github.com/Yusurmount/VRCX-Pro/wiki/Launch-parameters-&-VRCX.json')
                     "
                     >{{ t('view.settings.advanced.advanced.launch_commands.docs') }}</Button
                 >
@@ -568,6 +566,32 @@
                                     </div>
                                 </RadioGroup>
                             </div>
+
+                            <!-- Compatibility options -->
+                            <div class="space-y-2">
+                                <Label class="text-sm font-medium">
+                                    {{ t('view.settings.advanced.advanced.db_import.strategy_compat_label') }}
+                                </Label>
+                                <div class="flex items-center justify-between rounded-md border p-3">
+                                    <div class="flex flex-col gap-1">
+                                        <Label for="compat-user-mismatch" class="text-sm font-medium cursor-pointer">
+                                            {{
+                                                t(
+                                                    'view.settings.advanced.advanced.db_import.strategy_allow_user_mismatch'
+                                                )
+                                            }}
+                                        </Label>
+                                        <p class="text-xs text-muted-foreground">
+                                            {{
+                                                t(
+                                                    'view.settings.advanced.advanced.db_import.strategy_allow_user_mismatch_desc'
+                                                )
+                                            }}
+                                        </p>
+                                    </div>
+                                    <Switch id="compat-user-mismatch" v-model="allowUserMismatch" />
+                                </div>
+                            </div>
                         </div>
                     </template>
 
@@ -582,6 +606,13 @@
                         <Alert variant="default" class="mb-2 border-blue-500/50">
                             <AlertDescription class="text-sm">
                                 {{ t('view.settings.advanced.advanced.db_import.confirm_message') }}
+                            </AlertDescription>
+                        </Alert>
+
+                        <Alert v-if="importDiagnostics?.userMismatch" variant="warning" class="mb-0">
+                            <TriangleAlert class="h-4 w-4" />
+                            <AlertDescription class="text-sm">
+                                {{ t('view.settings.advanced.advanced.db_import.confirm_user_mismatch_notice') }}
                             </AlertDescription>
                         </Alert>
 
@@ -679,6 +710,19 @@
                             </div>
                         </div>
 
+                        <!-- Skipped tables -->
+                        <Alert v-if="importReport.skippedTables?.length > 0" variant="warning" class="mb-0">
+                            <TriangleAlert class="h-4 w-4" />
+                            <AlertDescription class="text-sm space-y-1">
+                                <p>{{ t('view.settings.advanced.advanced.db_import.report_skipped_tables') }}</p>
+                                <ul class="list-disc pl-4">
+                                    <li v-for="name in importReport.skippedTables" :key="name" class="break-all">
+                                        {{ name }}
+                                    </li>
+                                </ul>
+                            </AlertDescription>
+                        </Alert>
+
                         <!-- Per-table breakdown -->
                         <details class="text-sm">
                             <summary class="cursor-pointer text-muted-foreground hover:text-foreground">
@@ -728,6 +772,12 @@
                         <Alert variant="destructive" class="mb-2">
                             <AlertDescription>
                                 {{ t('view.settings.advanced.advanced.db_import.error', { error: importError }) }}
+                            </AlertDescription>
+                        </Alert>
+                        <Alert v-if="importErrorCode === 'user_mismatch'" variant="warning" class="mb-0">
+                            <TriangleAlert class="h-4 w-4" />
+                            <AlertDescription class="text-sm">
+                                {{ t('view.settings.advanced.advanced.db_import.error_user_mismatch_hint') }}
                             </AlertDescription>
                         </Alert>
                     </template>
@@ -781,7 +831,17 @@
                         </Button>
                     </template>
 
-                    <!-- Error: close -->
+                    <!-- Error: back to strategy + close -->
+                    <template v-else-if="importPhase === 'error'">
+                        <Button variant="outline" size="sm" @click="backToStrategy">
+                            {{ t('common.actions.back') }}
+                        </Button>
+                        <Button variant="outline" size="sm" @click="isImportDialogVisible = false">
+                            {{ t('confirm.cancel_button') }}
+                        </Button>
+                    </template>
+
+                    <!-- Fallback: close -->
                     <template v-else>
                         <Button variant="outline" size="sm" @click="isImportDialogVisible = false">
                             {{ t('confirm.cancel_button') }}
@@ -1053,9 +1113,13 @@
     const conflictStrategy = ref('overwrite'); // 'overwrite' | 'skip'
     const newDataStrategy = ref('add'); // 'add' | 'skip'
 
+    // Import compatibility options
+    const allowUserMismatch = ref(false); // Allow importing from a different account
+
     // Import file data (cached between phases)
     const importDataCache = ref(null);
     const importFileSummary = ref(null);
+    const importDiagnostics = ref(null);
 
     // Import result
     const importReport = reactive({
@@ -1064,9 +1128,11 @@
         skippedExisting: 0,
         skippedNew: 0,
         totalProcessed: 0,
+        skippedTables: [],
         tables: []
     });
     const importError = ref('');
+    const importErrorCode = ref('');
 
     // Database Reset state
     const isResetDialogVisible = ref(false);
@@ -1153,15 +1219,19 @@
         importProgressPercent.value = 0;
         conflictStrategy.value = 'overwrite';
         newDataStrategy.value = 'add';
+        allowUserMismatch.value = false;
         importDataCache.value = null;
         importFileSummary.value = null;
+        importDiagnostics.value = null;
         importReport.overwritten = 0;
         importReport.added = 0;
         importReport.skippedExisting = 0;
         importReport.skippedNew = 0;
         importReport.totalProcessed = 0;
+        importReport.skippedTables = [];
         importReport.tables = [];
         importError.value = '';
+        importErrorCode.value = '';
         isImportDialogVisible.value = true;
     }
 
@@ -1173,23 +1243,28 @@
         importPhase.value = 'reading';
 
         try {
-            const result = await readImportFile(userId);
+            const result = await readImportFile(userId, {
+                allowUserMismatch: allowUserMismatch.value
+            });
 
             if (result.success) {
                 importDataCache.value = result.data;
                 importFileSummary.value = result.summary;
+                importDiagnostics.value = result.diagnostics ?? null;
                 importPhase.value = 'confirm';
             } else if (result.error === 'cancelled') {
                 isImportDialogVisible.value = false;
                 toast(t('view.settings.advanced.advanced.db_import.error_cancelled'));
             } else {
                 importError.value = result.error;
+                importErrorCode.value = result.errorCode ?? '';
                 importPhase.value = 'error';
                 toast.error(t('view.settings.advanced.advanced.db_import.error', { error: result.error }));
             }
         } catch (e) {
             console.error('[Import] readImportFile threw:', e);
             importError.value = e.message || String(e);
+            importErrorCode.value = '';
             importPhase.value = 'error';
             toast.error(t('view.settings.advanced.advanced.db_import.error', { error: importError.value }));
         }
@@ -1230,6 +1305,7 @@
             importReport.skippedExisting = result.report.skippedExisting;
             importReport.skippedNew = result.report.skippedNew;
             importReport.totalProcessed = result.report.totalProcessed;
+            importReport.skippedTables = result.report.skippedTables ?? [];
             importReport.tables = result.report.tables;
             toast.success(
                 t('view.settings.advanced.advanced.db_import.success', {
@@ -1243,6 +1319,7 @@
         } else {
             importPhase.value = 'error';
             importError.value = result.error;
+            importErrorCode.value = '';
             toast.error(t('view.settings.advanced.advanced.db_import.error', { error: result.error }));
         }
     }
@@ -1356,4 +1433,3 @@
         });
     }
 </script>
-

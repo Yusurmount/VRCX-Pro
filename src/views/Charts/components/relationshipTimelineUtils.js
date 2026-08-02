@@ -99,7 +99,13 @@ function buildPerBucketTopNPercentageSeries({
 }) {
     if (!aggregation) return null;
 
-    const { bucketCount, xLabels, perFriendBuckets, bucketEntries, bucketTotals } = aggregation;
+    const {
+        bucketCount,
+        xLabels,
+        perFriendBuckets,
+        bucketEntries,
+        bucketTotals
+    } = aggregation;
     if (!bucketCount) return null;
 
     const topN = Math.max(1, Math.min(friendCount, perFriendBuckets.size));
@@ -110,14 +116,19 @@ function buildPerBucketTopNPercentageSeries({
     const totalsPerBucket = Array.from({ length: bucketCount }, () => 0);
 
     for (let bucketIdx = 0; bucketIdx < bucketCount; bucketIdx++) {
-        const sortedEntries = [...bucketEntries[bucketIdx]].sort((a, b) => b.score - a.score);
+        const sortedEntries = [...bucketEntries[bucketIdx]].sort(
+            (a, b) => b.score - a.score
+        );
         const topEntries = sortedEntries.slice(0, topN);
         let topSum = 0;
         for (const item of topEntries) {
             topSum += item.score;
             unionFriendIds.add(item.userId);
             if (!friendRawDataMap.has(item.userId)) {
-                friendRawDataMap.set(item.userId, Array.from({ length: bucketCount }, () => 0));
+                friendRawDataMap.set(
+                    item.userId,
+                    Array.from({ length: bucketCount }, () => 0)
+                );
             }
             friendRawDataMap.get(item.userId)[bucketIdx] = item.score;
             friendSelectedTotals.set(
@@ -129,11 +140,14 @@ function buildPerBucketTopNPercentageSeries({
         if (othersScore > 0) {
             othersRawData[bucketIdx] = othersScore;
         }
-        totalsPerBucket[bucketIdx] = topSum + (showOthers ? othersRawData[bucketIdx] : 0);
+        totalsPerBucket[bucketIdx] =
+            topSum + (showOthers ? othersRawData[bucketIdx] : 0);
     }
 
     const friendOrder = [...unionFriendIds].sort((a, b) => {
-        const scoreDiff = (friendSelectedTotals.get(b) || 0) - (friendSelectedTotals.get(a) || 0);
+        const scoreDiff =
+            (friendSelectedTotals.get(b) || 0) -
+            (friendSelectedTotals.get(a) || 0);
         if (scoreDiff !== 0) return scoreDiff;
         return a.localeCompare(b);
     });
@@ -145,7 +159,8 @@ function buildPerBucketTopNPercentageSeries({
     };
 
     const series = [];
-    const includeOthers = showOthers && othersRawData.some((value) => value > 0);
+    const includeOthers =
+        showOthers && othersRawData.some((value) => value > 0);
     if (includeOthers) {
         series.push({
             name: othersName,
@@ -161,7 +176,9 @@ function buildPerBucketTopNPercentageSeries({
                 areaStyle: { opacity: 0.95 }
             },
             blur: { areaStyle: { opacity: 0.3 } },
-            data: othersRawData.map((value, bucketIdx) => toPercent(value, bucketIdx))
+            data: othersRawData.map((value, bucketIdx) =>
+                toPercent(value, bucketIdx)
+            )
         });
     }
 

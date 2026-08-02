@@ -126,16 +126,25 @@ export function countActiveFilters(state) {
         return 0;
     }
     let count = 0;
-    if (state.relationship?.enabled && (state.relationship.friends || state.relationship.nonFriends)) {
+    if (
+        state.relationship?.enabled &&
+        (state.relationship.friends || state.relationship.nonFriends)
+    ) {
         count++;
     }
-    if (state.level?.enabled && Object.values(state.level.levels ?? {}).some(Boolean)) {
+    if (
+        state.level?.enabled &&
+        Object.values(state.level.levels ?? {}).some(Boolean)
+    ) {
         count++;
     }
     if (state.keyword?.enabled && state.keyword.text?.trim()) {
         count++;
     }
-    if (state.groups?.enabled && (state.groups.conditions ?? []).some((c) => c?.groupId)) {
+    if (
+        state.groups?.enabled &&
+        (state.groups.conditions ?? []).some((c) => c?.groupId)
+    ) {
         count++;
     }
     if (state.mutual?.enabled) {
@@ -143,11 +152,18 @@ export function countActiveFilters(state) {
     }
     if (state.roomHistory?.enabled) {
         const rh = state.roomHistory;
-        if (rh.firstJoin?.enabled || rh.sessionCount?.enabled || rh.onlineDuration?.enabled) {
+        if (
+            rh.firstJoin?.enabled ||
+            rh.sessionCount?.enabled ||
+            rh.onlineDuration?.enabled
+        ) {
             count++;
         }
     }
-    if (state.platform?.enabled && Object.values(state.platform.platforms ?? {}).some(Boolean)) {
+    if (
+        state.platform?.enabled &&
+        Object.values(state.platform.platforms ?? {}).some(Boolean)
+    ) {
         count++;
     }
     return count;
@@ -239,7 +255,12 @@ export function matchesPlayerFilters(row, state, runtime = {}) {
     }
 
     const rh = state.roomHistory;
-    if (rh?.enabled && (rh.firstJoin?.enabled || rh.sessionCount?.enabled || rh.onlineDuration?.enabled)) {
+    if (
+        rh?.enabled &&
+        (rh.firstJoin?.enabled ||
+            rh.sessionCount?.enabled ||
+            rh.onlineDuration?.enabled)
+    ) {
         if (!matchesRoomHistory(row, rh, runtime)) {
             return false;
         }
@@ -268,10 +289,16 @@ export function matchesPlayerFilters(row, state, runtime = {}) {
         const text = state.keyword.text?.trim().toLowerCase();
         if (text) {
             let hit = false;
-            if (state.keyword.searchName && `${row?.displayName ?? ''}`.toLowerCase().includes(text)) {
+            if (
+                state.keyword.searchName &&
+                `${row?.displayName ?? ''}`.toLowerCase().includes(text)
+            ) {
                 hit = true;
             }
-            if (state.keyword.searchBio && `${row?.ref?.bio ?? ''}`.toLowerCase().includes(text)) {
+            if (
+                state.keyword.searchBio &&
+                `${row?.ref?.bio ?? ''}`.toLowerCase().includes(text)
+            ) {
                 hit = true;
             }
             if (!hit) {
@@ -281,11 +308,15 @@ export function matchesPlayerFilters(row, state, runtime = {}) {
     }
 
     if (state.groups?.enabled) {
-        const conditions = (state.groups.conditions ?? []).filter((c) => c?.groupId);
+        const conditions = (state.groups.conditions ?? []).filter(
+            (c) => c?.groupId
+        );
         if (conditions.length > 0) {
             const check = (cond) => {
                 const groups = runtime.playerGroupMap?.get(row?.ref?.id);
-                const joined = groups ? groups.has(cond.groupId) : row?.groupOnNameplate === cond.groupId;
+                const joined = groups
+                    ? groups.has(cond.groupId)
+                    : row?.groupOnNameplate === cond.groupId;
                 return joined === Boolean(cond.joined);
             };
             if (state.groups.combine === 'OR') {
@@ -299,18 +330,25 @@ export function matchesPlayerFilters(row, state, runtime = {}) {
     }
 
     if (state.mutual?.enabled) {
-        const mutuals = (runtime.mutualSnapshot ?? new Map()).get(row?.ref?.id) ?? [];
+        const mutuals =
+            (runtime.mutualSnapshot ?? new Map()).get(row?.ref?.id) ?? [];
         if (mutuals.length === 0) {
             return false;
         }
-        if (state.mutual.targetUserId && !mutuals.includes(state.mutual.targetUserId)) {
+        if (
+            state.mutual.targetUserId &&
+            !mutuals.includes(state.mutual.targetUserId)
+        ) {
             return false;
         }
     }
 
     if (state.platform?.enabled) {
         const platforms = state.platform.platforms ?? {};
-        if (Object.values(platforms).some(Boolean) && !platforms[getPlayerPlatformKey(row)]) {
+        if (
+            Object.values(platforms).some(Boolean) &&
+            !platforms[getPlayerPlatformKey(row)]
+        ) {
             return false;
         }
     }
@@ -327,15 +365,21 @@ export function matchesPlayerFilters(row, state, runtime = {}) {
  * @returns {boolean}
  */
 function matchesRoomHistory(row, rh, runtime) {
-    const stats = (runtime.roomPlayerStats ?? new Map()).get(row?.ref?.id || row?.displayName) ?? null;
+    const stats =
+        (runtime.roomPlayerStats ?? new Map()).get(
+            row?.ref?.id || row?.displayName
+        ) ?? null;
     const hasTimer = typeof row?.timer === 'number' && row?.timer > 0;
 
     const firstJoin =
         stats?.firstJoin != null && hasTimer
             ? Math.min(stats.firstJoin, row.timer)
-            : stats?.firstJoin ?? (hasTimer ? row.timer : null);
-    const sessionCount = stats?.joinCount != null ? stats.joinCount : hasTimer ? 1 : 0;
-    const totalTime = (stats?.totalTime ?? 0) + (hasTimer ? (runtime.now ?? Date.now()) - row.timer : 0);
+            : (stats?.firstJoin ?? (hasTimer ? row.timer : null));
+    const sessionCount =
+        stats?.joinCount != null ? stats.joinCount : hasTimer ? 1 : 0;
+    const totalTime =
+        (stats?.totalTime ?? 0) +
+        (hasTimer ? (runtime.now ?? Date.now()) - row.timer : 0);
 
     if (rh.firstJoin?.enabled) {
         if (firstJoin == null) {

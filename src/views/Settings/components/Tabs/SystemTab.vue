@@ -268,4 +268,3 @@
         toast.info(t('view.settings.general.application.restore_defaults_restart_notice'), { duration: 5000 });
     }
 </script>
-

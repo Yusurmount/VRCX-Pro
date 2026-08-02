@@ -67,17 +67,38 @@ export function mergeFriends(primarySortedFriends) {
 // ── Aggregated feed ────────────────────────────────────────────────────────────
 
 const BASE_COLUMNS = [
-    '_prefix', 'id', 'created_at', 'user_id', 'display_name', 'type',
-    'location', 'world_name', 'previous_location', 'time', 'group_name',
-    'status', 'status_description', 'previous_status', 'previous_status_description',
-    'bio', 'previous_bio',
-    'owner_id', 'avatar_name',
-    'current_avatar_image_url', 'current_avatar_thumbnail_image_url',
-    'previous_current_avatar_image_url', 'previous_current_avatar_thumbnail_image_url'
+    '_prefix',
+    'id',
+    'created_at',
+    'user_id',
+    'display_name',
+    'type',
+    'location',
+    'world_name',
+    'previous_location',
+    'time',
+    'group_name',
+    'status',
+    'status_description',
+    'previous_status',
+    'previous_status_description',
+    'bio',
+    'previous_bio',
+    'owner_id',
+    'avatar_name',
+    'current_avatar_image_url',
+    'current_avatar_thumbnail_image_url',
+    'previous_current_avatar_image_url',
+    'previous_current_avatar_thumbnail_image_url'
 ].join(', ');
 
 function buildUnionSelectsForPrefix(prefix, filters) {
-    let gps = true, status = true, bio = true, avatar = true, online = true, offline = true;
+    let gps = true,
+        status = true,
+        bio = true,
+        avatar = true,
+        online = true,
+        offline = true;
 
     if (filters.length > 0) {
         gps = status = bio = avatar = online = offline = false;
@@ -142,11 +163,12 @@ function parseDbRow(dbRow) {
     row.$accountId = null;
     row.$accountColor = null;
     row.$accountLabel = null;
-    const session = accountHub.allSessions.find(s => s.dbPrefix === prefix);
+    const session = accountHub.allSessions.find((s) => s.dbPrefix === prefix);
     if (session) {
         row.$accountId = session.userId;
         row.$accountColor = accountHub.getAccountColor(session.userId);
-        row.$accountLabel = session.label || session.userInfo?.displayName || session.userId;
+        row.$accountLabel =
+            session.label || session.userInfo?.displayName || session.userId;
     } else if (prefix === accountHub.primaryPrefix) {
         row.$accountId = accountHub.primaryId;
         row.$accountColor = accountHub.getAccountColor(accountHub.primaryId);
@@ -210,7 +232,9 @@ export async function lookupAggregatedFeed(prefixes, filters = [], limit = -1) {
 
     const rows = [];
     await sqliteService.execute(
-        (dbRow) => { rows.push(parseDbRow(dbRow)); },
+        (dbRow) => {
+            rows.push(parseDbRow(dbRow));
+        },
         `SELECT ${BASE_COLUMNS} FROM (${allSelects.join(' UNION ALL ')}) ORDER BY created_at DESC, id DESC LIMIT @limit`,
         {
             '@perTable': limit,

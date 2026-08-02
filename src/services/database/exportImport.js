@@ -109,16 +109,6 @@ function getTableColumnInfo(tableName) {
 }
 
 /**
- * Get primary key column names for a table
- * @param {string} tableName
- * @returns {Promise<string[]>}
- */
-async function getPrimaryKeyColumns(tableName) {
-    const cols = await getTableColumnInfo(tableName);
-    return cols.filter((c) => c.pk > 0).map((c) => c.name);
-}
-
-/**
  * Convert a row to a column-name-keyed object
  * @param {any} row - Row data (object or array)
  * @param {string[]} columns - Column names
@@ -134,6 +124,43 @@ function rowToObject(row, columns) {
         return obj;
     }
     return row;
+}
+
+// Login credentials live outside the user data the import is meant to
+// restore. The `cookies` table holds the current VRChat auth cookie and the
+// configs keys below hold the saved credentials / last logged-in account.
+// Importing them would invalidate the running session, so they are skipped.
+const SENSITIVE_CONFIG_KEYS = new Set([
+    'config:savedcredentials',
+    'config:lastuserloggedin'
+]);
+
+function isSensitiveTable(tableName) {
+    return tableName === 'cookies';
+}
+
+function filterSensitiveRows(tableName, rows) {
+    if (tableName !== 'configs') return rows;
+    return rows.filter((row) => !SENSITIVE_CONFIG_KEYS.has(row.key));
+}
+
+/**
+ * Normalize a value extracted from an import file for SQL binding.
+ * Legacy (VRCX-Pro Previous) exports serialize C# Nullable<T> fields as
+ * {"Value": ...} objects which SQLite cannot bind directly.
+ * @param {any} value
+ * @returns {any}
+ */
+function normalizeImportValue(value) {
+    if (value !== null && typeof value === 'object') {
+        // C# Nullable<T> serialization shape
+        if ('Value' in value) {
+            return normalizeImportValue(value.Value);
+        }
+        // Any other object: keep as JSON text
+        return JSON.stringify(value);
+    }
+    return value;
 }
 
 /**
@@ -232,12 +259,14 @@ export async function exportDatabaseData(userId, onProgress) {
  * Validate an import file
  * @param {ExportPackage} data
  * @param {string} currentUserId
+ * @param {boolean} [allowUserMismatch] - Allow importing a backup from a different account
  * @returns {{valid: boolean, reason?: string}}
  */
-function validateImportData(data, currentUserId) {
+function validateImportData(data, currentUserId, allowUserMismatch = false) {
     if (!data || typeof data !== 'object') {
         return {
             valid: false,
+            code: 'invalid_format',
             reason: i18n.global.t(
                 'view.settings.advanced.advanced.db_import.error_invalid_format'
             )
@@ -246,6 +275,7 @@ function validateImportData(data, currentUserId) {
     if (!data.metadata || !data.metadata.version) {
         return {
             valid: false,
+            code: 'missing_metadata',
             reason: i18n.global.t(
                 'view.settings.advanced.advanced.db_import.error_missing_metadata'
             )
@@ -254,6 +284,7 @@ function validateImportData(data, currentUserId) {
     if (data.metadata.version !== EXPORT_VERSION) {
         return {
             valid: false,
+            code: 'version_mismatch',
             reason: i18n.global.t(
                 'view.settings.advanced.advanced.db_import.error_version_mismatch',
                 { version: EXPORT_VERSION }
@@ -263,14 +294,20 @@ function validateImportData(data, currentUserId) {
     if (!data.tables || typeof data.tables !== 'object') {
         return {
             valid: false,
+            code: 'missing_tables',
             reason: i18n.global.t(
                 'view.settings.advanced.advanced.db_import.error_missing_tables'
             )
         };
     }
-    if (data.metadata.userId && data.metadata.userId !== currentUserId) {
+    if (
+        data.metadata.userId &&
+        data.metadata.userId !== currentUserId &&
+        !allowUserMismatch
+    ) {
         return {
             valid: false,
+            code: 'user_mismatch',
             reason: i18n.global.t(
                 'view.settings.advanced.advanced.db_import.error_user_mismatch'
             )
@@ -278,6 +315,11 @@ function validateImportData(data, currentUserId) {
     }
     return { valid: true };
 }
+
+/**
+ * @typedef {Object} ImportFileDiagnostics
+ * @property {boolean} userMismatch - File metadata belongs to a different account
+ */
 
 /**
  * @typedef {'overwrite'|'skip'} ConflictStrategy
@@ -313,6 +355,8 @@ function validateImportData(data, currentUserId) {
  * @property {number} added - Records that were newly inserted
  * @property {number} skippedExisting - Existing records skipped
  * @property {number} skippedNew - New records skipped
+ * @property {string|null} skipped - Reason the whole table was skipped ('internal_table' | 'table_missing' | 'no_columns' | 'pk_missing' | 'sensitive') or null
+ * @property {number} droppedColumns - Columns dropped because they don't exist in the target table
  */
 
 /**
@@ -323,15 +367,17 @@ function validateImportData(data, currentUserId) {
  * @property {number} skippedExisting
  * @property {number} skippedNew
  * @property {number} totalProcessed
+ * @property {string[]} skippedTables - Tables that could not be imported
  * @property {TableReportEntry[]} tables
  */
 
 /**
  * Read and validate an import file
  * @param {string} currentUserId
- * @returns {Promise<{success: boolean, data?: ExportPackage, summary?: ImportFileSummary, error?: string}>}
+ * @param {{allowUserMismatch?: boolean}} [options] - Import options
+ * @returns {Promise<{success: boolean, data?: ExportPackage, summary?: ImportFileSummary, diagnostics?: ImportFileDiagnostics, error?: string}>}
  */
-export async function readImportFile(currentUserId) {
+export async function readImportFile(currentUserId, options = {}) {
     const filePath = await getOpenFilePath();
     if (!filePath) {
         return { success: false, error: 'cancelled' };
@@ -352,9 +398,17 @@ export async function readImportFile(currentUserId) {
         };
     }
 
-    const validation = validateImportData(data, currentUserId);
+    const validation = validateImportData(
+        data,
+        currentUserId,
+        options.allowUserMismatch
+    );
     if (!validation.valid) {
-        return { success: false, error: validation.reason };
+        return {
+            success: false,
+            error: validation.reason,
+            errorCode: validation.code
+        };
     }
 
     const recordsPerTable = {};
@@ -372,12 +426,30 @@ export async function readImportFile(currentUserId) {
             tableCount: Object.keys(data.tables).length,
             totalRecords,
             recordsPerTable
+        },
+        diagnostics: {
+            userMismatch: !!(
+                data.metadata?.userId && data.metadata.userId !== currentUserId
+            )
         }
     };
 }
 
 /**
- * Execute import with specified strategies
+ * Execute import with VRCX-Pro Previous import logic.
+ *
+ * Backup rows are written to the database with the columns exactly as
+ * exported - no schema/column adaptation is performed. Values are normalized
+ * because Previous exports serialize C# Nullable<T> fields as {"Value": ...}
+ * objects that the backend cannot bind, SQLite internal tables and login
+ * credentials (cookies table, saved credentials) are never imported.
+ *
+ * Note: the work is intentionally NOT wrapped in a BEGIN/COMMIT transaction.
+ * The C# backend guards `Execute` (read) and `ExecuteNonQuery` (write) with a
+ * non-recursive `ReaderWriterLockSlim`, so a SELECT issued inside an open
+ * transaction deadlocks/throws on the same thread. Rows are committed
+ * individually instead.
+ *
  * @param {ExportPackage} data
  * @param {ImportStrategies} strategies
  * @param {function} onProgress
@@ -402,16 +474,10 @@ export async function executeImport(data, strategies, onProgress) {
         tables: []
     };
 
-    await sqliteService.executeNonQuery('BEGIN');
-
     try {
         for (const tableName of tableNames) {
-            const rows = data.tables[tableName];
-            if (rows.length === 0) continue;
-
-            const columns = Object.keys(rows[0]);
-            const quotedColumns = columns.map((c) => `"${c}"`).join(', ');
-            const pkColumns = await getPrimaryKeyColumns(tableName);
+            let rows = data.tables[tableName];
+            if (!Array.isArray(rows) || rows.length === 0) continue;
 
             /** @type {TableReportEntry} */
             const tableReport = {
@@ -419,12 +485,43 @@ export async function executeImport(data, strategies, onProgress) {
                 overwritten: 0,
                 added: 0,
                 skippedExisting: 0,
-                skippedNew: 0
+                skippedNew: 0,
+                skipped: null,
+                droppedColumns: 0
             };
 
-            for (const row of rows) {
-                const values = columns.map((c) => row[c]);
+            // Never import SQLite internal tables (autoincrement counter,
+            // query planner stats) - writing them corrupts query performance.
+            if (tableName.startsWith('sqlite_')) {
+                tableReport.skipped = 'internal_table';
+                report.tables.push(tableReport);
+                continue;
+            }
 
+            // Never overwrite login credentials (VRChat auth cookie).
+            if (isSensitiveTable(tableName)) {
+                tableReport.skipped = 'sensitive';
+                report.tables.push(tableReport);
+                continue;
+            }
+
+            // Drop credential rows from the configs table.
+            rows = filterSensitiveRows(tableName, rows);
+            if (rows.length === 0) continue;
+
+            // Previous logic: use the backup columns verbatim.
+            const columns = Object.keys(rows[0]);
+            const quotedColumns = columns.map((c) => `"${c}"`).join(', ');
+            const pkColumns = (await getTableColumnInfo(tableName))
+                .filter((c) => c.pk > 0)
+                .map((c) => c.name);
+
+            for (const row of rows) {
+                const values = columns.map((c) =>
+                    row[c] === undefined ? null : normalizeImportValue(row[c])
+                );
+
+                // Check if record exists by primary key
                 let recordExists = false;
                 if (pkColumns.length > 0) {
                     const whereClauses = pkColumns
@@ -432,7 +529,7 @@ export async function executeImport(data, strategies, onProgress) {
                         .join(' AND ');
                     const pkParams = {};
                     pkColumns.forEach((pk, i) => {
-                        pkParams[`@pk${i}`] = row[pk];
+                        pkParams[`@pk${i}`] = normalizeImportValue(row[pk]);
                     });
 
                     recordExists = await new Promise((resolve, reject) => {
@@ -460,10 +557,12 @@ export async function executeImport(data, strategies, onProgress) {
                             .join(' AND ');
                         const updateParams = {};
                         columns.forEach((c, i) => {
-                            updateParams[`@v${i}`] = row[c];
+                            updateParams[`@v${i}`] = values[i];
                         });
                         pkColumns.forEach((pk, i) => {
-                            updateParams[`@w${i}`] = row[pk];
+                            updateParams[`@w${i}`] = normalizeImportValue(
+                                row[pk]
+                            );
                         });
                         const sql = `UPDATE "${tableName}" SET ${setClauses} WHERE ${whereClauses}`;
                         await sqliteService.executeNonQuery(sql, updateParams);
@@ -496,8 +595,6 @@ export async function executeImport(data, strategies, onProgress) {
             report.tables.push(tableReport);
         }
 
-        await sqliteService.executeNonQuery('COMMIT');
-
         report.success = true;
         report.overwritten = report.tables.reduce(
             (s, t) => s + t.overwritten,
@@ -510,11 +607,13 @@ export async function executeImport(data, strategies, onProgress) {
         );
         report.skippedNew = report.tables.reduce((s, t) => s + t.skippedNew, 0);
         report.totalProcessed = processedRows;
+        report.skippedTables = report.tables
+            .filter((t) => t.skipped)
+            .map((t) => t.tableName);
 
         return { success: true, report, tablesProcessed: tableNames.length };
     } catch (e) {
-        await sqliteService.executeNonQuery('ROLLBACK');
-        console.error('[Import] Transaction failed, rolled back:', e);
+        console.error('[Import] Legacy import failed:', e);
         return {
             success: false,
             report,
@@ -522,40 +621,4 @@ export async function executeImport(data, strategies, onProgress) {
             error: e.message || String(e)
         };
     }
-}
-
-/**
- * Legacy import function - kept for compatibility
- * @deprecated Use readImportFile + executeImport instead
- */
-export async function importDatabaseData(currentUserId, onProgress) {
-    const fileResult = await readImportFile(currentUserId);
-    if (!fileResult.success) {
-        return {
-            success: false,
-            importedCount: 0,
-            tablesProcessed: 0,
-            error: fileResult.error
-        };
-    }
-
-    const strategies = {
-        conflictStrategy: 'overwrite',
-        newDataStrategy: 'add'
-    };
-    const execResult = await executeImport(
-        fileResult.data,
-        strategies,
-        onProgress
-    );
-
-    if (execResult.success) {
-        return {
-            success: true,
-            importedCount:
-                execResult.report.overwritten + execResult.report.added,
-            tablesProcessed: execResult.tablesProcessed
-        };
-    }
-    return execResult;
 }

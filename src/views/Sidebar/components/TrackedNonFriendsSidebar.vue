@@ -2,7 +2,9 @@
     <div class="relative h-full">
         <div class="h-full w-full overflow-auto overflow-x-hidden">
             <div class="px-1.5 py-2.5">
-                <div v-if="trackedList.length === 0" class="flex flex-col items-center justify-center py-8 text-muted-foreground text-xs">
+                <div
+                    v-if="trackedList.length === 0"
+                    class="flex flex-col items-center justify-center py-8 text-muted-foreground text-xs">
                     <span>{{ t('side_panel.tracked_nonfriends.empty') }}</span>
                 </div>
                 <div v-else class="flex flex-col gap-0.5">
@@ -55,7 +57,11 @@
 
         <!-- Floating add button -->
         <div class="absolute bottom-5 right-4 z-10">
-            <button type="button" class="add-tracked-btn" :aria-label="t('side_panel.tracked_nonfriends.add_button')" @click="openAddDialog">
+            <button
+                type="button"
+                class="add-tracked-btn"
+                :aria-label="t('side_panel.tracked_nonfriends.add_button')"
+                @click="openAddDialog">
                 {{ t('side_panel.tracked_nonfriends.add_button') }}
                 <UserPlus class="w-3.5 h-3.5 ml-1.5" />
             </button>
@@ -99,13 +105,19 @@
                         </Avatar>
                         <div>
                             <p class="font-medium">
-                                {{ t('side_panel.tracked_nonfriends.add_confirm_question', { name: verifiedUser?.displayName || addInput }) }}
+                                {{
+                                    t('side_panel.tracked_nonfriends.add_confirm_question', {
+                                        name: verifiedUser?.displayName || addInput
+                                    })
+                                }}
                             </p>
                             <p class="text-xs text-muted-foreground">{{ addInput }}</p>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" @click="addStep = 'input'">{{ t('side_panel.tracked_nonfriends.add_back') }}</Button>
+                        <Button variant="outline" @click="addStep = 'input'">{{
+                            t('side_panel.tracked_nonfriends.add_back')
+                        }}</Button>
                         <Button @click="confirmAdd">{{ t('dialog.alertdialog.confirm') }}</Button>
                     </DialogFooter>
                 </template>
@@ -117,7 +129,14 @@
 <script setup>
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import { Button } from '@/components/ui/button';
-    import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+    import {
+        Dialog,
+        DialogContent,
+        DialogDescription,
+        DialogFooter,
+        DialogHeader,
+        DialogTitle
+    } from '@/components/ui/dialog';
     import { Input } from '@/components/ui/input';
     import { Spinner } from '@/components/ui/spinner';
     import { TooltipWrapper } from '@/components/ui/tooltip';

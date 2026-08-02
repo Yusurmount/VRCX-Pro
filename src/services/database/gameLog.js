@@ -1823,7 +1823,9 @@ const gameLog = {
             (row) => {
                 const loc = row[0];
                 if (!result.has(loc)) result.set(loc, []);
-                result.get(loc).push({ selfLeave: row[1], selfTime: row[2] || 0 });
+                result
+                    .get(loc)
+                    .push({ selfLeave: row[1], selfTime: row[2] || 0 });
             },
             `SELECT location, created_at, time
              FROM gamelog_join_leave
@@ -1852,7 +1854,11 @@ const gameLog = {
         });
         await sqliteService.execute(
             (row) => {
-                entries.push({ location: row[0], createdAt: row[1], time: row[2] || 0 });
+                entries.push({
+                    location: row[0],
+                    createdAt: row[1],
+                    time: row[2] || 0
+                });
             },
             `SELECT location, created_at, time
              FROM gamelog_join_leave
@@ -1866,7 +1872,8 @@ const gameLog = {
         // Group by location
         const byLocation = new Map();
         for (const entry of entries) {
-            if (!byLocation.has(entry.location)) byLocation.set(entry.location, []);
+            if (!byLocation.has(entry.location))
+                byLocation.set(entry.location, []);
             byLocation.get(entry.location).push(entry);
         }
 
@@ -1877,7 +1884,7 @@ const gameLog = {
             for (const entry of playerEntries) {
                 const leaveMs = new Date(entry.createdAt).getTime();
                 const joinMs = leaveMs - entry.time;
-                events.push([joinMs, 1]);   // player joins
+                events.push([joinMs, 1]); // player joins
                 events.push([leaveMs, -1]); // player leaves
             }
             // Sort by time ascending; ties: joins (+1) before leaves (-1) so that
@@ -1993,7 +2000,6 @@ const gameLog = {
             }
         );
     },
-
 
     /**
      * Get per-friend per-day relationship data for the relationship timeline chart.
@@ -2176,7 +2182,6 @@ const gameLog = {
             }
         );
         return data;
-
     }
 };
 

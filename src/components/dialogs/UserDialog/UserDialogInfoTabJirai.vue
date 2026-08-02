@@ -87,8 +87,7 @@
                 <pre
                     class="text-xs font-[inherit]"
                     style="white-space: pre-wrap; margin: 0 0.5em 0 0; max-height: 210px; overflow-y: auto"
-                    >{{ userDialog.note }}</pre
-                >
+                    >{{ userDialog.note }}</pre>
             </div>
         </div>
         <div
@@ -99,8 +98,7 @@
                 <pre
                     class="text-xs font-[inherit]"
                     style="white-space: pre-wrap; margin: 0 0.5em 0 0; max-height: 210px; overflow-y: auto"
-                    >{{ userDialog.memo }}</pre
-                >
+                    >{{ userDialog.memo }}</pre>
             </div>
         </div>
         <div class="box-border flex items-center p-1.5 text-[13px] w-full cursor-default">
@@ -178,14 +176,12 @@
                     v-if="bioDiffEnabled && bioDiffHtml"
                     class="text-xs leading-5.5 font-[inherit]"
                     style="white-space: pre-wrap; margin: 0 0.5em 0 0; max-height: 210px; overflow-y: auto"
-                    v-html="bioDiffHtml"
-                ></pre>
+                    v-html="bioDiffHtml"></pre>
                 <pre
                     v-else
                     class="text-xs truncate font-[inherit]"
                     style="white-space: pre-wrap; margin: 0 0.5em 0 0; max-height: 210px; overflow-y: auto"
-                    >{{ bioCache.translated || userDialog.ref.bio || '-' }}</pre
-                >
+                    >{{ bioCache.translated || userDialog.ref.bio || '-' }}</pre>
                 <div style="float: right">
                     <Button
                         v-if="translationApi && userDialog.ref.bio"

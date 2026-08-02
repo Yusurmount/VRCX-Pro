@@ -117,7 +117,7 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
             saveInstanceEmojiConfig,
             vrcRegistryAutoBackupConfig,
             vrcRegistryAskRestoreConfig,
-            sentryErrorReportingConfig,
+            sentryErrorReportingConfig
         ] = await Promise.all([
             configRepository.getBool('enablePrimaryPassword', false),
             configRepository.getString('VRCX_bioLanguage'),
@@ -166,7 +166,7 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
             configRepository.getBool('VRCX_saveInstanceEmoji', false),
             configRepository.getBool('VRCX_vrcRegistryAutoBackup', true),
             configRepository.getBool('VRCX_vrcRegistryAskRestore', true),
-            configRepository.getString('VRCX_SentryEnabled', ''),
+            configRepository.getString('VRCX_SentryEnabled', '')
         ]);
 
         if (!bioLanguageConfig || !languageCodes.includes(bioLanguageConfig)) {
