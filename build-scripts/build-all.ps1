@@ -2,13 +2,14 @@ cd ..
 
 $ErrorActionPreference = "Stop"
 
-$installPath = (&"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -version 16.0 -property installationpath) | Select-Object -Last 1
-Import-Module (Join-Path $installPath "Common7\Tools\Microsoft.VisualStudio.DevShell.dll")
-Enter-VsDevShell -VsInstallPath $installPath -SkipAutomaticLocation
+# Visual Studio is not required; .NET SDK handles the build directly.
+# $installPath = (&"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -version 16.0 -property installationpath) | Select-Object -Last 1
+# Import-Module (Join-Path $installPath "Common7\Tools\Microsoft.VisualStudio.DevShell.dll")
+# Enter-VsDevShell -VsInstallPath $installPath -SkipAutomaticLocation
 
 $Date = Get-Date -format yyyyMMdd
-$ZipName = "VRCX_" + $Date + ".zip"
-$SetupName = "VRCX_" + $Date + "_Setup.exe"
+$ZipName = "VRCX-Pro_" + $Date + ".zip"
+$SetupName = "VRCX-Pro_" + $Date + "_Setup.exe"
 
 Write-Host "Building .Net..." -ForegroundColor Green
 dotnet build Dotnet\VRCX-Cef.csproj -p:Configuration=Release -p:WarningLevel=0 -p:Platform=x64 -p:RestorePackagesConfig=true -t:"Restore;Clean;Build" -m --self-contained
@@ -22,11 +23,12 @@ $ErrorActionPreference = "Stop"
 Remove-Item -Path "build\Cef\html" -Force -Recurse -ErrorAction SilentlyContinue
 New-Item -ItemType Junction -Path "build\Cef\html" -Target "build\html"
 
-Write-Host "Creating Zip..." -ForegroundColor Green
-cd "build\Cef"
-7z a -tzip $ZipName * -mx=7 -xr0!"*.log" -xr0!"*.pdb"
-Move-Item $ZipName ..\..\$ZipName -Force
-cd ..\..\
+# 7z is not installed on this machine; skip Zip creation and go straight to the installer.
+# Write-Host "Creating Zip..." -ForegroundColor Green
+# cd "build\Cef"
+# 7z a -tzip $ZipName * -mx=7 -xr0!"*.log" -xr0!"*.pdb"
+# Move-Item $ZipName ..\..\$ZipName -Force
+# cd ..\..\
 
 Write-Host "Creating Installer..." -ForegroundColor Green
 $version = Get-Content -Path "Version" -Raw
@@ -35,7 +37,7 @@ Out-File -FilePath "version_define.nsh" -Encoding UTF8 -InputObject "!define PRO
 $nsisPath = "C:\Program Files (x86)\NSIS\makensis.exe"
 &$nsisPath installer.nsi
 Start-Sleep -Seconds 1
-Move-Item VRCX_Setup.exe ..\$SetupName -Force
+Move-Item VRCX-Pro_Setup.exe ..\$SetupName -Force
 cd ..
 
 Write-Host "Creating SHA256-hash..." -ForegroundColor Green

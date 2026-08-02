@@ -1089,6 +1089,7 @@
                     "vrc_profile_backgrounds_opacity": "背景不透明度",
                     "use_advanced_material": "使用高级材质（Beta）",
                     "use_advanced_material_description": "为对话框、弹出菜单与提示窗添加高斯模糊与边缘高光，并在主窗口底部加入环境光影。",
+                    "theme_color_adapting": "正在适配",
                     "accessible_status_indicators": "无障碍版状态指示器",
                     "accessible_status_indicators_description": "除了使用颜色之外，也使用形状来区分状态。",
                     "use_official_status_colors": "使用游戏内的状态颜色",

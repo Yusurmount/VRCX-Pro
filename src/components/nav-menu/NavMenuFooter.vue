@@ -68,6 +68,7 @@
                                     v-for="theme in themes"
                                     :key="theme"
                                     :model-value="themeMode === theme"
+                                    :disabled="isAdvancedMaterial && (theme === 'midnight' || theme === 'light')"
                                     indicator-position="right"
                                     @select="emit('theme-select', theme)">
                                     <span>{{ themeDisplayName(theme) }}</span>
@@ -79,19 +80,20 @@
                                             v-for="theme in themeColors"
                                             :key="theme.key"
                                             side="top"
-                                            :content="themeColorDisplayName(theme)"
+                                            :content="themeColorTooltip(theme)"
                                             :delay-duration="600">
                                             <button
                                                 type="button"
                                                 :disabled="isApplyingThemeColor"
+                                                :aria-disabled="isAdvancedMaterial || isApplyingThemeColor"
                                                 :aria-pressed="currentThemeColor === theme.key"
-                                                :aria-label="themeColorDisplayName(theme)"
-                                                :title="themeColorDisplayName(theme)"
-                                                @click="emit('theme-color-select', theme)"
+                                                :aria-label="themeColorTooltip(theme)"
+                                                :title="themeColorTooltip(theme)"
+                                                @click="handleThemeColorClick(theme)"
                                                 class="h-3.5 w-3.5 shrink-0 rounded-sm transition-transform hover:scale-125 cursor-pointer"
                                                 :class="
-                                                    currentThemeColor === theme.key
-                                                        ? 'ring-1 ring-ring ring-offset-1 ring-offset-background'
+                                                    isAdvancedMaterial || isApplyingThemeColor
+                                                        ? 'opacity-50 cursor-not-allowed hover:scale-100'
                                                         : ''
                                                 "
                                                 :style="{ backgroundColor: theme.swatch }"></button>
@@ -173,12 +175,16 @@
     } from '@/components/ui/dropdown-menu';
     import { SidebarFooter, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 
-    defineProps({
+    const props = defineProps({
         isCollapsed: {
             type: Boolean,
             default: false
         },
         isDarkMode: {
+            type: Boolean,
+            default: false
+        },
+        isAdvancedMaterial: {
             type: Boolean,
             default: false
         },
@@ -250,6 +256,19 @@
 
     const router = useRouter();
     const isSettingsRoute = ref(false);
+
+    // 高级材质激活时,主题色板禁用,悬停提示"正在适配"
+    const themeColorTooltip = (theme) =>
+        props.isAdvancedMaterial
+            ? t('view.settings.appearance.appearance.theme_color_adapting')
+            : props.themeColorDisplayName(theme);
+
+    const handleThemeColorClick = (theme) => {
+        if (props.isAdvancedMaterial || props.isApplyingThemeColor) {
+            return;
+        }
+        emit('theme-color-select', theme);
+    };
 
     watch(
         () => router?.currentRoute.value?.name,

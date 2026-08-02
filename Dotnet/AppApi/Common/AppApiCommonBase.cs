@@ -46,6 +46,9 @@ namespace VRCX
         public abstract Task<string> OpenFileSelectorDialog(string defaultPath = "", string defaultExt = "",
             string defaultFilter = "All files (*.*)|*.*");
 
+        public abstract Task<string> SaveFileSelectorDialog(string defaultPath = "", string defaultExt = "",
+            string defaultFilter = "All files (*.*)|*.*");
+
         // GameHandler
         public abstract void OnProcessStateChanged(MonitoredProcess monitoredProcess);
         public abstract void CheckGameRunning();

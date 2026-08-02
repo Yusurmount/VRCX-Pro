@@ -117,6 +117,34 @@ namespace VRCX
             return string.Empty;
         }
 
+        public string ReadFileText(string filePath)
+        {
+            if (File.Exists(filePath))
+                return File.ReadAllText(filePath, Encoding.UTF8);
+
+            return string.Empty;
+        }
+
+        public void WriteFileBytes(string filePath, byte[] data)
+        {
+            var dir = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            File.WriteAllBytes(filePath, data);
+        }
+
+        public void WriteFileText(string filePath, string text)
+        {
+            var dir = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            File.WriteAllText(filePath, text, Encoding.UTF8);
+        }
+
         public string CurrentCulture()
         {
             var culture = CultureInfo.CurrentCulture.ToString();

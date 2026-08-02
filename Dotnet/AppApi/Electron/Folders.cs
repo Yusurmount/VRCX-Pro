@@ -348,5 +348,12 @@ namespace VRCX
             // TODO: Implement
             return string.Empty;
         }
+
+        public override async Task<string> SaveFileSelectorDialog(string defaultPath = "", string defaultExt = "",
+            string defaultFilter = "All files (*.*)|*.*")
+        {
+            // TODO: Implement
+            return string.Empty;
+        }
     }
 }

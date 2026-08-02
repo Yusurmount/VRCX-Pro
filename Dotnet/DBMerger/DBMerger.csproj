@@ -16,7 +16,7 @@
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<Title>DBMerger</Title>
 		<Description>DBMerger - Merges VRCX sqlite databases</Description>
-		<RepositoryUrl>https://github.com/vrcx-team/VRCX</RepositoryUrl>
+		<RepositoryUrl>https://github.com/Yusurmount/VRCX-Pro</RepositoryUrl>
 		<ResourceLanguages>en</ResourceLanguages>
 		<SatelliteResourceLanguages>en-US;en</SatelliteResourceLanguages>
 		<EnableWindowsTargeting>true</EnableWindowsTargeting>

@@ -356,5 +356,46 @@ namespace VRCX
 
             return await tcs.Task;
         }
+
+        public override async Task<string> SaveFileSelectorDialog(string defaultPath = "", string defaultExt = "",
+            string defaultFilter = "All files (*.*)|*.*")
+        {
+            var tcs = new TaskCompletionSource<string>();
+            var staThread = new Thread(() =>
+            {
+                try
+                {
+                    using (var saveFileDialog = new System.Windows.Forms.SaveFileDialog())
+                    {
+                        if (!string.IsNullOrEmpty(defaultPath))
+                        {
+                            saveFileDialog.FileName = defaultPath;
+                        }
+
+                        saveFileDialog.DefaultExt = defaultExt;
+                        saveFileDialog.Filter = defaultFilter;
+
+                        var dialogResult = saveFileDialog.ShowDialog(MainForm.nativeWindow);
+                        if (dialogResult == DialogResult.OK && !string.IsNullOrEmpty(saveFileDialog.FileName))
+                        {
+                            tcs.SetResult(saveFileDialog.FileName);
+                        }
+                        else
+                        {
+                            tcs.SetResult("");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            });
+
+            staThread.SetApartmentState(ApartmentState.STA);
+            staThread.Start();
+
+            return await tcs.Task;
+        }
     }
 }

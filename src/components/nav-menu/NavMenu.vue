@@ -121,6 +121,7 @@
         <NavMenuFooter
             :is-collapsed="isCollapsed"
             :is-dark-mode="isDarkMode"
+            :is-advanced-material="useAdvancedMaterial"
             :has-pending-update="pendingVRCXUpdate"
             :has-pending-install="!!pendingVRCXInstall"
             :version="version"
@@ -234,7 +235,8 @@
         tableDensity,
         isDarkMode,
         isNavCollapsed: isCollapsed,
-        showNewDashboardButton
+        showNewDashboardButton,
+        useAdvancedMaterial
     } = storeToRefs(appearanceSettingsStore);
 
     const {
@@ -282,7 +284,7 @@
     const customNavDialogVisible = ref(false);
 
     const hasNotifications = computed(() => notifiedMenus.value.length > 0);
-    const version = computed(() => appVersion.value?.split('VRCX ')?.[1] || '-');
+    const version = computed(() => appVersion.value?.split('VRCX-Pro ')?.[1] || '-');
     const vrcxLogo = new URL('../../../images/VRCX.png', import.meta.url).href;
 
     const isEntryNotified = (entry) => checkEntryNotified(entry, notifiedMenus.value);

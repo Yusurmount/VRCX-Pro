@@ -79,6 +79,8 @@ echo.
 
 :: --- Finalize ---
 echo [INFO] Merging Resources...
+:: Remove stale junction left by build-all.ps1, otherwise xcopy hits a share violation
+if exist "build\Cef\html" rmdir /S /Q "build\Cef\html"
 if not exist "build\Cef\html" mkdir "build\Cef\html"
 xcopy "build\html" "build\Cef\html" /E /I /H /Y /Q
 if %errorlevel% neq 0 (

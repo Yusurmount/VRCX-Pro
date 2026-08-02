@@ -911,7 +911,8 @@
                     "vrc_profile_backgrounds": "顯示個人資料背景",
                     "vrc_profile_backgrounds_opacity": "背景不透明度",
                     "use_advanced_material": "使用進階材質（Beta）",
-                    "use_advanced_material_description": "為對話方塊、彈出選單與彈出式視窗加上磨砂玻璃模糊與邊緣高光，並在主視窗底部加入環境光影。"
+                    "use_advanced_material_description": "為對話方塊、彈出選單與彈出式視窗加上磨砂玻璃模糊與邊緣高光，並在主視窗底部加入環境光影。",
+                    "theme_color_adapting": "正在適配"
                 },
                 "display": {
                     "header": "顯示"

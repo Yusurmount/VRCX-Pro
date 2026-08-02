@@ -33,6 +33,17 @@ const themeColors = THEME_COLORS.map((theme) => ({
 const currentThemeColor = ref(DEFAULT_THEME_COLOR_KEY);
 const isApplyingThemeColor = ref(false);
 
+// 主题切换平滑过渡:切换时临时挂载 .theme-transitioning,配合 globals.css
+// 让主要背景/文字颜色渐变,过渡结束后移除,避免常驻 transition 的副作用
+let themeTransitionTimer = null;
+function markThemeTransitionStart() {
+    document.documentElement.classList.add('theme-transitioning');
+    clearTimeout(themeTransitionTimer);
+    themeTransitionTimer = setTimeout(() => {
+        document.documentElement.classList.remove('theme-transitioning');
+    }, 300);
+}
+
 function resolveThemeColor(themeKey) {
     const normalized = String(themeKey).trim().toLowerCase();
     return (
@@ -257,6 +268,8 @@ function applyAppCjkFontPack(packKey) {
 }
 
 function changeAppThemeStyle(themeMode) {
+    markThemeTransitionStart();
+
     if (themeMode === 'system') {
         themeMode = systemIsDarkMode() ? 'dark' : 'light';
     }
