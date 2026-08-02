@@ -1,4 +1,3 @@
-cd ..
 
 $ErrorActionPreference = "Stop"
 
@@ -8,8 +7,9 @@ $ErrorActionPreference = "Stop"
 # Enter-VsDevShell -VsInstallPath $installPath -SkipAutomaticLocation
 
 $Date = Get-Date -format yyyyMMdd
-$ZipName = "VRCX-Pro_" + $Date + ".zip"
-$SetupName = "VRCX-Pro_" + $Date + "_Setup.exe"
+$ZipName = "VRCX-Pro_" + $version+"+"+$Date + ".zip"
+$SetupName = "VRCX-Pro_" + "_Setup"+$version+"+"+$Date+".exe"
+$version = (Get-Content -Path "Version" -Raw).Trim()
 
 Write-Host "Building .Net..." -ForegroundColor Green
 dotnet build Dotnet\VRCX-Cef.csproj -p:Configuration=Release -p:WarningLevel=0 -p:Platform=x64 -p:RestorePackagesConfig=true -t:"Restore;Clean;Build" -m --self-contained
@@ -34,7 +34,6 @@ New-Item -ItemType Junction -Path "build\Cef\html" -Target "build\html"
 # cd ..\..\
 
 Write-Host "Creating Installer..." -ForegroundColor Green
-$version = (Get-Content -Path "Version" -Raw).Trim()
 cd "Installer"
 Out-File -FilePath "version_define.nsh" -Encoding UTF8 -InputObject "!define PRODUCT_VERSION_FROM_FILE `"$version.0`""
 $nsisPath = "C:\Program Files (x86)\NSIS\makensis.exe"
