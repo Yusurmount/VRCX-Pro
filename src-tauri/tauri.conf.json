@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "VRCX-Pro",
+  "version": "2.1.0",
+  "identifier": "app.vrcx",
+  "build": {
+    "beforeDevCommand": "cross-env PLATFORM=windows vite serve src",
+    "devUrl": "http://localhost:9000",
+    "beforeBuildCommand": "cross-env PLATFORM=windows vite build src",
+    "frontendDist": "../build/html"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "VRCX-Pro",
+        "width": 1600,
+        "height": 900,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "../build/Sidecar/*": "sidecar/",
+      "../build/Sidecar/runtimes/**/*": "sidecar/runtimes/"
+    }
+  }
+}

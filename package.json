@@ -39,6 +39,7 @@
         "start-electron": "electron . --hot-reload"
     },
     "dependencies": {
+        "@tauri-apps/api": "^2.11.1",
         "hazardous": "^0.3.0",
         "node-api-dotnet": "^0.9.21",
         "xlsx": "^0.18.5"

@@ -1,0 +1,72 @@
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>obj-sidecar\</BaseIntermediateOutputPath>
+    <OutputPath>..\build\Sidecar\</OutputPath>
+  </PropertyGroup>
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Configurations>Debug;Release</Configurations>
+    <Platforms>x64</Platforms>
+    <AssemblyTitle>VRCX-Sidecar</AssemblyTitle>
+    <Product>VRCX-Pro Sidecar</Product>
+    <Copyright>vrcx-team, pypy, natsumi</Copyright>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <Title>VRCX-Sidecar</Title>
+    <Description>VRCX-Pro sidecar backend process</Description>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <WarningLevel>0</WarningLevel>
+    <DefineConstants>LINUX</DefineConstants>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\Version">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="libs\openvr_api.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>openvr_api.dll</TargetPath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Cef\**" />
+    <Compile Remove="AppApi\Cef\**" />
+    <Compile Remove="Overlay\Cef\**" />
+    <Compile Remove="OverlayWebSocket\**" />
+    <Compile Remove="DBMerger\**" />
+    <Compile Remove="obj\**" />
+    <Compile Remove="obj1\**" />
+    <Compile Remove="obj-sidecar\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="NLog" Version="6.1.3" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.7" />
+    <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.5" />
+    <PackageReference Include="System.Data.SQLite" Version="1.0.119" /> <!--DO NOT UPGRADE-->
+    <PackageReference Include="System.Management" Version="10.0.8" />
+    <PackageReference Include="Websocket.Client" Version="5.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Blake2Sharp">
+      <HintPath>..\libs\Blake2Sharp.dll</HintPath>
+    </Reference>
+    <Reference Include="librsync.net">
+      <HintPath>..\libs\librsync.net.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

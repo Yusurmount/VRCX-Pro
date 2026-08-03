@@ -21,3 +21,12 @@ coverage/
 VRCX-Pro-Previous/
 AGENTS.md
 .dbg/
+
+# Tauri / Rust
+src-tauri/target/
+src-tauri/gen/
+
+# .NET sidecar build artifacts
+Dotnet/obj-sidecar/
+Dotnet/VRCX-Sidecar/bin/
+Dotnet/VRCX-Sidecar/obj/
