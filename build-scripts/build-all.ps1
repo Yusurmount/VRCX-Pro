@@ -8,15 +8,11 @@ $ErrorActionPreference = "Stop"
 
 $Date = Get-Date -format yyyyMMdd
 $ZipName = "VRCX-Pro_" + $version+"+"+$Date + ".zip"
-$SetupName = "VRCX-Pro_" + "_Setup"+$version+"+"+$Date+".exe"
+$SetupName = "VRCX-Pro_" + "Setup"+$version+"+"+$Date+".exe"
 $version = (Get-Content -Path "Version" -Raw).Trim()
 
 Write-Host "Building .Net..." -ForegroundColor Green
-# Remove stale outputs from previous self-contained builds. Residual runtime files
-# (hostfxr.dll, coreclr.dll, ...) make the apphost mis-detect this framework-dependent
-# build as app-local and fail with "You must install or update .NET to run this application."
-Remove-Item -Path "build\Cef" -Recurse -Force -ErrorAction SilentlyContinue
-dotnet build Dotnet\VRCX-Cef.csproj -p:Configuration=Release -p:WarningLevel=0 -p:Platform=x64 -p:RestorePackagesConfig=true -t:"Restore;Clean;Build" -m -p:SelfContained=false
+dotnet build Dotnet\VRCX-Cef.csproj -p:Configuration=Release -p:WarningLevel=0 -p:Platform=x64 -p:RestorePackagesConfig=true -t:"Restore;Clean;Build" -m --self-contained
 
 Write-Host "Building Node.js..." -ForegroundColor Green
 if (-not (Test-Path "node_modules")) {
