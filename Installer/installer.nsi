@@ -148,6 +148,28 @@ Function launchVRCX
     ShellExecAsUser::ShellExecAsUser "" "$INSTDIR\VRCX-Pro.exe" ""
 FunctionEnd
 
+Function CheckDotNet10
+    ; Returns "0" if .NET Desktop Runtime 10 (x64) is installed, "1" otherwise.
+    ; Registry keys written by the .NET installer are not always present
+    ; (e.g. portable installs), so fall back to probing the install directory.
+    StrCpy $R0 "1"
+    StrCpy $1 "$PROGRAMFILES64\dotnet\shared\Microsoft.WindowsDesktop.App"
+    ${If} ${FileExists} "$1"
+        FindFirst $2 $3 "$1\10.0.*"
+        ${If} $3 != ""
+            StrCpy $R0 "0"
+        ${EndIf}
+        FindClose $2
+    ${EndIf}
+    ${If} $R0 == "1"
+        ReadRegStr $4 HKLM "SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App" "Version"
+        ${If} $4 != ""
+            StrCpy $R0 "0"
+        ${EndIf}
+    ${EndIf}
+    Push $R0
+FunctionEnd
+
 ;--------------------------------
 ;Installer Sections
 
@@ -164,6 +186,29 @@ Section "Install" SecInstall
     Delete "$TEMP\vcredist_x64.exe"
 
     afterUpgrade:
+
+    ;--------------------------------
+    ; .NET Desktop Runtime 10 (x64) - required by framework-dependent build.
+    ; Auto-download & install if missing; fall back to manual download on failure.
+    Call CheckDotNet10
+    Pop $R0
+    ${If} $R0 == "1"
+        DetailPrint ".NET Desktop Runtime 10 (x64) not found, downloading..."
+        inetc::get "https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe" "$TEMP\dotnet-desktop-runtime-x64.exe" /END
+        Pop $R1
+        ${If} $R1 == "OK"
+            DetailPrint "Installing .NET Desktop Runtime 10 (x64)..."
+            ExecWait '"$TEMP\dotnet-desktop-runtime-x64.exe" /install /quiet /norestart' $R2
+            Delete "$TEMP\dotnet-desktop-runtime-x64.exe"
+            ${If} $R2 != 0
+                MessageBox MB_OK|MB_ICONEXCLAMATION "Installing .NET Desktop Runtime 10 failed.$\n$\nPlease download and install it manually, then run this installer again:$\nhttps://dotnet.microsoft.com/download/dotnet/10.0"
+                ExecShell "open" "https://dotnet.microsoft.com/download/dotnet/10.0"
+            ${EndIf}
+        ${Else}
+            MessageBox MB_OK|MB_ICONEXCLAMATION "Failed to download .NET Desktop Runtime 10 automatically.$\n$\nPlease download and install it manually, then run this installer again:$\nhttps://dotnet.microsoft.com/download/dotnet/10.0"
+            ExecShell "open" "https://dotnet.microsoft.com/download/dotnet/10.0"
+        ${EndIf}
+    ${EndIf}
 
     SetOutPath "$INSTDIR"
 

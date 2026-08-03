@@ -69,7 +69,14 @@ echo [INFO] Building Backend...
 :: Kill any running instances
 taskkill /F /IM VRCX-Pro.exe /T >nul 2>&1
 
-call dotnet build Dotnet\VRCX-Cef.csproj -p:Configuration=Release -p:Platform=x64
+:: Remove stale outputs left by build-all.ps1 (which builds with --self-contained).
+:: Residual runtime files (hostfxr.dll, coreclr.dll, System.Private.*.dll, etc.)
+:: make the apphost treat this framework-dependent build as app-local and fail
+:: with "You must install or update .NET to run this application." even when the
+:: .NET 10 runtime is installed on the machine.
+if exist "build\Cef" rmdir /S /Q "build\Cef"
+
+call dotnet build Dotnet\VRCX-Cef.csproj -p:Configuration=Release -p:Platform=x64 -p:SelfContained=false
 if %errorlevel% neq 0 (
     echo [ERROR] Backend build failed!
     pause

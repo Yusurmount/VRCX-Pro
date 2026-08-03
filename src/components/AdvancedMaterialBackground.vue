@@ -23,6 +23,7 @@
     // 位于 background-color 之上、内容之下），实体自身盖住高光，光晕介于
     // 控件与背景之间。命中实体写入相对坐标并置 --am-a 1（平滑淡入），
     // 切换/离开时旧实体置 --am-a 0 平滑淡出后移除类，空白区无光。
+    // 仅命中交互控件，不命中卡片/内容区等文本容器（避免高光融在文本容器内）。
     const entitySelector = [
         '[data-slot]',
         "[role='tab']",
@@ -35,9 +36,7 @@
         'a',
         'input',
         'textarea',
-        'select',
-        '[class*="bg-card"]',
-        '.x-container'
+        'select'
     ].join(', ');
     let glowRaf = 0;
     let glowEl = null;
