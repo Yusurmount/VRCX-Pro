@@ -24,7 +24,6 @@ export default defineConfig({
                 'src/vr/**',
                 'src/types/**',
                 'src/styles/**',
-                'src/ipc-electron/**',
                 'src/localization/**',
                 'src/lib/**/!(*.test).js',
                 'src/components/ui/**/*.vue',

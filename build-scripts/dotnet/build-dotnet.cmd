@@ -1,4 +1,4 @@
 @echo off
 cd ../../
-dotnet build Dotnet\VRCX-Cef.csproj -p:Configuration=Release -p:WarningLevel=0 -p:Platform=x64 -p:PlatformTarget=x64 -p:RestorePackagesConfig=true -t:"Restore;Clean;Build" -m -a x64 -p:SelfContained=false
+dotnet build Dotnet\VRCX-Sidecar.csproj -p:Configuration=Release -p:Platform=x64 -p:WarningLevel=0
 pause

@@ -29,7 +29,7 @@ namespace VRCX.Sidecar
                 var program = new ProgramElectron();
                 program.PreInit(GetVersion(), args);
 
-                // Mirrors src-electron/main.js startup sequence:
+                // Mirrors the original Electron main process startup sequence:
                 // VRCXStorage.Load -> Program.Init (AppApi + VR) -> SQLite -> AppApi.Init
                 // -> Discord -> WebApi -> LogWatcher
                 VRCXStorage.Instance.Load();

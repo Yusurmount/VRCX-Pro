@@ -2,7 +2,7 @@
 /**
  * Tauri 前端适配层 - 模拟 Electron 版 InteropApi 的动态代理行为。
  *
- * 原实现（src/ipc-electron/interopApi.js）通过 Proxy 将任意 `window.Xxx.Yyy(...)`
+ * 通过 Proxy 将任意 `window.Xxx.Yyy(...)`
  * 调用转为 `window.interopApi.callDotNetMethod('Xxx', 'Yyy', args)`（Electron IPC）。
  * 本适配层将同一契约转发到 Tauri 的 `call_dotnet` command（Rust 侧再转发给
  * C# sidecar 进程），前端代码无需任何改动。
