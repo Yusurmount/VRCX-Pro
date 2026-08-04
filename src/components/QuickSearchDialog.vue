@@ -94,7 +94,7 @@
                                 @select="handleSelect(item)">
                                 <img
                                     v-if="item.ref"
-                                    :src="userImage(item.ref)"
+                                    :src="userImage(item.ref, true)"
                                     class="size-6 rounded-full object-cover"
                                     loading="lazy" />
                                 <Users v-else class="size-4" />

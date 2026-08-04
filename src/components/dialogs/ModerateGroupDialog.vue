@@ -10,7 +10,7 @@
                     <div class="relative inline-block flex-none size-9 mr-2.5">
                         <img
                             class="size-full rounded-full object-cover"
-                            :src="userImage(moderateGroupDialog.userObject)"
+                            :src="userImage(moderateGroupDialog.userObject, true)"
                             loading="lazy" />
                     </div>
                     <div class="flex-1 overflow-hidden">

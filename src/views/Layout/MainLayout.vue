@@ -27,7 +27,9 @@
                         <template #default="{ layout }">
                             <ResizablePanel :default-size="mainDefaultSize" :order="1">
                                 <RouterView v-slot="{ Component }">
-                                    <KeepAlive exclude="ChartsInstance, ChartsMutual">
+                                    <!-- 图表页含 echarts/ResizeObserver/Worker，不适合 KeepAlive 常驻缓存，全部排除 -->
+                                    <KeepAlive
+                                        exclude="ChartsInstance, ChartsMutual, ChartsRelationshipTimeline, ChartsHotWorlds, ChartsTwoPersonRelationship">
                                         <component :is="Component" />
                                     </KeepAlive>
                                 </RouterView>

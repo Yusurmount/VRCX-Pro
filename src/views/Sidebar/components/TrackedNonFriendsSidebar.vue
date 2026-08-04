@@ -18,7 +18,7 @@
                             class="relative inline-block flex-none size-9 mr-2.5"
                             :class="userStatusClass(entry.ref)">
                             <Avatar class="size-full rounded-full">
-                                <AvatarImage :src="userImage(entry.ref)" class="object-cover" />
+                                <AvatarImage :src="userImage(entry.ref, true)" class="object-cover" />
                                 <AvatarFallback>
                                     <User class="size-5 text-muted-foreground" />
                                 </AvatarFallback>
@@ -100,7 +100,7 @@
                 <template v-else-if="addStep === 'confirm'">
                     <div class="flex items-center gap-3 py-2">
                         <Avatar class="size-12 rounded-full flex-none">
-                            <AvatarImage v-if="verifiedUser" :src="userImage(verifiedUser)" class="object-cover" />
+                            <AvatarImage v-if="verifiedUser" :src="userImage(verifiedUser, true)" class="object-cover" />
                             <AvatarFallback><User class="size-5" /></AvatarFallback>
                         </Avatar>
                         <div>

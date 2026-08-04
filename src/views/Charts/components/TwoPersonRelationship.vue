@@ -36,7 +36,7 @@
                                             :class="userStatusClass(item.user)">
                                             <img
                                                 class="size-full rounded-full object-cover"
-                                                :src="userImage(item.user)"
+                                                :src="userImage(item.user, true)"
                                                 loading="lazy" />
                                         </div>
                                         <div class="flex-1 overflow-hidden">
@@ -85,7 +85,7 @@
                                             :class="userStatusClass(item.user)">
                                             <img
                                                 class="size-full rounded-full object-cover"
-                                                :src="userImage(item.user)"
+                                                :src="userImage(item.user, true)"
                                                 loading="lazy" />
                                         </div>
                                         <div class="flex-1 overflow-hidden">

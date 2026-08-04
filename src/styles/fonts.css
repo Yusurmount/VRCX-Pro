@@ -1,9 +1,7 @@
 @import '@fontsource-variable/inter';
 
-@import '@fontsource-variable/noto-sans-jp';
-@import '@fontsource-variable/noto-sans-kr';
-@import '@fontsource-variable/noto-sans-sc';
-@import '@fontsource-variable/noto-sans-tc';
+/* Noto CJK 可变字体包改为按需动态加载（src/shared/utils/base/ui.js 的 applyAppCjkFontPack），
+   避免将全部 CJK 字体静态打包进主 CSS 拖慢启动 */
 
 @font-face {
     font-family: 'ellipsis-font';
@@ -14,9 +12,7 @@
 :root {
     /* Keep these bootstrap defaults aligned with src/shared/constants/fonts.js */
     --font-western-primary: 'Inter Variable';
-    --font-cjk-jp-primary: 'Noto Sans JP Variable';
     --font-cjk-sc-primary: 'Noto Sans SC Variable';
-    --font-cjk-kr-primary: 'Noto Sans KR Variable';
     --font-cjk-tc-primary: 'Noto Sans TC Variable';
     --font-western:
         'ellipsis-font', -apple-system, var(--font-western-primary), 'Segoe UI',
@@ -24,33 +20,16 @@
     --font-symbol: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
     --font-fallback-cjk: sans-serif;
     --font-primary-cjk:
-        var(--font-cjk-jp-primary), var(--font-cjk-sc-primary),
-        var(--font-cjk-kr-primary), var(--font-cjk-tc-primary);
+        var(--font-cjk-sc-primary), var(--font-cjk-tc-primary);
     --font-mono-cjk:
         ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
         'Liberation Mono', 'Courier New', var(--font-primary-cjk), monospace;
 }
 
 :root[lang='zh-CN'] {
-    --font-primary-cjk:
-        var(--font-cjk-sc-primary), var(--font-cjk-jp-primary),
-        var(--font-cjk-kr-primary), var(--font-cjk-tc-primary);
-}
-
-:root[lang='ja'] {
-    --font-primary-cjk:
-        var(--font-cjk-jp-primary), var(--font-cjk-kr-primary),
-        var(--font-cjk-tc-primary), var(--font-cjk-sc-primary);
-}
-
-:root[lang='ko'] {
-    --font-primary-cjk:
-        var(--font-cjk-kr-primary), var(--font-cjk-jp-primary),
-        var(--font-cjk-tc-primary), var(--font-cjk-sc-primary);
+    --font-primary-cjk: var(--font-cjk-sc-primary), var(--font-cjk-tc-primary);
 }
 
 :root[lang='zh-TW'] {
-    --font-primary-cjk:
-        var(--font-cjk-tc-primary), var(--font-cjk-jp-primary),
-        var(--font-cjk-kr-primary), var(--font-cjk-sc-primary);
+    --font-primary-cjk: var(--font-cjk-tc-primary), var(--font-cjk-sc-primary);
 }

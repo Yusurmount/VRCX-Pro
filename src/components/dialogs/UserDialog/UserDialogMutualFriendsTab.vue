@@ -45,7 +45,7 @@
                 @click="showUserDialog(user.id)">
                 <div class="relative inline-block flex-none size-9 mr-2.5">
                     <Avatar class="size-9">
-                        <AvatarImage :src="userImage(user)" class="object-cover" />
+                        <AvatarImage :src="userImage(user, true)" class="object-cover" />
                         <AvatarFallback>
                             <User class="size-4 text-muted-foreground" />
                         </AvatarFallback>

@@ -92,6 +92,17 @@ export const useVrcxStore = defineStore('Vrcx', () => {
     const appStartAt = Date.now();
 
     /**
+     * 若存储键尚未设置则写入默认值，避免启动时串行 IPC 往返。
+     * @param {string} key
+     * @param {string} defaultValue
+     */
+    async function ensureVRCXStorageDefault(key, defaultValue) {
+        if (!(await VRCXStorage.Get(key))) {
+            await VRCXStorage.Set(key, defaultValue);
+        }
+    }
+
+    /**
      *
      */
     async function init() {
@@ -146,59 +157,51 @@ export const useVrcxStore = defineStore('Vrcx', () => {
                 return;
             }
 
-            clearVRCXCacheFrequency.value = await configRepository.getInt(
-                'VRCX_clearVRCXCacheFrequency',
-                172800
-            );
-
-            if (!(await VRCXStorage.Get('VRCX_DatabaseLocation'))) {
-                await VRCXStorage.Set('VRCX_DatabaseLocation', '');
-            }
-            if (!(await VRCXStorage.Get('VRCX_ProxyServer'))) {
-                await VRCXStorage.Set('VRCX_ProxyServer', '');
-            }
-            if ((await VRCXStorage.Get('VRCX_DisableGpuAcceleration')) === '') {
-                await VRCXStorage.Set('VRCX_DisableGpuAcceleration', 'false');
-            }
-            if (
-                (await VRCXStorage.Get(
-                    'VRCX_DisableVrOverlayGpuAcceleration'
-                )) === ''
-            ) {
-                await VRCXStorage.Set(
+            // 并行读取全部配置，避免逐个跨进程 IPC 往返拖慢启动
+            const [
+                clearVRCXCacheFrequencyValue,
+                proxyServerValue,
+                locationXValue,
+                locationYValue,
+                sizeWidthValue,
+                sizeHeightValue,
+                windowStateValue,
+                maxTableSizeValue,
+                searchLimitValue
+            ] = await Promise.all([
+                configRepository.getInt('VRCX_clearVRCXCacheFrequency', 172800),
+                ensureVRCXStorageDefault('VRCX_DatabaseLocation', ''),
+                ensureVRCXStorageDefault('VRCX_ProxyServer', ''),
+                ensureVRCXStorageDefault('VRCX_DisableGpuAcceleration', 'false'),
+                ensureVRCXStorageDefault(
                     'VRCX_DisableVrOverlayGpuAcceleration',
                     'false'
-                );
-            }
-            proxyServer.value = await VRCXStorage.Get('VRCX_ProxyServer');
-            state.locationX = parseInt(
-                await VRCXStorage.Get('VRCX_LocationX'),
-                10
-            );
-            state.locationY = parseInt(
-                await VRCXStorage.Get('VRCX_LocationY'),
-                10
-            );
-            state.sizeWidth = parseInt(
-                await VRCXStorage.Get('VRCX_SizeWidth'),
-                10
-            );
-            state.sizeHeight = parseInt(
-                await VRCXStorage.Get('VRCX_SizeHeight'),
-                10
-            );
-            state.windowState = await VRCXStorage.Get('VRCX_WindowState');
+                ),
+                VRCXStorage.Get('VRCX_ProxyServer'),
+                VRCXStorage.Get('VRCX_LocationX'),
+                VRCXStorage.Get('VRCX_LocationY'),
+                VRCXStorage.Get('VRCX_SizeWidth'),
+                VRCXStorage.Get('VRCX_SizeHeight'),
+                VRCXStorage.Get('VRCX_WindowState'),
+                configRepository.getInt(
+                    'VRCX_maxTableSize_v2',
+                    DEFAULT_MAX_TABLE_SIZE
+                ),
+                configRepository.getInt('VRCX_searchLimit', DEFAULT_SEARCH_LIMIT)
+            ]);
 
-            maxTableSize.value = await configRepository.getInt(
-                'VRCX_maxTableSize_v2',
-                DEFAULT_MAX_TABLE_SIZE
-            );
+            clearVRCXCacheFrequency.value = clearVRCXCacheFrequencyValue;
+            proxyServer.value = proxyServerValue;
+            state.locationX = parseInt(locationXValue, 10);
+            state.locationY = parseInt(locationYValue, 10);
+            state.sizeWidth = parseInt(sizeWidthValue, 10);
+            state.sizeHeight = parseInt(sizeHeightValue, 10);
+            state.windowState = windowStateValue;
+
+            maxTableSize.value = maxTableSizeValue;
             database.setMaxTableSize(maxTableSize.value);
 
-            searchLimit.value = await configRepository.getInt(
-                'VRCX_searchLimit',
-                DEFAULT_SEARCH_LIMIT
-            );
+            searchLimit.value = searchLimitValue;
             if (searchLimit.value < SEARCH_LIMIT_MIN) {
                 searchLimit.value = SEARCH_LIMIT_MIN;
             }

@@ -17,23 +17,28 @@ import configRepository from '../services/config';
 
 export async function initUi() {
     try {
-        const language = await configRepository.getString(
-            'VRCX_appLanguage',
-            'en'
-        );
-        // @ts-ignore
-        i18n.locale = language;
-        await loadLocalizedStrings(language);
-        changeHtmlLangAttribute(language);
+        // 语言、主题、主题色、自定义 CSS 相互独立，并行初始化
+        const [language, themeModePromise, themeColorPromise, customCssPromise] =
+            [
+                configRepository.getString('VRCX_appLanguage', 'en'),
+                getThemeMode(configRepository),
+                initThemeColor(),
+                refreshCustomCss()
+            ];
 
-        const { initThemeMode } = await getThemeMode(configRepository);
+        const resolvedLanguage = await language;
+        // @ts-ignore
+        i18n.locale = resolvedLanguage;
+        await loadLocalizedStrings(resolvedLanguage);
+        changeHtmlLangAttribute(resolvedLanguage);
+
+        const { initThemeMode } = await themeModePromise;
         changeAppThemeStyle(initThemeMode);
-        await initThemeColor();
+        await themeColorPromise;
+        await customCssPromise;
     } catch (error) {
         console.error('Error initializing locale and theme:', error);
     }
-
-    refreshCustomCss();
 }
 
 export async function initUiForVrOverlay() {

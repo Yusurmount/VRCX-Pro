@@ -38,6 +38,198 @@
         'textarea',
         'select'
     ].join(', ');
+    // 非交互容器/文本/数据型 data-slot：不作为高光目标（表格单元格、对话框标题/底部、
+    // 卡片标题/描述、标签、分隔线、装饰等）。命中后向上继续查找最近的可高光实体，
+    // 避免高光零散地挂在文本与结构容器上造成视觉割裂。
+    const NON_GLOW_SLOTS = new Set([
+        // 表格：纯数据区不挂高光，高光只落在单元格内的控件上
+        'table-container',
+        'table',
+        'table-header',
+        'table-body',
+        'table-footer',
+        'table-row',
+        'table-head',
+        'table-cell',
+        'table-caption',
+        // 对话框/弹层结构容器（面板 content 除外）
+        'dialog',
+        'dialog-overlay',
+        'dialog-header',
+        'dialog-footer',
+        'dialog-title',
+        'dialog-description',
+        'alert-dialog',
+        'alert-dialog-overlay',
+        'alert-dialog-header',
+        'alert-dialog-footer',
+        'alert-dialog-title',
+        'alert-dialog-description',
+        'sheet',
+        'sheet-overlay',
+        'sheet-header',
+        'sheet-footer',
+        'sheet-title',
+        'sheet-description',
+        // 卡片结构容器
+        'card',
+        'card-header',
+        'card-footer',
+        'card-title',
+        'card-description',
+        // 表单/标签/文本
+        'label',
+        'field-label',
+        'field-title',
+        'field-description',
+        'field-error',
+        'field-legend',
+        'field-set',
+        'field-group',
+        'form-label',
+        'form-description',
+        'form-message',
+        'form-item',
+        'form-control',
+        'select-label',
+        'select-group',
+        'select-item-text',
+        'native-select-option',
+        'native-select-optgroup',
+        'native-select-wrapper',
+        // 触发/包装型元素：仅绑定交互事件,视觉上是文本/图标,不作为高光目标
+        // （若 as-child 包裹 button 等可见控件,鼠标落在控件上时仍走控件高光）
+        'tooltip-trigger',
+        'context-menu-trigger',
+        'dropdown-menu-trigger',
+        'popover-trigger',
+        'hover-card-trigger',
+        'dialog-trigger',
+        'alert-dialog-trigger',
+        'sheet-trigger',
+        'collapsible-trigger',
+        // 菜单分组/装饰
+        'dropdown-menu',
+        'dropdown-menu-label',
+        'dropdown-menu-group',
+        'dropdown-menu-shortcut',
+        'dropdown-menu-separator',
+        'dropdown-menu-radio-group',
+        'dropdown-menu-sub',
+        'dropdown-menu-sub-content',
+        'context-menu',
+        'context-menu-label',
+        'context-menu-group',
+        'context-menu-shortcut',
+        'context-menu-separator',
+        'context-menu-portal',
+        'context-menu-sub',
+        'context-menu-sub-content',
+        // 通用装饰
+        'separator',
+        'badge',
+        'progress',
+        'progress-indicator',
+        'skeleton',
+        'avatar',
+        'avatar-image',
+        'avatar-fallback',
+        // 命令面板结构（面板与可交互项保留）
+        'command-list',
+        'command-group',
+        'command-group-heading',
+        'command-empty',
+        'command-shortcut',
+        'command-input-wrapper',
+        'command-separator',
+        // 提示层（纯文本提示不挂高光）
+        'tooltip',
+        'tooltip-content',
+        'tooltip-arrow',
+        // 面包屑/分页
+        'breadcrumb',
+        'breadcrumb-list',
+        'breadcrumb-item',
+        'breadcrumb-page',
+        'breadcrumb-separator',
+        'breadcrumb-ellipsis',
+        'pagination-list',
+        'pagination-ellipsis',
+        // 空状态
+        'empty',
+        'empty-header',
+        'empty-title',
+        'empty-description',
+        'empty-content',
+        'empty-icon',
+        // 提示条
+        'alert',
+        'alert-title',
+        'alert-description',
+        // 日历结构
+        'calendar',
+        'calendar-grid',
+        'calendar-header',
+        'calendar-head-cell',
+        'calendar-heading',
+        'calendar-grid-row',
+        'calendar-grid-body',
+        'calendar-cell',
+        // 折叠
+        'collapsible',
+        'collapsible-content',
+        // 侧栏结构容器（sidebar 面板与可交互按钮保留）
+        'sidebar-content',
+        'sidebar-group',
+        'sidebar-group-content',
+        'sidebar-group-label',
+        'sidebar-footer',
+        'sidebar-header',
+        'sidebar-inset',
+        'sidebar-menu',
+        'sidebar-menu-item',
+        'sidebar-menu-sub',
+        'sidebar-menu-sub-item',
+        'sidebar-menu-badge',
+        'sidebar-menu-skeleton',
+        'sidebar-rail',
+        'sidebar-separator',
+        'sidebar-wrapper',
+        // 滚动/可调整
+        'scroll-area',
+        'scroll-area-viewport',
+        'scroll-area-scrollbar',
+        'resizable-panel',
+        'resizable-panel-group',
+        // 轮播结构
+        'carousel',
+        'carousel-content',
+        'carousel-item',
+        // 输入装饰
+        'input-group-addon',
+        'input-otp-slot',
+        'input-otp-separator',
+        // 浮层根/锚点（面板 content 保留）
+        'popover',
+        'popover-anchor',
+        // 工具栏分组
+        'toggle-group'
+    ]);
+
+    // 从命中的元素向上跳过黑名单容器，返回最近的可高光实体（面板/交互控件）
+    function findGlowTarget(el) {
+        while (el) {
+            const slot = el.dataset?.slot;
+            if (slot && NON_GLOW_SLOTS.has(slot)) {
+                el = el.parentElement;
+                continue;
+            }
+            if (el.matches(entitySelector)) return el;
+            el = el.parentElement;
+        }
+        return null;
+    }
+
     let glowRaf = 0;
     let glowEl = null;
     let lastGlowEl = null;
@@ -60,7 +252,7 @@
                 // 纯文本（不在交互控件内）不显示高光；控件内部文字仍触发控件高光
                 const textEl = t.closest('p, span, td, th, label, h1, h2, h3, h4, h5, h6, li, em, strong, small');
                 if (!textEl || textEl.closest('button, a, [role], [data-slot]')) {
-                    glowEl = t.closest(entitySelector) || null;
+                    glowEl = findGlowTarget(t.closest(entitySelector));
                 }
             }
         }
@@ -174,8 +366,8 @@
     function render() {
         const canvas = canvasRef.value;
         if (!canvas) return;
-        // 光斑为低细节模糊背景，限制 dpr 避免超大位图占用内存
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        // 光斑为低细节模糊背景，限制 dpr 为 1 避免超大位图占用内存/显存
+        const dpr = 1;
         const w = window.innerWidth;
         const h = window.innerHeight;
         canvas.width = Math.round(w * dpr);

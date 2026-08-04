@@ -237,7 +237,6 @@ function applyAppFontFamily(fontKey, customCssName) {
         ensureDynamicFontStyle(APP_FONT_LINK_ATTR, 'custom', null);
         return {
             key: 'custom',
-            ...APP_FONT_CONFIG.custom,
             cssName
         };
     }
@@ -257,12 +256,16 @@ function applyAppFontFamily(fontKey, customCssName) {
 function applyAppCjkFontPack(packKey) {
     const resolved = resolveAppCjkFontPack(packKey);
     const root = document.documentElement;
-    root.style.setProperty('--font-cjk-jp-primary', resolved.cssName.jp);
     root.style.setProperty('--font-cjk-sc-primary', resolved.cssName.sc);
-    root.style.setProperty('--font-cjk-kr-primary', resolved.cssName.kr);
     root.style.setProperty('--font-cjk-tc-primary', resolved.cssName.tc);
 
     ensureAppCjkFontPackLinks(resolved.key);
+
+    if (resolved.key === 'noto') {
+        // 内置 Noto CJK 可变字体包按需异步加载（Vite 拆分独立 CSS chunk，不阻塞首屏主 CSS）
+        import('@fontsource-variable/noto-sans-sc');
+        import('@fontsource-variable/noto-sans-tc');
+    }
 
     return resolved;
 }

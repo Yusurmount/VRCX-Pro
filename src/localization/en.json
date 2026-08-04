@@ -244,6 +244,19 @@
             "add_back": "Back"
         }
     },
+    "settings": {
+        "general": {
+            "user_colors": {
+                "trust_levels": {
+                    "visitor": "Visitor",
+                    "new_user": "New User",
+                    "user": "User",
+                    "known_user": "Known User",
+                    "trusted_user": "Trusted User"
+                }
+            }
+        }
+    },
     "view": {
         "login": {
             "savedAccounts": "Saved Accounts",
@@ -269,6 +282,7 @@
             }
         },
         "feed": {
+            "header": "Feed",
             "favorites_only_tooltip": "Filter favorites only",
             "search_placeholder": "Search",
             "filters": {
@@ -294,6 +308,7 @@
             "loading_more": "Loading more..."
         },
         "game_log": {
+            "header": "Game Log",
             "filter_placeholder": "Filter",
             "search_placeholder": "Search",
             "filters": {
@@ -383,6 +398,7 @@
             }
         },
         "my_avatars": {
+            "header": "My Avatars",
             "filter": "Filter",
             "clear_filters": "Clear All",
             "table_view": "Table View",
@@ -486,6 +502,7 @@
             "select_avatar_tooltip": "Select Avatar"
         },
         "friend_log": {
+            "header": "Friend Log",
             "filter_placeholder": "Filter",
             "search_placeholder": "Search",
             "filters": {
@@ -498,6 +515,7 @@
             }
         },
         "moderation": {
+            "header": "Moderation",
             "filter_placeholder": "Filter",
             "search_placeholder": "Search",
             "refresh_tooltip": "Refresh",
@@ -513,6 +531,7 @@
             }
         },
         "notification": {
+            "header": "Notifications",
             "filter_placeholder": "Filter",
             "search_placeholder": "Search",
             "refresh_tooltip": "Refresh",
@@ -575,6 +594,7 @@
             }
         },
         "friend_list": {
+            "header": "Friend List",
             "bulk_unfriend": "Bulk Unfriend Mode",
             "bulk_unfriend_selection": "Bulk Unfriend Selection",
             "load": "Load missing entries",
@@ -587,6 +607,11 @@
             "filter_placeholder": "Filter",
             "load_mutual_friends": "Load Mutual Friends",
             "mutual_loading_hint": "View progress on the Mutual Friend Graph page"
+        },
+        "favorites": {
+            "avatars": "Avatars",
+            "friends": "Friends",
+            "worlds": "Worlds"
         },
         "charts": {
             "instance_activity": {
@@ -750,6 +775,7 @@
             },
             "two_person_relationship": {
                 "header": "Duo Relationship",
+                "refresh": "Refresh",
                 "tips": {
                     "description": "Analyzes your game log database to find instances where two friends were present in the same room. Even if you weren't there, it reconstructs their shared moments from their individual join/leave records."
                 },
@@ -1035,22 +1061,6 @@
                     "language": "Language",
                     "bio_language": "Target Language",
                     "theme_mode": "Theme",
-                    "font_family": "Font",
-                    "cjk_font_pack": "CJK Font",
-                    "font_family_inter": "Inter (Default)",
-                    "font_family_noto_sans": "Noto Sans",
-                    "font_family_geist": "Geist",
-                    "font_family_nunito_sans": "Nunito Sans",
-                    "font_family_ibm_plex_sans": "IBM Plex Sans",
-                    "font_family_jetbrains_mono": "JetBrains Mono",
-                    "font_family_fantasque_sans_mono": "Fantasque Sans Mono",
-                    "font_family_system_ui": "System Font",
-                    "font_family_custom": "Custom",
-                    "font_family_custom_dialog_title": "Custom Font Family",
-                    "font_family_custom_dialog_description": "Enter a valid CSS font-family value",
-                    "font_family_custom_invalid": "Invalid font-family. Use comma-separated font names, e.g. 'My Font', Arial, sans-serif",
-                    "cjk_font_pack_noto": "Noto Sans CJK",
-                    "cjk_font_pack_pht": "PuHuiTi CJK",
                     "theme_mode_system": "System",
                     "theme_mode_light": "Light",
                     "theme_mode_dark": "Dark",
@@ -1561,6 +1571,23 @@
         "prompt": {
             "input_invalid": "Invalid input"
         },
+        "edit_profile": {
+            "icon": "Icon",
+            "banner": "Banner",
+            "banner_type_avatar_banner": "Avatar Banner",
+            "banner_type_color": "Color",
+            "banner_type_custom_image": "Custom Image",
+            "create_theme": "Create Theme",
+            "delete_theme": "Delete Theme",
+            "gradient_bottom": "Gradient Bottom",
+            "gradient_top": "Gradient Top",
+            "profile_background": "Profile Background",
+            "profile_background_type_gradient": "Gradient",
+            "profile_background_type_image": "Image",
+            "profile_background_type_none": "None",
+            "profile_theme": "Profile Theme",
+            "theme_name_placeholder": "Theme name..."
+        },
         "user": {
             "status": {
                 "active": "Active",
@@ -1628,10 +1655,16 @@
                 "track_stranger": "Track This User",
                 "untrack_stranger": "Stop Tracking This User",
                 "favorite_tooltip": "Add to Favorites",
-                "unfavorite_tooltip": "Remove from Favorites"
+                "unfavorite_tooltip": "Remove from Favorites",
+                "edit_profile": "Edit Profile",
+                "delete_favorite": "Delete Favorite"
             },
             "info": {
                 "header": "Info",
+                "current_instance": "Current Instance",
+                "instance_role_restricted": "Instance Role Restricted",
+                "vrcx_info": "VRCX Info",
+                "vrcx_info_tooltip": "This user's profile is using a VRCX placeholder image.",
                 "launch_invite_tooltip": "Launch/Invite",
                 "self_invite_tooltip": "Invite Yourself",
                 "open_in_vrchat_tooltip": "Open in VRChat",
@@ -1988,7 +2021,8 @@
                 "visible": "Visible",
                 "friends": "Friends",
                 "hidden": "Hidden",
-                "subscribed": "Subscribed"
+                "subscribed": "Subscribed",
+                "unsubscribed": "Unsubscribed"
             },
             "actions": {
                 "represent_tooltip": "Set Representing",
@@ -2013,7 +2047,9 @@
                 "moderation_tools": "Moderation Tools",
                 "leave": "Leave Group",
                 "block": "Block Group",
-                "unblock": "Unblock Group"
+                "unblock": "Unblock Group",
+                "subscribe_event": "Subscribe to Event",
+                "unsubscribe_event": "Unsubscribe from Event"
             },
             "info": {
                 "header": "Info",
@@ -2134,6 +2170,7 @@
             "content_drones": "Drones",
             "content_items": "Items",
             "content_third_person": "Third Person",
+            "content_prop_movement": "Content/Movement",
             "world_id": "World ID",
             "instance_id": "Instance ID",
             "instance_id_placeholder": "Random",
@@ -2630,7 +2667,8 @@
                 "description": "Description",
                 "export_to_calendar": "Export to Calendar",
                 "download_ics": "Download .ics",
-                "copied_event_link": "Calendar event URL copied to clipboard"
+                "copied_event_link": "Calendar event URL copied to clipboard",
+                "repeating_event_tooltip": "Repeating Event"
             },
             "featured_events": "Featured Events"
         },
@@ -3030,7 +3068,8 @@
             "joined": "Group joined",
             "join_request_sent": "Group join request sent",
             "visibility_updated": "Group visibility updated",
-            "subscription_updated": "Group subscription updated"
+            "subscription_updated": "Group subscription updated",
+            "event_announcement_updated": "Group announcement updated"
         },
         "invite": {
             "self_sent": "Self invite sent",
@@ -3147,7 +3186,9 @@
         "blocked": "has blocked you",
         "unblocked": "has unblocked you",
         "muted": "has muted you",
-        "unmuted": "has unmuted you"
+        "unmuted": "has unmuted you",
+        "group_event_created_title": "Group Event Created",
+        "group_event_starting_title": "Group Event Starting"
     },
     "status": {
         "title": "VRChat Status"

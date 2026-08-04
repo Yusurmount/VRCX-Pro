@@ -12,6 +12,7 @@ import { groupRequest, instanceRequest, queryRequest } from '../api';
 import { database } from '../services/database';
 import { FILTER_EVERYONE } from '../shared/constants/';
 import { patchGroupFromEvent } from '../queries';
+import { evictMapCache } from '../shared/utils/cacheUtils';
 import { useGameStore } from '../stores/game';
 import { useInstanceStore } from '../stores/instance';
 import { useModalStore } from '../stores/modal';
@@ -137,6 +138,13 @@ export function applyGroup(json) {
     if (groupStore.currentUserGroups.has(ref.id)) {
         syncGroupSearchIndex(ref);
     }
+    // 限制 cachedGroups 无上限累积：保留已加入的群组，其余按最旧淘汰
+    evictMapCache(
+        groupStore.cachedGroups,
+        200,
+        (_value, key) => groupStore.currentUserGroups.has(key),
+        { logLabel: 'Group cache cleanup' }
+    );
     return ref;
 }
 

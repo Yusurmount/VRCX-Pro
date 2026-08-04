@@ -16,6 +16,59 @@ const RECENCY_FIELDS = [
     'createdAt'
 ];
 
+// 单实体查询缓存条数上限：防止快速浏览用户/世界/头像/群组时缓存无上限累积
+// （超出上限按 dataUpdatedAt 最旧淘汰；gcTime 到期仍会正常回收）
+const ENTITY_CACHE_MAX_ENTRIES = Object.freeze({
+    user: 400,
+    avatar: 200,
+    world: 200,
+    group: 100
+});
+
+/**
+ * 判断 queryKey 是否为单个实体查询键（排除成员列表/画廊/日历等复合键）
+ */
+function isSingleEntityKey(queryKey, type) {
+    if (queryKey[0] !== type) {
+        return false;
+    }
+    if (type === 'group') {
+        // group 单实体键形如 ['group', groupId, boolean]
+        return queryKey.length === 3 && typeof queryKey[2] === 'boolean';
+    }
+    // user/avatar/world 单实体键形如 ['user', userId]
+    return queryKey.length === 2;
+}
+
+/**
+ * 淘汰超出上限的实体查询缓存（按 dataUpdatedAt 最旧优先）
+ */
+function evictExcessEntityCache() {
+    for (const [type, maxEntries] of Object.entries(
+        ENTITY_CACHE_MAX_ENTRIES
+    )) {
+        const queries = queryClient
+            .getQueryCache()
+            .getAll()
+            .filter(
+                (query) =>
+                    isSingleEntityKey(query.queryKey, type) &&
+                    typeof query.state.data !== 'undefined'
+            );
+        if (queries.length <= maxEntries) {
+            continue;
+        }
+        queries.sort((a, b) => a.state.dataUpdatedAt - b.state.dataUpdatedAt);
+        const excess = queries.length - maxEntries;
+        for (let i = 0; i < excess; i++) {
+            queryClient.removeQueries({
+                queryKey: queries[i].queryKey,
+                exact: true
+            });
+        }
+    }
+}
+
 /**
  *
  * @param data
@@ -160,6 +213,8 @@ export async function fetchWithEntityPolicy({
         queryFn: () => withQueryLog(queryFn),
         ...toQueryOptions(policy)
     });
+
+    evictExcessEntityCache();
 
     if (isFresh) {
         logWebRequest(

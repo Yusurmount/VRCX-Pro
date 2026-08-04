@@ -77,7 +77,7 @@ export const createColumns = ({
             meta: { label: () => t('table.playerList.avatar') },
             cell: ({ row }) => {
                 const userRef = row.original?.ref;
-                const src = userImage(userRef);
+                const src = userImage(userRef, true);
                 if (!src) return null;
                 return (
                     <div class="flex items-center pl-2">

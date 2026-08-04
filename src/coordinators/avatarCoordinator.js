@@ -19,6 +19,7 @@ import { patchAvatarFromEvent } from '../queries';
 import { processBulk } from '../services/request';
 import { applyFavorite } from './favoriteCoordinator';
 import { refreshUserDialogAvatars, showUserDialog } from './userCoordinator';
+import { evictMapCache } from '../shared/utils/cacheUtils';
 import { useAdvancedSettingsStore } from '../stores/settings/advanced';
 import { useAvatarProviderStore } from '../stores/avatarProvider';
 import { useAvatarStore } from '../stores/avatar';
@@ -72,6 +73,16 @@ export function applyAvatar(json) {
     }
     patchAvatarFromEvent(ref);
     syncAvatarSearchIndex(ref);
+    // 限制 cachedAvatars 无上限累积：保留收藏与当前使用的头像，其余按最旧淘汰
+    const userStore = useUserStore();
+    evictMapCache(
+        avatarStore.cachedAvatars,
+        500,
+        (_value, key) =>
+            key === userStore.currentUser.currentAvatar ||
+            favoriteStore.getCachedFavoritesByObjectId(key),
+        { logLabel: 'Avatar cache cleanup' }
+    );
     return ref;
 }
 

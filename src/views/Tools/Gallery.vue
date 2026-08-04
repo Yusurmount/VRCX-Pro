@@ -102,7 +102,7 @@
                                         showFullscreenImageDialog(image.versions[image.versions.length - 1].file.url)
                                     ">
                                     <img
-                                        :src="image.versions[image.versions.length - 1].file.url"
+                                        :src="galleryImageThumb(image)"
                                         loading="lazy"
                                         class="aspect-[4/3] w-full rounded-t-md object-cover" />
                                 </ItemHeader>
@@ -182,7 +182,7 @@
                                         showFullscreenImageDialog(image.versions[image.versions.length - 1].file.url)
                                     ">
                                     <img
-                                        :src="image.versions[image.versions.length - 1].file.url"
+                                        :src="galleryImageThumb(image)"
                                         loading="lazy"
                                         class="aspect-square w-full rounded-t-md object-cover" />
                                 </ItemHeader>
@@ -399,7 +399,7 @@
                                         showFullscreenImageDialog(image.versions[image.versions.length - 1].file.url)
                                     ">
                                     <img
-                                        :src="image.versions[image.versions.length - 1].file.url"
+                                        :src="galleryImageThumb(image)"
                                         loading="lazy"
                                         class="aspect-square w-full rounded-t-md object-cover" />
                                 </ItemHeader>
@@ -549,7 +549,7 @@
                             <div class="overflow-hidden">
                                 <ItemHeader class="cursor-pointer" @click="showFullscreenImageDialog(item.imageUrl)">
                                     <img
-                                        :src="item.imageUrl"
+                                        :src="galleryImageThumb(item)"
                                         loading="lazy"
                                         class="aspect-square w-full rounded-t-md object-cover" />
                                 </ItemHeader>
@@ -621,6 +621,7 @@
     import { useRouter } from 'vue-router';
 
     import {
+        convertFileUrlToImageUrl,
         extractFileId,
         formatDateFilter,
         getEmojiFileName,
@@ -641,6 +642,14 @@
     const router = useRouter();
     const modalStore = useModalStore();
 
+    // 网格展示统一使用 256px 缩略图（点击仍查看原图），降低大图解码内存/显存占用；
+    // 无法转换为缩略图的 URL 原样返回，不影响原功能
+    function galleryImageThumb(item) {
+        const url = item?.versions?.length
+            ? item.versions[item.versions.length - 1].file?.url
+            : item?.imageUrl;
+        return convertFileUrlToImageUrl(url, 256);
+    }
     const {
         galleryTable,
         galleryDialogVisible,

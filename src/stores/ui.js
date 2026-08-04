@@ -207,6 +207,86 @@ export const useUiStore = defineStore('Ui', () => {
         clearGroupMemberModerationDialog();
         instanceStore.hidePreviousInstancesDialogs();
         clearDialogCrumbs();
+
+        // 关闭后立即释放对话框持有的大数据（保留对象引用与 UI 偏好字段：
+        // visible/loading/activeTab/lastActiveTab/各类排序筛选均保留）。
+        // id 置 null 使进行中的请求/WebSocket 回调因 id 不匹配而丢弃结果，防止旧数据写回。
+        const { userDialog, worldDialog, avatarDialog, groupDialog } = {
+            userDialog: userStore.userDialog,
+            worldDialog: worldStore.worldDialog,
+            avatarDialog: avatarStore.avatarDialog,
+            groupDialog: groupStore.groupDialog
+        };
+        userDialog.id = null;
+        userDialog.ref = {};
+        userDialog.publicProfileRef = {};
+        userDialog.friend = {};
+        userDialog.$location = {};
+        userDialog.instance = {
+            id: '',
+            tag: '',
+            $location: {},
+            friendCount: 0,
+            users: [],
+            shortName: '',
+            ref: {}
+        };
+        userDialog.users = [];
+        userDialog.worlds = [];
+        userDialog.avatars = [];
+        userDialog.userFavoriteWorlds = [];
+        userDialog.userGroups = {
+            groups: [],
+            ownGroups: [],
+            mutualGroups: [],
+            remainingGroups: []
+        };
+        userDialog.representedGroup = {};
+        userDialog.$avatarInfo = {
+            ownerId: '',
+            avatarName: '',
+            fileCreatedAt: ''
+        };
+        userDialog.previousDisplayNames = [];
+        userDialog.dateFriendedInfo = [];
+        userDialog.mutualFriends = [];
+        userDialog.memo = '';
+        userDialog.note = '';
+
+        worldDialog.id = null;
+        worldDialog.ref = {};
+        worldDialog.$location = {};
+        worldDialog.rooms = [];
+        worldDialog.fileAnalysis = {};
+        worldDialog.memo = '';
+
+        avatarDialog.id = null;
+        avatarDialog.ref = {};
+        avatarDialog.galleryImages = [];
+        avatarDialog.fileAnalysis = {};
+        avatarDialog.platformInfo = {};
+
+        groupDialog.id = null;
+        groupDialog.ref = {};
+        groupDialog.announcement = {};
+        groupDialog.posts = [];
+        groupDialog.postsFiltered = [];
+        groupDialog.calendar = [];
+        groupDialog.members = [];
+        groupDialog.memberSearchResults = [];
+        groupDialog.instances = [];
+        groupDialog.galleries = {};
+        groupDialog.ownerDisplayName = '';
+
+        const moderation = groupStore.groupMemberModeration;
+        moderation.id = null;
+        moderation.groupRef = {};
+        moderation.openWithUserId = '';
+        moderation.selectedUsers = {};
+        moderation.selectedUsersArray = [];
+        for (const key of Object.keys(moderation.tables)) {
+            moderation.tables[key].data = [];
+        }
     }
 
     /**

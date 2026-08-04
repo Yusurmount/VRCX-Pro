@@ -123,7 +123,7 @@
                                 @click="clickSavedLogin(user)">
                                 <ItemMedia variant="image">
                                     <Avatar class="rounded-full">
-                                        <AvatarImage :src="userImage(user.user)" />
+                                        <AvatarImage :src="userImage(user.user, true)" />
                                         <AvatarFallback>
                                             <User class="size-5 text-muted-foreground" />
                                         </AvatarFallback>
@@ -160,7 +160,22 @@
                             t('view.login.forgotPassword')
                         }}</a>
                     </p>
-                    <p>&copy; 2019-2026 VRCX Contributors</p>
+                    <p>
+                        &copy; 2019-2026
+                        <a class="cursor-pointer" @click="openExternalLink('https://github.com/pypy-vrc')">pypy</a>
+                        &amp;
+                        <a class="cursor-pointer" @click="openExternalLink('https://github.com/Natsumi-sama')"
+                            >Natsumi</a
+                        >
+                        &amp;
+                        <a class="cursor-pointer" @click="openExternalLink('https://github.com/Map1en')">Map1en</a>
+                    </p>
+                    <p>
+                        &copy; 2026
+                        <a class="cursor-pointer" @click="openExternalLink('https://github.com/Yusurmount')"
+                            >Yusurmount</a
+                        >
+                    </p>
                     <p>{{ t('view.settings.general.legal_notice.info') }}</p>
                     <p>{{ t('view.settings.general.legal_notice.disclaimer1') }}</p>
                     <p>{{ t('view.settings.general.legal_notice.disclaimer2') }}</p>

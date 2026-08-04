@@ -16,7 +16,7 @@ const fs = require('fs');
 const https = require('https');
 const crypto = require('crypto');
 
-app.disableHardwareAcceleration();
+// 注意：GPU 加速开关须在 app ready 前决定（见 VRCXStorage.Load() 之后的 disableGpuAccelerationIfNeeded）
 
 const bundledDotNetPath = path.join(process.resourcesPath, 'dotnet-runtime');
 if (fs.existsSync(bundledDotNetPath)) {
@@ -126,6 +126,15 @@ interopApi.getDotNetObject('LogWatcher').Init();
 
 interopApi.getDotNetObject('SystemMonitorElectron').Init();
 interopApi.getDotNetObject('AppApiVrElectron').Init();
+
+// 默认启用 GPU 加速；仅当用户设置勾选"禁用 GPU 加速"时才禁用（须在 app ready 前调用）
+if (
+    interopApi
+        .getDotNetObject('VRCXStorage')
+        .Get('VRCX_DisableGpuAcceleration') === 'true'
+) {
+    app.disableHardwareAcceleration();
+}
 
 ipcMain.handle('callDotNetMethod', (event, className, methodName, args) => {
     return interopApi.callMethod(className, methodName, args);
@@ -444,9 +453,14 @@ function createWindow() {
         icon: path.join(rootDir, 'images/VRCX.png'),
         autoHideMenuBar: true,
         titleBarStyle: 'hiddenInset',
+        show: false,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js')
         }
+    });
+    // 页面首次渲染完成后再显示窗口，避免启动白屏闪烁
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.show();
     });
     applyWindowState();
     const indexPath = path.join(rootDir, 'build/html/index.html');

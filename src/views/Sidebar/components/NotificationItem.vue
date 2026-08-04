@@ -307,7 +307,7 @@
         if (userId) {
             const user = userStore.cachedUsers.get(userId);
             if (user) {
-                return userImage(user);
+                return userImage(user, true);
             }
         }
         return n.senderUserIcon || null;

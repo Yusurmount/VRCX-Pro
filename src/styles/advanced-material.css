@@ -137,11 +137,33 @@ html.use-advanced-material .x-container [class*='sticky'] {
 }
 
 /* ------------------------------------------------------------------ */
+/* 侧边栏菜单项强调框：待选（hover/展开悬停）与已选（按下/选中）改为        */
+/* 半透明白色，与 66% 玻璃侧栏背景协调                                     */
+/* ------------------------------------------------------------------ */
+html.use-advanced-material [data-sidebar='menu-button']:hover,
+html.use-advanced-material
+    [data-sidebar='menu-button'][data-state='open']:hover,
+html.use-advanced-material [data-sidebar='menu-sub-button']:hover {
+    background-color: color-mix(in oklab, white 12%, transparent);
+    color: var(--sidebar-foreground);
+}
+
+html.use-advanced-material [data-sidebar='menu-button']:active,
+html.use-advanced-material [data-sidebar='menu-button'][data-active='true'],
+html.use-advanced-material [data-sidebar='menu-sub-button']:active,
+html.use-advanced-material
+    [data-sidebar='menu-sub-button'][data-active='true'] {
+    background-color: color-mix(in oklab, white 18%, transparent);
+    color: var(--sidebar-foreground);
+}
+
+/* ------------------------------------------------------------------ */
 /* 控件：悬停边缘高光 + 按钮统一半透明                                    */
 /* ------------------------------------------------------------------ */
 
 /* 悬停边缘高光：轻微主题色描边 + 柔和外发光。聚焦 / 禁用时不叠加，          */
-/* 避免覆盖 focus ring 与 disabled 状态                                   */
+/* 避免覆盖 focus ring 与 disabled 状态；容器型（input-group/tags-input）     */
+/* 聚焦（focus-within）时组件自带 ring，故也不叠加                           */
 html.use-advanced-material
     [data-slot='button']:hover:not(:focus-visible):not(:disabled):not(
         [data-disabled]
@@ -153,7 +175,27 @@ html.use-advanced-material
 html.use-advanced-material
     [data-slot='input']:hover:not(:focus-visible):not(:disabled),
 html.use-advanced-material
-    [data-slot='textarea']:hover:not(:focus-visible):not(:disabled) {
+    [data-slot='textarea']:hover:not(:focus-visible):not(:disabled),
+html.use-advanced-material
+    [data-slot='select-trigger']:hover:not(:focus-visible):not(:disabled):not(
+        [data-disabled]
+    ),
+html.use-advanced-material
+    [data-slot='native-select']:hover:not(:focus-visible):not(:disabled),
+html.use-advanced-material
+    [data-slot='sidebar-input']:hover:not(:focus-visible):not(:disabled),
+html.use-advanced-material
+    [data-slot='command-input']:hover:not(:focus-visible):not(:disabled),
+html.use-advanced-material
+    [data-slot='toggle-group-item']:hover:not(:focus-visible):not(:disabled):not(
+        [data-disabled]
+    ),
+html.use-advanced-material
+    [data-slot='radio-group-item']:hover:not(:focus-visible):not(:disabled),
+html.use-advanced-material
+    [data-slot='input-group']:hover:not(:focus-visible):not(:focus-within),
+html.use-advanced-material
+    [data-slot='tags-input']:hover:not(:focus-visible):not(:focus-within) {
     box-shadow:
         inset 0 0 0 1px color-mix(in oklab, var(--primary) 30%, transparent),
         0 0 8px -2px color-mix(in oklab, var(--primary) 22%, transparent);

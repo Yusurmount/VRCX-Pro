@@ -33,6 +33,7 @@
 <template>
     <TagsInputRoot
         v-slot="slotProps"
+        data-slot="tags-input"
         v-bind="forwarded"
         :class="
             cn(

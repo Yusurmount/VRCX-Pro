@@ -48,12 +48,10 @@ function getAssetLanguage(assetId) {
     }
 
     const language =
-        // Font assets, e.g., noto-sans-jp-regular.woff2 mapped to language code.
+        // Font assets, e.g., noto-sans-sc-regular.woff2 mapped to language code.
         {
-            jp: 'ja',
             sc: 'zh-CN',
-            tc: 'zh-TW',
-            kr: 'ko'
+            tc: 'zh-TW'
         }[assetId.split('noto-sans-')[1]?.split('-')[0]];
 
     return language || null;

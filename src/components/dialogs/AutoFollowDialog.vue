@@ -17,7 +17,7 @@
                         @click="selectFriend(friend)">
                         <div class="relative block h-10 w-10 flex-none mr-3" :class="userStatusClass(friend.ref)">
                             <Avatar class="h-full w-full rounded-full">
-                                <AvatarImage :src="userImage(friend.ref)" class="object-cover" />
+                                <AvatarImage :src="userImage(friend.ref, true)" class="object-cover" />
                                 <AvatarFallback>
                                     <User class="h-5 w-5 text-muted-foreground" />
                                 </AvatarFallback>

@@ -142,6 +142,10 @@
                     &amp;
                     <a class="cursor-pointer" @click="openExternalLink('https://github.com/Map1en')">Map1en</a>
                 </p>
+                <p class="m-0">
+                    &copy; 2026
+                    <a class="cursor-pointer" @click="openExternalLink('https://github.com/Yusurmount')">Yusurmount</a>
+                </p>
                 <p class="m-0">{{ t('view.settings.general.legal_notice.info') }}</p>
                 <p class="m-0">{{ t('view.settings.general.legal_notice.disclaimer1') }}</p>
                 <p class="m-0">{{ t('view.settings.general.legal_notice.disclaimer2') }}</p>

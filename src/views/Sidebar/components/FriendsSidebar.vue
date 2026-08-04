@@ -37,7 +37,7 @@
                                                 class="relative inline-block flex-none size-9 mr-2.5"
                                                 :class="userStatusClass(currentUser)">
                                                 <Avatar class="size-full rounded-full">
-                                                    <AvatarImage :src="userImage(currentUser)" class="object-cover" />
+                                                    <AvatarImage :src="userImage(currentUser, true)" class="object-cover" />
                                                     <AvatarFallback>
                                                         <User class="size-5 text-muted-foreground" />
                                                     </AvatarFallback>
@@ -127,6 +127,9 @@
                                                 </ContextMenuItem>
                                             </ContextMenuSubContent>
                                         </ContextMenuSub>
+                                        <ContextMenuItem @click="openEditProfileFromSidebar">
+                                            {{ t('dialog.user.actions.edit_profile') }}
+                                        </ContextMenuItem>
                                     </ContextMenuContent>
                                 </ContextMenu>
                             </template>
@@ -199,6 +202,7 @@
             </div>
         </div>
         <BackToTop :virtualizer="virtualizer" :target="scrollViewportRef" :tooltip="false" />
+        <EditProfileDialog :edit-profile-dialog="editProfileDialog" />
 
         <!-- <div class="absolute bottom-5 right-[70px] z-10">
             <button
@@ -258,6 +262,7 @@
     import Location from '../../../components/Location.vue';
     import configRepository from '../../../services/config';
     import { useStatusPresets } from '../../../components/dialogs/UserDialog/composables/useStatusPresets';
+    import EditProfileDialog from '../../../components/dialogs/UserDialog/EditProfileDialog.vue';
     import { accountHub } from '../../../services/accountHub.js';
     import { mergeFriends } from '../../../services/aggregatedView.js';
 
@@ -298,13 +303,14 @@
         sidebarSortMethods
     } = storeToRefs(appearanceSettingsStore);
     const { gameLogDisabled } = storeToRefs(useAdvancedSettingsStore());
-    const { showSendBoopDialog } = useUserStore();
+    const userStore = useUserStore();
+    const { showSendBoopDialog, showEditProfileDialog } = userStore;
     const launchStore = useLaunchStore();
     const { favoriteFriendGroups, groupedByGroupKeyFavoriteFriends, localFriendFavorites } =
         storeToRefs(useFavoriteStore());
     const { lastLocation, lastLocationDestination } = storeToRefs(useLocationStore());
     const { isGameRunning } = storeToRefs(useGameStore());
-    const { currentUser } = storeToRefs(useUserStore());
+    const { currentUser, editProfileDialog } = storeToRefs(userStore);
     const { checkCanInvite, checkCanInviteSelf } = useInviteChecks();
     const { userImage, userStatusClass } = useUserDisplay();
     const { presets: statusPresets, getStatusClass: presetStatusClass } = useStatusPresets();
@@ -959,6 +965,10 @@
      */
     function friendSendBoop(friend) {
         showSendBoopDialog(friend.id);
+    }
+
+    function openEditProfileFromSidebar() {
+        showEditProfileDialog();
     }
 
     /**

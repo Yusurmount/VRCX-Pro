@@ -236,7 +236,7 @@
                                         <template v-if="item.user">
                                             <img
                                                 class="mr-2.5 inline-block size-8 flex-none rounded-full object-cover"
-                                                :src="userImage(item.user)"
+                                                :src="userImage(item.user, true)"
                                                 loading="lazy" />
                                         </template>
                                         <span
