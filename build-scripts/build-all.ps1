@@ -5,11 +5,11 @@ $ErrorActionPreference = "Stop"
 # $installPath = (&"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -version 16.0 -property installationpath) | Select-Object -Last 1
 # Import-Module (Join-Path $installPath "Common7\Tools\Microsoft.VisualStudio.DevShell.dll")
 # Enter-VsDevShell -VsInstallPath $installPath -SkipAutomaticLocation
-
+$version = (Get-Content -Path "Version" -Raw).Trim()
 $Date = Get-Date -format yyyyMMdd
 $ZipName = "VRCX-Pro_" + $version+"+"+$Date + ".zip"
-$SetupName = "VRCX-Pro_" + "Setup"+$version+"+"+$Date+".exe"
-$version = (Get-Content -Path "Version" -Raw).Trim()
+$SetupName = "VRCX-Pro_" + "Setup_"+$version+"+"+$Date+".exe"
+
 
 Write-Host "Building .Net..." -ForegroundColor Green
 dotnet build Dotnet\VRCX-Cef.csproj -p:Configuration=Release -p:WarningLevel=0 -p:Platform=x64 -p:RestorePackagesConfig=true -t:"Restore;Clean;Build" -m --self-contained
