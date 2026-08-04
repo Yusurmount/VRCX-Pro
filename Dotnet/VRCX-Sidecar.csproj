@@ -6,7 +6,8 @@
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <OutputType>Exe</OutputType>
+    <!-- WinExe：不创建控制台窗口（stdin/stdout 管道由 Rust 宿主重定向，功能不受影响） -->
+    <OutputType>WinExe</OutputType>
     <Configurations>Debug;Release</Configurations>
     <Platforms>x64</Platforms>
     <AssemblyTitle>VRCX-Sidecar</AssemblyTitle>
@@ -69,4 +70,17 @@
       <HintPath>..\libs\librsync.net.dll</HintPath>
     </Reference>
   </ItemGroup>
+
+  <!--
+    把 win-x64 native 库复制到输出根目录：
+    tauri resources 的 glob 只会扁平复制顶层文件（"../build/Sidecar/*"），无法保持
+    runtimes/win-x64/native/ 子目录结构，导致 System.Data.SQLite 找不到 SQLite.Interop.dll
+    （sidecar 启动即崩溃循环、界面白屏）。System.Data.SQLite 会先从 exe 目录查找
+    SQLite.Interop.dll，故将 native 库提到输出根即可可靠加载。
+  -->
+  <Target Name="CopyNativeLibsToRoot" AfterTargets="Build">
+    <Copy SourceFiles="$(OutDir)runtimes\win-x64\native\SQLite.Interop.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" Condition="Exists('$(OutDir)runtimes\win-x64\native\SQLite.Interop.dll')" />
+    <Copy SourceFiles="$(OutDir)runtimes\win-x64\native\e_sqlite3.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" Condition="Exists('$(OutDir)runtimes\win-x64\native\e_sqlite3.dll')" />
+    <Copy SourceFiles="$(OutDir)runtimes\win-x64\native\sni.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" Condition="Exists('$(OutDir)runtimes\win-x64\native\sni.dll')" />
+  </Target>
 </Project>

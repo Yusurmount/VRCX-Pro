@@ -1,6 +1,6 @@
 [package]
 name = "vrcx-pro"
-version = "2.1.0"
+version = "3.0.0"
 description = "Friendship management tool for VRChat"
 authors = ["VRCX Team"]
 edition = "2021"
@@ -13,7 +13,7 @@ crate-type = ["rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri = { version = "2", features = ["tray-icon", "image-png", "devtools"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-notification = "2"

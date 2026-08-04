@@ -21,6 +21,8 @@ AGENTS.md
 # Tauri / Rust
 src-tauri/target/
 src-tauri/gen/
+.tauri-cache/
+VRCX-Pro_*.exe
 
 # .NET sidecar build artifacts
 Dotnet/obj-sidecar/
