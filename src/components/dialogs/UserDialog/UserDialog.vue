@@ -277,13 +277,17 @@
     function refreshUserDialogTreeData() {
         const D = userDialog.value;
         if (D.id === currentUser.value.id) {
-            treeData.value = formatJsonVars({
-                ...currentUser.value,
-                ...D.ref
-            });
+            treeData.value = {
+                currentUser: formatJsonVars(currentUser.value),
+                user: formatJsonVars(D.ref),
+                profile: formatJsonVars(D.publicProfileRef)
+            };
             return;
         }
-        treeData.value = formatJsonVars(D.ref);
+        treeData.value = {
+            user: formatJsonVars(D.ref),
+            profile: formatJsonVars(D.publicProfileRef)
+        };
     }
 
     /**
