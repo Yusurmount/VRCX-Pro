@@ -306,7 +306,7 @@
 </template>
 
 <script setup>
-    import { Ellipsis, MoreHorizontal, Plus, RefreshCcw, RefreshCw, User } from 'lucide-vue-next';
+    import { Ellipsis, MoreHorizontal, Plus, RefreshCcw, RefreshCw } from 'lucide-vue-next';
     import { computed, ref, watch } from 'vue';
     import { Button } from '@/components/ui/button';
     import { DataTableEmpty } from '@/components/ui/data-table';
