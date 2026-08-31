@@ -42,6 +42,7 @@
     let echartsInstance = null;
     const usersFirstActivity = ref(null);
     const resizeObserver = ref(null);
+    let afterInitTimeoutId = null;
 
     const processedData = computed(() => {
         if (!props.chartData || props.chartData.length === 0) return [];
@@ -118,6 +119,10 @@
     });
 
     onBeforeUnmount(() => {
+        if (afterInitTimeoutId) {
+            clearTimeout(afterInitTimeoutId);
+            afterInitTimeoutId = null;
+        }
         if (resizeObserver.value) {
             resizeObserver.value.disconnect();
             resizeObserver.value = null;
@@ -203,7 +208,10 @@
             }
         }
 
-        setTimeout(afterInit, 50);
+        afterInitTimeoutId = setTimeout(() => {
+            afterInitTimeoutId = null;
+            afterInit();
+        }, 50);
     }
 
     function handleClickYAxisLabel(params) {

@@ -273,7 +273,7 @@
                 "password": "密碼",
                 "saveCredentials": "儲存登入資料",
                 "devEndpoint": "開發介面",
-                "endpoint": "Endpoint",
+                "endpoint": "介面位址",
                 "websocket": "WebSocket"
             },
             "language_detect": {
@@ -799,14 +799,14 @@
                 },
                 "trend": {
                     "rising": "上升",
-                    "cooling": "Cooling"
+                    "cooling": "冷卻"
                 },
                 "stats_line": {
                     "friends": "{count} 好友",
                     "visits": "{count} 次造訪"
                 },
                 "stats": {
-                    "top_friends": "top friends",
+                    "top_friends": "位好友造訪過",
                     "total_visits": "總造訪次數",
                     "rising": "上升",
                     "cooling": "冷卻"
@@ -1172,13 +1172,13 @@
                     "random_colors_from_user_id": "從用戶 ID 隨機挑選顏色",
                     "random_colors_from_user_id_description": "根據使用者 ID 為每位用戶指派固定顏色。",
                     "trust_levels": {
-                        "visitor": "Visitor",
-                        "new_user": "New User",
-                        "user": "User",
-                        "known_user": "Known User",
-                        "trusted_user": "Trusted User",
-                        "vrchat_team": "VRChat Team",
-                        "nuisance": "Nuisance"
+                        "visitor": "訪客",
+                        "new_user": "新用戶",
+                        "user": "用戶",
+                        "known_user": "已知用戶",
+                        "trusted_user": "受信任用戶",
+                        "vrchat_team": "VRChat 團隊",
+                        "nuisance": "劣跡玩家"
                     }
                 },
                 "friend_log": {
@@ -1956,11 +1956,11 @@
                 "content_adult": "成人",
                 "content_sex": "色情",
                 "performanceRating": {
-                    "Excellent": "Excellent",
-                    "Good": "Good",
-                    "Medium": "Medium",
-                    "Poor": "Poor",
-                    "VeryPoor": "Very Poor",
+                    "Excellent": "優秀",
+                    "Good": "良好",
+                    "Medium": "中等",
+                    "Poor": "較差",
+                    "VeryPoor": "很差",
                     "None": "無"
                 }
             },
@@ -2438,8 +2438,8 @@
             "world": "變更世界圖片",
             "description": "推薦圖片尺寸：1200 像素 x 900 像素 (4:3)",
             "upload": "上傳圖片",
-            "confirm": "Confirm Crop",
-            "cancel": "Cancel"
+            "confirm": "確認裁切",
+            "cancel": "取消"
         },
         "screenshot_metadata": {
             "header": "螢幕截圖詳細資料",
@@ -3446,28 +3446,6 @@
                 "support": "支援 VRCX"
             },
             "releases": {
-                "2026_04_05": {
-                    "title": "探索新功能",
-                    "subtitle": "一些你可能沒有注意到的有用功能",
-                    "items": {
-                        "quick_search": {
-                            "title": "快速搜尋",
-                            "description": "按 Ctrl+K (⌘K)，尋找用戶、世界、群組和角色。"
-                        },
-                        "local_favorite_groups": {
-                            "title": "本地收藏",
-                            "description": "建立不限數量的自訂好友群組，突破 VRChat 的限制。"
-                        },
-                        "auto_status": {
-                            "title": "自動狀態",
-                            "description": "根據好友上線狀態自動切換狀態，並可依群組篩選。"
-                        },
-                        "right_click_menus": {
-                            "title": "操作菜單",
-                            "description": "在好友、表格與標題上按右鍵可進行快速操作。"
-                        }
-                    }
-                },
                 "2026_05_03": {
                     "title": "探索新功能",
                     "subtitle": "一些你可能沒有注意到的有用功能",

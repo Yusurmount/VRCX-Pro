@@ -177,17 +177,14 @@ const groupReq = {
         });
     },
     /**
-    userId: string,
-    groupId: string,
-    params: {
-        visibility: string,
-        isSubscribedToAnnouncements: bool,
-        isSubscribedToEventAnnouncements: bool,
-        managerNotes: string
-    }
-     * @param userId
-     * @param groupId
-     * @param params
+     * @param {string} userId
+     * @param {string} groupId
+     * @param {{
+     *   visibility?: string,
+     *   isSubscribedToAnnouncements?: boolean,
+     *   isSubscribedToEventAnnouncements?: boolean,
+     *   managerNotes?: string
+     * }} params
      */
     setGroupMemberProps(userId, groupId, params) {
         return request(`groups/${groupId}/members/${userId}`, {

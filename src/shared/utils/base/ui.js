@@ -344,20 +344,30 @@ function updateTrustColorClasses(trustColor) {
     document.getElementsByTagName('head')[0].appendChild(style);
 }
 
+let customCssUrl = null;
+let customCssRefreshId = 0;
+
 async function refreshCustomCss() {
-    if (document.contains(document.getElementById('app-custom-style'))) {
-        document.getElementById('app-custom-style').remove();
-    }
+    const refreshId = ++customCssRefreshId;
     const customCss = await AppApi.CustomCss();
+    if (refreshId !== customCssRefreshId) return;
+
+    const oldStyle = document.getElementById('app-custom-style');
+    oldStyle?.remove();
+    if (customCssUrl) {
+        URL.revokeObjectURL(customCssUrl);
+        customCssUrl = null;
+    }
     if (customCss) {
         const head = document.head;
         const $appCustomStyle = document.createElement('link');
         $appCustomStyle.setAttribute('id', 'app-custom-style');
         $appCustomStyle.rel = 'stylesheet';
         $appCustomStyle.type = 'text/css';
-        $appCustomStyle.href = URL.createObjectURL(
+        customCssUrl = URL.createObjectURL(
             new Blob([customCss], { type: 'text/css' })
         );
+        $appCustomStyle.href = customCssUrl;
         head.appendChild($appCustomStyle);
     }
 }

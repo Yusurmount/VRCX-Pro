@@ -34,6 +34,7 @@ import { watchState } from './watchState';
 import * as workerTimers from 'worker-timers';
 
 let webSocket = null;
+let reconnectTimer = null;
 let lastWebSocketMessage = '';
 
 /**
@@ -88,9 +89,10 @@ function connectWebSocket(token) {
     };
     socket.onclose = () => {
         wsState.connected = false;
-        if (webSocket === socket) {
-            webSocket = null;
+        if (webSocket !== socket) {
+            return;
         }
+        webSocket = null;
         try {
             socket.close();
         } catch (err) {
@@ -99,7 +101,8 @@ function connectWebSocket(token) {
         if (AppDebug.debugWebSocket) {
             console.log('WebSocket closed');
         }
-        workerTimers.setTimeout(() => {
+        reconnectTimer = workerTimers.setTimeout(() => {
+            reconnectTimer = null;
             if (
                 watchState.isLoggedIn &&
                 watchState.isFriendsLoaded &&
@@ -159,6 +162,10 @@ function connectWebSocket(token) {
  * @returns {void}
  */
 export function closeWebSocket() {
+    if (reconnectTimer !== null) {
+        workerTimers.clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+    }
     const socket = webSocket;
     if (socket === null) {
         return;

@@ -12,18 +12,21 @@ function readPerformanceMemory() {
     return { usedJSHeapSize, jsHeapSizeLimit };
 }
 
+let activeController = null;
+
 export function startRendererMemoryThresholdReport(
     Sentry,
     { intervalMs = 10_000, thresholdRatio = 0.8, cooldownMs = 5 * 60_000 } = {}
 ) {
+    if (activeController) return activeController;
+
     const initial = readPerformanceMemory();
     if (!initial) return null;
 
     if (!Sentry?.withScope) return null;
 
     let lastSent = 0;
-
-    return setInterval(() => {
+    const interval = setInterval(() => {
         const m = readPerformanceMemory();
         if (!m) return;
 
@@ -47,4 +50,15 @@ export function startRendererMemoryThresholdReport(
             );
         });
     }, intervalMs);
+
+    const controller = {
+        stop() {
+            clearInterval(interval);
+            if (activeController === controller) {
+                activeController = null;
+            }
+        }
+    };
+    activeController = controller;
+    return controller;
 }

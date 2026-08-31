@@ -21,7 +21,7 @@
                 v-model="userDialog.activeTab"
                 :items="userDialogTabs"
                 :tab-color="userDialogTabColor"
-                :unmount-on-hide="false"
+                :unmount-on-hide="true"
                 fill
                 :background="true"
                 @update:modelValue="userDialogTabClick">

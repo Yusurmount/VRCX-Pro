@@ -42,6 +42,15 @@
     // 卡片标题/描述、标签、分隔线、装饰等）。命中后向上继续查找最近的可高光实体，
     // 避免高光零散地挂在文本与结构容器上造成视觉割裂。
     const NON_GLOW_SLOTS = new Set([
+        // Item 结构容器：高光统一落在 item 根节点，避免标题/描述/内容/媒体各自断开
+        'item-title',
+        'item-description',
+        'item-content',
+        'item-media',
+        'item-header',
+        'item-footer',
+        'item-actions',
+        'item-separator',
         // 表格：纯数据区不挂高光，高光只落在单元格内的控件上
         'table-container',
         'table',

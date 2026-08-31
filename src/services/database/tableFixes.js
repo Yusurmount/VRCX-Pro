@@ -88,19 +88,12 @@ const tableFixes = {
 
     async fixBrokenLeaveEntries() {
         var badEntries = await this.getBrokenLeaveEntries();
-        var badEntriesList = '';
-        var count = badEntries.length;
-        badEntries.forEach((entry) => {
-            count--;
-            if (count === 0) {
-                badEntriesList = badEntriesList.concat(entry);
-            } else {
-                badEntriesList = badEntriesList.concat(`${entry}, `);
-            }
-        });
-
+        if (badEntries.length === 0) {
+            // an empty IN () list is invalid SQL
+            return;
+        }
         await sqliteService.executeNonQuery(
-            `UPDATE gamelog_join_leave SET time = 0 WHERE id IN (${badEntriesList})`
+            `UPDATE gamelog_join_leave SET time = 0 WHERE id IN (${badEntries.join(', ')})`
         );
     },
 
