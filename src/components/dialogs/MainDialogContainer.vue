@@ -130,6 +130,21 @@
                 return {};
         }
     });
+    const activeDialogKey = computed(() => {
+        switch (activeType.value) {
+            case 'user':
+                return `${activeType.value}-${userStore.userDialog.id || ''}`;
+            case 'world':
+                return `${activeType.value}-${worldStore.worldDialog.id || ''}`;
+            case 'avatar':
+                return `${activeType.value}-${avatarStore.avatarDialog.id || ''}`;
+            case 'group':
+                return `${activeType.value}-${groupStore.groupDialog.id || ''}`;
+            default:
+                return activeType.value;
+        }
+    });
+
     const isOpen = computed({
         get: () => activeComponent.value !== null,
         set: (value) => {
@@ -336,7 +351,11 @@
                 </BreadcrumbList>
             </Breadcrumb>
 
-            <component :is="activeComponent" v-if="activeComponent" v-bind="activeComponentProps" :key="activeType" />
+            <component
+                :is="activeComponent"
+                v-if="activeComponent"
+                v-bind="activeComponentProps"
+                :key="activeDialogKey" />
         </DialogContent>
     </Dialog>
 </template>

@@ -123,16 +123,6 @@
             </SettingsItem>
         </SettingsGroup>
 
-        <SettingsGroup :title="t('view.settings.general.contributors.header')">
-            <div>
-                <img
-                    src="https://contrib.rocks/image?repo=Yusurmount/VRCX-Pro"
-                    alt="Contributors"
-                    class="cursor-pointer"
-                    @click="openExternalLink('https://github.com/Yusurmount/VRCX-Pro/graphs/contributors')" />
-            </div>
-        </SettingsGroup>
-
         <SettingsGroup :title="t('view.settings.general.legal_notice.header')">
             <div class="flex flex-col gap-2 text-sm text-muted-foreground mb-2">
                 <p class="m-0">
