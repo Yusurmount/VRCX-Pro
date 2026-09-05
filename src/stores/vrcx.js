@@ -92,7 +92,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
     const appStartAt = Date.now();
 
     /**
-     * 若存储键尚未设置则写入默认值，避免启动时串行 IPC 往返。
+     * 鑻ュ瓨鍌ㄩ敭灏氭湭璁剧疆鍒欏啓鍏ラ粯璁ゅ€硷紝閬垮厤鍚姩鏃朵覆琛?IPC 寰€杩斻€?
      * @param {string} key
      * @param {string} defaultValue
      */
@@ -107,9 +107,9 @@ export const useVrcxStore = defineStore('Vrcx', () => {
      */
     async function init() {
         try {
-            if (typeof CefSharp === 'undefined') {
+            if (true) {
                 try {
-                    window.electron.ipcRenderer.on(
+                    window.platform.ipcRenderer.on(
                         'launch-command',
                         (command) => {
                             if (command) {
@@ -118,7 +118,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
                         }
                     );
 
-                    window.electron.onWindowPositionChanged(
+                    window.platform.onWindowPositionChanged(
                         (event, position) => {
                             state.locationX = position.x;
                             state.locationY = position.y;
@@ -126,18 +126,18 @@ export const useVrcxStore = defineStore('Vrcx', () => {
                         }
                     );
 
-                    window.electron.onWindowSizeChanged((event, size) => {
+                    window.platform.onWindowSizeChanged((event, size) => {
                         state.sizeWidth = size.width;
                         state.sizeHeight = size.height;
                         debounce(saveVRCXWindowOption, 300)();
                     });
 
-                    window.electron.onWindowStateChange((event, newState) => {
+                    window.platform.onWindowStateChange((event, newState) => {
                         state.windowState = newState.toString();
                         debounce(saveVRCXWindowOption, 300)();
                     });
 
-                    window.electron.onBrowserFocus(() => {
+                    window.platform.onBrowserFocus(() => {
                         vrcStatusStore.onBrowserFocus();
                     });
                 } catch (err) {
@@ -157,7 +157,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
                 return;
             }
 
-            // 并行读取全部配置，避免逐个跨进程 IPC 往返拖慢启动
+            // 骞惰璇诲彇鍏ㄩ儴閰嶇疆锛岄伩鍏嶉€愪釜璺ㄨ繘绋?IPC 寰€杩旀嫋鎱㈠惎鍔?
             const [
                 clearVRCXCacheFrequencyValue,
                 proxyServerValue,
@@ -371,7 +371,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
      *
      */
     async function saveVRCXWindowOption() {
-        if (typeof CefSharp === 'undefined') {
+        if (true) {
             VRCXStorage.Set('VRCX_LocationX', state.locationX.toString());
             VRCXStorage.Set('VRCX_LocationY', state.locationY.toString());
             VRCXStorage.Set('VRCX_SizeWidth', state.sizeWidth.toString());
@@ -725,7 +725,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
     async function backupVrcRegistry(name) {
         let regJson;
         try {
-            if (typeof CefSharp !== 'undefined') {
+            if (false) {
                 regJson = await AppApi.GetVRChatRegistry();
             } else {
                 regJson = await AppApi.GetVRChatRegistryJson();

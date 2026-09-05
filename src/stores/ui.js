@@ -208,9 +208,9 @@ export const useUiStore = defineStore('Ui', () => {
         instanceStore.hidePreviousInstancesDialogs();
         clearDialogCrumbs();
 
-        // 关闭后立即释放对话框持有的大数据（保留对象引用与 UI 偏好字段：
-        // visible/loading/activeTab/lastActiveTab/各类排序筛选均保留）。
-        // id 置 null 使进行中的请求/WebSocket 回调因 id 不匹配而丢弃结果，防止旧数据写回。
+        // 鍏抽棴鍚庣珛鍗抽噴鏀惧璇濇鎸佹湁鐨勫ぇ鏁版嵁锛堜繚鐣欏璞″紩鐢ㄤ笌 UI 鍋忓ソ瀛楁锛?
+        // visible/loading/activeTab/lastActiveTab/鍚勭被鎺掑簭绛涢€夊潎淇濈暀锛夈€?
+        // id 缃?null 浣胯繘琛屼腑鐨勮姹?WebSocket 鍥炶皟鍥?id 涓嶅尮閰嶈€屼涪寮冪粨鏋滐紝闃叉鏃ф暟鎹啓鍥炪€?
         const { userDialog, worldDialog, avatarDialog, groupDialog } = {
             userDialog: userStore.userDialog,
             worldDialog: worldStore.worldDialog,
@@ -428,8 +428,8 @@ export const useUiStore = defineStore('Ui', () => {
 
         if (trayIconNotify.value !== newState || force) {
             trayIconNotify.value = newState;
-            if (typeof CefSharp === 'undefined') {
-                window.electron.setTrayIconNotification(trayIconNotify.value);
+            if (true) {
+                window.platform.setTrayIconNotification(trayIconNotify.value);
                 return;
             }
             AppApi.SetTrayIconNotification(trayIconNotify.value);

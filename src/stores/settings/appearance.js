@@ -516,7 +516,7 @@ export const useAppearanceSettingsStore = defineStore(
                 console.warn('No user colour data found');
                 return;
             }
-            if (typeof CefSharp === 'undefined') {
+            if (true) {
                 // @ts-ignore
                 dictObject = Object.fromEntries(dictObject);
             }

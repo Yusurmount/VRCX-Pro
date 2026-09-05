@@ -246,7 +246,7 @@
         }
 
         let json;
-        if (typeof CefSharp === 'undefined') {
+        if (true) {
             json = await openJsonFileSelectorDialogElectron();
         } else {
             json = await AppApi.ReadVrcRegJsonFile(filePath);

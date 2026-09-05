@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "VRCX-Pro.Backend/1.0.0": {
+        "runtime": {
+          "VRCX-Pro.Backend.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "VRCX-Pro.Backend/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

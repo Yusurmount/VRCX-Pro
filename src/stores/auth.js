@@ -475,7 +475,7 @@ export const useAuthStore = defineStore('Auth', () => {
                 if (encryptionType === 'machineKey') {
                     try {
                         plaintext =
-                            await window.electron.machineDecrypt(
+                            await window.platform.machineDecrypt(
                                 storedPassword
                             );
                     } catch (e) {
@@ -668,7 +668,7 @@ export const useAuthStore = defineStore('Auth', () => {
                 }
             } else if (encryptionType === 'machineKey') {
                 try {
-                    password = await window.electron.machineDecrypt(password);
+                    password = await window.platform.machineDecrypt(password);
                 } catch (err) {
                     console.error(
                         'Machine key decrypt failed in relogin:',
@@ -734,7 +734,7 @@ export const useAuthStore = defineStore('Auth', () => {
      */
     async function encryptPasswordWithMachineKey(password) {
         try {
-            const encrypted = await window.electron.machineEncrypt(password);
+            const encrypted = await window.platform.machineEncrypt(password);
             return { encrypted, type: 'machineKey' };
         } catch (e) {
             console.error('Machine key encryption failed, storing as-is:', e);
@@ -752,7 +752,7 @@ export const useAuthStore = defineStore('Auth', () => {
     async function decryptPassword(password, encryptionType, primaryPassword) {
         if (encryptionType === 'machineKey') {
             try {
-                return await window.electron.machineDecrypt(password);
+                return await window.platform.machineDecrypt(password);
             } catch (e) {
                 console.error('Machine key decryption failed:', e);
                 return password;

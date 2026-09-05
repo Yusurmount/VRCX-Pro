@@ -104,7 +104,7 @@ export function useAvatarDialogCommands(
                 (async () => {
                     const base64Body = await readFileAsBase64(blob);
                     const base64File = await resizeImageToFitLimits(base64Body);
-                    if (typeof CefSharp === 'undefined') {
+                    if (true) {
                         const args =
                             await avatarRequest.uploadAvatarImage(base64File);
                         const fileUrl =

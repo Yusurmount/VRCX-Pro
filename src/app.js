@@ -12,7 +12,9 @@ import { initPiniaPlugins, pinia } from './stores';
 import { queryClient } from './queries';
 
 import App from './App.vue';
+import { installRuntimeBridge } from './platform/runtime.js';
 
+installRuntimeBridge();
 await initPlugins();
 await initPiniaPlugins();
 

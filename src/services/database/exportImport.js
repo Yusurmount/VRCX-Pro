@@ -22,8 +22,8 @@ const EXPORT_FILE_EXT = '.vrcxdb.json';
  */
 async function getSaveFilePath() {
     const defaultName = `VRCX_DB_${new Date().toISOString().slice(0, 10)}${EXPORT_FILE_EXT}`;
-    if (window.electron?.saveFileDialog) {
-        return window.electron.saveFileDialog(
+    if (window.platform?.saveFileDialog) {
+        return window.platform.saveFileDialog(
             defaultName,
             'VRCX Database Backup'
         );
@@ -43,11 +43,11 @@ async function getSaveFilePath() {
  * @returns {Promise<string|null>} Selected file path or null if cancelled
  */
 async function getOpenFilePath() {
-    if (window.electron?.openJsonFileDialog) {
-        return window.electron.openJsonFileDialog();
+    if (window.platform?.openJsonFileDialog) {
+        return window.platform.openJsonFileDialog();
     }
-    if (window.electron?.openFileDialog) {
-        return window.electron.openFileDialog();
+    if (window.platform?.openFileDialog) {
+        return window.platform.openFileDialog();
     }
     if (AppApi?.OpenFileSelectorDialog) {
         const filter = `VRCX Database Backup (*${EXPORT_FILE_EXT})|*${EXPORT_FILE_EXT}|All files (*.*)|*.*`;
@@ -62,8 +62,8 @@ async function getOpenFilePath() {
  * @returns {Promise<boolean>}
  */
 async function writeFile(filePath, content) {
-    if (window.electron?.writeFile) {
-        return window.electron.writeFile(filePath, content);
+    if (window.platform?.writeFile) {
+        return window.platform.writeFile(filePath, content);
     }
     if (AppApi?.WriteFileText) {
         AppApi.WriteFileText(filePath, content);
@@ -77,8 +77,8 @@ async function writeFile(filePath, content) {
  * @returns {Promise<string>}
  */
 async function readFile(filePath) {
-    if (window.electron?.readFile) {
-        return window.electron.readFile(filePath);
+    if (window.platform?.readFile) {
+        return window.platform.readFile(filePath);
     }
     if (AppApi?.ReadFileText) {
         return AppApi.ReadFileText(filePath);

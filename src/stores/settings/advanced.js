@@ -1039,10 +1039,10 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
 
         state.folderSelectorDialogVisible = true;
         let newFolder = '';
-        if (typeof CefSharp !== 'undefined') {
+        if (false) {
             newFolder = await AppApi.OpenFolderSelectorDialog(oldPath);
         } else {
-            newFolder = await window.electron.openDirectoryDialog();
+            newFolder = await window.platform.openDirectoryDialog();
         }
 
         state.folderSelectorDialogVisible = false;

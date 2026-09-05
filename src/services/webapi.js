@@ -21,7 +21,7 @@ class WebApiService {
         if (!options) {
             throw new Error('options is required');
         }
-        if (typeof CefSharp === 'undefined') {
+        if (true) {
             const requestJson = JSON.stringify(options);
             var json = await WebApi.ExecuteJson(requestJson);
             var data = JSON.parse(json);

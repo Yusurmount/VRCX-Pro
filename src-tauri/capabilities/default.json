@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "VRCX-Pro desktop permissions",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    "notification:default",
+    "process:default",
+    "clipboard-manager:default"
+  ]
+}

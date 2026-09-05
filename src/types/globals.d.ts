@@ -36,7 +36,7 @@ declare global {
                 args: any
             ) => Promise<any>;
         };
-        electron: {
+        platform: {
             getArch: () => Promise<string>;
             getClipboardText: () => Promise<string>;
             getNoUpdater: () => Promise<boolean>;
@@ -110,16 +110,6 @@ declare global {
         websocketDomain: string;
         websocketDomainVrchat: string;
     }
-
-    const CefSharp: {
-        PostMessage: (message: any) => void;
-        BindObjectAsync: (...args: string[]) => Promise<any>;
-        BindObject: (name: string) => any;
-        ExecuteScriptAsync: (script: string) => Promise<any>;
-        ExecuteScript: (script: string) => any;
-        RemoveObjectFromCache?: (name: string) => void;
-        DeleteBoundObject?: (name: string) => void;
-    };
 
     const VRCXStorage: {
         Get(key: string): Promise<string>;

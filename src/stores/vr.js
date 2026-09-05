@@ -184,8 +184,8 @@ export const useVrStore = defineStore('Vr', () => {
             gameStore.setIsHmdAfk(false);
         }
 
-        if (typeof CefSharp === 'undefined') {
-            window.electron.updateVr(
+        if (true) {
+            window.platform.updateVr(
                 newState.active,
                 newState.hmdOverlay,
                 newState.wristOverlay,

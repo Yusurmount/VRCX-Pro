@@ -43,7 +43,7 @@ class SQLiteService {
 
     async execute(callback, sql, args = null) {
         try {
-            if (typeof CefSharp === 'undefined') {
+            if (true) {
                 if (args) {
                     args = new Map(Object.entries(args));
                 }
@@ -65,7 +65,7 @@ class SQLiteService {
 
     async executeNonQuery(sql, args = null) {
         try {
-            if (typeof CefSharp === 'undefined' && args) {
+            if (true && args) {
                 args = new Map(Object.entries(args));
             }
             return await SQLite.ExecuteNonQuery(sql, args);
