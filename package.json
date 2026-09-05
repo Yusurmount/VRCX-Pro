@@ -31,12 +31,15 @@
         "build:licenses": "node ./build-scripts/generate-third-party-licenses.js",
         "prod": "cross-env PLATFORM=windows vite build src && npm run build:licenses",
         "prod-linux": "cross-env PLATFORM=linux vite build src && npm run build:licenses",
-        "build:tauri-backend": "dotnet publish Dotnet/TauriBackend/VRCX-TauriBackend.csproj -c Release -r win-x64 --self-contained false -o build/TauriBackend",
+        "build:tauri-backend": "node scripts/build-tauri-backend.mjs",
         "verify:tauri": "node scripts/verify-tauri.mjs",
         "probe:tauri-backend": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/probe-tauri-backend.ps1",
         "tauri": "tauri",
         "tauri:dev": "tauri dev",
-        "tauri:build": "tauri build"
+        "tauri:build": "tauri build",
+        "dev:auto": "vite serve src",
+        "prod:auto": "vite build src && npm run build:licenses",
+        "build:tauri-backend:dev": "node scripts/build-tauri-backend.mjs --framework-dependent"
     },
     "dependencies": {
         "@tauri-apps/api": "^2.11.1",

@@ -38,7 +38,7 @@ export const useVrStore = defineStore('Vr', () => {
         { flush: 'sync' }
     );
 
-    // also runs from CEF C# on overlay browser startup
+    // also runs when the VR overlay browser starts
     function vrInit() {
         updateVRConfigVars();
         updateVRLastLocation();

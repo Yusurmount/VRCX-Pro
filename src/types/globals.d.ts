@@ -214,7 +214,7 @@ declare global {
         GetFileBase64(path: string): Promise<string | null>;
         TryOpenInstanceInVrc(launchUrl: string): Promise<boolean>;
 
-        // Image Upload (Cef Only)
+        // Image Upload
         MD5File(blob: string): Promise<string>;
         SignFile(blob: string): Promise<string>;
         FileLength(blob: string): Promise<string>;

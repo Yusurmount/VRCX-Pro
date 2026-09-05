@@ -4,13 +4,15 @@ import path from 'node:path';
 const root = process.cwd();
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const config = JSON.parse(fs.readFileSync(path.join(root, 'src-tauri/tauri.conf.json'), 'utf8'));
+const npmrc = fs.readFileSync(path.join(root, '.npmrc'), 'utf8');
+if (npmrc.includes('electron_mirror')) failures.push('legacy .npmrc electron_mirror setting');
 const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
 const failures = [];
 
 for (const dependency of ['electron', 'electron-builder', 'node-api-dotnet', 'hazardous']) {
     if (allDeps[dependency]) failures.push(`legacy dependency: ${dependency}`);
 }
-for (const directory of ['src-electron', 'src/ipc-electron']) {
+for (const directory of ['src-electron', 'src/ipc-electron', 'Installer', 'Dotnet/build-tools']) {
     if (fs.existsSync(path.join(root, directory))) failures.push(`legacy directory: ${directory}`);
 }
 const legacyFiles = [

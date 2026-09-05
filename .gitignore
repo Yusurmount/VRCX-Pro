@@ -8,8 +8,6 @@ Dotnet/TauriBackend/obj/
 *.log
 *.DotSettings.user
 .vs/
-Installer/version_define.nsh
-Installer/VRCX-Pro_Setup.exe
 VRCX-Pro_*Setup*.exe
 VRCX-Pro_Setup_*.exe
 SHA256SUMS.txt

@@ -1,1 +1,0 @@
-﻿!define PRODUCT_VERSION_FROM_FILE "2.3.0.0"

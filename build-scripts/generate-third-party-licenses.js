@@ -417,20 +417,25 @@ function createThirdPartyNoticeText(frontendLicenseMarkdown, entries) {
     return `${lines.join('\n').trimEnd()}\n`;
 }
 
+function collectCsprojFiles(directory) {
+    const entries = [];
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+        const fullPath = path.join(directory, entry.name);
+        if (entry.isDirectory() && !['bin', 'obj', 'obj1'].includes(entry.name)) {
+            entries.push(...collectCsprojFiles(fullPath));
+        } else if (entry.isFile() && entry.name.endsWith('.csproj')) {
+            entries.push(fullPath);
+        }
+    }
+    return entries;
+}
+
 function main() {
     ensureDirectory(outputDir);
 
     const frontendLicenseMarkdown = readFileIfExists(frontendLicensePath) || '';
     const frontendEntries = parseFrontendLicenses(frontendLicenseMarkdown);
-    const csprojFiles = fs
-        .readdirSync(dotnetDir)
-        .filter((fileName) => fileName.endsWith('.csproj'))
-        .map((fileName) => path.join(dotnetDir, fileName))
-        .concat(path.join(dotnetDir, 'DBMerger', 'DBMerger.csproj'))
-        .filter(
-            (filePath, index, filePaths) =>
-                filePaths.indexOf(filePath) === index && fs.existsSync(filePath)
-        );
+    const csprojFiles = collectCsprojFiles(dotnetDir).sort();
 
     const dotnetEntries = enrichDotnetEntries(mergeDotnetEntries(csprojFiles));
     const manifest = {
