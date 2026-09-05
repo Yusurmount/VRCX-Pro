@@ -11,6 +11,8 @@ Install Rust and the platform WebView prerequisites, then run:
 npm run tauri:dev
 ```
 
+Run `npm run verify:tauri` before packaging to ensure the old desktop runtime has not returned.
+
 The frontend bridge is in `src/platform/runtime.js`. Existing UI code can continue calling
 the platform facade while each operation is moved to a Tauri command. The .NET implementation
 will run as a separate sidecar and answer `dotnet_call` requests; no Node.js in-process hosting

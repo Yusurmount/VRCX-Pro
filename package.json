@@ -32,6 +32,7 @@
         "prod": "cross-env PLATFORM=windows vite build src && npm run build:licenses",
         "prod-linux": "cross-env PLATFORM=linux vite build src && npm run build:licenses",
         "build:tauri-backend": "dotnet publish Dotnet/TauriBackend/VRCX-TauriBackend.csproj -c Release -r win-x64 --self-contained false -o build/TauriBackend",
+        "verify:tauri": "node scripts/verify-tauri.mjs",
         "tauri": "tauri",
         "tauri:dev": "tauri dev",
         "tauri:build": "tauri build"
