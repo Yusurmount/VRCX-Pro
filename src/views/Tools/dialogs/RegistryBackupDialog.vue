@@ -206,7 +206,7 @@
     /**
      *
      */
-    async function openJsonFileSelectorDialogElectron() {
+    async function openJsonFileSelectorDialog() {
         return new Promise((resolve) => {
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
@@ -247,7 +247,7 @@
 
         let json;
         if (true) {
-            json = await openJsonFileSelectorDialogElectron();
+            json = await openJsonFileSelectorDialog();
         } else {
             json = await AppApi.ReadVrcRegJsonFile(filePath);
         }

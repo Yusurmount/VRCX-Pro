@@ -142,7 +142,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
                     });
                 } catch (err) {
                     console.error(
-                        'Failed to register Electron IPC handlers:',
+                        'Failed to register platform IPC handlers:',
                         err
                     );
                 }

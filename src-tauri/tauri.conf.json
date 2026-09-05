@@ -4,7 +4,7 @@
   "version": "2.2.0",
   "identifier": "app.vrcx",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "npm run build:tauri-backend && npm run dev",
     "devUrl": "http://localhost:9000",
     "beforeBuildCommand": "npm run prod && npm run build:tauri-backend",
     "frontendDist": "../build/html"

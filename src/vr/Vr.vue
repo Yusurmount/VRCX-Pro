@@ -1566,7 +1566,7 @@
 
     let isUnmounted = false;
     let updateStatsLoopTimeoutId = null;
-    let updateVrElectronLoopTimeoutId = null;
+    let updateVrOverlayLoopTimeoutId = null;
     let cleanHudFeedLoopTimeoutId = null;
 
     onMounted(() => {
@@ -1588,14 +1588,14 @@
         window.$vr.trackingResultToClass = trackingResultToClass;
         window.$vr.updateFeedLength = updateFeedLength;
         window.$vr.updateStatsLoop = updateStatsLoop;
-        window.$vr.updateVrElectronLoop = updateVrElectronLoop;
+        window.$vr.updateVrOverlayLoop = updateVrOverlayLoop;
         window.$vr.cleanHudFeedLoop = cleanHudFeedLoop;
         window.$vr.cleanHudFeed = cleanHudFeed;
 
         window.$vr.vrState = vrState;
 
         if (true) {
-            updateVrElectronLoop();
+            updateVrOverlayLoop();
         }
         refreshCustomScript();
         updateStatsLoop();
@@ -1613,9 +1613,9 @@
             workerTimers.clearTimeout(updateStatsLoopTimeoutId);
             updateStatsLoopTimeoutId = null;
         }
-        if (updateVrElectronLoopTimeoutId !== null) {
-            workerTimers.clearTimeout(updateVrElectronLoopTimeoutId);
-            updateVrElectronLoopTimeoutId = null;
+        if (updateVrOverlayLoopTimeoutId !== null) {
+            workerTimers.clearTimeout(updateVrOverlayLoopTimeoutId);
+            updateVrOverlayLoopTimeoutId = null;
         }
         if (cleanHudFeedLoopTimeoutId !== null) {
             workerTimers.clearTimeout(cleanHudFeedLoopTimeoutId);
@@ -1891,7 +1891,7 @@
     /**
      *
      */
-    async function updateVrElectronLoop() {
+    async function updateVrOverlayLoop() {
         try {
             const overlayQueue = await AppApiVr.GetExecuteVrOverlayFunctionQueue();
             if (overlayQueue) {
@@ -1913,7 +1913,7 @@
         if (isUnmounted) {
             return;
         }
-        updateVrElectronLoopTimeoutId = workerTimers.setTimeout(() => updateVrElectronLoop(), 500);
+        updateVrOverlayLoopTimeoutId = workerTimers.setTimeout(() => updateVrOverlayLoop(), 500);
     }
 
     /**

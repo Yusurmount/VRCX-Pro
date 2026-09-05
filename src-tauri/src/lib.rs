@@ -79,17 +79,16 @@ fn start_dotnet_sidecar(app: tauri::AppHandle, state: State<'_, DotnetSidecar>) 
     } else {
         "VRCX-Pro.Backend"
     };
-    let sidecar = app
-        .path()
-        .resource_dir()
-        .map_err(|error| error.to_string())?
-        .join("dotnet-runtime")
-        .join(sidecar_name);
-
-    if !sidecar.exists() {
+    let resource_dir = app.path().resource_dir().map_err(|error| error.to_string())?;
+    let candidates = [
+        resource_dir.join("dotnet-runtime").join(sidecar_name),
+        std::env::current_dir().map_err(|error| error.to_string())?.join("build/TauriBackend").join(sidecar_name),
+        resource_dir.join("../build/TauriBackend").join(sidecar_name),
+    ];
+    let Some(sidecar) = candidates.into_iter().find(|path| path.exists()) else {
         // Development builds can run without the backend; the frontend remains usable.
         return Ok(false);
-    }
+    };
 
     let mut child = Command::new(sidecar)
         .stdin(Stdio::piped())
