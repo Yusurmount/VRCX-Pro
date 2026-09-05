@@ -50,7 +50,10 @@ internal static class Program
         if (request.ClassName.Equals("VRCXStorage", StringComparison.OrdinalIgnoreCase)) return StorageMethod(request.MethodName, args);
         if (request.ClassName.Equals("SQLite", StringComparison.OrdinalIgnoreCase)) return await SqliteMethod(request.MethodName, args);
         if (request.ClassName.Equals("AppApi", StringComparison.OrdinalIgnoreCase)) return AppApiMethod(request.MethodName, args);
-        if (request.ClassName.Equals("WebApi", StringComparison.OrdinalIgnoreCase)) return true;
+        if (request.ClassName.Equals("WebApi", StringComparison.OrdinalIgnoreCase))
+            return request.MethodName.Equals("ExecuteJson", StringComparison.OrdinalIgnoreCase)
+                ? "{\"status\":0,\"message\":\"\"}"
+                : true;
         if (request.ClassName.Equals("LogWatcher", StringComparison.OrdinalIgnoreCase)) return request.MethodName.Equals("Get", StringComparison.OrdinalIgnoreCase) ? Array.Empty<object>() : true;
         if (request.ClassName.Equals("Discord", StringComparison.OrdinalIgnoreCase) || request.ClassName.Equals("AssetBundleManager", StringComparison.OrdinalIgnoreCase)) return true;
         return null;

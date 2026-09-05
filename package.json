@@ -33,6 +33,7 @@
         "prod-linux": "cross-env PLATFORM=linux vite build src && npm run build:licenses",
         "build:tauri-backend": "dotnet publish Dotnet/TauriBackend/VRCX-TauriBackend.csproj -c Release -r win-x64 --self-contained false -o build/TauriBackend",
         "verify:tauri": "node scripts/verify-tauri.mjs",
+        "probe:tauri-backend": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/probe-tauri-backend.ps1",
         "tauri": "tauri",
         "tauri:dev": "tauri dev",
         "tauri:build": "tauri build"
