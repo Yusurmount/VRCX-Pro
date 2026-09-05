@@ -5,6 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
  * The .NET backend can implement `dotnet_call` without changing callers.
  */
 class InteropApi {
+    requestId = 0;
     constructor() {
         return new Proxy(this, {
             get: (target, property) => {
@@ -22,8 +23,15 @@ class InteropApi {
         });
     }
 
-    callMethod(className, methodName, ...args) {
-        return invoke('dotnet_call', { className, methodName, args });
+    async callMethod(className, methodName, ...args) {
+        const response = await invoke('dotnet_call', {
+            className,
+            methodName,
+            args,
+            id: ++this.requestId
+        });
+        if (response?.ok === false) throw new Error(response.error || 'Sidecar request failed');
+        return response?.result ?? response;
     }
 }
 
