@@ -1,10 +1,16 @@
-use std::process::{Command, Stdio};
+use std::io::{BufRead, BufReader, Write};
+use std::process::{Child, ChildStdout, Command, Stdio};
 use std::sync::Mutex;
 use tauri::{Emitter, Manager, State};
 use serde_json::Value;
 use std::fs;
 
-struct DotnetSidecar(Mutex<Option<std::process::Child>>);
+struct SidecarProcess {
+    child: Child,
+    reader: BufReader<ChildStdout>,
+}
+
+struct DotnetSidecar(Mutex<Option<SidecarProcess>>);
 
 #[tauri::command]
 fn get_arch() -> String {
@@ -17,8 +23,36 @@ fn dotnet_status(state: State<'_, DotnetSidecar>) -> bool {
 }
 
 #[tauri::command]
-fn dotnet_call(_class_name: String, _method_name: String, _args: Vec<Value>) -> Result<Value, String> {
-    Err(".NET sidecar is not bundled in this development build".to_string())
+fn dotnet_call(
+    state: State<'_, DotnetSidecar>,
+    class_name: String,
+    method_name: String,
+    args: Vec<Value>,
+) -> Result<Value, String> {
+    let mut guard = state.0.lock().map_err(|_| "sidecar mutex poisoned".to_string())?;
+    let process = guard
+        .as_mut()
+        .ok_or_else(|| "The .NET sidecar is not running".to_string())?;
+    let stdin = process
+        .child
+        .stdin
+        .as_mut()
+        .ok_or_else(|| "sidecar stdin unavailable".to_string())?;
+    let request = serde_json::json!({
+        "id": 1,
+        "className": class_name,
+        "methodName": method_name,
+        "args": args
+    });
+    writeln!(stdin, "{}", request).map_err(|error| error.to_string())?;
+    stdin.flush().map_err(|error| error.to_string())?;
+
+    let mut response = String::new();
+    process
+        .reader
+        .read_line(&mut response)
+        .map_err(|error| error.to_string())?;
+    serde_json::from_str(response.trim()).map_err(|error| error.to_string())
 }
 
 #[tauri::command]
@@ -40,25 +74,37 @@ fn start_dotnet_sidecar(app: tauri::AppHandle, state: State<'_, DotnetSidecar>) 
         return Ok(true);
     }
 
+    let sidecar_name = if cfg!(target_os = "windows") {
+        "VRCX-Pro.Backend.exe"
+    } else {
+        "VRCX-Pro.Backend"
+    };
     let sidecar = app
         .path()
         .resource_dir()
         .map_err(|error| error.to_string())?
         .join("dotnet-runtime")
-        .join("VRCX-Pro.Backend.exe");
+        .join(sidecar_name);
 
     if !sidecar.exists() {
         // Development builds can run without the backend; the frontend remains usable.
         return Ok(false);
     }
 
-    let child = Command::new(sidecar)
+    let mut child = Command::new(sidecar)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
         .spawn()
         .map_err(|error| error.to_string())?;
-    *guard = Some(child);
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| "sidecar stdout unavailable".to_string())?;
+    *guard = Some(SidecarProcess {
+        child,
+        reader: BufReader::new(stdout),
+    });
     Ok(true)
 }
 

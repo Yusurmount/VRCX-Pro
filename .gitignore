@@ -2,6 +2,8 @@ node_modules/
 build/
 obj/
 obj1/
+Dotnet/TauriBackend/bin/
+Dotnet/TauriBackend/obj/
 .idea/
 *.log
 *.DotSettings.user
