@@ -13,6 +13,30 @@ for (const dependency of ['electron', 'electron-builder', 'node-api-dotnet', 'ha
 for (const directory of ['src-electron', 'src/ipc-electron']) {
     if (fs.existsSync(path.join(root, directory))) failures.push(`legacy directory: ${directory}`);
 }
+const legacyFiles = [
+    'Dotnet/VRCX-Cef.csproj',
+    'Dotnet/VRCX-Electron.csproj',
+    'Dotnet/VRCX-Electron-arm64.csproj',
+    'Dotnet/Cef',
+    'Dotnet/AppApi/Cef',
+    'Dotnet/AppApi/Electron',
+    'Dotnet/Overlay/Cef',
+    'Dotnet/Overlay/Electron'
+];
+for (const file of legacyFiles) {
+    if (fs.existsSync(path.join(root, file))) failures.push(`legacy artifact: ${file}`);
+}
+const legacyBuildEntrypoints = [
+    'build-windows-local.bat',
+    'build-scripts/build-all.ps1',
+    'build-scripts/dotnet/build-dotnet.cmd',
+    'build-scripts/make-junction.cmd',
+    'build-scripts/make-zip.cmd',
+    'Installer/installer.nsi'
+];
+for (const file of legacyBuildEntrypoints) {
+    if (fs.existsSync(path.join(root, file))) failures.push(`legacy build entrypoint: ${file}`);
+}
 if (packageJson.main) failures.push('package.json must not define an Electron main entry');
 if (config.build?.frontendDist !== '../build/html') failures.push('unexpected Tauri frontendDist');
 if (!config.bundle?.resources?.['../build/TauriBackend']) failures.push('Tauri .NET backend resource is missing');
