@@ -41,7 +41,7 @@ export function dataToExcelBlob(data, sheetName = 'Data') {
 }
 
 /**
- * 閫氳繃 Electron IPC 淇濆瓨鏂囦欢鍒扮鐩?
+ * 閫氳繃 native desktop IPC 淇濆瓨鏂囦欢鍒扮鐩?
  * @param {string} defaultName - 榛樿鏂囦欢鍚?
  * @param {Blob} blob - 鏂囦欢鍐呭
  * @param {string} [formatLabel] - 鏍煎紡鏍囩
@@ -51,7 +51,7 @@ export async function saveFileViaDialog(defaultName, blob, formatLabel) {
     try {
         const buffer = await blob.arrayBuffer();
 
-        // Electron path
+        // Native platform path
         if (window.platform?.saveFileDialog) {
             const result = await window.platform.saveFileDialog(
                 defaultName,
@@ -64,7 +64,7 @@ export async function saveFileViaDialog(defaultName, blob, formatLabel) {
             return { success: true };
         }
 
-        // platform path
+        // Legacy application API fallback
         if (AppApi?.SaveFileSelectorDialog && AppApi?.WriteFileBytes) {
             const ext = defaultName.includes('.')
                 ? defaultName.split('.').pop()

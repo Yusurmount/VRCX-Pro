@@ -5,13 +5,23 @@ import { sendNotification } from '@tauri-apps/plugin-notification';
 import { relaunch } from '@tauri-apps/plugin-process';
 
 const call = (command, args) => invoke(command, args).catch(() => null);
+const sidecarCall = (ready, className, methodName, args) =>
+    ready.then(() =>
+        invoke('dotnet_call', {
+            id: Date.now(),
+            className,
+            methodName,
+            args
+        }).then((response) => response?.result ?? response)
+    );
 
 export function installRuntimeBridge() {
     if (window.platform) return;
 
-    void call('start_dotnet_sidecar');
+    const ready = call('start_dotnet_sidecar');
 
     window.platform = {
+        ready,
         getArch: () => call('get_arch'),
         getNoUpdater: () => false,
         getClipboardText: () => readText(),
@@ -25,8 +35,8 @@ export function installRuntimeBridge() {
         writeFile: (filePath, buffer) =>
             call('write_file', { filePath, bytes: Array.from(new Uint8Array(buffer)) }),
         readFile: (filePath) => call('read_file', { filePath }),
-        machineEncrypt: (plaintext) => call('machine_encrypt', { plaintext }),
-        machineDecrypt: (encryptedData) => call('machine_decrypt', { encryptedData }),
+        machineEncrypt: (plaintext) => sidecarCall(ready, 'AppApi', 'MachineEncrypt', [plaintext]),
+        machineDecrypt: (encryptedData) => sidecarCall(ready, 'AppApi', 'MachineDecrypt', [encryptedData]),
         desktopNotification: (title, body) => sendNotification({ title, body }),
         restartApp: () => relaunch(),
         getOverlayWindow: () => call('get_overlay_window'),

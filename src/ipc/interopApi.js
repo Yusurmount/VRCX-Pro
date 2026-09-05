@@ -24,6 +24,7 @@ class InteropApi {
     }
 
     async callMethod(className, methodName, ...args) {
+        await window.platform?.ready;
         const response = await invoke('dotnet_call', {
             className,
             methodName,

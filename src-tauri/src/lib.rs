@@ -1,9 +1,9 @@
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdout, Command, Stdio};
 use std::sync::Mutex;
-use tauri::{Emitter, Manager, State};
 use serde_json::Value;
 use std::fs;
+use tauri::{Emitter, Manager, State};
 
 struct SidecarProcess {
     child: Child,
@@ -25,6 +25,7 @@ fn dotnet_status(state: State<'_, DotnetSidecar>) -> bool {
 #[tauri::command]
 fn dotnet_call(
     state: State<'_, DotnetSidecar>,
+    id: u64,
     class_name: String,
     method_name: String,
     args: Vec<Value>,
@@ -39,7 +40,7 @@ fn dotnet_call(
         .as_mut()
         .ok_or_else(|| "sidecar stdin unavailable".to_string())?;
     let request = serde_json::json!({
-        "id": 1,
+        "id": id,
         "className": class_name,
         "methodName": method_name,
         "args": args

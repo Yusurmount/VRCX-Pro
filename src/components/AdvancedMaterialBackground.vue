@@ -351,7 +351,7 @@
 
     // 圆形光源的高斯模糊静态结果 = 径向高斯分布。
     // 用 createRadialGradient 按高斯曲线精确采样渲染，规避 ctx.filter
-    // 在 Electron 环境不稳定的问题；模糊只计算一次，画布即为静态位图。
+    // 在 native desktop 环境不稳定的问题；模糊只计算一次，画布即为静态位图。
     function drawOrb(ctx, cx, cy, radius, color, alpha) {
         const sigma = radius / 3; // 高斯标准差：半径处强度衰减至约 1%
         const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);

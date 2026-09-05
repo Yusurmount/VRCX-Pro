@@ -106,8 +106,16 @@ internal static class Program
         "getzoom" => 1d,
         "setzoom" or "setuseragent" or "desktopnotification" or "flashwindow" or "focuswindow" or "setvr" => true,
         "getclipboard" => string.Empty,
+        "machineencrypt" => Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(args.FirstOrDefault().ToString())),
+        "machinedecrypt" => Decode(args.FirstOrDefault().ToString()),
         _ => null
     };
+
+    private static string Decode(string value)
+    {
+        try { return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(value)); }
+        catch { return value; }
+    }
 
     private static void LoadStorage()
     {
