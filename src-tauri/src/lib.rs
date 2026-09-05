@@ -3,6 +3,8 @@ use std::process::{Child, ChildStdout, Command, Stdio};
 use std::sync::Mutex;
 use serde_json::Value;
 use std::fs;
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::TrayIconBuilder;
 use tauri::{Emitter, Manager, State};
 
 struct SidecarProcess {
@@ -11,6 +13,8 @@ struct SidecarProcess {
 }
 
 struct DotnetSidecar(Mutex<Option<SidecarProcess>>);
+
+struct TrayState(Mutex<Option<tauri::tray::TrayIcon>>);
 
 #[tauri::command]
 fn get_arch() -> String {
@@ -108,6 +112,32 @@ fn start_dotnet_sidecar(app: tauri::AppHandle, state: State<'_, DotnetSidecar>) 
     Ok(true)
 }
 
+#[tauri::command]
+fn get_overlay_window() -> Option<Value> {
+    None
+}
+
+#[tauri::command]
+fn update_vr(active: bool, hmd_overlay: bool, wrist_overlay: bool, menu_button: bool, overlay_hand: u32) -> Result<bool, String> {
+    let _ = (active, hmd_overlay, wrist_overlay, menu_button, overlay_hand);
+    Ok(true)
+}
+
+#[tauri::command]
+fn set_tray_icon_notification(state: State<'_, TrayState>, notify: bool) -> Result<bool, String> {
+    if let Some(tray) = state.0.lock().map_err(|_| "tray mutex poisoned".to_string())?.as_ref() {
+        let tooltip = if notify { "VRCX-Pro: notification" } else { "VRCX-Pro" };
+        let _ = tray.set_tooltip(Some(tooltip));
+    }
+    Ok(true)
+}
+
+#[tauri::command]
+fn quit_application(app: tauri::AppHandle) -> Result<bool, String> {
+    app.exit(0);
+    Ok(true)
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -121,11 +151,48 @@ pub fn run() {
             }
         }))
         .manage(DotnetSidecar(Mutex::new(None)))
-        .invoke_handler(tauri::generate_handler![get_arch, dotnet_status, start_dotnet_sidecar, dotnet_call, read_file, write_file])
+        .manage(TrayState(Mutex::new(None)))
+        .invoke_handler(tauri::generate_handler![
+            get_arch,
+            dotnet_status,
+            start_dotnet_sidecar,
+            dotnet_call,
+            read_file,
+            write_file,
+            get_overlay_window,
+            update_vr,
+            set_tray_icon_notification,
+            quit_application
+        ])
         .setup(|app| {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_title("VRCX-Pro");
             }
+
+            let show_item = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+            let decoded = image::load_from_memory(include_bytes!("../../images/VRCX.png"))
+                .map_err(|error| error.to_string())?.to_rgba8();
+            let (width, height) = decoded.dimensions();
+            let tray_icon = tauri::image::Image::new_owned(decoded.into_raw(), width, height);
+            let tray = TrayIconBuilder::new()
+                .icon(tray_icon)
+                .menu(&menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| match event.id().as_ref() {
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "quit" => app.exit(0),
+                    _ => {}
+                })
+                .build(app)?;
+            *app.state::<TrayState>().0.lock().expect("tray mutex poisoned") = Some(tray);
+
             Ok(())
         })
         .run(tauri::generate_context!())

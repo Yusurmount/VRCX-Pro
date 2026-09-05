@@ -12,7 +12,7 @@ const failures = [];
 for (const dependency of ['electron', 'electron-builder', 'node-api-dotnet', 'hazardous']) {
     if (allDeps[dependency]) failures.push(`legacy dependency: ${dependency}`);
 }
-for (const directory of ['src-electron', 'src/ipc-electron', 'Installer', 'Dotnet/build-tools']) {
+for (const directory of ['src-electron', 'src/ipc-electron', 'Installer', 'Dotnet/build-tools', 'Dotnet/AppApi/Common', 'Dotnet/Overlay', 'Dotnet/ScreenshotMetadata']) {
     if (fs.existsSync(path.join(root, directory))) failures.push(`legacy directory: ${directory}`);
 }
 const legacyFiles = [
@@ -23,7 +23,8 @@ const legacyFiles = [
     'Dotnet/AppApi/Cef',
     'Dotnet/AppApi/Electron',
     'Dotnet/Overlay/Cef',
-    'Dotnet/Overlay/Electron'
+    'Dotnet/Overlay/Electron',
+    'Dotnet/docs/screenshotMetadata-schema.json'
 ];
 for (const file of legacyFiles) {
     if (fs.existsSync(path.join(root, file))) failures.push(`legacy artifact: ${file}`);

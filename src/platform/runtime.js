@@ -39,6 +39,7 @@ export function installRuntimeBridge() {
         machineDecrypt: (encryptedData) => sidecarCall(ready, 'AppApi', 'MachineDecrypt', [encryptedData]),
         desktopNotification: (title, body) => sendNotification({ title, body }),
         restartApp: () => relaunch(),
+        quitApplication: () => call('quit_application'),
         getOverlayWindow: () => call('get_overlay_window'),
         updateVr: (active, hmdOverlay, wristOverlay, menuButton, overlayHand) =>
             call('update_vr', { active, hmdOverlay, wristOverlay, menuButton, overlayHand }),

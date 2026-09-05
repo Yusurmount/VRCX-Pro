@@ -12,6 +12,11 @@ internal static class Program
     private static readonly object StorageLock = new();
     private static string StorageFile = string.Empty;
     private static string DatabaseFile = string.Empty;
+    private static string UpdateDirectory = string.Empty;
+    private static string? StagedUpdaterPath;
+    private static object? UpdatingLock;
+    private static CancellationTokenSource? UpdateCts;
+    private static volatile int UpdateProgress;
 
     public static async Task Main()
     {
@@ -19,6 +24,8 @@ internal static class Program
         Directory.CreateDirectory(dataDirectory);
         StorageFile = Path.Combine(dataDirectory, "storage.json");
         DatabaseFile = Path.Combine(dataDirectory, "VRCX.sqlite3");
+        UpdateDirectory = Path.Combine(Path.GetTempPath(), "VRCX", "update");
+        UpdatingLock = new object();
         LoadStorage();
 
         using var reader = new StreamReader(Console.OpenStandardInput());
@@ -104,12 +111,97 @@ internal static class Program
         "currentlanguage" => "en",
         "currentculture" => "en-US",
         "getzoom" => 1d,
-        "setzoom" or "setuseragent" or "desktopnotification" or "flashwindow" or "focuswindow" or "setvr" => true,
+        "setzoom" or "setuseragent" or "desktopnotification" or "flashwindow" or "focuswindow" => true,
+        "setvr" or "executevroverlayfunction" => true,
         "getclipboard" => string.Empty,
         "machineencrypt" => Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(args.FirstOrDefault().ToString())),
         "machinedecrypt" => Decode(args.FirstOrDefault().ToString()),
+        "downloadupdate" => StartUpdateDownload(args),
+        "checkupdateprogress" => CheckUpdateProgress(),
+        "cancelupdate" => CancelUpdate(),
+        "restartapplication" => RestartApplication(),
         _ => null
     };
+
+    private static bool StartUpdateDownload(JsonElement[] args)
+    {
+        var url = args.ElementAtOrDefault(0).GetString();
+        var hash = args.ElementAtOrDefault(1).GetString();
+        if (string.IsNullOrWhiteSpace(url)) return false;
+
+        lock (UpdatingLock!) { UpdateCts = new CancellationTokenSource(); UpdateProgress = 0; }
+        var cts = UpdateCts!;
+        _ = Task.Run(async () =>
+        {
+            var progress = 0;
+            try
+            {
+                Directory.CreateDirectory(UpdateDirectory);
+                using var client = new HttpClient();
+                using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+                response.EnsureSuccessStatusCode();
+                var total = response.Content.Headers.ContentLength ?? 0;
+                var fileName = Path.GetFileName(new Uri(url).AbsolutePath);
+                if (string.IsNullOrWhiteSpace(fileName)) fileName = "update.exe";
+                var target = Path.Combine(UpdateDirectory, fileName);
+                await using var source = await response.Content.ReadAsStreamAsync(cts.Token);
+                await using (var destination = File.Create(target))
+                {
+                    var buffer = new byte[81920];
+                    long read = 0;
+                    int bytes;
+                    while ((bytes = await source.ReadAsync(buffer, cts.Token)) > 0)
+                    {
+                        await destination.WriteAsync(buffer.AsMemory(0, bytes), cts.Token);
+                        read += bytes;
+                        if (total > 0 && read < total)
+                        {
+                            var percent = (int)(read * 100 / total);
+                            if (percent != progress) { progress = percent; UpdateProgress = progress; }
+                        }
+                        else
+                        {
+                            progress = 99; UpdateProgress = progress;
+                        }
+                    }
+                }
+                if (!string.IsNullOrWhiteSpace(hash))
+                {
+                    var actual = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(await File.ReadAllBytesAsync(target, cts.Token))).ToLowerInvariant();
+                    if (!string.Equals(actual, hash, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Update hash mismatch");
+                }
+                StagedUpdaterPath = target;
+                UpdateProgress = 100;
+            }
+            catch (Exception)
+            {
+                try { if (StagedUpdaterPath is string staged && File.Exists(staged)) File.Delete(staged); StagedUpdaterPath = null; } catch { }
+                UpdateProgress = 0;
+            }
+            finally
+            {
+                if (ReferenceEquals(UpdateCts, cts)) { UpdateCts?.Dispose(); UpdateCts = null; }
+            }
+        }, cts.Token);
+        return true;
+    }
+
+    private static int CheckUpdateProgress() => UpdateProgress;
+
+    private static bool CancelUpdate()
+    {
+        lock (UpdatingLock!) { UpdateCts?.Cancel(); }
+        UpdateProgress = 0;
+        return true;
+    }
+
+    private static object? RestartApplication()
+    {
+        if (!OperatingSystem.IsWindows()) return null;
+        lock (UpdatingLock!) if (StagedUpdaterPath is string staged && File.Exists(staged))
+            return System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { UseShellExecute = true, FileName = staged }) != null;
+        return false;
+    }
 
     private static string Decode(string value)
     {

@@ -447,9 +447,10 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         }
         return checkForVRCXUpdate();
     }
-    function restartVRCX(isUpgrade) {
+    async function restartVRCX(isUpgrade) {
         if (!LINUX) {
-            AppApi.RestartApplication(isUpgrade);
+            await AppApi.RestartApplication(isUpgrade);
+            window.platform.quitApplication();
         } else {
             window.platform.restartApp();
         }
