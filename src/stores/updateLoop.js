@@ -192,6 +192,18 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
         state.nextCurrentUserRefresh = value;
     }
 
+    /**
+     * API 限流自动降速：检测到 429 后，将各轮询类刷新统一推后，避免持续高频请求触发风控。
+     *
+     * @param {number} value 秒数
+     */
+    function applyRateLimitBackoff(value) {
+        state.nextCurrentUserRefresh = value;
+        state.nextFriendsRefresh = value;
+        state.nextGroupInstanceRefresh = value;
+        state.nextDiscordUpdate = value;
+    }
+
     return {
         // state,
 
@@ -204,6 +216,7 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
         setNextCurrentUserRefresh,
         setNextDiscordUpdate,
         setNextGroupInstanceRefresh,
-        setNextClearVRCXCacheCheck
+        setNextClearVRCXCacheCheck,
+        applyRateLimitBackoff
     };
 });

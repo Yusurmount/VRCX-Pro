@@ -71,6 +71,8 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
     const vrcRegistryAutoBackup = ref(true);
     const vrcRegistryAskRestore = ref(true);
     const sentryErrorReporting = ref(false);
+    const MIN_POLL_INTERVAL_SECONDS = 30;
+    const pollMinInterval = ref(60);
     watch(
         () => watchState.isLoggedIn,
         () => {
@@ -117,7 +119,8 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
             saveInstanceEmojiConfig,
             vrcRegistryAutoBackupConfig,
             vrcRegistryAskRestoreConfig,
-            sentryErrorReportingConfig
+            sentryErrorReportingConfig,
+            pollMinIntervalConfig
         ] = await Promise.all([
             configRepository.getBool('enablePrimaryPassword', false),
             configRepository.getString('VRCX_bioLanguage'),
@@ -168,6 +171,13 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
             configRepository.getBool('VRCX_vrcRegistryAskRestore', true),
             configRepository.getString('VRCX_SentryEnabled', '')
         ]);
+
+        if (Number.isFinite(pollMinIntervalConfig) && pollMinIntervalConfig > 0) {
+            pollMinInterval.value = Math.max(
+                pollMinIntervalConfig,
+                MIN_POLL_INTERVAL_SECONDS
+            );
+        }
 
         if (!bioLanguageConfig || !languageCodes.includes(bioLanguageConfig)) {
             bioLanguage.value = 'en';
@@ -1094,6 +1104,37 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
             .catch(() => {});
     }
 
+    async function setPollMinInterval(value) {
+        const parsed = parseInt(value, 10);
+        const clamped = Number.isFinite(parsed)
+            ? Math.max(parsed, MIN_POLL_INTERVAL_SECONDS)
+            : pollMinInterval.value;
+        pollMinInterval.value = clamped;
+        await configRepository.setInt('VRCX_pollMinInterval', clamped);
+    }
+
+    function promptPollMinInterval() {
+        modalStore
+            .prompt({
+                title: t('prompt.api_poll_interval.header'),
+                description: t('prompt.api_poll_interval.description', {
+                    min: MIN_POLL_INTERVAL_SECONDS
+                }),
+                confirmText: t('prompt.api_poll_interval.ok'),
+                cancelText: t('prompt.api_poll_interval.cancel'),
+                inputValue: pollMinInterval.value.toString(),
+                pattern: /\d+$/,
+                errorMessage: t('prompt.api_poll_interval.input_error')
+            })
+            .then(async ({ ok, value }) => {
+                if (!ok) return;
+                if (value && !isNaN(parseInt(value, 10))) {
+                    await setPollMinInterval(parseInt(value, 10));
+                }
+            })
+            .catch(() => {});
+    }
+
     return {
         state,
 
@@ -1137,6 +1178,7 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
         vrcRegistryAutoBackup,
         vrcRegistryAskRestore,
         sentryErrorReporting,
+        pollMinInterval,
 
         setEnablePrimaryPassword,
         setEnablePrimaryPasswordConfigRepository,
@@ -1190,6 +1232,8 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
         setVrcRegistryAskRestore,
         setSentryErrorReporting,
         checkSentryConsent,
-        askDeleteAllScreenshotMetadata
+        askDeleteAllScreenshotMetadata,
+        setPollMinInterval,
+        promptPollMinInterval
     };
 });

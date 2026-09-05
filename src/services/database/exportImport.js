@@ -63,7 +63,12 @@ async function getOpenFilePath() {
  */
 async function writeFile(filePath, content) {
     if (window.platform?.writeFile) {
-        return window.platform.writeFile(filePath, content);
+        // platform.writeFile expects an ArrayBuffer; encode string content
+        const bytes =
+            typeof content === 'string'
+                ? new TextEncoder().encode(content).buffer
+                : content;
+        return window.platform.writeFile(filePath, bytes);
     }
     if (AppApi?.WriteFileText) {
         AppApi.WriteFileText(filePath, content);
@@ -78,7 +83,10 @@ async function writeFile(filePath, content) {
  */
 async function readFile(filePath) {
     if (window.platform?.readFile) {
-        return window.platform.readFile(filePath);
+        const content = await window.platform.readFile(filePath);
+        if (typeof content === 'string') return content;
+        // platform.readFile returns a byte array (Vec<u8>); decode to string
+        return new TextDecoder().decode(new Uint8Array(content));
     }
     if (AppApi?.ReadFileText) {
         return AppApi.ReadFileText(filePath);

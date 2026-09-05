@@ -1,6 +1,6 @@
 {
     "name": "vrcx-pro",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "private": true,
     "description": "Friendship management tool for VRChat",
     "keywords": [
@@ -47,6 +47,7 @@
         "@tauri-apps/plugin-dialog": "^2.7.3",
         "@tauri-apps/plugin-notification": "^2.4.0",
         "@tauri-apps/plugin-process": "^2.3.1",
+        "gsap": "^3.15.0",
         "xlsx": "^0.18.5"
     },
     "devDependencies": {

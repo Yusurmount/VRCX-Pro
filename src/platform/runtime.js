@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { readText } from '@tauri-apps/plugin-clipboard-manager';
-import { sendNotification } from '@tauri-apps/plugin-notification';
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import { relaunch } from '@tauri-apps/plugin-process';
 
 const call = (command, args) => invoke(command, args).catch(() => null);
@@ -37,9 +37,16 @@ export function installRuntimeBridge() {
         readFile: (filePath) => call('read_file', { filePath }),
         machineEncrypt: (plaintext) => sidecarCall(ready, 'AppApi', 'MachineEncrypt', [plaintext]),
         machineDecrypt: (encryptedData) => sidecarCall(ready, 'AppApi', 'MachineDecrypt', [encryptedData]),
-        desktopNotification: (title, body) => sendNotification({ title, body }),
+        desktopNotification: async (title, body) => {
+            let granted = await isPermissionGranted();
+            if (!granted) {
+                granted = (await requestPermission()) === 'granted';
+            }
+            if (granted) sendNotification({ title, body });
+        },
         restartApp: () => relaunch(),
         quitApplication: () => call('quit_application'),
+        setCloseToTray: (enabled) => call('set_close_to_tray', { enabled }),
         getOverlayWindow: () => call('get_overlay_window'),
         updateVr: (active, hmdOverlay, wristOverlay, menuButton, overlayHand) =>
             call('update_vr', { active, hmdOverlay, wristOverlay, menuButton, overlayHand }),

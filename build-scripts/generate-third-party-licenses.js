@@ -49,7 +49,7 @@ function sanitizeId(value) {
 
 function extractXmlTagValue(xml, tagName) {
     const match = xml.match(
-        new RegExp(`<${tagName}>([\\s\\S]*?)<\\/${tagName}>`, 'i')
+        new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`, 'i')
     );
 
     return match?.[1]?.trim() || '';

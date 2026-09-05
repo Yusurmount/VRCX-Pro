@@ -13,6 +13,7 @@ import { database } from '../services/database';
 import { initWebsocket } from '../services/websocket';
 import { request } from '../services/request';
 import { runHandleAutoLoginFlow } from '../coordinators/authAutoLoginCoordinator';
+import { isOobeCompleted } from '../services/oobe';
 import { getCurrentUser } from '../coordinators/userCoordinator';
 import { useAdvancedSettingsStore } from './settings/advanced';
 import { useGeneralSettingsStore } from './settings/general';
@@ -209,6 +210,11 @@ export const useAuthStore = defineStore('Auth', () => {
      * @returns {Promise<void>}
      */
     async function autoLoginAfterMounted() {
+        // Temporarily disable auto-login while the OOBE wizard has not been completed,
+        // so it cannot interfere with the first-run flow.
+        if (!(await isOobeCompleted())) {
+            return;
+        }
         const canAutoLogin = await vrcxStore.waitForDatabaseInit();
         if (!canAutoLogin) {
             console.warn(

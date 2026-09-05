@@ -499,7 +499,8 @@
             "delete_tooltip": "删除",
             "unavailable_tooltip": "不可用",
             "private": "私人",
-            "select_avatar_tooltip": "更换为此模型"
+            "select_avatar_tooltip": "更换为此模型",
+            "copy_id_tooltip": "复制ID"
         },
         "friend_log": {
             "header": "好友日志",
@@ -528,7 +529,11 @@
                 "interactOff": "关闭模型互动",
                 "muteChat": "屏蔽聊天气泡",
                 "unmuteChat": "取消屏蔽聊天气泡"
-            }
+            },
+            "clear_all": "Clear All",
+            "clear_confirm_description": "WARNING: This will remove all \"{type}\" moderations from your account and cannot be undone. Continue?",
+            "clear_confirm_title": "Clear Moderations",
+            "clear_type_placeholder": "Clear all moderations"
         },
         "notification": {
             "header": "通知",
@@ -927,6 +932,9 @@
                 },
                 "favorites": {
                     "header": "收藏"
+                },
+                "friend_requests": {
+                    "header": "Friend Reqeusts"
                 }
             },
             "vr": {
@@ -970,6 +978,9 @@
                 },
                 "nightly": {
                     "header": "测试版选项"
+                },
+                "ui_debug": {
+                    "header": "界面调试"
                 }
             },
             "general": {
@@ -1048,11 +1059,15 @@
                     "header": "法律声明",
                     "info": "VRCX 是一个提供VRChat好友管理的辅助应用。这个程序使用了非官方的 VRChat API (VRCSDK)。",
                     "disclaimer1": "VRCX 不受 VRChat 的认可，也不反映 VRChat 或者任何正式参与制作或管理 VRChat 的人员/团体的观点或意见。VRChat 是 VRChat Inc. 的商标。 VRChat © VRChat Inc.",
-                    "disclaimer2": "pypy & Natsumi 及本项目的全体贡献者，均不对使用 VRCX 引起的任何问题负责。使用时请自负风险！",
+                    "disclaimer2": "pypy, Natsumi & Yusurmount 及本项目的全体贡献者，均不对使用 VRCX 引起的任何问题负责。使用时请自负风险！",
                     "open_source_software_notice": "开放源代码软件许可"
                 },
                 "contributors": {
                     "header": "贡献者们"
+                },
+                "friend_requests": {
+                    "header": "Auto-decline Spam Friend Requests",
+                    "header_tooltip": "Auto-decline requests from users you haven't met (never been in the same instance)."
                 }
             },
             "appearance": {
@@ -1298,6 +1313,11 @@
                     "vrcx_settings": {
                         "header": "VRCX"
                     },
+                    "api_request_interval": {
+                        "header": "VRChat API 请求间隔下限保护",
+                        "description": "触发 429 限流后，距下一次轮询请求的等待时间（最小 30 秒）。",
+                        "button": "当前：{value}秒"
+                    },
                     "primary_password": {
                         "header": "独立密码",
                         "description": "使用独立密码加密 VRCX 数据（将停用自动登录）"
@@ -1396,6 +1416,31 @@
                         "folder_tooltip": "如果要在 VRChat 启动时一并启动一些APP，请将其快捷方式放在这个文件夹中.",
                         "auto_close": "在 VRChat 关闭后自动关闭这些APP",
                         "run_process_once": "仅允许启动应用的单个实例（禁止多开）"
+                    },
+                    "ui_debug": {
+                        "header": "界面调试工具",
+                        "open": {
+                            "label": "界面调试工具",
+                            "description": "用于触发一些难以重现的弹窗和场景进行测试。",
+                            "button": "打开"
+                        },
+                        "oobe": {
+                            "label": "OOBE 向导",
+                            "desc": "从第一步开始打开首次启动向导。"
+                        },
+                        "reset_oobe": {
+                            "label": "重置 OOBE",
+                            "desc": "清除 OOBE 完成标记，然后重新打开向导。"
+                        },
+                        "welcome": {
+                            "label": "欢迎引导弹窗",
+                            "desc": "重置已见标记，重新显示欢迎引导弹窗。"
+                        },
+                        "toast": {
+                            "label": "测试提示通知",
+                            "desc": "显示一条示例提示通知。",
+                            "message": "这是界面调试工具发送的测试通知。"
+                        }
                     },
                     "cache_debug": {
                         "header": "VRCX 缓存/调试选项",
@@ -2942,6 +2987,13 @@
             "ok": "确定",
             "input_error": "请输入有效的值"
         },
+        "api_poll_interval": {
+            "header": "VRChat API 请求间隔下限保护",
+            "description": "输入 VRChat API 触发限流后两次轮询请求之间的最小间隔秒数。低于 {min} 秒的值将被钳位为 {min} 秒。",
+            "cancel": "取消",
+            "ok": "确定",
+            "input_error": "请输入有效的值"
+        },
         "new_local_favorite_group": {
             "message": {
                 "error": "名称为 {name} 的收藏夹已存在"
@@ -3148,6 +3200,7 @@
             "recommended_pair": "💡 {nameA} 和 {nameB} 可能是好友（判定得分: {score}）。"
         },
         "copy_failed": "复制失败",
+        "copy_success": "已复制到剪贴板",
         "error": "错误"
     },
     "notifications": {
@@ -3502,5 +3555,72 @@
         "view_merged": "合并视图",
         "view_mode": "视图模式",
         "view_primary": "主账号"
+    },
+    "oobe": {
+        "back": "上一步",
+        "recovery": {
+            "title": "数据恢复",
+            "subtitle": "如果您之前备份过数据，可以在此导入备份文件进行恢复（可选）。",
+            "import": "选择备份文件并恢复",
+            "skip": "跳过，直接完成"
+        },
+        "left": {
+            "title": "欢迎使用 VRCX-Pro",
+            "subtitle": {
+                "welcome": "一种全新的方式来管理您的 VRChat 体验。",
+                "legal": "我们认真对待您的安全与透明。",
+                "warning": "一个非官方的辅助应用程序。",
+                "setup": "简单几步，让它成为您的专属。",
+                "login": "登录以开始使用。",
+                "complete": "一切就绪，尽情享受！"
+            }
+        },
+        "welcome": {
+            "title": "欢迎！",
+            "subtitle": "欢迎使用 VRCX-Pro，只需几步即可完成设置。",
+            "cta": "开始"
+        },
+        "legal": {
+            "title": "免责声明与开源协议声明",
+            "decline": "我不接受此声明",
+            "agree": "我已知晓"
+        },
+        "warning": {
+            "title": "账户安全提示",
+            "subtitle": "这不是官方应用程序。",
+            "body": "VRCX-Pro 是一个独立、非官方的 VRChat 辅助工具，不受 VRChat 官方认可或支持。请特别注意以下账户安全事项：",
+            "account_1": "VRCX-Pro 会使用您的 VRChat 账户凭据进行登录，请勿将账户信息分享给任何人。",
+            "account_2": "本项目为开源软件，请从官方或可信渠道获取，谨防仿冒或篡改版本。",
+            "account_3": "请勿滥用 API 或违反 VRChat 服务条款（ToS）。此类行为可能导致您的 VRChat 账户被封禁。",
+            "acknowledge": "我已知晓"
+        },
+        "setup": {
+            "title": "快速设置",
+            "subtitle": "选择下列偏好设置，您随时可以在设置界面中更改。",
+            "tray": "关闭到系统托盘",
+            "tray_desc": "关闭窗口时最小化到系统托盘",
+            "startup": "开机自启",
+            "startup_desc": "Windows 启动时自动运行 VRCX-Pro",
+            "minimized": "最小化启动",
+            "minimized_desc": "启动时以最小化到托盘方式运行",
+            "theme": "深色主题",
+            "theme_desc": "界面使用深色主题",
+            "language": "语言",
+            "language_desc": "选择界面语言",
+            "next": "下一步"
+        },
+        "login": {
+            "title": "登录您的账户",
+            "subtitle": "使用您的 VRChat 账户登录以继续。",
+            "go": "登录",
+            "useSelected": "使用所选账户登录",
+            "addAccount": "添加新账户",
+            "backToAccounts": "返回账户列表"
+        },
+        "complete": {
+            "title": "万事大吉",
+            "subtitle": "一切准备就绪",
+            "enter": "进入 VRCX-Pro"
+        }
     }
 }

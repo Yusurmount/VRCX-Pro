@@ -977,6 +977,9 @@
                 },
                 "nightly": {
                     "header": "Nightly"
+                },
+                "ui_debug": {
+                    "header": "UI Debug"
                 }
             },
             "general": {
@@ -1055,7 +1058,7 @@
                     "header": "Legal Notice",
                     "info": "VRCX is an assistant application for VRChat that provides information about and managing friendship. This application makes use of the unofficial VRChat API SDK.",
                     "disclaimer1": "VRCX is not endorsed by VRChat and does not reflect the views or opinions of VRChat or anyone officially involved in producing or managing VRChat properties. VRChat and all associated properties are trademarks or registered trademarks of VRChat Inc. VRChat © VRChat Inc.",
-                    "disclaimer2": "pypy & Natsumi and all contributors are not responsible for any problems caused by VRCX. Use at your own risk!",
+                    "disclaimer2": "pypy, Natsumi & Yusurmount and all contributors are not responsible for any problems caused by VRCX. Use at your own risk!",
                     "open_source_software_notice": "Open Source Software Notice"
                 },
                 "contributors": {
@@ -1309,6 +1312,11 @@
                     "vrcx_settings": {
                         "header": "VRCX"
                     },
+                    "api_request_interval": {
+                        "header": "VRChat API Request Interval Protection",
+                        "description": "Wait time after a 429 rate limit before the next polling request (min 30s).",
+                        "button": "Current: {value}s"
+                    },
                     "primary_password": {
                         "header": "Primary Password",
                         "description": "Encrypt Password (Disables Auto Login)"
@@ -1407,6 +1415,31 @@
                         "folder_tooltip": "To auto-launch apps with VRChat, place shortcuts inside this folder, alteratively use the platform-specific subfolders, Steam app shortcuts are also supported",
                         "auto_close": "Auto Close Apps",
                         "run_process_once": "Open Single Instance of App"
+                    },
+                    "ui_debug": {
+                        "header": "UI Debug Tool",
+                        "open": {
+                            "label": "UI Debug Tool",
+                            "description": "Trigger hard-to-reach popups and scenes for testing.",
+                            "button": "Open"
+                        },
+                        "oobe": {
+                            "label": "OOBE Wizard",
+                            "desc": "Open the first-run wizard from step 1."
+                        },
+                        "reset_oobe": {
+                            "label": "Reset OOBE",
+                            "desc": "Clear the OOBE completion flag, then reopen the wizard."
+                        },
+                        "welcome": {
+                            "label": "Welcome Dialog",
+                            "desc": "Reset the seen flag and show the welcome dialog again."
+                        },
+                        "toast": {
+                            "label": "Test Toast",
+                            "desc": "Show a sample toast notification.",
+                            "message": "This is a test notification from the UI debug tool."
+                        }
                     },
                     "cache_debug": {
                         "header": "VRCX Instance Cache/Debug",
@@ -2953,6 +2986,13 @@
             "ok": "OK",
             "input_error": "Valid number is required"
         },
+        "api_poll_interval": {
+            "header": "VRChat API Request Interval Protection",
+            "description": "Enter the minimum interval in seconds between VRChat API requests after a rate limit. Values below {min} seconds will be clamped to {min}.",
+            "cancel": "Cancel",
+            "ok": "OK",
+            "input_error": "Valid number is required"
+        },
         "new_local_favorite_group": {
             "message": {
                 "error": "Group already exists with the name {name}"
@@ -3159,6 +3199,7 @@
             "recommended_pair": "💡 {nameA} and {nameB} may be friends (Score: {score})."
         },
         "copy_failed": "Copy failed",
+        "copy_success": "Copied to clipboard",
         "error": "Error"
     },
     "notifications": {
@@ -3513,5 +3554,72 @@
         "view_mode": "View Mode",
         "view_merged": "Merged View",
         "view_primary": "Primary Account"
+    },
+    "oobe": {
+        "back": "Back",
+        "recovery": {
+            "title": "Data Recovery",
+            "subtitle": "If you have a previous backup, you can import it here to restore your data (optional).",
+            "import": "Choose backup file and restore",
+            "skip": "Skip and finish"
+        },
+        "left": {
+            "title": "Welcome to VRCX-Pro",
+            "subtitle": {
+                "welcome": "A new way to manage your VRChat experience.",
+                "legal": "We take your safety and transparency seriously.",
+                "warning": "An unofficial assistant application.",
+                "setup": "Make it yours in a few quick steps.",
+                "login": "Sign in to get started.",
+                "complete": "You're all set. Enjoy!"
+            }
+        },
+        "welcome": {
+            "title": "Welcome!",
+            "subtitle": "Thank you for choosing VRCX-Pro. Let's get you set up in just a few steps.",
+            "cta": "Get Started"
+        },
+        "legal": {
+            "title": "Legal Notice & Disclaimer",
+            "decline": "I Do Not Agree",
+            "agree": "I Agree & Continue"
+        },
+        "warning": {
+            "title": "Account Security Notice",
+            "subtitle": "This is not an official application.",
+            "body": "VRCX-Pro is an independent, unofficial assistant tool for VRChat. It is not endorsed or supported by VRChat. Please pay attention to the following account security points:",
+            "account_1": "VRCX-Pro signs in using your VRChat account credentials. Never share your account information with anyone.",
+            "account_2": "This project is open source. Download it from official or trusted sources and beware of fake or tampered builds.",
+            "account_3": "Do not abuse the API or violate the VRChat Terms of Service (ToS). Doing so may result in your VRChat account being banned.",
+            "acknowledge": "I Understand, Continue"
+        },
+        "setup": {
+            "title": "Quick Setup",
+            "subtitle": "Choose a few preferences below. You can change them anytime in Settings.",
+            "tray": "Close to System Tray",
+            "tray_desc": "Minimize to the tray when closing the window",
+            "startup": "Launch at Startup",
+            "startup_desc": "Start VRCX-Pro automatically when Windows starts",
+            "minimized": "Start Minimized",
+            "minimized_desc": "Start the application minimized to the tray",
+            "theme": "Dark Theme",
+            "theme_desc": "Use the dark theme for the interface",
+            "language": "Language",
+            "language_desc": "Choose the interface language",
+            "next": "Next"
+        },
+        "login": {
+            "title": "Sign in to your account",
+            "subtitle": "Log in with your VRChat account to continue.",
+            "go": "Go to Login",
+            "useSelected": "Sign in with selected account",
+            "addAccount": "Add new account",
+            "backToAccounts": "Back to account list"
+        },
+        "complete": {
+            "title": "Configuration Complete",
+            "subtitle": "Everything is ready. Click below to enter VRCX-Pro.",
+            "enter": "Enter VRCX-Pro"
+        }
     }
 }

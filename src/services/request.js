@@ -1,6 +1,7 @@
 import { toast } from 'vue-sonner';
 
 import {
+    useAdvancedSettingsStore,
     useAuthStore,
     useModalStore,
     useNotificationStore,
@@ -89,6 +90,7 @@ export function request(endpoint, options) {
     const modalStore = useModalStore();
     const notificationStore = useNotificationStore();
     const updateLoopStore = useUpdateLoopStore();
+    const advancedSettingsStore = useAdvancedSettingsStore();
     if (
         !watchState.isLoggedIn &&
         endpoint.startsWith('/auth') &&
@@ -136,6 +138,13 @@ export function request(endpoint, options) {
                 throw `API request blocked while logged out: ${endpoint}`;
             }
             const parsed = parseResponse(response);
+            if (parsed.status === 429) {
+                // API 限流友好提示（$throw 会给出 429 文案）+ 自动降速：推后各轮询刷新，避免持续触发风控。
+                // 保护间隔取自设置>高级的「VRChat API 请求间隔下限保护」，默认 60s、硬性下限 30s。
+                updateLoopStore.applyRateLimitBackoff(
+                    Math.max(advancedSettingsStore.pollMinInterval, 30)
+                );
+            }
             if (!isApiLogSuppressed()) {
                 const tag = `[API ${init.method}]`;
                 if (!parsed.data) {

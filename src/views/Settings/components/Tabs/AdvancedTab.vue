@@ -24,6 +24,14 @@
                 :description="t('view.settings.advanced.advanced.self_invite.description')">
                 <Switch :model-value="selfInviteOverride" @update:modelValue="setSelfInviteOverride" />
             </SettingsItem>
+
+            <SettingsItem
+                :label="t('view.settings.advanced.advanced.api_request_interval.header')"
+                :description="t('view.settings.advanced.advanced.api_request_interval.description')">
+                <Button size="sm" variant="outline" @click="promptPollMinInterval">
+                    {{ t('view.settings.advanced.advanced.api_request_interval.button', { value: pollMinInterval }) }}
+                </Button>
+            </SettingsItem>
         </SettingsGroup>
 
         <SettingsGroup :title="t('view.settings.advanced_groups.security.header')">
@@ -970,6 +978,16 @@
                 show-icon />
         </SettingsGroup>
 
+        <SettingsGroup :title="t('view.settings.advanced_groups.ui_debug.header')">
+            <SettingsItem
+                :label="t('view.settings.advanced.advanced.ui_debug.open.label')"
+                :description="t('view.settings.advanced.advanced.ui_debug.open.description')">
+                <Button size="sm" variant="outline" @click="isUIDebugDialogVisible = true">
+                    {{ t('view.settings.advanced.advanced.ui_debug.open.button') }}
+                </Button>
+            </SettingsItem>
+        </SettingsGroup>
+
         <template v-if="branch === 'Nightly'">
             <SettingsGroup :title="t('view.settings.advanced_groups.nightly.header')">
                 <SettingsItem
@@ -982,12 +1000,13 @@
 
         <RegistryBackupDialog />
         <PhotonSettings v-if="photonLoggingEnabled" />
+        <UIDebugDialog v-model:uidDialog="isUIDebugDialogVisible" />
     </div>
 </template>
 
 <script setup>
     import { Trash2, TriangleAlert, Download, Upload } from 'lucide-vue-next';
-    import { computed, reactive, ref } from 'vue';
+    import { computed, reactive, ref, shallowRef } from 'vue';
     import { toast } from 'vue-sonner';
     import { Button } from '@/components/ui/button';
     import { Input } from '@/components/ui/input';
@@ -1025,6 +1044,7 @@
 
     import PhotonSettings from '../PhotonSettings.vue';
     import RegistryBackupDialog from '../../../Tools/dialogs/RegistryBackupDialog.vue';
+    import UIDebugDialog from '../../dialogs/UIDebugDialog.vue';
     import SettingsGroup from '../SettingsGroup.vue';
     import SettingsItem from '../SettingsItem.vue';
 
@@ -1072,7 +1092,8 @@
         sqliteTableSizes,
         avatarAutoCleanup,
         purgeInProgress,
-        sentryErrorReporting
+        sentryErrorReporting,
+        pollMinInterval
     } = storeToRefs(advancedSettingsStore);
 
     const {
@@ -1088,7 +1109,8 @@
         setAvatarAutoCleanup,
         purgeAvatarFeedData,
         promptAutoClearVRCXCacheFrequency,
-        setSentryErrorReporting
+        setSentryErrorReporting,
+        promptPollMinInterval
     } = advancedSettingsStore;
 
     const configTreeData = ref({});
@@ -1116,8 +1138,10 @@
     // Import compatibility options
     const allowUserMismatch = ref(false); // Allow importing from a different account
 
-    // Import file data (cached between phases)
-    const importDataCache = ref(null);
+    // Import file data (cached between phases).
+    // Uses shallowRef so the full backup object is NOT deep-proxied: making a
+    // huge DB dump reactive exhausts renderer memory and crashes the app.
+    const importDataCache = shallowRef(null);
     const importFileSummary = ref(null);
     const importDiagnostics = ref(null);
 
@@ -1141,6 +1165,7 @@
     const resetConfirmInput = ref('');
     const resetInputError = ref(false);
     const resetError = ref('');
+    const isUIDebugDialogVisible = ref(false);
     const confirmationRequiredText = computed(() => {
         const now = new Date();
         const y = now.getFullYear();

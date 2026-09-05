@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "VRCX-Pro",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "identifier": "app.vrcx",
   "build": {
     "beforeDevCommand": "npm run build:tauri-backend:dev && npm run dev:auto",
@@ -19,7 +19,7 @@
         "minWidth": 960,
         "minHeight": 600,
         "resizable": true,
-        "decorations": false,
+        "decorations": true,
         "transparent": false
       }
     ],
@@ -32,6 +32,14 @@
     "targets": "all",
     "resources": {
       "../build/TauriBackend": "dotnet-runtime"
+    },
+    "windows": {
+      "nsis": {
+        "template": "templates/installer.nsi",
+        "installMode": "perMachine",
+        "installerIcon": "../images/VRCX.ico",
+        "uninstallerIcon": "../images/VRCX.ico"
+      }
     },
     "icon": [
       "../images/VRCX.png",

@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using System.Reflection;
 using System.Text.Json;
 
 namespace VRCX.TauriBackend;
@@ -18,6 +19,30 @@ internal static class Program
     private static CancellationTokenSource? UpdateCts;
     private static volatile int UpdateProgress;
 
+    // Version is injected at build time from the repository's `Version` file
+    // (`-p:Version`), so it stays in sync with the source of truth.
+    private static readonly string AppVersion = Assembly.GetExecutingAssembly()
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+        ?.InformationalVersion?.Split('+')[0] ?? "1.0.0";
+    public static readonly string Version = $"VRCX-Pro {AppVersion}";
+
+    public static string StorageGet(string key)
+    {
+        lock (StorageLock)
+        {
+            return Storage.TryGetValue(key, out var value) ? value : string.Empty;
+        }
+    }
+
+    public static void StorageSet(string key, string value)
+    {
+        lock (StorageLock)
+        {
+            Storage[key] = value;
+            File.WriteAllText(StorageFile, JsonSerializer.Serialize(Storage, JsonOptions));
+        }
+    }
+
     public static async Task Main()
     {
         var dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX");
@@ -27,6 +52,8 @@ internal static class Program
         UpdateDirectory = Path.Combine(Path.GetTempPath(), "VRCX", "update");
         UpdatingLock = new object();
         LoadStorage();
+        Sqlite.Init(DatabaseFile);
+        WebApi.Instance.Init();
 
         using var reader = new StreamReader(Console.OpenStandardInput());
         await using var writer = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
@@ -57,10 +84,7 @@ internal static class Program
         if (request.ClassName.Equals("VRCXStorage", StringComparison.OrdinalIgnoreCase)) return StorageMethod(request.MethodName, args);
         if (request.ClassName.Equals("SQLite", StringComparison.OrdinalIgnoreCase)) return await SqliteMethod(request.MethodName, args);
         if (request.ClassName.Equals("AppApi", StringComparison.OrdinalIgnoreCase)) return AppApiMethod(request.MethodName, args);
-        if (request.ClassName.Equals("WebApi", StringComparison.OrdinalIgnoreCase))
-            return request.MethodName.Equals("ExecuteJson", StringComparison.OrdinalIgnoreCase)
-                ? "{\"status\":0,\"message\":\"\"}"
-                : true;
+        if (request.ClassName.Equals("WebApi", StringComparison.OrdinalIgnoreCase)) return await WebApiMethod(request.MethodName, args);
         if (request.ClassName.Equals("LogWatcher", StringComparison.OrdinalIgnoreCase)) return request.MethodName.Equals("Get", StringComparison.OrdinalIgnoreCase) ? Array.Empty<object>() : true;
         if (request.ClassName.Equals("Discord", StringComparison.OrdinalIgnoreCase) || request.ClassName.Equals("AssetBundleManager", StringComparison.OrdinalIgnoreCase)) return true;
         return null;
@@ -107,7 +131,7 @@ internal static class Program
 
     private static object? AppApiMethod(string method, JsonElement[] args) => method.ToLowerInvariant() switch
     {
-        "getversion" => "2.2.0",
+        "getversion" => AppVersion,
         "currentlanguage" => "en",
         "currentculture" => "en-US",
         "getzoom" => 1d,
@@ -122,6 +146,20 @@ internal static class Program
         "restartapplication" => RestartApplication(),
         _ => null
     };
+
+    private static async Task<object?> WebApiMethod(string method, JsonElement[] args)
+    {
+        var arg = args.Length > 0 ? args[0] : default;
+        switch (method.ToLowerInvariant())
+        {
+            case "executejson": return await WebApi.Instance.ExecuteJson(arg.ValueKind == JsonValueKind.String ? arg.GetString() ?? "{}" : "{}");
+            case "getcookies": return WebApi.Instance.GetCookies();
+            case "setcookies": WebApi.Instance.SetCookies(arg.ValueKind == JsonValueKind.String ? arg.GetString() ?? string.Empty : string.Empty); return true;
+            case "clearcookies": WebApi.Instance.ClearCookies(); return true;
+            case "savecookies": WebApi.Instance.SaveCookies(); return true;
+            default: return true;
+        }
+    }
 
     private static bool StartUpdateDownload(JsonElement[] args)
     {

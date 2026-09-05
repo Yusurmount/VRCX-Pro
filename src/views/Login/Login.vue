@@ -303,6 +303,9 @@
      *
      */
     function postLoginRedirect() {
+        if (route.query.oobe === '1') {
+            return { name: 'oobe', query: { step: 'complete' } };
+        }
         const redirect = route.query.redirect;
         if (typeof redirect === 'string' && redirect.startsWith('/') && redirect !== '/login') {
             return redirect;

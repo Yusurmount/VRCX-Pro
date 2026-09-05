@@ -55,6 +55,9 @@
                         <DropdownMenuItem @click="handleOpenProfile">
                             {{ t('common.actions.view_details') }}
                         </DropdownMenuItem>
+                        <DropdownMenuItem @click="copyFriendId">
+                            {{ t('view.favorite.copy_id_tooltip') }}
+                        </DropdownMenuItem>
                         <DropdownMenuItem v-if="favorite.ref.state === 'online'" @click="friendRequestInvite">
                             {{ t('dialog.user.actions.request_invite') }}
                         </DropdownMenuItem>

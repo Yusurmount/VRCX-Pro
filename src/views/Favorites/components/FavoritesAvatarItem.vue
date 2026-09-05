@@ -53,6 +53,9 @@
                                 <DropdownMenuItem @click="handleViewDetails">
                                     {{ t('common.actions.view_details') }}
                                 </DropdownMenuItem>
+                                <DropdownMenuItem @click="copyFavoriteId">
+                                    {{ t('view.favorite.copy_id_tooltip') }}
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                     v-if="canSelectAvatar"
                                     :disabled="currentUser.currentAvatar === favorite.id"
@@ -196,6 +199,10 @@
 
     function handleViewDetails() {
         showAvatarDialog(props.favorite.id);
+    }
+
+    function copyFavoriteId() {
+        copyToClipboard(props.favorite.id, t('message.copy_success'));
     }
 
     function handleDeleteFavorite() {

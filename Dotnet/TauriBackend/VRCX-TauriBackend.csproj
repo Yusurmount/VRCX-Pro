@@ -6,8 +6,13 @@
     <Nullable>enable</Nullable>
     <AssemblyName>VRCX-Pro.Backend</AssemblyName>
     <RootNamespace>VRCX.TauriBackend</RootNamespace>
+    <!-- Default synced with the repository `Version` file; build-tauri-backend.mjs overrides it via -p:Version -->
+    <Version>2.3.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.7" />
   </ItemGroup>
 </Project>

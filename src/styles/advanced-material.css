@@ -138,13 +138,17 @@ html.use-advanced-material .x-container [class*='sticky'] {
 
 /* ------------------------------------------------------------------ */
 /* 侧边栏菜单项强调框：待选（hover/展开悬停）与已选（按下/选中）改为        */
-/* 半透明白色，与 66% 玻璃侧栏背景协调                                     */
+/* 半透明主题强调色，与 66% 玻璃侧栏背景协调（非纯色）                     */
 /* ------------------------------------------------------------------ */
 html.use-advanced-material [data-sidebar='menu-button']:hover,
 html.use-advanced-material
     [data-sidebar='menu-button'][data-state='open']:hover,
 html.use-advanced-material [data-sidebar='menu-sub-button']:hover {
-    background-color: color-mix(in oklab, white 12%, transparent);
+    background-color: color-mix(
+        in oklab,
+        var(--sidebar-accent) 30%,
+        transparent
+    );
     color: var(--sidebar-foreground);
 }
 
@@ -153,8 +157,43 @@ html.use-advanced-material [data-sidebar='menu-button'][data-active='true'],
 html.use-advanced-material [data-sidebar='menu-sub-button']:active,
 html.use-advanced-material
     [data-sidebar='menu-sub-button'][data-active='true'] {
-    background-color: color-mix(in oklab, white 18%, transparent);
+    background-color: color-mix(
+        in oklab,
+        var(--sidebar-accent) 48%,
+        transparent
+    );
     color: var(--sidebar-foreground);
+}
+
+/* ------------------------------------------------------------------ */
+/* 菜单项强调（下拉/右键/命令面板/下拉选择等小菜单按钮）：                 */
+/* 悬停高亮由基础 solid --accent 改为半透明主题强调色，非纯色             */
+/* ------------------------------------------------------------------ */
+html.use-advanced-material
+    [data-slot='dropdown-menu-item']:focus:not([data-disabled]):not(
+        [data-variant='destructive']
+    ),
+html.use-advanced-material
+    [data-slot='dropdown-menu-checkbox-item']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='dropdown-menu-radio-item']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='dropdown-menu-sub-trigger']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='context-menu-item']:focus:not([data-disabled]):not(
+        [data-variant='destructive']
+    ),
+html.use-advanced-material
+    [data-slot='context-menu-checkbox-item']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='context-menu-radio-item']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='context-menu-sub-trigger']:focus:not([data-disabled]),
+html.use-advanced-material [data-slot='select-item']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='command-item'][data-highlighted]:not([data-disabled]) {
+    background-color: color-mix(in oklab, var(--accent) 38%, transparent);
+    color: var(--accent-foreground);
 }
 
 /* ------------------------------------------------------------------ */
@@ -187,9 +226,9 @@ html.use-advanced-material
 html.use-advanced-material
     [data-slot='command-input']:hover:not(:focus-visible):not(:disabled),
 html.use-advanced-material
-    [data-slot='toggle-group-item']:hover:not(:focus-visible):not(:disabled):not(
-        [data-disabled]
-    ),
+    [data-slot='toggle-group-item']:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]),
 html.use-advanced-material
     [data-slot='radio-group-item']:hover:not(:focus-visible):not(:disabled),
 html.use-advanced-material
@@ -290,16 +329,20 @@ html.use-advanced-material
 /* ------------------------------------------------------------------ */
 
 /* 光晕透明度注册为可过渡属性：命中时 --am-a 由 0→1 平滑淡入，
-   切换/离开时 1→0 平滑淡出，避免 background-image 突变产生割裂感 */
+   切换/离开时 1→0 平滑淡出，避免 background-image 突变产生割裂感。
+   必须 inherits:true：光晕由实体的 ::before 渲染，需从实体继承 --am-a 值 */
 @property --am-a {
     syntax: '<number>';
-    inherits: false;
+    inherits: true;
     initial-value: 0;
 }
 
-/* 高光渲染在命中实体的背景层：background-image 位于 background-color
-   之上、内容之下，实体自身盖住高光（介于控件与背景之间）。
-   位置由 JS 写入 --am-mx/--am-my（相对实体百分比），透明度由 --am-a 控制 */
+/* 鼠标高光（两级渲染）：
+   1) 所有命中实体：用 background-image 在实体盒内画光晕（天然裁剪，
+      卡片/列表行等大控件不会溢出边缘），位置由 JS 写入 --am-mx/--am-my。
+   2) 小控件（图标按钮/裸图标，data-am-bleed 存在时）：额外用 ::before
+      画固定 520px 越界光晕并以光标为中心，避免被小盒子裁剪而看不到完整光晕。
+   透明度均由 --am-a 控制（0→1 平滑淡入/淡出）。 */
 html.use-advanced-material .am-glow-on {
     background-image: radial-gradient(
         260px circle at var(--am-mx, 50%) var(--am-my, 50%),
@@ -307,4 +350,25 @@ html.use-advanced-material .am-glow-on {
         transparent 70%
     );
     transition: --am-a 0.18s ease;
+}
+
+html.use-advanced-material .am-glow-on[data-am-bleed] {
+    isolation: isolate;
+}
+
+html.use-advanced-material .am-glow-on[data-am-bleed]::before {
+    content: '';
+    position: absolute;
+    left: var(--am-mx, 50%);
+    top: var(--am-my, 50%);
+    width: 520px;
+    height: 520px;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+        260px circle at 50% 50%,
+        rgba(255, 255, 255, calc(0.09 * var(--am-a))),
+        transparent 70%
+    );
 }
