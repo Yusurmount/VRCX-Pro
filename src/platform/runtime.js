@@ -46,6 +46,7 @@ export function installRuntimeBridge() {
         },
         restartApp: () => relaunch(),
         quitApplication: () => call('quit_application'),
+        showMainWindow: () => call('show_main_window'),
         setCloseToTray: (enabled) => call('set_close_to_tray', { enabled }),
         getOverlayWindow: () => call('get_overlay_window'),
         updateVr: (active, hmdOverlay, wristOverlay, menuButton, overlayHand) =>

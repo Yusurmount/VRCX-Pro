@@ -123,7 +123,7 @@ export const useAppearanceSettingsStore = defineStore(
         const accessibleStatusIndicators = ref(false);
         const useOfficialStatusColors = ref(true);
         const useAdvancedMaterial = ref(false);
-        // 启用高级材质时被强制遮蔽的主题模式（midnight/light），关闭时恢复
+        // 启用高级材质时被强制遮蔽的主题模式（midnight），关闭时恢复
         const themeModeBackup = ref('');
         const showNewDashboardButton = ref(true);
         const tableLimitsDialog = ref({
@@ -407,11 +407,8 @@ export const useAppearanceSettingsStore = defineStore(
                 false
             );
             applyAdvancedMaterialClass();
-            // 高级材质激活时午夜/浅色模式暂不可用:若持久化配置为二者之一,强制切到暗色
-            if (
-                useAdvancedMaterial.value &&
-                (themeMode.value === 'midnight' || themeMode.value === 'light')
-            ) {
+            // 高级材质激活时午夜模式暂不可用:若持久化配置为午夜,强制切到暗色
+            if (useAdvancedMaterial.value && themeMode.value === 'midnight') {
                 themeModeBackup.value = themeMode.value;
                 setThemeMode('dark');
             }
@@ -563,11 +560,8 @@ export const useAppearanceSettingsStore = defineStore(
          * @param {string} mode
          */
         function setThemeMode(mode) {
-            // 高级材质激活时,午夜/浅色模式暂不可用:统一按暗色处理
-            if (
-                useAdvancedMaterial.value &&
-                (mode === 'midnight' || mode === 'light')
-            ) {
+            // 高级材质激活时,午夜模式暂不可用:统一按暗色处理
+            if (useAdvancedMaterial.value && mode === 'midnight') {
                 mode = 'dark';
             } else if (
                 useAdvancedMaterial.value &&
@@ -1086,11 +1080,8 @@ export const useAppearanceSettingsStore = defineStore(
                 useAdvancedMaterial.value
             );
             if (useAdvancedMaterial.value) {
-                // 激活:午夜/浅色模式暂不可用,自动切到暗色并平滑过渡
-                if (
-                    themeMode.value === 'midnight' ||
-                    themeMode.value === 'light'
-                ) {
+                // 激活:午夜模式暂不可用,自动切到暗色并平滑过渡
+                if (themeMode.value === 'midnight') {
                     themeModeBackup.value = themeMode.value;
                     setThemeMode('dark');
                 }

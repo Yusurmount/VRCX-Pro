@@ -38,6 +38,12 @@ let reconnectTimer = null;
 let lastWebSocketMessage = '';
 let webSocketClosedGracefully = true;
 
+// Token cache to skip re-fetching /auth on every reconnect.
+const _authTokenTtl = 30 * 1000; // reuse a token fetched within the last 30s
+let _cachedAuthToken = null;
+let _cachedAuthTokenAt = 0;
+let _authTokenPromise = null; // in-flight /auth fetch shared by prewarm + connect
+
 /**
  * Reactive WebSocket state for status bar telemetry.
  * - connected: whether the WS is currently open
@@ -56,20 +62,50 @@ export function initWebsocket() {
     if (!watchState.isFriendsLoaded || webSocket !== null) {
         return;
     }
-    return request('auth', {
-        method: 'GET'
-    })
-        .then((json) => {
-            const args = {
-                json
-            };
-            if (args.json.ok) {
-                connectWebSocket(args.json.token);
+
+    // Reuse a recently fetched token to avoid the ~1s /auth round-trip
+    // (which goes through the .NET sidecar) on every reconnect.
+    if (_cachedAuthToken && Date.now() - _cachedAuthTokenAt < _authTokenTtl) {
+        connectWebSocket(_cachedAuthToken);
+        return;
+    }
+
+    return ensureAuthToken()
+        .then((token) => {
+            if (token) {
+                connectWebSocket(token);
             }
         })
         .catch((err) => {
             console.error('WebSocket init error:', err);
         });
+}
+
+/**
+ * Ensures a valid WS auth token is available, returning it. Reuses the cache
+ * or a shared in-flight request so prewarm and the connect path never issue
+ * two /auth calls.
+ * @returns {Promise<string | null>}
+ */
+function ensureAuthToken() {
+    if (_cachedAuthToken && Date.now() - _cachedAuthTokenAt < _authTokenTtl) {
+        return Promise.resolve(_cachedAuthToken);
+    }
+    if (_authTokenPromise === null) {
+        _authTokenPromise = request('auth', { method: 'GET' })
+            .then((json) => {
+                if (json?.ok) {
+                    _cachedAuthToken = json.token;
+                    _cachedAuthTokenAt = Date.now();
+                    return json.token;
+                }
+                return null;
+            })
+            .finally(() => {
+                _authTokenPromise = null;
+            });
+    }
+    return _authTokenPromise;
 }
 
 /**
@@ -86,7 +122,11 @@ function connectWebSocket(token) {
     const socket = new WebSocket(`${AppDebug.websocketDomain}/?auth=${token}`);
     socket.onopen = () => {
         wsState.connected = true;
-        if (!webSocketClosedGracefully && watchState.isLoggedIn && watchState.isFriendsLoaded) {
+        if (
+            !webSocketClosedGracefully &&
+            watchState.isLoggedIn &&
+            watchState.isFriendsLoaded
+        ) {
             console.warn('WebSocket reconnected after unexpected closure');
             webSocketClosedGracefully = true;
             notificationStore.refreshNotifications();
@@ -172,6 +212,10 @@ function connectWebSocket(token) {
  * @returns {void}
  */
 export function closeWebSocket() {
+    // Invalidate cached auth token after logout / manual close so we don't
+    // reuse a token for a different auth session.
+    _cachedAuthToken = null;
+    _cachedAuthTokenAt = 0;
     if (reconnectTimer !== null) {
         workerTimers.clearTimeout(reconnectTimer);
         reconnectTimer = null;
@@ -199,6 +243,24 @@ export function reconnectWebSocket() {
     }
     closeWebSocket();
     initWebsocket();
+}
+
+/**
+ * Pre-fetches the WS auth token as early as possible (in parallel with
+ * friend-list loading) and stores it in the cache, so that when friends are
+ * ready and initWebsocket runs, it can open the WS immediately without the
+ * ~1s /auth round-trip sitting on the critical path.
+ * @returns {void}
+ */
+export function prewarmAuthToken() {
+    if (!watchState.isLoggedIn) {
+        return;
+    }
+    // best-effort: kick off (or await) the shared /auth fetch so the token is
+    // cached by the time isFriendsLoaded flips and initWebsocket runs
+    ensureAuthToken().catch(() => {
+        // warmup is best-effort; initWebsocket will fetch if still absent
+    });
 }
 
 /**

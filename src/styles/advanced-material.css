@@ -45,7 +45,7 @@ html.use-advanced-material
         [data-slot='context-menu-sub-content'],
         [data-sonner-toast]
     ) {
-    background-color: color-mix(in oklab, var(--popover) 66%, transparent);
+    background-color: color-mix(in oklab, var(--popover) 50%, transparent);
     backdrop-filter: blur(3px);
     border-color: color-mix(in oklab, var(--foreground) 12%, transparent);
     box-shadow:
@@ -342,11 +342,18 @@ html.use-advanced-material
       卡片/列表行等大控件不会溢出边缘），位置由 JS 写入 --am-mx/--am-my。
    2) 小控件（图标按钮/裸图标，data-am-bleed 存在时）：额外用 ::before
       画固定 520px 越界光晕并以光标为中心，避免被小盒子裁剪而看不到完整光晕。
-   透明度均由 --am-a 控制（0→1 平滑淡入/淡出）。 */
+   透明度均由 --am-a 控制（0→1 平滑淡入/淡出）。
+   光晕颜色/强度为主题驱动：深色模式白色高光（照亮），浅色模式柔和深色
+   光晕（在浅色卡片上才能被看见），见下方 --am-glow-rgb / --am-glow-a。 */
+html.use-advanced-material {
+    --am-glow-rgb: 255, 255, 255;
+    --am-glow-a: 0.09;
+}
+
 html.use-advanced-material .am-glow-on {
     background-image: radial-gradient(
         260px circle at var(--am-mx, 50%) var(--am-my, 50%),
-        rgba(255, 255, 255, calc(0.09 * var(--am-a))),
+        rgba(var(--am-glow-rgb), calc(var(--am-glow-a) * var(--am-a))),
         transparent 70%
     );
     transition: --am-a 0.18s ease;
@@ -368,7 +375,112 @@ html.use-advanced-material .am-glow-on[data-am-bleed]::before {
     pointer-events: none;
     background: radial-gradient(
         260px circle at 50% 50%,
-        rgba(255, 255, 255, calc(0.09 * var(--am-a))),
+        rgba(var(--am-glow-rgb), calc(var(--am-glow-a) * var(--am-a))),
         transparent 70%
     );
+}
+
+/* ------------------------------------------------------------------ */
+/* 浅色模式适配：浅色主题（data-theme='light'）下背景为近白，部分深色效果      */
+/* 需针对浅色重调，避免不可见 / 发白 / 文字对比不足                          */
+/* ------------------------------------------------------------------ */
+
+/* 1) 鼠标光晕：深色白色光晕在浅色卡片上不可见，改为柔和深灰光晕并降低强度 */
+html.use-advanced-material[data-theme='light'] {
+    --am-glow-rgb: 24, 34, 51;
+    --am-glow-a: 0.055;
+}
+
+/* 2) 弹层可读性：浅色下把半透明遮罩加深（遮更多白色底 → 对比更强），
+   以深色前景描边 + 柔投影界定层级，替代深色模式几乎不可见的白色外发光 */
+html.use-advanced-material[data-theme='light']
+    :is(
+        [data-slot='dialog-content'],
+        [data-slot='alert-dialog-content'],
+        [data-slot='sheet-content']
+    ) {
+    background-color: color-mix(in oklab, var(--popover) 88%, transparent);
+    border-color: color-mix(in oklab, var(--foreground) 10%, transparent);
+    box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, var(--primary) 5%, transparent),
+        0 4px 16px -8px color-mix(in oklab, var(--foreground) 18%, transparent);
+}
+
+html.use-advanced-material[data-theme='light']
+    :is(
+        [data-slot='dropdown-menu-content'],
+        [data-slot='dropdown-menu-sub-content'],
+        [data-slot='popover-content'],
+        [data-slot='select-content'],
+        [data-slot='context-menu-content'],
+        [data-slot='context-menu-sub-content'],
+        [data-sonner-toast]
+    ) {
+    background-color: color-mix(in oklab, var(--popover) 78%, transparent);
+    border-color: color-mix(in oklab, var(--foreground) 10%, transparent);
+    box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, var(--primary) 5%, transparent),
+        0 4px 16px -8px color-mix(in oklab, var(--foreground) 16%, transparent);
+}
+
+/* 3) Tooltip：浅色下默认是亮底深字还是深底亮字取决于 --foreground。
+   浅色 --foreground 为近黑 → 组件深底亮字，但本文件把背景压成 66% 半透明后
+   文字（--background 近白）叠加在浅色基座上会低对比。这里加深背景后恢复对比 */
+html.use-advanced-material[data-theme='light'] [data-slot='tooltip-content'] {
+    background-color: color-mix(in oklab, var(--foreground) 92%, transparent);
+}
+
+/* 4) 主题色按钮：浅色下 66% 半透明主题色叠加在白色底上偏淡，加深提可读性 */
+html.use-advanced-material[data-theme='light'] [data-slot='button'].bg-primary {
+    background-color: color-mix(
+        in oklab,
+        var(--primary) 74%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material[data-theme='light']
+    [data-slot='button'].bg-primary:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]) {
+    background-color: color-mix(
+        in oklab,
+        var(--primary) 86%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material[data-theme='light']
+    [data-slot='button'].bg-secondary {
+    background-color: color-mix(
+        in oklab,
+        var(--secondary) 72%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material[data-theme='light']
+    [data-slot='button'].bg-secondary:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]) {
+    background-color: color-mix(
+        in oklab,
+        var(--secondary) 84%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material[data-theme='light']
+    [data-slot='button'].bg-destructive {
+    background-color: color-mix(
+        in oklab,
+        var(--destructive) 74%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material[data-theme='light']
+    [data-slot='button'].bg-destructive:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]) {
+    background-color: color-mix(
+        in oklab,
+        var(--destructive) 86%,
+        transparent
+    ) !important;
 }

@@ -2,6 +2,9 @@ import { dbVars } from '../database';
 
 import sqliteService from '../sqlite.js';
 
+// Fallback fetch limit when maxTableSize/searchTableSize are unusable.
+const DEFAULT_FEED_ENTRY_LIMIT = 25;
+
 const feed = {
     addGPSToDatabase(entry) {
         sqliteService.executeNonQuery(
@@ -262,6 +265,12 @@ const feed = {
         dateFrom = '',
         dateTo = ''
     ) {
+        // Guard against non-numeric values (e.g. an interop response envelope)
+        // leaking into @limit/@perTable, which breaks SQLite with datatype mismatch.
+        maxEntries = Number(maxEntries);
+        if (!Number.isFinite(maxEntries)) maxEntries = dbVars.searchTableSize;
+        if (!Number.isFinite(maxEntries)) maxEntries = DEFAULT_FEED_ENTRY_LIMIT;
+        if (maxEntries < -1) maxEntries = -1;
         if (search.startsWith('wrld_') || search.startsWith('grp_')) {
             return this.getFeedByInstanceId(search, filters, vipList);
         }
@@ -459,6 +468,12 @@ const feed = {
         vipList,
         maxEntries = dbVars.maxTableSize
     ) {
+        // Guard against non-numeric values (e.g. an interop response envelope)
+        // leaking into @limit/@perTable, which breaks SQLite with datatype mismatch.
+        maxEntries = Number(maxEntries);
+        if (!Number.isFinite(maxEntries)) maxEntries = dbVars.maxTableSize;
+        if (!Number.isFinite(maxEntries)) maxEntries = DEFAULT_FEED_ENTRY_LIMIT;
+        if (maxEntries < -1) maxEntries = -1;
         let vipQuery = '';
         const vipArgs = {};
         if (vipList.length > 0) {

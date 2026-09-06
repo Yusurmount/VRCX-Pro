@@ -172,7 +172,10 @@ export const useVrcxStore = defineStore('Vrcx', () => {
                 configRepository.getInt('VRCX_clearVRCXCacheFrequency', 172800),
                 ensureVRCXStorageDefault('VRCX_DatabaseLocation', ''),
                 ensureVRCXStorageDefault('VRCX_ProxyServer', ''),
-                ensureVRCXStorageDefault('VRCX_DisableGpuAcceleration', 'false'),
+                ensureVRCXStorageDefault(
+                    'VRCX_DisableGpuAcceleration',
+                    'false'
+                ),
                 ensureVRCXStorageDefault(
                     'VRCX_DisableVrOverlayGpuAcceleration',
                     'false'
@@ -187,7 +190,10 @@ export const useVrcxStore = defineStore('Vrcx', () => {
                     'VRCX_maxTableSize_v2',
                     DEFAULT_MAX_TABLE_SIZE
                 ),
-                configRepository.getInt('VRCX_searchLimit', DEFAULT_SEARCH_LIMIT)
+                configRepository.getInt(
+                    'VRCX_searchLimit',
+                    DEFAULT_SEARCH_LIMIT
+                )
             ]);
 
             clearVRCXCacheFrequency.value = clearVRCXCacheFrequencyValue;

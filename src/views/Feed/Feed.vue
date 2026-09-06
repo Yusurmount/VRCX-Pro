@@ -123,7 +123,7 @@
 </template>
 
 <script setup>
-    import { computed, ref } from 'vue';
+    import { computed, onMounted, ref } from 'vue';
     import { ListFilter, Star, Upload, Download } from 'lucide-vue-next';
     import { getLocalTimeZone, today } from '@internationalized/date';
     import { storeToRefs } from 'pinia';
@@ -358,6 +358,12 @@
         }
         feedTableLookup();
     }
+
+    // Reload the feed from the database whenever the view opens, so imported /
+    // reset data (e.g. after a DB restore) is shown instead of only realtime entries.
+    onMounted(() => {
+        feedTableLookup();
+    });
 </script>
 
 <style scoped>

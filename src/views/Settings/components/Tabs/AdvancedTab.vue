@@ -738,36 +738,38 @@
                             </summary>
                             <div class="mt-2 max-h-48 overflow-y-auto space-y-1">
                                 <div
-                                    v-for="t in importReport.tables"
-                                    :key="t.tableName"
+                                    v-for="tab in importReport.tables"
+                                    :key="tab.tableName"
                                     class="flex justify-between text-xs py-1 px-2 rounded hover:bg-muted">
-                                    <span class="truncate max-w-[180px]" :title="t.tableName">{{ t.tableName }}</span>
+                                    <span class="truncate max-w-[180px]" :title="tab.tableName">{{
+                                        tab.tableName
+                                    }}</span>
                                     <span class="shrink-0">
                                         <span
-                                            v-if="t.overwritten > 0"
+                                            v-if="tab.overwritten > 0"
                                             class="text-green-600 dark:text-green-400 ml-1"
                                             :title="t('view.settings.advanced.advanced.db_import.report_overwritten')"
-                                            >+{{ t.overwritten }}O</span
+                                            >+{{ tab.overwritten }}O</span
                                         >
                                         <span
-                                            v-if="t.added > 0"
+                                            v-if="tab.added > 0"
                                             class="text-blue-600 dark:text-blue-400 ml-1"
                                             :title="t('view.settings.advanced.advanced.db_import.report_added')"
-                                            >+{{ t.added }}A</span
+                                            >+{{ tab.added }}A</span
                                         >
                                         <span
-                                            v-if="t.skippedExisting > 0"
+                                            v-if="tab.skippedExisting > 0"
                                             class="text-muted-foreground ml-1"
                                             :title="
                                                 t('view.settings.advanced.advanced.db_import.report_skipped_existing')
                                             "
-                                            >-{{ t.skippedExisting }}SE</span
+                                            >-{{ tab.skippedExisting }}SE</span
                                         >
                                         <span
-                                            v-if="t.skippedNew > 0"
+                                            v-if="tab.skippedNew > 0"
                                             class="text-muted-foreground ml-1"
                                             :title="t('view.settings.advanced.advanced.db_import.report_skipped_new')"
-                                            >-{{ t.skippedNew }}SN</span
+                                            >-{{ tab.skippedNew }}SN</span
                                         >
                                     </span>
                                 </div>
@@ -1027,6 +1029,7 @@
         useAppearanceSettingsStore,
         useAuthStore,
         useAvatarStore,
+        useFeedStore,
         useGeneralSettingsStore,
         useGroupStore,
         useInstanceStore,
@@ -1039,6 +1042,11 @@
     import { authRequest, queryRequest } from '@/api';
     import { disableGameLogDialog } from '@/coordinators/gameLogCoordinator';
     import { clearVRCXCache } from '@/coordinators/vrcxCoordinator';
+    import {
+        getLocalWorldFavorites,
+        getLocalAvatarFavorites,
+        getLocalFriendFavorites
+    } from '@/coordinators/favoriteCoordinator';
     import { openExternalLink } from '@/shared/utils';
     import { exportDatabaseData, readImportFile, executeImport } from '@/services/database/exportImport';
 
@@ -1332,6 +1340,13 @@
             importReport.totalProcessed = result.report.totalProcessed;
             importReport.skippedTables = result.report.skippedTables ?? [];
             importReport.tables = result.report.tables;
+            // Reload local favorite stores from the freshly imported database so
+            // the UI tables reflect the imported data immediately.
+            getLocalWorldFavorites();
+            getLocalAvatarFavorites();
+            getLocalFriendFavorites();
+            // Reload the friend activity feed table.
+            useFeedStore().feedTableLookup();
             toast.success(
                 t('view.settings.advanced.advanced.db_import.success', {
                     importedCount: result.report.overwritten + result.report.added,

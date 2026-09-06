@@ -3558,6 +3558,7 @@
     },
     "oobe": {
         "back": "上一步",
+        "step_of": "第 {current} / {total} 步",
         "recovery": {
             "title": "数据恢复",
             "subtitle": "如果您之前备份过数据，可以在此导入备份文件进行恢复（可选）。",

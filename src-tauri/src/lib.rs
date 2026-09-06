@@ -32,6 +32,166 @@ fn set_app_user_model_id(app: &tauri::App) {
     }
 }
 
+/// Returns the `VT_LPWSTR` payload of a PROPVARIANT (tag at offset 0, pointer at
+/// offset 8). The caller must release the pointer with `CoTaskMemFree`.
+#[cfg(target_os = "windows")]
+unsafe fn propvar_string(
+    pv: &windows::Win32::System::Com::StructuredStorage::PROPVARIANT,
+) -> Option<*mut u16> {
+    let bytes = pv as *const windows::Win32::System::Com::StructuredStorage::PROPVARIANT
+        as *const u8;
+    if *(bytes as *const u16) != windows::Win32::System::Variant::VT_LPWSTR.0 {
+        return None;
+    }
+    let ptr = *(bytes.add(8) as *const *mut u16);
+    (!ptr.is_null()).then_some(ptr)
+}
+
+/// True if the NUL-terminated wide string at `ptr` equals `expected`.
+#[cfg(target_os = "windows")]
+unsafe fn wide_equals(ptr: *const u16, expected: &[u16]) -> bool {
+    let mut i = 0usize;
+    while i < expected.len() {
+        let c = *ptr.add(i);
+        if c != expected[i] {
+            return false;
+        }
+        if c == 0 {
+            return true;
+        }
+        i += 1;
+    }
+    *ptr.add(i) == 0
+}
+
+/// Windows silently discards toast notifications unless the toast AUMID (the Tauri
+/// `identifier`, `app.vrcx`) is registered on the system. Registration happens through a
+/// Start Menu shortcut that carries the `System.AppUserModel.ID` property. The NSIS
+/// installer creates that shortcut, but portable / direct-run builds (e.g. extracting the
+/// bundle without installing) never do, so notifications "fail silently".
+///
+/// As a safety net we ensure the per-user Start Menu shortcut (pointing at the current
+/// executable) carries that property, (re)creating it when missing. Dev builds running
+/// from `target/debug|release` are skipped: dev toasts already work through the
+/// notification plugin's dev fallback, and pointing a Start Menu shortcut at a build
+/// artifact would only pollute the menu.
+#[cfg(target_os = "windows")]
+fn ensure_toast_shortcut(app: &tauri::App) {
+    use windows::Win32::Storage::EnhancedStorage::PKEY_AppUserModel_ID;
+    use windows::Win32::System::Com::StructuredStorage::PROPVARIANT;
+    use windows::Win32::System::Com::{
+        CoCreateInstance, CoInitializeEx, CoTaskMemAlloc, CoTaskMemFree, CoUninitialize,
+        CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED, IPersistFile, STGM_READ,
+    };
+    use windows::Win32::System::Variant::VT_LPWSTR;
+    use windows::Win32::UI::Shell::PropertiesSystem::IPropertyStore;
+    use windows::Win32::UI::Shell::IShellLinkW;
+    use windows::core::{Interface, PCWSTR, GUID};
+
+    const CLSID_SHELL_LINK: GUID =
+        GUID::from_u128(0x00021401_0000_0000_c000_000000000046);
+
+    let Ok(appdata) = std::env::var("APPDATA") else {
+        return;
+    };
+    let start_menu = format!(
+        r"{}\Microsoft\Windows\Start Menu\Programs\VRCX-Pro.lnk",
+        appdata.trim_end_matches('\\')
+    );
+    let Ok(exe) = std::env::current_exe() else {
+        return;
+    };
+    let Some(exe_dir) = exe.parent() else {
+        return;
+    };
+    let dir_str = exe_dir.to_string_lossy().to_string();
+    if dir_str.ends_with(r"\target\debug") || dir_str.ends_with(r"\target\release") {
+        return;
+    }
+
+    let wide = |s: &str| -> Vec<u16> { s.encode_utf16().chain(std::iter::once(0)).collect() };
+    let aumid = app.config().identifier.clone();
+    let exe_wide = wide(&exe.to_string_lossy());
+    let dir_wide = wide(&exe_dir.to_string_lossy());
+    let lnk_wide = wide(&start_menu);
+    let aumid_wide = wide(&aumid);
+
+    // S_OK (first init) and S_FALSE (already initialized) are both success.
+    if unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) }.is_err() {
+        return;
+    }
+    let result = (|| -> windows::core::Result<()> {
+        let link: IShellLinkW =
+            unsafe { CoCreateInstance(&CLSID_SHELL_LINK, None, CLSCTX_INPROC_SERVER)? };
+
+        // A shortcut may already exist (e.g. created by the NSIS installer). Only
+        // act when it does not carry our AUMID yet.
+        if std::path::Path::new(&start_menu).exists() {
+            let persist: IPersistFile = link.cast()?;
+            unsafe {
+                persist.Load(PCWSTR(lnk_wide.as_ptr()), STGM_READ)?;
+            }
+            let store: IPropertyStore = link.cast()?;
+            let got = unsafe { store.GetValue(&PKEY_AppUserModel_ID)? };
+            let value = unsafe { propvar_string(&got) };
+            let present = value.is_some_and(|ptr| unsafe { wide_equals(ptr, &aumid_wide) });
+            if let Some(ptr) = value {
+                unsafe { CoTaskMemFree(Some(ptr as *const _)) };
+            }
+            if present {
+                return Ok(());
+            }
+            // Fall through and recreate the shortcut with the property set.
+        }
+
+        unsafe {
+            link.SetPath(PCWSTR(exe_wide.as_ptr()))?;
+            link.SetWorkingDirectory(PCWSTR(dir_wide.as_ptr()))?;
+        }
+
+        // The ShellLink class object also implements IPropertyStore; stamp the
+        // `System.AppUserModel.ID` property so Windows maps this AUMID to the app.
+        let store: IPropertyStore = link.cast()?;
+        // Build a VT_LPWSTR PROPVARIANT by hand (the InitPropVariant* helpers were
+        // dropped from windows-rs), allocating the string with CoTaskMemAlloc.
+        let mut var = PROPVARIANT::default();
+        let len_bytes = aumid_wide.len() * std::mem::size_of::<u16>();
+        let buf = unsafe { CoTaskMemAlloc(len_bytes) };
+        if buf.is_null() {
+            return Err(windows::core::Error::from_win32());
+        }
+        let pwsz = buf as *mut u16;
+        unsafe {
+            std::ptr::copy_nonoverlapping(aumid_wide.as_ptr(), pwsz, aumid_wide.len());
+        }
+        {
+            // `var` is zeroed. Write the PROPVARIANT head manually with the same
+            // memory layout windows-rs exposes: VARENUM tag at offset 0, three
+            // reserved u16 at offset 2..8 and the union's pointer at offset 8.
+            let bytes = &mut var as *mut PROPVARIANT as *mut u8;
+            unsafe {
+                *(bytes as *mut u16) = VT_LPWSTR.0;
+                *(bytes.add(8) as *mut *mut u16) = pwsz;
+            }
+        }
+        unsafe {
+            store.SetValue(&PKEY_AppUserModel_ID, &var)?;
+            store.Commit()?;
+        }
+        unsafe { CoTaskMemFree(Some(buf)) };
+
+        let persist: IPersistFile = link.cast()?;
+        unsafe {
+            persist.Save(PCWSTR(lnk_wide.as_ptr()), true)?;
+        }
+        Ok(())
+    })();
+    let _ = result;
+    unsafe {
+        let _ = CoUninitialize();
+    }
+}
+
 #[tauri::command]
 fn get_arch() -> String {
     std::env::consts::ARCH.to_string()
@@ -110,13 +270,17 @@ fn start_dotnet_sidecar(app: tauri::AppHandle, state: State<'_, DotnetSidecar>) 
         "VRCX-Pro.Backend"
     };
     let resource_dir = app.path().resource_dir().map_err(|error| error.to_string())?;
-    // In dev the bundled resource (`resource_dir/dotnet-runtime`) is only copied
-    // when the build script re-runs, so fall back to the freshly published
-    // backend at the repository root. `CARGO_MANIFEST_DIR` points at src-tauri.
+    // `CARGO_MANIFEST_DIR` points at src-tauri.
     let dev_backend = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../build/TauriBackend")
         .join(sidecar_name);
-    let candidates = [resource_dir.join("dotnet-runtime").join(sidecar_name), dev_backend];
+    // Prefer the freshly published backend in dev: `build:tauri-backend:dev`
+    // produces a framework-dependent build that runs with the system-installed
+    // .NET. The bundled `resource_dir/dotnet-runtime` only gets refreshed on a
+    // full `tauri build`, so an earlier self-contained publish there is stale
+    // and may fail even when .NET is installed. In packaged builds this dev
+    // path does not exist, so it falls back to the bundled runtime.
+    let candidates = [dev_backend, resource_dir.join("dotnet-runtime").join(sidecar_name)];
     let Some(sidecar) = candidates.into_iter().find(|path| path.exists()) else {
         // Development builds can run without the backend; the frontend remains usable.
         return Ok(false);
@@ -126,7 +290,8 @@ fn start_dotnet_sidecar(app: tauri::AppHandle, state: State<'_, DotnetSidecar>) 
     command
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::inherit());
+        .stderr(Stdio::inherit())
+        .env("VRCX_APP_EXE", std::env::current_exe().unwrap_or_default());
     #[cfg(target_os = "windows")]
     {
         // The backend is a console app; hide its window so no extra cmd window
@@ -178,6 +343,15 @@ fn set_close_to_tray(state: State<'_, CloseToTray>, enabled: bool) -> Result<boo
     Ok(true)
 }
 
+#[tauri::command]
+fn show_main_window(app: tauri::AppHandle) -> Result<bool, String> {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+    Ok(true)
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -204,7 +378,8 @@ pub fn run() {
             update_vr,
             set_tray_icon_notification,
             quit_application,
-            set_close_to_tray
+            set_close_to_tray,
+            show_main_window
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -222,7 +397,10 @@ pub fn run() {
         })
         .setup(|app| {
             #[cfg(target_os = "windows")]
-            set_app_user_model_id(app);
+            {
+                set_app_user_model_id(app);
+                ensure_toast_shortcut(app);
+            }
 
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_title("VRCX-Pro");

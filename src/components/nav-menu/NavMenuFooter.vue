@@ -68,7 +68,7 @@
                                     v-for="theme in themes"
                                     :key="theme"
                                     :model-value="themeMode === theme"
-                                    :disabled="isAdvancedMaterial && (theme === 'midnight' || theme === 'light')"
+                                    :disabled="isAdvancedMaterial && theme === 'midnight'"
                                     indicator-position="right"
                                     @select="emit('theme-select', theme)">
                                     <span>{{ themeDisplayName(theme) }}</span>

@@ -114,6 +114,24 @@ internal static class Program
         return true;
     }
 
+    /// <summary>
+    /// Converts a JSON parameter value to its proper CLR type. Binding every
+    /// argument as a raw string (JsonElement.ToString()) breaks SQLite type
+    /// affinity for INTEGER/REAL/NULL columns and causes "datatype mismatch"
+    /// / silent write failures during DB import. Nulls map to DBNull so the
+    /// parameter is treated as NULL rather than the literal text "null".
+    /// </summary>
+    private static object? ToClrValue(JsonElement el) => el.ValueKind switch
+    {
+        JsonValueKind.Null => DBNull.Value,
+        JsonValueKind.True => 1,
+        JsonValueKind.False => 0,
+        JsonValueKind.Number when el.TryGetInt64(out var l) => l,
+        JsonValueKind.Number when el.TryGetDouble(out var d) => d,
+        JsonValueKind.String => el.GetString(),
+        _ => el.GetRawText()
+    };
+
     private static async Task<object?> SqliteMethod(string method, JsonElement[] args)
     {
         await using var connection = new SqliteConnection($"Data Source={DatabaseFile}");
@@ -121,7 +139,7 @@ internal static class Program
         await using var command = connection.CreateCommand();
         command.CommandText = args.FirstOrDefault().GetString() ?? string.Empty;
         if (args.Length > 1 && args[1].ValueKind == JsonValueKind.Object)
-            foreach (var parameter in args[1].EnumerateObject()) command.Parameters.AddWithValue(parameter.Name, parameter.Value.ToString());
+            foreach (var parameter in args[1].EnumerateObject()) command.Parameters.AddWithValue(parameter.Name, ToClrValue(parameter.Value));
         if (method.Equals("ExecuteNonQuery", StringComparison.OrdinalIgnoreCase)) return await command.ExecuteNonQueryAsync();
         await using var rows = await command.ExecuteReaderAsync();
         var result = new List<object?[]>();
@@ -140,6 +158,7 @@ internal static class Program
         "getclipboard" => string.Empty,
         "machineencrypt" => Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(args.FirstOrDefault().ToString())),
         "machinedecrypt" => Decode(args.FirstOrDefault().ToString()),
+        "setstartup" => SetStartup(args),
         "downloadupdate" => StartUpdateDownload(args),
         "checkupdateprogress" => CheckUpdateProgress(),
         "cancelupdate" => CancelUpdate(),
@@ -158,6 +177,35 @@ internal static class Program
             case "clearcookies": WebApi.Instance.ClearCookies(); return true;
             case "savecookies": WebApi.Instance.SaveCookies(); return true;
             default: return true;
+        }
+    }
+
+    private static bool SetStartup(JsonElement[] args)
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
+            if (key is null) return false;
+
+            var enabled = args.ElementAtOrDefault(0).ValueKind == JsonValueKind.True ||
+                          (args.ElementAtOrDefault(0).ValueKind == JsonValueKind.String &&
+                           bool.TryParse(args.ElementAtOrDefault(0).GetString(), out var v) && v);
+            if (enabled)
+            {
+                var app = Environment.GetEnvironmentVariable("VRCX_APP_EXE");
+                if (string.IsNullOrWhiteSpace(app)) return false;
+                key.SetValue("VRCX-Pro", $"\"{app}\"", Microsoft.Win32.RegistryValueKind.String);
+            }
+            else
+            {
+                key.DeleteValue("VRCX-Pro", throwOnMissingValue: false);
+            }
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 

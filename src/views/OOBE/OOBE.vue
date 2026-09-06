@@ -1,5 +1,15 @@
 <template>
     <div class="oobe bg-background">
+        <!-- Top bar: step counter + segmented progress -->
+        <header class="oobe-header">
+            <span class="oobe-step-counter text-muted-foreground">
+                {{ t('oobe.step_of', { current: currentStep, total: 7 }) }}
+            </span>
+        </header>
+        <div class="oobe-progress" role="progressbar" :aria-valuenow="currentStep" aria-valuemin="1" aria-valuemax="7">
+            <div v-for="step in 7" :key="step" class="oobe-progress-segment" :class="{ active: step <= currentStep }" />
+        </div>
+
         <!-- Left: centered icon with SVG stroke animation -->
         <aside class="oobe-left">
             <Transition name="oobe-icon">
@@ -354,8 +364,13 @@
         logoClickCount.value += 1;
         if (logoClickCount.value < 10) return;
         logoClickCount.value = 0;
-        await completeOobe();
-        router.replace('/login');
+        try {
+            await completeOobe();
+        } catch (e) {
+            console.error('[OOBE] completeOobe failed:', e);
+        } finally {
+            router.replace('/login').catch((e) => console.error('[OOBE] navigation failed:', e));
+        }
     }
 
     const authStore = useAuthStore();
@@ -375,7 +390,13 @@
      * @returns {Promise<void>}
      */
     async function updateSavedCredentials() {
-        savedCredentials.value = await getAllSavedCredentials();
+        try {
+            savedCredentials.value = await getAllSavedCredentials();
+        } catch (e) {
+            // Never let a credential-loading failure break the wizard.
+            console.error('[OOBE] failed to load saved credentials:', e);
+            savedCredentials.value = {};
+        }
         if (hasSavedAccounts.value) {
             loginMode.value = 'list';
         }
@@ -395,8 +416,9 @@
                 currentStep.value = 6;
                 preloadFeed();
             }
-        } catch {
+        } catch (e) {
             // relogin already handles user-facing error display (toast)
+            console.error('[OOBE] relogin failed:', e);
         } finally {
             await updateSavedCredentials();
             loginBusy.value = false;
@@ -427,6 +449,10 @@
             if (watchState.isLoggedIn) {
                 preloadFeed();
             }
+        } catch (e) {
+            // API-level errors are already toasted by the global interceptor;
+            // log anything else (e.g. crypto/local failures) without crashing.
+            console.error('[OOBE] login failed:', e);
         } finally {
             loginBusy.value = false;
         }
@@ -522,12 +548,21 @@
         window.platform?.quitApplication?.();
     }
 
+    const finishing = ref(false);
+
     /**
      *
      */
     async function finish() {
-        await completeOobe();
-        router.replace('/feed');
+        if (finishing.value) return;
+        finishing.value = true;
+        try {
+            await completeOobe();
+        } catch (e) {
+            console.error('[OOBE] completeOobe failed:', e);
+        } finally {
+            router.replace('/feed').catch((e) => console.error('[OOBE] navigation failed:', e));
+        }
     }
 
     /**
@@ -601,6 +636,47 @@
         position: relative;
         z-index: 50;
         background-color: var(--background);
+    }
+
+    /* ---- Top bar ---- */
+    .oobe-header {
+        position: absolute;
+        top: 24px;
+        left: 36px;
+        right: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    .oobe-step-counter {
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .oobe-progress {
+        position: absolute;
+        top: 78px;
+        left: 36px;
+        right: 36px;
+        display: flex;
+        gap: 6px;
+    }
+
+    .oobe-progress-segment {
+        flex: 1;
+        height: 4px;
+        border-radius: 999px;
+        background-color: var(--muted-foreground);
+        opacity: 0.2;
+        transition:
+            opacity 0.3s ease,
+            background-color 0.3s ease;
+    }
+
+    .oobe-progress-segment.active {
+        opacity: 1;
+        background-color: var(--primary);
     }
 
     /* ---- Left icon ---- */
@@ -803,5 +879,31 @@
     .oobe-icon-leave-to {
         opacity: 0;
         transform: scale(1.05);
+    }
+
+    /* ---- Responsive: keep the layout usable in smaller windows ---- */
+    @media (max-width: 900px) {
+        .oobe {
+            gap: 48px;
+            padding: 40px 24px;
+        }
+
+        .oobe-left,
+        .oobe-icon-wrap,
+        .oobe-vrcx-logo,
+        .oobe-icon-svg {
+            width: 100px;
+            height: 100px;
+        }
+
+        .oobe-content {
+            width: min(440px, calc(100vw - 200px));
+        }
+    }
+
+    @media (max-width: 640px) {
+        .oobe-left {
+            display: none;
+        }
     }
 </style>

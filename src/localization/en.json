@@ -3557,6 +3557,7 @@
     },
     "oobe": {
         "back": "Back",
+        "step_of": "Step {current} of {total}",
         "recovery": {
             "title": "Data Recovery",
             "subtitle": "If you have a previous backup, you can import it here to restore your data (optional).",
