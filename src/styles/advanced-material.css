@@ -387,8 +387,16 @@ html.use-advanced-material .am-glow-on[data-am-bleed]::before {
 
 /* 1) 鼠标光晕：深色白色光晕在浅色卡片上不可见，改为柔和深灰光晕并降低强度 */
 html.use-advanced-material[data-theme='light'] {
+    /* 鼠标光晕：深色白色光晕在浅色卡片上不可见，改为柔和深灰光晕并降低强度 */
     --am-glow-rgb: 24, 34, 51;
     --am-glow-a: 0.055;
+
+    /* 大面积白底刺眼：把近纯白表面色（内容/侧栏/卡片）降为低饱和柔和浅色。
+       底部 canvas 通过 getComputedStyle 读取这些变量，底色随之柔和 */
+    --background: oklch(0.96 0.004 82);
+    --card: oklch(0.972 0.004 82);
+    --popover: oklch(0.985 0.003 82);
+    --sidebar: oklch(0.952 0.006 82);
 }
 
 /* 2) 弹层可读性：浅色下把半透明遮罩加深（遮更多白色底 → 对比更强），

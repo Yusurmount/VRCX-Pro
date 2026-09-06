@@ -1,6 +1,6 @@
 [package]
 name = "vrcx-pro"
-version = "3.0.0"
+version = "3.1.0"
 description = "Friendship management tool for VRChat"
 authors = ["VRCX Team"]
 edition = "2021"

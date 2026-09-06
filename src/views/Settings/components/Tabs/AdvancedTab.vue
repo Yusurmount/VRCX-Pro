@@ -377,7 +377,7 @@
                     if (!open) isExportDialogVisible = false;
                 }
             ">
-            <DialogContent class="x-dialog sm:max-w-md">
+            <DialogContent class="x-dialog sm:max-w-md" :show-close-button="false">
                 <DialogHeader>
                     <DialogTitle>{{ t('view.settings.advanced.advanced.db_export.confirm_title') }}</DialogTitle>
                 </DialogHeader>
@@ -460,7 +460,7 @@
                     if (!open) isImportDialogVisible = false;
                 }
             ">
-            <DialogContent class="x-dialog sm:max-w-lg">
+            <DialogContent class="x-dialog sm:max-w-lg" :show-close-button="false">
                 <DialogHeader>
                     <DialogTitle>
                         <template v-if="importPhase === 'strategy'">
