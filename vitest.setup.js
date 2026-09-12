@@ -3,7 +3,7 @@
  * Loads English locale messages into i18n so that
  * translation calls return expected values in tests.
  *
- * Provides global stubs for CefSharp IPC bindings.
+ * Provides global stubs for native IPC bindings.
  */
 
 import { i18n } from './src/plugins/i18n';
@@ -19,6 +19,29 @@ globalThis.SQLite = new Proxy({}, { get: () => noopAsync });
 globalThis.LogWatcher = new Proxy({}, { get: () => noopAsync });
 globalThis.Discord = new Proxy({}, { get: () => noopAsync });
 globalThis.AssetBundleManager = new Proxy({}, { get: () => noopAsync });
+globalThis.window.platform = {
+    getArch: noopAsync,
+    getNoUpdater: () => Promise.resolve(false),
+    getClipboardText: noopAsync,
+    setTrayIconNotification: noopAsync,
+    openFileDialog: noopAsync,
+    openJsonFileDialog: noopAsync,
+    openDirectoryDialog: noopAsync,
+    saveFileDialog: noopAsync,
+    writeFile: noopAsync,
+    readFile: noopAsync,
+    machineEncrypt: noopAsync,
+    machineDecrypt: noopAsync,
+    desktopNotification: noopAsync,
+    restartApp: noopAsync,
+    getOverlayWindow: noopAsync,
+    updateVr: noopAsync,
+    onWindowPositionChanged: () => () => {},
+    onWindowSizeChanged: () => () => {},
+    onWindowStateChange: () => () => {},
+    onBrowserFocus: () => () => {},
+    ipcRenderer: { on: () => undefined }
+};
 
 // ResizeObserver polyfill (needed by @dnd-kit/vue at import time)
 globalThis.ResizeObserver ??= class {

@@ -24,6 +24,14 @@
                 :description="t('view.settings.advanced.advanced.self_invite.description')">
                 <Switch :model-value="selfInviteOverride" @update:modelValue="setSelfInviteOverride" />
             </SettingsItem>
+
+            <SettingsItem
+                :label="t('view.settings.advanced.advanced.api_request_interval.header')"
+                :description="t('view.settings.advanced.advanced.api_request_interval.description')">
+                <Button size="sm" variant="outline" @click="promptPollMinInterval">
+                    {{ t('view.settings.advanced.advanced.api_request_interval.button', { value: pollMinInterval }) }}
+                </Button>
+            </SettingsItem>
         </SettingsGroup>
 
         <SettingsGroup :title="t('view.settings.advanced_groups.security.header')">
@@ -369,7 +377,7 @@
                     if (!open) isExportDialogVisible = false;
                 }
             ">
-            <DialogContent class="x-dialog sm:max-w-md">
+            <DialogContent class="x-dialog sm:max-w-md" :show-close-button="false">
                 <DialogHeader>
                     <DialogTitle>{{ t('view.settings.advanced.advanced.db_export.confirm_title') }}</DialogTitle>
                 </DialogHeader>
@@ -452,7 +460,7 @@
                     if (!open) isImportDialogVisible = false;
                 }
             ">
-            <DialogContent class="x-dialog sm:max-w-lg">
+            <DialogContent class="x-dialog sm:max-w-lg" :show-close-button="false">
                 <DialogHeader>
                     <DialogTitle>
                         <template v-if="importPhase === 'strategy'">
@@ -730,36 +738,38 @@
                             </summary>
                             <div class="mt-2 max-h-48 overflow-y-auto space-y-1">
                                 <div
-                                    v-for="t in importReport.tables"
-                                    :key="t.tableName"
+                                    v-for="tab in importReport.tables"
+                                    :key="tab.tableName"
                                     class="flex justify-between text-xs py-1 px-2 rounded hover:bg-muted">
-                                    <span class="truncate max-w-[180px]" :title="t.tableName">{{ t.tableName }}</span>
+                                    <span class="truncate max-w-[180px]" :title="tab.tableName">{{
+                                        tab.tableName
+                                    }}</span>
                                     <span class="shrink-0">
                                         <span
-                                            v-if="t.overwritten > 0"
+                                            v-if="tab.overwritten > 0"
                                             class="text-green-600 dark:text-green-400 ml-1"
                                             :title="t('view.settings.advanced.advanced.db_import.report_overwritten')"
-                                            >+{{ t.overwritten }}O</span
+                                            >+{{ tab.overwritten }}O</span
                                         >
                                         <span
-                                            v-if="t.added > 0"
+                                            v-if="tab.added > 0"
                                             class="text-blue-600 dark:text-blue-400 ml-1"
                                             :title="t('view.settings.advanced.advanced.db_import.report_added')"
-                                            >+{{ t.added }}A</span
+                                            >+{{ tab.added }}A</span
                                         >
                                         <span
-                                            v-if="t.skippedExisting > 0"
+                                            v-if="tab.skippedExisting > 0"
                                             class="text-muted-foreground ml-1"
                                             :title="
                                                 t('view.settings.advanced.advanced.db_import.report_skipped_existing')
                                             "
-                                            >-{{ t.skippedExisting }}SE</span
+                                            >-{{ tab.skippedExisting }}SE</span
                                         >
                                         <span
-                                            v-if="t.skippedNew > 0"
+                                            v-if="tab.skippedNew > 0"
                                             class="text-muted-foreground ml-1"
                                             :title="t('view.settings.advanced.advanced.db_import.report_skipped_new')"
-                                            >-{{ t.skippedNew }}SN</span
+                                            >-{{ tab.skippedNew }}SN</span
                                         >
                                     </span>
                                 </div>
@@ -970,6 +980,16 @@
                 show-icon />
         </SettingsGroup>
 
+        <SettingsGroup :title="t('view.settings.advanced_groups.ui_debug.header')">
+            <SettingsItem
+                :label="t('view.settings.advanced.advanced.ui_debug.open.label')"
+                :description="t('view.settings.advanced.advanced.ui_debug.open.description')">
+                <Button size="sm" variant="outline" @click="isUIDebugDialogVisible = true">
+                    {{ t('view.settings.advanced.advanced.ui_debug.open.button') }}
+                </Button>
+            </SettingsItem>
+        </SettingsGroup>
+
         <template v-if="branch === 'Nightly'">
             <SettingsGroup :title="t('view.settings.advanced_groups.nightly.header')">
                 <SettingsItem
@@ -982,12 +1002,13 @@
 
         <RegistryBackupDialog />
         <PhotonSettings v-if="photonLoggingEnabled" />
+        <UIDebugDialog v-model:uidDialog="isUIDebugDialogVisible" />
     </div>
 </template>
 
 <script setup>
     import { Trash2, TriangleAlert, Download, Upload } from 'lucide-vue-next';
-    import { computed, reactive, ref } from 'vue';
+    import { computed, reactive, ref, shallowRef } from 'vue';
     import { toast } from 'vue-sonner';
     import { Button } from '@/components/ui/button';
     import { Input } from '@/components/ui/input';
@@ -1008,6 +1029,7 @@
         useAppearanceSettingsStore,
         useAuthStore,
         useAvatarStore,
+        useFeedStore,
         useGeneralSettingsStore,
         useGroupStore,
         useInstanceStore,
@@ -1020,11 +1042,17 @@
     import { authRequest, queryRequest } from '@/api';
     import { disableGameLogDialog } from '@/coordinators/gameLogCoordinator';
     import { clearVRCXCache } from '@/coordinators/vrcxCoordinator';
+    import {
+        getLocalWorldFavorites,
+        getLocalAvatarFavorites,
+        getLocalFriendFavorites
+    } from '@/coordinators/favoriteCoordinator';
     import { openExternalLink } from '@/shared/utils';
     import { exportDatabaseData, readImportFile, executeImport } from '@/services/database/exportImport';
 
     import PhotonSettings from '../PhotonSettings.vue';
     import RegistryBackupDialog from '../../../Tools/dialogs/RegistryBackupDialog.vue';
+    import UIDebugDialog from '../../dialogs/UIDebugDialog.vue';
     import SettingsGroup from '../SettingsGroup.vue';
     import SettingsItem from '../SettingsItem.vue';
 
@@ -1072,7 +1100,8 @@
         sqliteTableSizes,
         avatarAutoCleanup,
         purgeInProgress,
-        sentryErrorReporting
+        sentryErrorReporting,
+        pollMinInterval
     } = storeToRefs(advancedSettingsStore);
 
     const {
@@ -1088,7 +1117,8 @@
         setAvatarAutoCleanup,
         purgeAvatarFeedData,
         promptAutoClearVRCXCacheFrequency,
-        setSentryErrorReporting
+        setSentryErrorReporting,
+        promptPollMinInterval
     } = advancedSettingsStore;
 
     const configTreeData = ref({});
@@ -1116,8 +1146,10 @@
     // Import compatibility options
     const allowUserMismatch = ref(false); // Allow importing from a different account
 
-    // Import file data (cached between phases)
-    const importDataCache = ref(null);
+    // Import file data (cached between phases).
+    // Uses shallowRef so the full backup object is NOT deep-proxied: making a
+    // huge DB dump reactive exhausts renderer memory and crashes the app.
+    const importDataCache = shallowRef(null);
     const importFileSummary = ref(null);
     const importDiagnostics = ref(null);
 
@@ -1141,6 +1173,7 @@
     const resetConfirmInput = ref('');
     const resetInputError = ref(false);
     const resetError = ref('');
+    const isUIDebugDialogVisible = ref(false);
     const confirmationRequiredText = computed(() => {
         const now = new Date();
         const y = now.getFullYear();
@@ -1307,6 +1340,13 @@
             importReport.totalProcessed = result.report.totalProcessed;
             importReport.skippedTables = result.report.skippedTables ?? [];
             importReport.tables = result.report.tables;
+            // Reload local favorite stores from the freshly imported database so
+            // the UI tables reflect the imported data immediately.
+            getLocalWorldFavorites();
+            getLocalAvatarFavorites();
+            getLocalFriendFavorites();
+            // Reload the friend activity feed table.
+            useFeedStore().feedTableLookup();
             toast.success(
                 t('view.settings.advanced.advanced.db_import.success', {
                     importedCount: result.report.overwritten + result.report.added,

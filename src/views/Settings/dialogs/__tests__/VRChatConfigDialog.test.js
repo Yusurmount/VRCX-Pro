@@ -100,7 +100,7 @@ vi.mock('../../../../coordinators/gameCoordinator', () => ({
     runSweepVRChatCacheFlow: (...args) => mocks.sweepVRChatCache(...args)
 }));
 
-// Set global mocks for CefSharp-injected APIs
+// Set global mocks for native IPC APIs
 globalThis.AppApi = mocks.appApi;
 globalThis.AssetBundleManager = mocks.assetBundleManager;
 

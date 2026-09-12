@@ -56,9 +56,9 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
     const updateToastRelease = ref('');
 
     async function initVRCXUpdaterSettings() {
-        if (typeof CefSharp === 'undefined') {
-            arch.value = await window.electron.getArch();
-            noUpdater.value = await window.electron.getNoUpdater();
+        if (true) {
+            arch.value = await window.platform.getArch();
+            noUpdater.value = await window.platform.getNoUpdater();
             console.log('Architecture:', arch.value);
         }
         if (isMacOS.value) {
@@ -447,11 +447,12 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         }
         return checkForVRCXUpdate();
     }
-    function restartVRCX(isUpgrade) {
+    async function restartVRCX(isUpgrade) {
         if (!LINUX) {
-            AppApi.RestartApplication(isUpgrade);
+            await AppApi.RestartApplication(isUpgrade);
+            window.platform.quitApplication();
         } else {
-            window.electron.restartApp();
+            window.platform.restartApp();
         }
     }
     function updateProgressText() {

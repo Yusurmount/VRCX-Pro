@@ -152,8 +152,7 @@ export const useGalleryStore = defineStore('Gallery', () => {
         refreshEmojiTable();
         refreshStickerTable();
         refreshPrintTable();
-        refreshPrintFavorites(),
-        getInventory();
+        (refreshPrintFavorites(), getInventory());
     }
 
     /**
@@ -332,7 +331,7 @@ export const useGalleryStore = defineStore('Gallery', () => {
 
         favoritePrintIds.value = new Set(
             favorites.map((favorite) => favorite.printId)
-    );
+        );
     }
 
     /**
@@ -487,16 +486,22 @@ export const useGalleryStore = defineStore('Gallery', () => {
             return;
         }
         const idList = [];
-        for (let i = printCount - 1; i >= 0 && idList.length < deleteCount; i--) {
+        for (
+            let i = printCount - 1;
+            i >= 0 && idList.length < deleteCount;
+            i--
+        ) {
             const print = printTable.value[i];
             if (favoritePrintIds.value.has(print.id)) {
                 continue;
             }
-            idList.push(print.id)
+            idList.push(print.id);
         }
         console.log(`Deleting ${idList.length} old prints`, idList);
         if (idList.length < deleteCount) {
-            console.log(`Unable to automatically delete enough old prints because ${deleteCount - idList.length} print(s) are protected by favorites.`);
+            console.log(
+                `Unable to automatically delete enough old prints because ${deleteCount - idList.length} print(s) are protected by favorites.`
+            );
         }
         try {
             for (const printId of idList) {

@@ -13,6 +13,7 @@ import { database } from '../services/database';
 import { initWebsocket } from '../services/websocket';
 import { request } from '../services/request';
 import { runHandleAutoLoginFlow } from '../coordinators/authAutoLoginCoordinator';
+import { isOobeCompleted } from '../services/oobe';
 import { getCurrentUser } from '../coordinators/userCoordinator';
 import { useAdvancedSettingsStore } from './settings/advanced';
 import { useGeneralSettingsStore } from './settings/general';
@@ -209,6 +210,11 @@ export const useAuthStore = defineStore('Auth', () => {
      * @returns {Promise<void>}
      */
     async function autoLoginAfterMounted() {
+        // Temporarily disable auto-login while the OOBE wizard has not been completed,
+        // so it cannot interfere with the first-run flow.
+        if (!(await isOobeCompleted())) {
+            return;
+        }
         const canAutoLogin = await vrcxStore.waitForDatabaseInit();
         if (!canAutoLogin) {
             console.warn(
@@ -475,7 +481,7 @@ export const useAuthStore = defineStore('Auth', () => {
                 if (encryptionType === 'machineKey') {
                     try {
                         plaintext =
-                            await window.electron.machineDecrypt(
+                            await window.platform.machineDecrypt(
                                 storedPassword
                             );
                     } catch (e) {
@@ -668,7 +674,7 @@ export const useAuthStore = defineStore('Auth', () => {
                 }
             } else if (encryptionType === 'machineKey') {
                 try {
-                    password = await window.electron.machineDecrypt(password);
+                    password = await window.platform.machineDecrypt(password);
                 } catch (err) {
                     console.error(
                         'Machine key decrypt failed in relogin:',
@@ -734,7 +740,7 @@ export const useAuthStore = defineStore('Auth', () => {
      */
     async function encryptPasswordWithMachineKey(password) {
         try {
-            const encrypted = await window.electron.machineEncrypt(password);
+            const encrypted = await window.platform.machineEncrypt(password);
             return { encrypted, type: 'machineKey' };
         } catch (e) {
             console.error('Machine key encryption failed, storing as-is:', e);
@@ -752,7 +758,7 @@ export const useAuthStore = defineStore('Auth', () => {
     async function decryptPassword(password, encryptionType, primaryPassword) {
         if (encryptionType === 'machineKey') {
             try {
-                return await window.electron.machineDecrypt(password);
+                return await window.platform.machineDecrypt(password);
             } catch (e) {
                 console.error('Machine key decryption failed:', e);
                 return password;

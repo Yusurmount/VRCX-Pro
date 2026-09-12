@@ -206,7 +206,7 @@
     /**
      *
      */
-    async function openJsonFileSelectorDialogElectron() {
+    async function openJsonFileSelectorDialog() {
         return new Promise((resolve) => {
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
@@ -246,8 +246,8 @@
         }
 
         let json;
-        if (typeof CefSharp === 'undefined') {
-            json = await openJsonFileSelectorDialogElectron();
+        if (true) {
+            json = await openJsonFileSelectorDialog();
         } else {
             json = await AppApi.ReadVrcRegJsonFile(filePath);
         }

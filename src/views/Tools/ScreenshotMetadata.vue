@@ -579,8 +579,8 @@
     async function getAndDisplayScreenshotFromFile() {
         let filePath = '';
 
-        if (typeof CefSharp === 'undefined') {
-            filePath = await window.electron.openFileDialog();
+        if (true) {
+            filePath = await window.platform.openFileDialog();
         } else {
             filePath = await AppApi.OpenFileSelectorDialog(
                 await AppApi.GetVRChatPhotosLocation(),

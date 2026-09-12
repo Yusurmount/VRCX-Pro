@@ -139,12 +139,12 @@ describe('notyGetImage', () => {
 // ─── displayDesktopToast ─────────────────────────────────────────────
 
 describe('displayDesktopToast', () => {
-    let deps, dispatch;
+    let deps, dispatch, desktopNotification;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        globalThis.WINDOWS = true;
-        globalThis.AppApi = { DesktopNotification: vi.fn() };
+        desktopNotification = vi.fn();
+        globalThis.window.platform.desktopNotification = desktopNotification;
         deps = makeDeps();
         dispatch = createOverlayDispatch(deps);
     });
@@ -158,7 +158,7 @@ describe('displayDesktopToast', () => {
         dispatch.displayDesktopToast({}, 'some message', 'img.jpg');
 
         expect(getNotificationMessage).toHaveBeenCalled();
-        expect(AppApi.DesktopNotification).toHaveBeenCalledWith(
+        expect(desktopNotification).toHaveBeenCalledWith(
             'Friend Online',
             'Alice is online',
             'img.jpg'
@@ -170,7 +170,7 @@ describe('displayDesktopToast', () => {
 
         dispatch.displayDesktopToast({}, 'some message', 'img.jpg');
 
-        expect(AppApi.DesktopNotification).not.toHaveBeenCalled();
+        expect(desktopNotification).not.toHaveBeenCalled();
     });
 });
 

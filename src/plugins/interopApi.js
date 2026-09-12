@@ -1,39 +1,19 @@
 // @ts-nocheck
-import InteropApi from '../ipc-electron/interopApi.js';
+import InteropApi from '../ipc/interopApi.js';
 import configRepository from '../services/config.js';
 import vrcxJsonStorage from '../services/jsonStorage.js';
 
 export async function initInteropApi(isVrOverlay = false) {
-    const hasCefSharp = typeof CefSharp !== 'undefined';
     if (isVrOverlay) {
-        if (hasCefSharp) {
-            await CefSharp.BindObjectAsync('AppApiVr');
-        } else {
-            // @ts-ignore
-            window.AppApiVr = InteropApi.AppApiVrElectron;
-        }
+        window.AppApiVr = InteropApi.AppApiVr;
     } else {
-        // #region | Init Cef C# bindings
-        if (hasCefSharp) {
-            await CefSharp.BindObjectAsync(
-                'AppApi',
-                'WebApi',
-                'VRCXStorage',
-                'SQLite',
-                'LogWatcher',
-                'Discord',
-                'AssetBundleManager'
-            );
-        } else {
-            window.AppApi = InteropApi.AppApiElectron;
-            window.WebApi = InteropApi.WebApi;
-            window.VRCXStorage = InteropApi.VRCXStorage;
-            window.SQLite = InteropApi.SQLite;
-            window.LogWatcher = InteropApi.LogWatcher;
-            window.Discord = InteropApi.Discord;
-            window.AssetBundleManager = InteropApi.AssetBundleManager;
-            window.AppApiVrElectron = InteropApi.AppApiVrElectron;
-        }
+        window.AppApi = InteropApi.AppApi;
+        window.WebApi = InteropApi.WebApi;
+        window.VRCXStorage = InteropApi.VRCXStorage;
+        window.SQLite = InteropApi.SQLite;
+        window.LogWatcher = InteropApi.LogWatcher;
+        window.Discord = InteropApi.Discord;
+        window.AssetBundleManager = InteropApi.AssetBundleManager;
 
         await configRepository.init();
         new vrcxJsonStorage(VRCXStorage);

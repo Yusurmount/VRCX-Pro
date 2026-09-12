@@ -45,7 +45,7 @@ html.use-advanced-material
         [data-slot='context-menu-sub-content'],
         [data-sonner-toast]
     ) {
-    background-color: color-mix(in oklab, var(--popover) 66%, transparent);
+    background-color: color-mix(in oklab, var(--popover) 50%, transparent);
     backdrop-filter: blur(3px);
     border-color: color-mix(in oklab, var(--foreground) 12%, transparent);
     box-shadow:
@@ -138,13 +138,17 @@ html.use-advanced-material .x-container [class*='sticky'] {
 
 /* ------------------------------------------------------------------ */
 /* 侧边栏菜单项强调框：待选（hover/展开悬停）与已选（按下/选中）改为        */
-/* 半透明白色，与 66% 玻璃侧栏背景协调                                     */
+/* 半透明主题强调色，与 66% 玻璃侧栏背景协调（非纯色）                     */
 /* ------------------------------------------------------------------ */
 html.use-advanced-material [data-sidebar='menu-button']:hover,
 html.use-advanced-material
     [data-sidebar='menu-button'][data-state='open']:hover,
 html.use-advanced-material [data-sidebar='menu-sub-button']:hover {
-    background-color: color-mix(in oklab, white 12%, transparent);
+    background-color: color-mix(
+        in oklab,
+        var(--sidebar-accent) 30%,
+        transparent
+    );
     color: var(--sidebar-foreground);
 }
 
@@ -153,8 +157,43 @@ html.use-advanced-material [data-sidebar='menu-button'][data-active='true'],
 html.use-advanced-material [data-sidebar='menu-sub-button']:active,
 html.use-advanced-material
     [data-sidebar='menu-sub-button'][data-active='true'] {
-    background-color: color-mix(in oklab, white 18%, transparent);
+    background-color: color-mix(
+        in oklab,
+        var(--sidebar-accent) 48%,
+        transparent
+    );
     color: var(--sidebar-foreground);
+}
+
+/* ------------------------------------------------------------------ */
+/* 菜单项强调（下拉/右键/命令面板/下拉选择等小菜单按钮）：                 */
+/* 悬停高亮由基础 solid --accent 改为半透明主题强调色，非纯色             */
+/* ------------------------------------------------------------------ */
+html.use-advanced-material
+    [data-slot='dropdown-menu-item']:focus:not([data-disabled]):not(
+        [data-variant='destructive']
+    ),
+html.use-advanced-material
+    [data-slot='dropdown-menu-checkbox-item']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='dropdown-menu-radio-item']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='dropdown-menu-sub-trigger']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='context-menu-item']:focus:not([data-disabled]):not(
+        [data-variant='destructive']
+    ),
+html.use-advanced-material
+    [data-slot='context-menu-checkbox-item']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='context-menu-radio-item']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='context-menu-sub-trigger']:focus:not([data-disabled]),
+html.use-advanced-material [data-slot='select-item']:focus:not([data-disabled]),
+html.use-advanced-material
+    [data-slot='command-item'][data-highlighted]:not([data-disabled]) {
+    background-color: color-mix(in oklab, var(--accent) 38%, transparent);
+    color: var(--accent-foreground);
 }
 
 /* ------------------------------------------------------------------ */
@@ -187,9 +226,9 @@ html.use-advanced-material
 html.use-advanced-material
     [data-slot='command-input']:hover:not(:focus-visible):not(:disabled),
 html.use-advanced-material
-    [data-slot='toggle-group-item']:hover:not(:focus-visible):not(:disabled):not(
-        [data-disabled]
-    ),
+    [data-slot='toggle-group-item']:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]),
 html.use-advanced-material
     [data-slot='radio-group-item']:hover:not(:focus-visible):not(:disabled),
 html.use-advanced-material
@@ -290,21 +329,166 @@ html.use-advanced-material
 /* ------------------------------------------------------------------ */
 
 /* 光晕透明度注册为可过渡属性：命中时 --am-a 由 0→1 平滑淡入，
-   切换/离开时 1→0 平滑淡出，避免 background-image 突变产生割裂感 */
+   切换/离开时 1→0 平滑淡出，避免 background-image 突变产生割裂感。
+   必须 inherits:true：光晕由实体的 ::before 渲染，需从实体继承 --am-a 值 */
 @property --am-a {
     syntax: '<number>';
-    inherits: false;
+    inherits: true;
     initial-value: 0;
 }
 
-/* 高光渲染在命中实体的背景层：background-image 位于 background-color
-   之上、内容之下，实体自身盖住高光（介于控件与背景之间）。
-   位置由 JS 写入 --am-mx/--am-my（相对实体百分比），透明度由 --am-a 控制 */
+/* 鼠标高光（两级渲染）：
+   1) 所有命中实体：用 background-image 在实体盒内画光晕（天然裁剪，
+      卡片/列表行等大控件不会溢出边缘），位置由 JS 写入 --am-mx/--am-my。
+   2) 小控件（图标按钮/裸图标，data-am-bleed 存在时）：额外用 ::before
+      画固定 520px 越界光晕并以光标为中心，避免被小盒子裁剪而看不到完整光晕。
+   透明度均由 --am-a 控制（0→1 平滑淡入/淡出）。
+   光晕颜色/强度为主题驱动：深色模式白色高光（照亮），浅色模式柔和深色
+   光晕（在浅色卡片上才能被看见），见下方 --am-glow-rgb / --am-glow-a。 */
+html.use-advanced-material {
+    --am-glow-rgb: 255, 255, 255;
+    --am-glow-a: 0.09;
+}
+
 html.use-advanced-material .am-glow-on {
     background-image: radial-gradient(
         260px circle at var(--am-mx, 50%) var(--am-my, 50%),
-        rgba(255, 255, 255, calc(0.09 * var(--am-a))),
+        rgba(var(--am-glow-rgb), calc(var(--am-glow-a) * var(--am-a))),
         transparent 70%
     );
     transition: --am-a 0.18s ease;
+}
+
+html.use-advanced-material .am-glow-on[data-am-bleed] {
+    isolation: isolate;
+}
+
+html.use-advanced-material .am-glow-on[data-am-bleed]::before {
+    content: '';
+    position: absolute;
+    left: var(--am-mx, 50%);
+    top: var(--am-my, 50%);
+    width: 520px;
+    height: 520px;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+        260px circle at 50% 50%,
+        rgba(var(--am-glow-rgb), calc(var(--am-glow-a) * var(--am-a))),
+        transparent 70%
+    );
+}
+
+/* ------------------------------------------------------------------ */
+/* 浅色模式适配：浅色主题（data-theme='light'）下背景为近白，部分深色效果      */
+/* 需针对浅色重调，避免不可见 / 发白 / 文字对比不足                          */
+/* ------------------------------------------------------------------ */
+
+/* 1) 鼠标光晕：深色白色光晕在浅色卡片上不可见，改为柔和深灰光晕并降低强度 */
+html.use-advanced-material[data-theme='light'] {
+    /* 鼠标光晕：深色白色光晕在浅色卡片上不可见，改为柔和深灰光晕并降低强度 */
+    --am-glow-rgb: 24, 34, 51;
+    --am-glow-a: 0.055;
+
+    /* 大面积白底刺眼：把近纯白表面色（内容/侧栏/卡片）降为低饱和柔和浅色。
+       底部 canvas 通过 getComputedStyle 读取这些变量，底色随之柔和 */
+    --background: oklch(0.96 0.004 82);
+    --card: oklch(0.972 0.004 82);
+    --popover: oklch(0.985 0.003 82);
+    --sidebar: oklch(0.952 0.006 82);
+}
+
+/* 2) 弹层可读性：浅色下把半透明遮罩加深（遮更多白色底 → 对比更强），
+   以深色前景描边 + 柔投影界定层级，替代深色模式几乎不可见的白色外发光 */
+html.use-advanced-material[data-theme='light']
+    :is(
+        [data-slot='dialog-content'],
+        [data-slot='alert-dialog-content'],
+        [data-slot='sheet-content']
+    ) {
+    background-color: color-mix(in oklab, var(--popover) 88%, transparent);
+    border-color: color-mix(in oklab, var(--foreground) 10%, transparent);
+    box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, var(--primary) 5%, transparent),
+        0 4px 16px -8px color-mix(in oklab, var(--foreground) 18%, transparent);
+}
+
+html.use-advanced-material[data-theme='light']
+    :is(
+        [data-slot='dropdown-menu-content'],
+        [data-slot='dropdown-menu-sub-content'],
+        [data-slot='popover-content'],
+        [data-slot='select-content'],
+        [data-slot='context-menu-content'],
+        [data-slot='context-menu-sub-content'],
+        [data-sonner-toast]
+    ) {
+    background-color: color-mix(in oklab, var(--popover) 78%, transparent);
+    border-color: color-mix(in oklab, var(--foreground) 10%, transparent);
+    box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, var(--primary) 5%, transparent),
+        0 4px 16px -8px color-mix(in oklab, var(--foreground) 16%, transparent);
+}
+
+/* 3) Tooltip：浅色下默认是亮底深字还是深底亮字取决于 --foreground。
+   浅色 --foreground 为近黑 → 组件深底亮字，但本文件把背景压成 66% 半透明后
+   文字（--background 近白）叠加在浅色基座上会低对比。这里加深背景后恢复对比 */
+html.use-advanced-material[data-theme='light'] [data-slot='tooltip-content'] {
+    background-color: color-mix(in oklab, var(--foreground) 92%, transparent);
+}
+
+/* 4) 主题色按钮：浅色下 66% 半透明主题色叠加在白色底上偏淡，加深提可读性 */
+html.use-advanced-material[data-theme='light'] [data-slot='button'].bg-primary {
+    background-color: color-mix(
+        in oklab,
+        var(--primary) 74%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material[data-theme='light']
+    [data-slot='button'].bg-primary:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]) {
+    background-color: color-mix(
+        in oklab,
+        var(--primary) 86%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material[data-theme='light']
+    [data-slot='button'].bg-secondary {
+    background-color: color-mix(
+        in oklab,
+        var(--secondary) 72%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material[data-theme='light']
+    [data-slot='button'].bg-secondary:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]) {
+    background-color: color-mix(
+        in oklab,
+        var(--secondary) 84%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material[data-theme='light']
+    [data-slot='button'].bg-destructive {
+    background-color: color-mix(
+        in oklab,
+        var(--destructive) 74%,
+        transparent
+    ) !important;
+}
+html.use-advanced-material[data-theme='light']
+    [data-slot='button'].bg-destructive:hover:not(:focus-visible):not(
+        :disabled
+    ):not([data-disabled]) {
+    background-color: color-mix(
+        in oklab,
+        var(--destructive) 86%,
+        transparent
+    ) !important;
 }

@@ -49,11 +49,13 @@ const database = {
     ...manualRelations,
 
     setMaxTableSize(limit) {
-        dbVars.maxTableSize = limit;
+        limit = Number(limit);
+        dbVars.maxTableSize = Number.isFinite(limit) ? limit : -1;
     },
 
     setSearchTableSize(limit) {
-        dbVars.searchTableSize = limit;
+        limit = Number(limit);
+        dbVars.searchTableSize = Number.isFinite(limit) ? limit : 5000;
     },
 
     async initUserTables(userId) {

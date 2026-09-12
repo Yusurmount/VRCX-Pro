@@ -76,6 +76,9 @@
                 @self-invite="handleSelfInvite">
                 <template #append>
                     <ContextMenuSeparator />
+                    <ContextMenuItem @click="copyWorldId">
+                        {{ t('view.favorite.copy_id_tooltip') }}
+                    </ContextMenuItem>
                     <ContextMenuItem @click="showFavoriteDialog('world', favorite.id)">
                         {{ t('view.favorite.edit_favorite_tooltip') }}
                     </ContextMenuItem>
@@ -177,6 +180,10 @@
 
     function handleViewDetails() {
         showWorldDialog(props.favorite.id);
+    }
+
+    function copyWorldId() {
+        copyToClipboard(props.favorite.id, t('message.copy_success'));
     }
 
     function handleNewInstance() {

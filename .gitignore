@@ -2,12 +2,12 @@ node_modules/
 build/
 obj/
 obj1/
+Dotnet/TauriBackend/bin/
+Dotnet/TauriBackend/obj/
 .idea/
 *.log
 *.DotSettings.user
 .vs/
-Installer/version_define.nsh
-Installer/VRCX-Pro_Setup.exe
 VRCX-Pro_*Setup*.exe
 VRCX-Pro_Setup_*.exe
 SHA256SUMS.txt
@@ -22,3 +22,4 @@ VRCX-Pro-Previous/
 AGENTS.md
 .dbg/
 *_CHANGELOG.md
+.trae/

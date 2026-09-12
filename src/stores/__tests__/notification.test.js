@@ -106,6 +106,8 @@ const { notificationRequest } = await import('../../api');
 
 const { useNotificationStore } = await import('../notification');
 const { useGeneralSettingsStore } = await import('../settings/general');
+const { useNotificationsSettingsStore } =
+    await import('../settings/notifications');
 
 describe('notification store - auto decline friend requests', () => {
     let notificationStore;
@@ -239,5 +241,32 @@ describe('notification store - auto decline friend requests', () => {
 
         expect(database.getJoinCount).not.toHaveBeenCalled();
         expect(notificationRequest.hideNotification).not.toHaveBeenCalled();
+    });
+});
+
+describe('notification store - test notification', () => {
+    let notificationStore;
+    let desktopNotification;
+
+    beforeEach(() => {
+        setActivePinia(createPinia());
+        vi.clearAllMocks();
+        notificationStore = useNotificationStore();
+        desktopNotification = vi.fn();
+        globalThis.window.platform.desktopNotification = desktopNotification;
+    });
+
+    it('sends the desktop toast even when desktop toasts are set to never', async () => {
+        expect(useNotificationsSettingsStore().desktopToast).toBe('Never');
+
+        notificationStore.testNotification();
+
+        await vi.waitFor(() => {
+            expect(desktopNotification).toHaveBeenCalledWith(
+                'Event',
+                'view.settings.notifications.notifications.test_message',
+                ''
+            );
+        });
     });
 });

@@ -64,6 +64,12 @@ export function useNavLayout({
 
     const createDefaultNavLayout = () => createBaseDefaultNavLayout(t);
 
+    // 首屏立即用默认布局渲染导航项，避免等 IPC 配置加载（initThemeColor /
+    // loadDashboards / loadNavMenuConfig 的串行 await）完成后才显示侧边栏选项。
+    // 之后 loadNavMenuConfig 会用存储的配置水合覆盖默认布局。
+    navLayout.value = createDefaultNavLayout();
+    navLayoutReady.value = true;
+
     const menuItems = computed(() => {
         const items = buildMenuItems(
             navLayout.value,

@@ -43,10 +43,7 @@ class SQLiteService {
 
     async execute(callback, sql, args = null) {
         try {
-            if (typeof CefSharp === 'undefined') {
-                if (args) {
-                    args = new Map(Object.entries(args));
-                }
+            if (true) {
                 var json = await SQLite.ExecuteJson(sql, args);
                 var items = JSON.parse(json);
                 items.forEach((item) => {
@@ -65,9 +62,6 @@ class SQLiteService {
 
     async executeNonQuery(sql, args = null) {
         try {
-            if (typeof CefSharp === 'undefined' && args) {
-                args = new Map(Object.entries(args));
-            }
             return await SQLite.ExecuteNonQuery(sql, args);
         } catch (e) {
             this.handleSQLiteError(e);

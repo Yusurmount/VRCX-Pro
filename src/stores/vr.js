@@ -38,7 +38,7 @@ export const useVrStore = defineStore('Vr', () => {
         { flush: 'sync' }
     );
 
-    // also runs from CEF C# on overlay browser startup
+    // also runs when the VR overlay browser starts
     function vrInit() {
         updateVRConfigVars();
         updateVRLastLocation();
@@ -184,8 +184,8 @@ export const useVrStore = defineStore('Vr', () => {
             gameStore.setIsHmdAfk(false);
         }
 
-        if (typeof CefSharp === 'undefined') {
-            window.electron.updateVr(
+        if (true) {
+            window.platform.updateVr(
                 newState.active,
                 newState.hmdOverlay,
                 newState.wristOverlay,

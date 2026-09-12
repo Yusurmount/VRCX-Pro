@@ -1,0 +1,30 @@
+[package]
+name = "vrcx-pro"
+version = "3.1.2"
+description = "Friendship management tool for VRChat"
+authors = ["VRCX Team"]
+edition = "2021"
+
+[lib]
+name = "vrcx_pro_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2", features = ["tray-icon", "devtools"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-process = "2"
+tauri-plugin-single-instance = "2"
+image = { version = "0.25", default-features = true }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_UI_Shell"] }
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]

@@ -1,9 +1,9 @@
 import * as XLSX from 'xlsx';
 
 /**
- * 将数据数组转换为 JSON Blob
- * @param {Array<object>} data - 数据数组
- * @param {number} [space=2] - JSON 缩进空格数
+ * 灏嗘暟鎹暟缁勮浆鎹负 JSON Blob
+ * @param {Array<object>} data - 鏁版嵁鏁扮粍
+ * @param {number} [space=2] - JSON 缂╄繘绌烘牸鏁?
  * @returns {Blob}
  */
 export function toJsonBlob(data, space = 2) {
@@ -12,8 +12,8 @@ export function toJsonBlob(data, space = 2) {
 }
 
 /**
- * 将多个工作表数据转换为 Excel Blob
- * @param {Array<{name: string, data: Array<object>}>} sheets - 工作表数组
+ * 灏嗗涓伐浣滆〃鏁版嵁杞崲涓?Excel Blob
+ * @param {Array<{name: string, data: Array<object>}>} sheets - 宸ヤ綔琛ㄦ暟缁?
  * @returns {Blob}
  */
 export function toExcelBlob(sheets) {
@@ -31,9 +31,9 @@ export function toExcelBlob(sheets) {
 }
 
 /**
- * 将单个数据数组转换为 Excel Blob（默认工作表名 "Data"）
- * @param {Array<object>} data - 数据数组
- * @param {string} [sheetName='Data'] - 工作表名
+ * 灏嗗崟涓暟鎹暟缁勮浆鎹负 Excel Blob锛堥粯璁ゅ伐浣滆〃鍚?"Data"锛?
+ * @param {Array<object>} data - 鏁版嵁鏁扮粍
+ * @param {string} [sheetName='Data'] - 宸ヤ綔琛ㄥ悕
  * @returns {Blob}
  */
 export function dataToExcelBlob(data, sheetName = 'Data') {
@@ -41,30 +41,30 @@ export function dataToExcelBlob(data, sheetName = 'Data') {
 }
 
 /**
- * 通过 Electron IPC 保存文件到磁盘
- * @param {string} defaultName - 默认文件名
- * @param {Blob} blob - 文件内容
- * @param {string} [formatLabel] - 格式标签
+ * 閫氳繃 native desktop IPC 淇濆瓨鏂囦欢鍒扮鐩?
+ * @param {string} defaultName - 榛樿鏂囦欢鍚?
+ * @param {Blob} blob - 鏂囦欢鍐呭
+ * @param {string} [formatLabel] - 鏍煎紡鏍囩
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export async function saveFileViaDialog(defaultName, blob, formatLabel) {
     try {
         const buffer = await blob.arrayBuffer();
 
-        // Electron path
-        if (window.electron?.saveFileDialog) {
-            const result = await window.electron.saveFileDialog(
+        // Native platform path
+        if (window.platform?.saveFileDialog) {
+            const result = await window.platform.saveFileDialog(
                 defaultName,
                 formatLabel ?? 'All Files'
             );
             if (!result) {
                 return { success: false, error: 'cancelled' };
             }
-            await window.electron.writeFile(result, buffer);
+            await window.platform.writeFile(result, buffer);
             return { success: true };
         }
 
-        // CefSharp path
+        // Legacy application API fallback
         if (AppApi?.SaveFileSelectorDialog && AppApi?.WriteFileBytes) {
             const ext = defaultName.includes('.')
                 ? defaultName.split('.').pop()
@@ -90,10 +90,10 @@ export async function saveFileViaDialog(defaultName, blob, formatLabel) {
 }
 
 /**
- * 导出 JSON 并保存到磁盘
- * @param {Array<object>} data - 数据数组
- * @param {string} defaultName - 默认文件名（不含扩展名）
- * @param {number} [space=2] - JSON 缩进空格数
+ * 瀵煎嚭 JSON 骞朵繚瀛樺埌纾佺洏
+ * @param {Array<object>} data - 鏁版嵁鏁扮粍
+ * @param {string} defaultName - 榛樿鏂囦欢鍚嶏紙涓嶅惈鎵╁睍鍚嶏級
+ * @param {number} [space=2] - JSON 缂╄繘绌烘牸鏁?
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export async function exportJSON(data, defaultName, space = 2) {
@@ -102,10 +102,10 @@ export async function exportJSON(data, defaultName, space = 2) {
 }
 
 /**
- * 导出 Excel 并保存到磁盘（单工作表）
- * @param {Array<object>} data - 数据数组
- * @param {string} defaultName - 默认文件名（不含扩展名）
- * @param {string} [sheetName='Data'] - 工作表名
+ * 瀵煎嚭 Excel 骞朵繚瀛樺埌纾佺洏锛堝崟宸ヤ綔琛級
+ * @param {Array<object>} data - 鏁版嵁鏁扮粍
+ * @param {string} defaultName - 榛樿鏂囦欢鍚嶏紙涓嶅惈鎵╁睍鍚嶏級
+ * @param {string} [sheetName='Data'] - 宸ヤ綔琛ㄥ悕
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export async function exportExcel(data, defaultName, sheetName = 'Data') {
@@ -114,9 +114,9 @@ export async function exportExcel(data, defaultName, sheetName = 'Data') {
 }
 
 /**
- * 导出多工作表 Excel 并保存到磁盘
- * @param {Array<{name: string, data: Array<object>}>} sheets - 工作表数组
- * @param {string} defaultName - 默认文件名（不含扩展名）
+ * 瀵煎嚭澶氬伐浣滆〃 Excel 骞朵繚瀛樺埌纾佺洏
+ * @param {Array<{name: string, data: Array<object>}>} sheets - 宸ヤ綔琛ㄦ暟缁?
+ * @param {string} defaultName - 榛樿鏂囦欢鍚嶏紙涓嶅惈鎵╁睍鍚嶏級
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export async function exportExcelMultiSheet(sheets, defaultName) {

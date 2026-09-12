@@ -144,6 +144,7 @@
         'avatar-image',
         'avatar-fallback',
         // 命令面板结构（面板与可交互项保留）
+        'command',
         'command-list',
         'command-group',
         'command-group-heading',
@@ -221,8 +222,12 @@
         // 浮层根/锚点（面板 content 保留）
         'popover',
         'popover-anchor',
+        'popover-content',
+        'hover-card-content',
         // 工具栏分组
-        'toggle-group'
+        'toggle-group',
+        // 顶部 Tab 标签栏：Tab 按钮高光冒泡到标签栏（tabs-list）容器
+        'tabs-trigger'
     ]);
 
     // 从命中的元素向上跳过黑名单容器，返回最近的可高光实体（面板/交互控件）
@@ -233,10 +238,85 @@
                 el = el.parentElement;
                 continue;
             }
-            if (el.matches(entitySelector)) return el;
+            if (el.matches(entitySelector)) {
+                // 禁用态控件不显示高光（避免误导为可交互）
+                if (el.matches(':disabled, [aria-disabled="true"], [data-disabled]')) {
+                    return null;
+                }
+                // 顶部菜单栏按钮：若该按钮位于"横向 flex 行里 ≥3 个并排按钮"
+                // 的工具条 bar 内，则高光冒泡到整条 bar，而非单个按钮
+                const bar = findToolbarBar(el);
+                if (bar) {
+                    bar.dataset.amBar = '1';
+                    return bar;
+                }
+                return el;
+            }
             el = el.parentElement;
         }
         return null;
+    }
+
+    // 工具条 bar 识别：从命中的按钮向上查找"横向 flex 行"，若该行内含
+    // ≥3 个并排的按钮类元素，判定为顶部/工具菜单栏，整条 bar 作为高光实体。
+    // 仅检查横向（flex-direction: row）容器，纵向列表/侧栏不适用。
+    // 按钮常被 inline-block / TooltipWrapper 等包装，故按"子节点自身或其
+    // 后代含按钮"来计数，而非仅直接子节点。
+    const TOOLBAR_BTN_SELECTOR = [
+        'button',
+        '[data-slot="button"]',
+        '[role="button"]',
+        '[role="tab"]',
+        '[data-slot="toggle-group-item"]',
+        '[data-slot="select-trigger"]',
+        '[data-slot="dropdown-menu-trigger"]'
+    ].join(', ');
+    function findToolbarBar(el) {
+        if (!el?.parentElement) return null;
+        let node = el;
+        for (let depth = 0; depth < 3 && node; depth++) {
+            const parent = node.parentElement;
+            if (!parent) return null;
+            const style = getComputedStyle(parent);
+            if (style.display === 'flex' && style.flexDirection === 'row') {
+                let btnCount = 0;
+                for (const child of parent.children) {
+                    if (child.matches(TOOLBAR_BTN_SELECTOR) || child.querySelector(TOOLBAR_BTN_SELECTOR)) {
+                        btnCount++;
+                    }
+                }
+                if (btnCount >= 3) return parent;
+            }
+            node = parent;
+        }
+        return null;
+    }
+
+    // 裸图标按钮：<i> 直接充当按钮（无 button/data-slot/role）。
+    // 仅当明显可点（cursor-pointer）且不在其它交互控件内部时，才作为高光目标，
+    // 避免给纯装饰图标误挂高光。
+    function findStandaloneIconTarget(t) {
+        if (!t?.closest) return null;
+        const el = t.closest('i');
+        if (!el) return null;
+        if (el.closest('button, a, [role], [data-slot]')) return null;
+        if (!el.classList.contains('cursor-pointer')) return null;
+        return el;
+    }
+
+    // ::before 光晕为绝对定位，需以实体为定位祖先。仅当实体是 static 时才置为
+    // relative，避免覆盖 dialog-content 等绝对/固定定位面板的布局；淡出时还原。
+    function ensureGlowPosition(el) {
+        if (getComputedStyle(el).position === 'static') {
+            el.style.setProperty('position', 'relative');
+            el.setAttribute('data-am-pos-set', '');
+        }
+    }
+    function resetGlowPosition(el) {
+        if (el.hasAttribute('data-am-pos-set')) {
+            el.style.removeProperty('position');
+            el.removeAttribute('data-am-pos-set');
+        }
     }
 
     let glowRaf = 0;
@@ -261,7 +341,7 @@
                 // 纯文本（不在交互控件内）不显示高光；控件内部文字仍触发控件高光
                 const textEl = t.closest('p, span, td, th, label, h1, h2, h3, h4, h5, h6, li, em, strong, small');
                 if (!textEl || textEl.closest('button, a, [role], [data-slot]')) {
-                    glowEl = findGlowTarget(t.closest(entitySelector));
+                    glowEl = findGlowTarget(t.closest(entitySelector)) || findStandaloneIconTarget(t);
                 }
             }
         }
@@ -274,6 +354,8 @@
                 clearTimeout(glowFadeTimer);
                 glowFadeTimer = setTimeout(() => {
                     if (lastGlowEl && lastGlowEl.style.getPropertyValue('--am-a') === '0') {
+                        delete lastGlowEl.dataset.amBleed;
+                        resetGlowPosition(lastGlowEl);
                         lastGlowEl.classList.remove('am-glow-on');
                     }
                 }, 220);
@@ -284,6 +366,19 @@
             if (!rect.width || !rect.height) return;
             glowEl.style.setProperty('--am-mx', (((glowX - rect.left) / rect.width) * 100).toFixed(2) + '%');
             glowEl.style.setProperty('--am-my', (((glowY - rect.top) / rect.height) * 100).toFixed(2) + '%');
+            // 大控件（卡片/列表行等）光晕裁剪在实体盒内避免溢出；
+            // 小控件（图标按钮/裸图标）才启用越界光晕，并确保实体可作为 ::before 的定位祖先。
+            // 顶部菜单栏 bar 一律不使用越界光晕：bar 位于滚动区顶部且高度矮，
+            // 520px 的 ::before 会向下延伸造成页面竖向滚动/空白，故保持盒内光晕。
+            const isBar = glowEl.hasAttribute('data-am-bar');
+            const isSmall = !isBar && rect.width < 150 && rect.height < 150;
+            if (isSmall) {
+                glowEl.dataset.amBleed = '1';
+                ensureGlowPosition(glowEl);
+            } else {
+                delete glowEl.dataset.amBleed;
+                resetGlowPosition(glowEl);
+            }
             glowEl.classList.add('am-glow-on');
             glowEl.style.setProperty('--am-a', '1');
         });
@@ -351,7 +446,7 @@
 
     // 圆形光源的高斯模糊静态结果 = 径向高斯分布。
     // 用 createRadialGradient 按高斯曲线精确采样渲染，规避 ctx.filter
-    // 在 Electron 环境不稳定的问题；模糊只计算一次，画布即为静态位图。
+    // 在 native desktop 环境不稳定的问题；模糊只计算一次，画布即为静态位图。
     function drawOrb(ctx, cx, cy, radius, color, alpha) {
         const sigma = radius / 3; // 高斯标准差：半径处强度衰减至约 1%
         const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);

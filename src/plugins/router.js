@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 
 import { watchState } from '../services/watchState';
+import { isOobeCompleted } from '../services/oobe';
 
 import FavoritesAvatar from './../views/Favorites/FavoritesAvatar.vue';
 import FavoritesFriend from './../views/Favorites/FavoritesFriend.vue';
@@ -17,6 +18,7 @@ import MainLayout from '../views/Layout/MainLayout.vue';
 import Moderation from './../views/Moderation/Moderation.vue';
 import MyAvatars from './../views/MyAvatars/MyAvatars.vue';
 import Notification from './../views/Notifications/Notification.vue';
+import OOBE from './../views/OOBE/OOBE.vue';
 import PlayerList from './../views/PlayerList/PlayerList.vue';
 import ScreenshotMetadata from './../views/Tools/ScreenshotMetadata.vue';
 import Search from './../views/Search/Search.vue';
@@ -28,6 +30,12 @@ const routes = [
         path: '/login',
         name: 'login',
         component: Login,
+        meta: { public: true }
+    },
+    {
+        path: '/oobe',
+        name: 'oobe',
+        component: OOBE,
         meta: { public: true }
     },
     {
@@ -160,9 +168,16 @@ export function initRouter(app) {
     app.use(router);
 }
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
     if (to.path === '/social') {
         return false;
+    }
+
+    // First-run gate: users must finish the OOBE wizard before entering the app.
+    if (to.name !== 'oobe' && to.name !== 'login') {
+        if (!watchState.isLoggedIn && !(await isOobeCompleted())) {
+            return { name: 'oobe' };
+        }
     }
 
     if (to.name === 'login' && watchState.isLoggedIn) {

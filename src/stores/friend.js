@@ -13,6 +13,7 @@ import {
 import { getUserMemo } from '../coordinators/memoCoordinator';
 import { friendRequest, userRequest } from '../api';
 import { runInitFriendsListFlow } from '../coordinators/friendSyncCoordinator';
+import { prewarmAuthToken } from '../services/websocket';
 import {
     runPendingOfflineTickFlow,
     runUpdateFriendFlow
@@ -392,6 +393,7 @@ export const useFriendStore = defineStore('Friend', () => {
             onlineFriendCount.value = 0;
             pendingOfflineMap.clear();
             if (isLoggedIn) {
+                prewarmAuthToken(); // fetch WS token early, in parallel with friend load
                 runInitFriendsListFlow(i18n.global.t);
                 pendingOfflineWorkerFunction();
             } else {

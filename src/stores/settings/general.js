@@ -135,6 +135,7 @@ export const useGeneralSettingsStore = defineStore('GeneralSettings', () => {
         } else {
             isCloseToTray.value = isCloseToTrayConfig === 'true';
         }
+        window.platform?.setCloseToTray(isCloseToTray.value);
 
         disableGpuAcceleration.value =
             disableGpuAccelerationStrConfig === 'true';
@@ -193,6 +194,7 @@ export const useGeneralSettingsStore = defineStore('GeneralSettings', () => {
     function setIsCloseToTray() {
         isCloseToTray.value = !isCloseToTray.value;
         VRCXStorage.Set('VRCX_CloseToTray', isCloseToTray.value.toString());
+        window.platform?.setCloseToTray(isCloseToTray.value);
     }
     function setDisableGpuAcceleration() {
         disableGpuAcceleration.value = !disableGpuAcceleration.value;

@@ -842,13 +842,17 @@ export const useNotificationStore = defineStore('Notification', () => {
     }
 
     /**
+     * Plays a notification on every channel enabled for it.
      *
      * @param noty
+     * @param {boolean} [isTest] Set by the settings test button; skips the
+     *   when-to-display gates so the desktop toast is always sent.
      */
-    function playNoty(noty) {
+    function playNoty(noty, isTest = false) {
         if (
-            userStore.currentUser.status === 'busy' ||
-            !watchState.isFriendsLoaded
+            !isTest &&
+            (userStore.currentUser.status === 'busy' ||
+                !watchState.isFriendsLoaded)
         ) {
             return;
         }
@@ -899,6 +903,7 @@ export const useNotificationStore = defineStore('Notification', () => {
         const playNotificationTTS =
             notiConditions[notificationsSettingsStore.notificationTTS]?.();
         const playDesktopToast =
+            isTest ||
             notiConditions[notificationsSettingsStore.desktopToast]?.() ||
             notiConditions['AFK']();
 
@@ -1222,11 +1227,16 @@ export const useNotificationStore = defineStore('Notification', () => {
      *
      */
     function testNotification() {
-        playNoty({
-            type: 'Event',
-            created_at: new Date().toJSON(),
-            data: t('view.settings.notifications.notifications.test_message')
-        });
+        playNoty(
+            {
+                type: 'Event',
+                created_at: new Date().toJSON(),
+                data: t(
+                    'view.settings.notifications.notifications.test_message'
+                )
+            },
+            true
+        );
     }
 
     /**

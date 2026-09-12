@@ -94,8 +94,8 @@ export const useSearchStore = defineStore('Search', () => {
 
     async function directAccessPaste() {
         let cbText = '';
-        if (typeof CefSharp === 'undefined') {
-            cbText = await window.electron.getClipboardText();
+        if (true) {
+            cbText = await window.platform.getClipboardText();
         } else {
             cbText = await AppApi.GetClipboard().catch((e) => {
                 console.log(e);
