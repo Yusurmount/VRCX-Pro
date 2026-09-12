@@ -1,7 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { readText } from '@tauri-apps/plugin-clipboard-manager';
-import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import { relaunch } from '@tauri-apps/plugin-process';
 
 const call = (command, args) => invoke(command, args).catch(() => null);
@@ -37,12 +36,16 @@ export function installRuntimeBridge() {
         readFile: (filePath) => call('read_file', { filePath }),
         machineEncrypt: (plaintext) => sidecarCall(ready, 'AppApi', 'MachineEncrypt', [plaintext]),
         machineDecrypt: (encryptedData) => sidecarCall(ready, 'AppApi', 'MachineDecrypt', [encryptedData]),
-        desktopNotification: async (title, body) => {
-            let granted = await isPermissionGranted();
-            if (!granted) {
-                granted = (await requestPermission()) === 'granted';
+        desktopNotification: (title, body, image) => {
+            const options = { title, body };
+            if (image) {
+                options.icon = image;
             }
-            if (granted) sendNotification({ title, body });
+            return invoke('plugin:notification|notify', { options }).catch(
+                (error) => {
+                    console.error('desktopNotification failed', error);
+                }
+            );
         },
         restartApp: () => relaunch(),
         quitApplication: () => call('quit_application'),
