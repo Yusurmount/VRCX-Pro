@@ -355,7 +355,7 @@ export const useUiStore = defineStore('Ui', () => {
     });
 
     function showConsole() {
-        AppApi.ShowDevTools();
+        import('@tauri-apps/api/core').then(({ invoke }) => invoke('open_devtools'));
         if (
             AppDebug.debug ||
             AppDebug.debugWebRequests ||

@@ -32,7 +32,7 @@ class InteropApi {
             id: ++this.requestId
         });
         if (response?.ok === false) throw new Error(response.error || 'Sidecar request failed');
-        return response?.result ?? response;
+        return response?.result;
     }
 }
 

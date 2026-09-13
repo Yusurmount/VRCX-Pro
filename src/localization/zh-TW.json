@@ -1417,28 +1417,135 @@
                         "run_process_once": "開啟應用程式的單一執行個體"
                     },
                     "ui_debug": {
-                        "header": "介面除錯工具",
-                        "open": {
-                            "label": "介面除錯工具",
-                            "description": "用於觸發一些難以重現的彈窗和場景進行測試。",
-                            "button": "開啟"
+                        "header": "界面調試工具",
+                        "tabs": {
+                            "notifications": "通知",
+                            "onboarding": "引導",
+                            "dialogs": "對話框",
+                            "components": "組件"
                         },
-                        "oobe": {
-                            "label": "OOBE 精靈",
-                            "desc": "從第一步開始開啟首次啟動精靈。"
-                        },
-                        "reset_oobe": {
-                            "label": "重設 OOBE",
-                            "desc": "清除 OOBE 完成標記，然後重新開啟精靈。"
-                        },
-                        "welcome": {
-                            "label": "歡迎引導彈窗",
-                            "desc": "重設已檢視標記，重新顯示歡迎引導彈窗。"
+                        "gallery": {
+                            "hint": "VRCX 組件庫的視覺化展示。"
                         },
                         "toast": {
-                            "label": "測試提示通知",
-                            "desc": "顯示一條範例提示通知。",
-                            "message": "這是介面除錯工具傳送的測試通知。"
+                            "title": "測試提示通知",
+                            "description": "這是界面調試工具發送的測試通知。",
+                            "loading_message": "載入中…",
+                            "promise_success": "承誓已成功解決！",
+                            "promise_error": "承誓已被拒絕。",
+                            "action": "復原",
+                            "action_clicked": "操作已點擊！",
+                            "items": {
+                                "default": {
+                                    "label": "預設提示",
+                                    "desc": "顯示預設提示通知。"
+                                },
+                                "success": {
+                                    "label": "成功提示",
+                                    "desc": "顯示成功提示通知。"
+                                },
+                                "error": {
+                                    "label": "錯誤提示",
+                                    "desc": "顯示錯誤提示通知。"
+                                },
+                                "warning": {
+                                    "label": "警告提示",
+                                    "desc": "顯示警告提示通知。"
+                                },
+                                "info": {
+                                    "label": "訊息提示",
+                                    "desc": "顯示訊息提示通知。"
+                                },
+                                "loading": {
+                                    "label": "載入提示",
+                                    "desc": "顯示載入提示，然後轉為成功。"
+                                },
+                                "promise": {
+                                    "label": "承誓提示",
+                                    "desc": "通過承誓驱動的提示（隨機成功/失敗）。"
+                                },
+                                "action": {
+                                    "label": "操作提示",
+                                    "desc": "顯示带有操作按鈕的提示。"
+                                },
+                                "persistent": {
+                                    "label": "持續提示",
+                                    "desc": "顯示不會自動關閉的提示。"
+                                },
+                                "dismiss_all": {
+                                    "label": "關閉全部",
+                                    "desc": "關閉所有活動的提示。"
+                                }
+                            }
+                        },
+                        "onboarding": {
+                            "oobe": {
+                                "label": "OOBE 引導",
+                                "desc": "從第一步開始打開首次啟動引導。"
+                            },
+                            "reset_oobe": {
+                                "label": "重置 OOBE",
+                                "desc": "清除 OOBE 完成標記，然後重新打開引導。"
+                            },
+                            "welcome": {
+                                "label": "歡迎引導對話框",
+                                "desc": "重置已見標記，重新顯示歡迎引導彈窗。"
+                            },
+                            "whats_new": {
+                                "label": "新功能對話框",
+                                "desc": "打開最新版本的新功能對話框。"
+                            },
+                            "changelog": {
+                                "label": "更新日誌",
+                                "desc": "打開更新日誌對話框。"
+                            }
+                        },
+                        "dialogs": {
+                            "demo_description": "這是從 UI 調試工具觸發的示例對話框。您可以像使用普通對話框一概與其交互。",
+                            "result": "對話框結果：{reason}",
+                            "alert": {
+                                "label": "警告對話框",
+                                "desc": "顯示僅带確認按鈕的簡單警告對話框。"
+                            },
+                            "confirm": {
+                                "label": "確認對話框",
+                                "desc": "顯示带有確認和取消按鈕的確認對話框。"
+                            },
+                            "confirm_destructive": {
+                                "label": "危險確認",
+                                "desc": "顯示危險確認對話框（不可關閉）。"
+                            },
+                            "prompt": {
+                                "label": "輸入對話框",
+                                "desc": "顯示带有文本輸入框的輸入對話框。"
+                            },
+                            "prompt_validation": {
+                                "label": "带驗證的輸入",
+                                "desc": "顯示带正規表達式驗證的輸入對話框（3-16字元數字）。"
+                            },
+                            "otp_totp": {
+                                "label": "TOTP 提示",
+                                "desc": "顯示 TOTP 風格的 OTP 提示。"
+                            },
+                            "otp_email": {
+                                "label": "郵件 OTP 提示",
+                                "desc": "顯示郵件 OTP 提示。"
+                            },
+                            "otp_recovery": {
+                                "label": "回復密碼 OTP 提示",
+                                "desc": "顯示回復密碼 OTP 提示。"
+                            },
+                            "update": {
+                                "label": "VRCX 更新對話框",
+                                "desc": "顯示 VRCX 更新對話框。"
+                            }
+                        },
+                        "open": {
+                            "open": {
+                                "label": "介面偵錬工具",
+                                "description": "用於觸發一些難以重现的弹窗和場景進行測試。",
+                                "button": "開啟"
+                            }
                         }
                     },
                     "cache_debug": {
@@ -1455,7 +1562,7 @@
                         "clear_cache": "清除快取",
                         "refresh_cache": "刷新快取",
                         "auto_clear_cache": "自動清除快取",
-                        "show_console": "顯示主控台"
+                        "show_console": "Webview DevTools"
                     },
                     "sqlite_table_size": {
                         "header": "SQLite 數據表大小",
@@ -1546,6 +1653,11 @@
                         "error_invalid_json": "無效的 JSON 檔案，請選擇有效的 VRCX 資料庫備份檔案。",
                         "import_log_title": "匯入日誌",
                         "import_log_empty": "暫無匯入紀錄。"
+                    },
+                    "db_manage": {
+                        "button": "資料庫管理",
+                        "title": "資料庫管理",
+                        "description": "匯出、匯入或重設資料庫。"
                     },
                     "db_export": {
                         "button": "匯出資料庫",

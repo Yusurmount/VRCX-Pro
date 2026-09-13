@@ -192,6 +192,16 @@ fn show_main_window(app: tauri::AppHandle) -> Result<bool, String> {
     Ok(true)
 }
 
+#[tauri::command]
+fn open_devtools(app: tauri::AppHandle) -> Result<bool, String> {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+        let _ = window.open_devtools();
+    }
+    Ok(true)
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -219,7 +229,8 @@ pub fn run() {
             set_tray_icon_notification,
             quit_application,
             set_close_to_tray,
-            show_main_window
+            show_main_window,
+            open_devtools
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

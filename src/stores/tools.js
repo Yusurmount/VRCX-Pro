@@ -9,6 +9,7 @@ const initialDialogState = () => ({
     exportAvatarsList: false,
     editInviteMessages: false,
     autoChangeStatus: false,
+    databaseManagement: false,
     infoCompletion: false
 });
 

@@ -12,6 +12,7 @@
         :isAutoChangeStatusDialogVisible="autoChangeStatus"
         @close="closeDialog('autoChangeStatus')" />
     <ProfileCompletionDialog :visible="infoCompletion" @close="closeDialog('infoCompletion')" />
+    <DatabaseManagementDialog :visible="databaseManagement" @close="closeDialog('databaseManagement')" />
 </template>
 
 <script setup>
@@ -20,6 +21,7 @@
     import { useFriendStore, useToolsStore } from '../../../stores';
 
     import AutoChangeStatusDialog from '../dialogs/AutoChangeStatusDialog.vue';
+    import DatabaseManagementDialog from '../dialogs/DatabaseManagementDialog.vue';
     import ProfileCompletionDialog from '../dialogs/ProfileCompletionDialog.vue';
     import RegistryBackupDialog from '../dialogs/RegistryBackupDialog.vue';
 
@@ -34,6 +36,7 @@
     const toolsStore = useToolsStore();
     const {
         autoChangeStatus,
+        databaseManagement,
         infoCompletion,
         editInviteMessages,
         exportAvatarsList,

@@ -1419,27 +1419,134 @@
                     },
                     "ui_debug": {
                         "header": "界面调试工具",
-                        "open": {
-                            "label": "界面调试工具",
-                            "description": "用于触发一些难以重现的弹窗和场景进行测试。",
-                            "button": "打开"
+                        "tabs": {
+                            "notifications": "通知",
+                            "onboarding": "引导",
+                            "dialogs": "对话框",
+                            "components": "组件"
                         },
-                        "oobe": {
-                            "label": "OOBE 向导",
-                            "desc": "从第一步开始打开首次启动向导。"
-                        },
-                        "reset_oobe": {
-                            "label": "重置 OOBE",
-                            "desc": "清除 OOBE 完成标记，然后重新打开向导。"
-                        },
-                        "welcome": {
-                            "label": "欢迎引导弹窗",
-                            "desc": "重置已见标记，重新显示欢迎引导弹窗。"
+                        "gallery": {
+                            "hint": "VRCX 组件库的可视化展示。"
                         },
                         "toast": {
-                            "label": "测试提示通知",
-                            "desc": "显示一条示例提示通知。",
-                            "message": "这是界面调试工具发送的测试通知。"
+                            "title": "测试提示通知",
+                            "description": "这是界面调试工具发送的测试通知。",
+                            "loading_message": "加载中…",
+                            "promise_success": "承诺已成功解决！",
+                            "promise_error": "承诺已被拒绝。",
+                            "action": "撤销",
+                            "action_clicked": "操作已点击！",
+                            "items": {
+                                "default": {
+                                    "label": "默认提示",
+                                    "desc": "显示默认提示通知。"
+                                },
+                                "success": {
+                                    "label": "成功提示",
+                                    "desc": "显示成功提示通知。"
+                                },
+                                "error": {
+                                    "label": "错误提示",
+                                    "desc": "显示错误提示通知。"
+                                },
+                                "warning": {
+                                    "label": "警告提示",
+                                    "desc": "显示警告提示通知。"
+                                },
+                                "info": {
+                                    "label": "信息提示",
+                                    "desc": "显示信息提示通知。"
+                                },
+                                "loading": {
+                                    "label": "加载提示",
+                                    "desc": "显示加载提示，然后转为成功。"
+                                },
+                                "promise": {
+                                    "label": "承诺提示",
+                                    "desc": "通过承诺驱动的提示（随机成功/失败）。"
+                                },
+                                "action": {
+                                    "label": "操作提示",
+                                    "desc": "显示带有操作按钮的提示。"
+                                },
+                                "persistent": {
+                                    "label": "持久提示",
+                                    "desc": "显示不会自动关闭的提示。"
+                                },
+                                "dismiss_all": {
+                                    "label": "关闭所有",
+                                    "desc": "关闭所有活动的提示。"
+                                }
+                            }
+                        },
+                        "onboarding": {
+                            "oobe": {
+                                "label": "OOBE 向导",
+                                "desc": "从第一步开始打开首次启动向导。"
+                            },
+                            "reset_oobe": {
+                                "label": "重置 OOBE",
+                                "desc": "清除 OOBE 完成标记，然后重新打开向导。"
+                            },
+                            "welcome": {
+                                "label": "欢迎引导对话框",
+                                "desc": "重置已见标记，重新显示欢迎引导弹窗。"
+                            },
+                            "whats_new": {
+                                "label": "新功能对话框",
+                                "desc": "打开最新版本的新功能对话框。"
+                            },
+                            "changelog": {
+                                "label": "更新日志",
+                                "desc": "打开更新日志对话框。"
+                            }
+                        },
+                        "dialogs": {
+                            "demo_description": "这是从 UI 调试工具触发的示例对话框。您可以像使用普通对话框一样与其交互。",
+                            "result": "对话框结果：{reason}",
+                            "alert": {
+                                "label": "警告对话框",
+                                "desc": "显示仅带确认按钮的简单警告对话框。"
+                            },
+                            "confirm": {
+                                "label": "确认对话框",
+                                "desc": "显示带有确认和取消按钮的确认对话框。"
+                            },
+                            "confirm_destructive": {
+                                "label": "危险确认",
+                                "desc": "显示危险确认对话框（不可关闭）。"
+                            },
+                            "prompt": {
+                                "label": "输入对话框",
+                                "desc": "显示带有文本输入框的输入对话框。"
+                            },
+                            "prompt_validation": {
+                                "label": "带验证的输入",
+                                "desc": "显示带正则表达式验证的输入对话框（3-16位字母数字）。"
+                            },
+                            "otp_totp": {
+                                "label": "TOTP 提示",
+                                "desc": "显示 TOTP 风格的 OTP 提示。"
+                            },
+                            "otp_email": {
+                                "label": "邮件 OTP 提示",
+                                "desc": "显示邮件 OTP 提示。"
+                            },
+                            "otp_recovery": {
+                                "label": "恢复密码 OTP 提示",
+                                "desc": "显示恢复密码 OTP 提示。"
+                            },
+                            "update": {
+                                "label": "VRCX 更新对话框",
+                                "desc": "显示 VRCX 更新对话框。"
+                            }
+                        },
+                        "open": {
+                            "open": {
+                                "label": "界面调试工具",
+                                "description": "用于触发一些难以重现的弹窗和场景进行测试。",
+                                "button": "打开"
+                            }
                         }
                     },
                     "cache_debug": {
@@ -1456,7 +1563,7 @@
                         "clear_cache": "清除缓存",
                         "refresh_cache": "刷新",
                         "auto_clear_cache": "自动清理",
-                        "show_console": "显示界面调试工具"
+                        "show_console": "Webview DevTools"
                     },
                     "sqlite_table_size": {
                         "header": "SQLite 数据库信息",
@@ -1506,6 +1613,11 @@
                         "description": "设置\"拍立得\"和\"贴纸\"等内容保存的位置",
                         "set_folder": "设置保存文件夹",
                         "reset_override": "重置为默认"
+                    },
+                    "db_manage": {
+                        "button": "数据库管理",
+                        "title": "数据库管理",
+                        "description": "导出、导入或重置数据库。"
                     },
                     "db_export": {
                         "button": "导出数据库",

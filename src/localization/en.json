@@ -1418,27 +1418,134 @@
                     },
                     "ui_debug": {
                         "header": "UI Debug Tool",
-                        "open": {
-                            "label": "UI Debug Tool",
-                            "description": "Trigger hard-to-reach popups and scenes for testing.",
-                            "button": "Open"
+                        "tabs": {
+                            "notifications": "Notifications",
+                            "onboarding": "Onboarding",
+                            "dialogs": "Dialogs",
+                            "components": "Components"
                         },
-                        "oobe": {
-                            "label": "OOBE Wizard",
-                            "desc": "Open the first-run wizard from step 1."
-                        },
-                        "reset_oobe": {
-                            "label": "Reset OOBE",
-                            "desc": "Clear the OOBE completion flag, then reopen the wizard."
-                        },
-                        "welcome": {
-                            "label": "Welcome Dialog",
-                            "desc": "Reset the seen flag and show the welcome dialog again."
+                        "gallery": {
+                            "hint": "A visual showcase of the component library used throughout VRCX."
                         },
                         "toast": {
-                            "label": "Test Toast",
-                            "desc": "Show a sample toast notification.",
-                            "message": "This is a test notification from the UI debug tool."
+                            "title": "Test Toast",
+                            "description": "This is a test notification from the UI debug tool.",
+                            "loading_message": "Loading…",
+                            "promise_success": "Promise resolved successfully!",
+                            "promise_error": "Promise was rejected.",
+                            "action": "Undo",
+                            "action_clicked": "Action clicked!",
+                            "items": {
+                                "default": {
+                                    "label": "Default Toast",
+                                    "desc": "Show a default toast notification."
+                                },
+                                "success": {
+                                    "label": "Success Toast",
+                                    "desc": "Show a success toast notification."
+                                },
+                                "error": {
+                                    "label": "Error Toast",
+                                    "desc": "Show an error toast notification."
+                                },
+                                "warning": {
+                                    "label": "Warning Toast",
+                                    "desc": "Show a warning toast notification."
+                                },
+                                "info": {
+                                    "label": "Info Toast",
+                                    "desc": "Show an info toast notification."
+                                },
+                                "loading": {
+                                    "label": "Loading Toast",
+                                    "desc": "Show a loading toast that transitions to success."
+                                },
+                                "promise": {
+                                    "label": "Promise Toast",
+                                    "desc": "Show a toast driven by a promise (random success/failure)."
+                                },
+                                "action": {
+                                    "label": "Action Toast",
+                                    "desc": "Show a toast with an action button."
+                                },
+                                "persistent": {
+                                    "label": "Persistent Toast",
+                                    "desc": "Show a toast that does not auto-dismiss."
+                                },
+                                "dismiss_all": {
+                                    "label": "Dismiss All",
+                                    "desc": "Dismiss all active toasts."
+                                }
+                            }
+                        },
+                        "onboarding": {
+                            "oobe": {
+                                "label": "OOBE Wizard",
+                                "desc": "Open the first-run wizard from step 1."
+                            },
+                            "reset_oobe": {
+                                "label": "Reset OOBE",
+                                "desc": "Clear the OOBE completion flag, then reopen the wizard."
+                            },
+                            "welcome": {
+                                "label": "Welcome Dialog",
+                                "desc": "Reset the seen flag and show the welcome dialog again."
+                            },
+                            "whats_new": {
+                                "label": "What's New Dialog",
+                                "desc": "Open the What's New dialog for the latest release."
+                            },
+                            "changelog": {
+                                "label": "Changelog",
+                                "desc": "Open the changelog dialog."
+                            }
+                        },
+                        "dialogs": {
+                            "demo_description": "This is a demo dialog triggered from the UI debug tool. You can interact with it as you would with any normal dialog.",
+                            "result": "Dialog result: {reason}",
+                            "alert": {
+                                "label": "Alert Dialog",
+                                "desc": "Show a simple alert dialog with only a confirm button."
+                            },
+                            "confirm": {
+                                "label": "Confirm Dialog",
+                                "desc": "Show a confirmation dialog with confirm and cancel buttons."
+                            },
+                            "confirm_destructive": {
+                                "label": "Destructive Confirm",
+                                "desc": "Show a destructive confirmation dialog (non-dismissible)."
+                            },
+                            "prompt": {
+                                "label": "Prompt Dialog",
+                                "desc": "Show a prompt dialog with a text input."
+                            },
+                            "prompt_validation": {
+                                "label": "Prompt with Validation",
+                                "desc": "Show a prompt dialog with regex validation (3-16 alphanumeric chars)."
+                            },
+                            "otp_totp": {
+                                "label": "TOTP Prompt",
+                                "desc": "Show a TOTP-style OTP prompt."
+                            },
+                            "otp_email": {
+                                "label": "Email OTP Prompt",
+                                "desc": "Show an email OTP prompt."
+                            },
+                            "otp_recovery": {
+                                "label": "Recovery OTP Prompt",
+                                "desc": "Show a recovery OTP prompt."
+                            },
+                            "update": {
+                                "label": "VRCX Update Dialog",
+                                "desc": "Show the VRCX update dialog."
+                            }
+                        },
+                        "open": {
+                            "open": {
+                                "label": "UI Debug Tool",
+                                "description": "Trigger hard-to-reach popups and scenes for testing.",
+                                "button": "Open"
+                            }
                         }
                     },
                     "cache_debug": {
@@ -1455,7 +1562,7 @@
                         "clear_cache": "Clear Cache",
                         "refresh_cache": "Refresh Cache",
                         "auto_clear_cache": "Auto Clear Cache",
-                        "show_console": "Show Console"
+                        "show_console": "Webview DevTools"
                     },
                     "sqlite_table_size": {
                         "header": "SQLite Table Size",
@@ -1505,6 +1612,11 @@
                         "description": "Open or set the folder for VRChat content such as Prints and Stickers.",
                         "set_folder": "Set Folder",
                         "reset_override": "Reset"
+                    },
+                    "db_manage": {
+                        "button": "Database Management",
+                        "title": "Database Management",
+                        "description": "Export, import, or reset the database."
                     },
                     "db_export": {
                         "button": "Export Database",

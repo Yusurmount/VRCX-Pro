@@ -163,6 +163,22 @@ internal static class Program
         "checkupdateprogress" => CheckUpdateProgress(),
         "cancelupdate" => CancelUpdate(),
         "restartapplication" => RestartApplication(),
+        "readconfigfile" => ReadConfigFileSafe(),
+        "readconfigfilesafe" => ReadConfigFileSafe(),
+        "getvrchatappdatalocation" => GetVrChatAppDataFolder(),
+        "getvrchatphotoslocation" => GetVrChatPhotosFolder(),
+        "getvrchatscreenshotslocation" => GetVrChatScreenshotsFolder(),
+        "getvrchatcachelocation" => GetVrChatCacheFolder(),
+        "openvrcxappdatafolder" => OpenExplorerFolder(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX")),
+        "openvrcappdatafolder" => OpenExplorerFolder(GetVrChatAppDataFolder()),
+        "openvrcphotosfolder" => OpenExplorerFolder(GetVrChatPhotosFolder()),
+        "openvrcscreenshotsfolder" => OpenExplorerFolder(GetVrChatScreenshotsFolder()),
+        "opencrashvrccrashdumps" => OpenExplorerFolder(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CrashDumps")),
+        "openfolderandselectitem" => OpenFolderAndSelectItem(args),
+        "openuvcphotosfolder" => OpenExplorerFolder(args.FirstOrDefault().ValueKind == JsonValueKind.String ? args[0].GetString() ?? GetVrChatPhotosFolder() : GetVrChatPhotosFolder()),
+        "openfolderselectordialog" => OpenFolderSelectorDialog(args),
+        "openfileselectordialog" => OpenFileSelectorDialog(args),
+        "savefileselectordialog" => SaveFileSelectorDialog(args),
         _ => null
     };
 
@@ -279,6 +295,109 @@ internal static class Program
         lock (UpdatingLock!) { UpdateCts?.Cancel(); }
         UpdateProgress = 0;
         return true;
+    }
+
+
+    private static string ReadVrChatConfigValue(string key)
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var appDataParent = Path.GetDirectoryName(appData) ?? appData;
+        var configPath = Path.Combine(appDataParent, "LocalLow", "VRChat", "VRChat", "config.json");
+        if (!File.Exists(configPath)) return string.Empty;
+        try
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(configPath));
+            if (doc.RootElement.TryGetProperty(key, out var prop) && prop.ValueKind == JsonValueKind.String)
+                return prop.GetString() ?? string.Empty;
+        }
+        catch { }
+        return string.Empty;
+    }
+
+    private static string GetVrChatAppDataFolder()
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var appDataParent = Path.GetDirectoryName(appData) ?? appData;
+        return Path.Combine(appDataParent, "LocalLow", "VRChat", "VRChat");
+    }
+
+    private static string GetVrChatPhotosFolder()
+    {
+        var customPath = ReadVrChatConfigValue("picture_output_folder");
+        if (!string.IsNullOrWhiteSpace(customPath))
+        {
+            var expanded = Environment.ExpandEnvironmentVariables(customPath);
+            if (Directory.Exists(expanded)) return expanded;
+        }
+        var myPictures = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+        var vrchatPictures = Path.Combine(myPictures, "VRChat");
+        if (Directory.Exists(vrchatPictures)) return vrchatPictures;
+        return Path.Combine(GetVrChatAppDataFolder(), "UgcPhotos");
+    }
+
+    private static string GetVrChatScreenshotsFolder()
+    {
+        var screenshotsDir = Path.Combine(GetVrChatAppDataFolder(), "Screenshots");
+        if (Directory.Exists(screenshotsDir)) return screenshotsDir;
+        return GetVrChatPhotosFolder();
+    }
+
+    private static string GetVrChatCacheFolder()
+    {
+        return Path.Combine(GetVrChatAppDataFolder(), "CacheW");
+    }
+
+    private static bool OpenExplorerFolder(string path)
+    {
+        if (!OperatingSystem.IsWindows()) return false;
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+            return true;
+        }
+        catch { return false; }
+    }
+
+    private static bool OpenFolderAndSelectItem(JsonElement[] args)
+    {
+        if (!OperatingSystem.IsWindows()) return false;
+        var path = args.FirstOrDefault().ValueKind == JsonValueKind.String ? args[0].GetString() ?? string.Empty : string.Empty;
+        if (string.IsNullOrWhiteSpace(path)) return false;
+        var isFolder = args.ElementAtOrDefault(1).ValueKind == JsonValueKind.True;
+        if (isFolder)
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+        }
+        else
+        {
+            if (!File.Exists(path)) return false;
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"/select,\"{path}\"",
+                UseShellExecute = true
+            });
+        }
+        return true;
+    }
+
+    private static string OpenFolderSelectorDialog(JsonElement[] args) => string.Empty;
+    private static string OpenFileSelectorDialog(JsonElement[] args) => string.Empty;
+    private static string SaveFileSelectorDialog(JsonElement[] args) => string.Empty;
+
+    private static string ReadConfigFileSafe()
+    {
+        var configPath = Path.Combine(GetVrChatAppDataFolder(), "config.json");
+        if (!File.Exists(configPath)) return "{}";
+        try { return File.ReadAllText(configPath); } catch { return "{}"; }
     }
 
     private static object? RestartApplication()

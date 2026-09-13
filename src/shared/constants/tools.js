@@ -158,6 +158,16 @@ const toolDefinitions = [
         action: { type: 'dialog', dialogKey: 'auto-change-status' }
     },
     {
+        key: 'database-management',
+        category: 'system',
+        iconKey: 'database',
+        navIcon: 'ri-database-2-line',
+        titleKey: 'view.settings.advanced.advanced.db_manage.button',
+        descriptionKey: 'view.settings.advanced.advanced.db_manage.description',
+        navEligible: true,
+        action: { type: 'dialog', dialogKey: 'databaseManagement' }
+    },
+    {
         key: 'info-completion',
         category: 'system',
         iconKey: 'database',
