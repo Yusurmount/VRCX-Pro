@@ -108,7 +108,7 @@
                             :alt="t('dialog.edit_profile.icon')"
                             loading="lazy" />
                         <Button
-                            v-if="editProfileDialog.iconUrl"
+                            v-if="editProfileDialog.iconUrl !== currentUser.currentAvatarThumbnailImageUrl"
                             size="sm"
                             variant="outline"
                             :disabled="editProfileDialog.loading"
