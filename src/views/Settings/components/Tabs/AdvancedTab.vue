@@ -54,10 +54,6 @@
                 <Switch :model-value="logResourceLoad" @update:modelValue="setLogResourceLoad" />
             </SettingsItem>
 
-            <SettingsItem :label="t('view.settings.general.logging.empty_avatar')">
-                <Switch :model-value="logEmptyAvatars" @update:modelValue="setLogEmptyAvatars" />
-            </SettingsItem>
-
             <SettingsItem :label="t('view.settings.general.logging.auto_login_delay')">
                 <Switch :model-value="autoLoginDelayEnabled" @update:modelValue="setAutoLoginDelayEnabled" />
             </SettingsItem>
@@ -450,7 +446,7 @@
     const { showConsole } = useUiStore();
 
     const generalSettingsStore = useGeneralSettingsStore();
-    const { udonExceptionLogging, logResourceLoad, logEmptyAvatars, autoLoginDelayEnabled } =
+    const { udonExceptionLogging, logResourceLoad, autoLoginDelayEnabled } =
         storeToRefs(generalSettingsStore);
     const {
         setUdonExceptionLogging,
