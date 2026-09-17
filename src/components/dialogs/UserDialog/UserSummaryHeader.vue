@@ -358,22 +358,21 @@
             </span>
         </div>
         <div class="text-xs flex justify-between gap-2">
-            <AvatarInfo
-                :key="userDialog.id"
-                :imageurl="userDialog.ref.currentAvatarImageUrl"
-                :userid="userDialog.id"
-                :avatartags="userDialog.ref.currentAvatarTags"
-                style="display: inline-block" />
-            <MediaImage
-                v-if="userDialog.ref.currentAvatarThumbnailImageUrl"
-                class="h-12 w-16 rounded-lg object-cover cursor-pointer flex-none"
-                :src="userDialog.ref.currentAvatarThumbnailImageUrl"
-                @click="
-                    showFullscreenImageDialog(
-                        userDialog.ref.currentAvatarImageUrl || userDialog.ref.currentAvatarThumbnailImageUrl
-                    )
-                "
-                loading="lazy" />
+            <template v-if="avatarImageUrl">
+                <AvatarInfo
+                    :key="avatarImageUrl"
+                    :imageurl="avatarImageUrl"
+                    :userid="userDialog.id"
+                    :avatartags="userDialog.ref.currentAvatarTags"
+                    style="display: inline-block" />
+                <MediaImage
+                    v-if="userDialog.ref.currentAvatarThumbnailImageUrl"
+                    class="h-12 w-16 rounded-lg object-cover cursor-pointer flex-none"
+                    :src="userDialog.ref.currentAvatarThumbnailImageUrl"
+                    @click="showFullscreenImageDialog(avatarImageUrl)"
+                    loading="lazy" />
+            </template>
+            <div v-else class="text-xs text-muted-foreground">—</div>
         </div>
     </Panel>
 
@@ -523,6 +522,13 @@
             userImage(userDialog.value.publicProfileRef, true, '256') ||
             userImage(userDialog.value.ref, true, '256')
     );
+    // 当前用户对话框 ref 的头像可能为空/滞后，看自己时以登录用户的当前头像为准
+    const avatarImageUrl = computed(() => {
+        if (userDialog.value.id === currentUser.value.id) {
+            return currentUser.value.currentAvatarImageUrl;
+        }
+        return userDialog.value.ref.currentAvatarImageUrl;
+    });
 
     watch(
         () => userDialog.value.id,
