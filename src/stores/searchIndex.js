@@ -11,6 +11,9 @@ export const useSearchIndexStore = defineStore('SearchIndex', () => {
     const favWorlds = new Map();
 
     const version = ref(0);
+    // Cached snapshot rebuilt only when version changes.
+    let _cachedSnapshot = null;
+    let _snapshotVersion = -1;
 
     /**
      * Sync a friend context into the search index.
@@ -258,14 +261,18 @@ export const useSearchIndexStore = defineStore('SearchIndex', () => {
      * @returns {object} Plain object arrays ready for postMessage.
      */
     function getSnapshot() {
-        return {
-            friends: Array.from(friends.values()),
-            avatars: Array.from(avatars.values()),
-            worlds: Array.from(worlds.values()),
-            groups: Array.from(groups.values()),
-            favAvatars: Array.from(favAvatars.values()),
-            favWorlds: Array.from(favWorlds.values())
-        };
+        if (_snapshotVersion !== version.value) {
+            _cachedSnapshot = {
+                friends: Array.from(friends.values()),
+                avatars: Array.from(avatars.values()),
+                worlds: Array.from(worlds.values()),
+                groups: Array.from(groups.values()),
+                favAvatars: Array.from(favAvatars.values()),
+                favWorlds: Array.from(favWorlds.values())
+            };
+            _snapshotVersion = version.value;
+        }
+        return _cachedSnapshot;
     }
 
     return {

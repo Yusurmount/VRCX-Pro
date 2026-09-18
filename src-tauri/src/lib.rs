@@ -7,6 +7,8 @@ use tauri::menu::{Menu, MenuItem, Submenu};
 use tauri::tray::TrayIconBuilder;
 use tauri::{Emitter, Manager, State};
 
+mod mcp;
+
 struct SidecarProcess {
     child: Child,
     reader: BufReader<ChildStdout>,
@@ -17,6 +19,74 @@ struct DotnetSidecar(Arc<Mutex<Option<SidecarProcess>>>);
 struct TrayState(Mutex<Option<tauri::tray::TrayIcon>>);
 
 struct CloseToTray(Mutex<bool>);
+
+struct McpServerState(Mutex<Option<mcp::McpServer>>);
+
+struct LaunchArgsState(LaunchArgs);
+
+/// Parsed command-line launch arguments, mirroring the old .NET StartupArgs.
+#[derive(Clone, serde::Serialize)]
+struct LaunchArgs {
+    /// App was launched at Windows startup (pass `--startup`).
+    startup: bool,
+    /// Debug mode enabled (pass `--debug`).
+    debug: bool,
+    /// VR overlay mode (pass `--overlay`).
+    overlay: bool,
+    /// Disable GPU acceleration (pass `--disable-gpu`).
+    disable_gpu: bool,
+    /// Center window on screen (pass `--center`).
+    center: bool,
+    /// Custom config directory (pass `--config=<dir>`).
+    config_directory: Option<String>,
+    /// Proxy server URL (pass `--proxy-server=<url>`).
+    proxy_server: Option<String>,
+    /// Override window width (pass `--width=<N>`).
+    width: Option<u32>,
+    /// Override window height (pass `--height=<N>`).
+    height: Option<u32>,
+    /// Launch command from vrcx:// URI (pass `vrcx://...`).
+    launch_command: Option<String>,
+}
+
+fn parse_launch_args(args: &[String]) -> LaunchArgs {
+    let mut result = LaunchArgs {
+        startup: false,
+        debug: false,
+        overlay: false,
+        disable_gpu: false,
+        center: false,
+        config_directory: None,
+        proxy_server: None,
+        width: None,
+        height: None,
+        launch_command: None,
+    };
+    for arg in args {
+        if arg == "--startup" {
+            result.startup = true;
+        } else if arg == "--debug" {
+            result.debug = true;
+        } else if arg == "--overlay" {
+            result.overlay = true;
+        } else if arg == "--disable-gpu" {
+            result.disable_gpu = true;
+        } else if arg == "--center" {
+            result.center = true;
+        } else if let Some(rest) = arg.strip_prefix("--config=") {
+            result.config_directory = Some(rest.trim_matches(|c| c == '"' || c == '\'').to_string());
+        } else if let Some(rest) = arg.strip_prefix("--proxy-server=") {
+            result.proxy_server = Some(rest.trim_matches(|c| c == '"' || c == '\'').to_string());
+        } else if let Some(rest) = arg.strip_prefix("--width=") {
+            result.width = rest.parse().ok();
+        } else if let Some(rest) = arg.strip_prefix("--height=") {
+            result.height = rest.parse().ok();
+        } else if arg.starts_with("vrcx://") {
+            result.launch_command = Some(arg.clone());
+        }
+    }
+    result
+}
 
 /// Registers the process-level AppUserModelID so Windows toast notifications
 /// work even in dev / portable (non-installed) builds, where no Start-menu
@@ -193,6 +263,23 @@ fn show_main_window(app: tauri::AppHandle) -> Result<bool, String> {
 }
 
 #[tauri::command]
+fn resize_window(app: tauri::AppHandle, width: f64, height: f64) -> Result<bool, String> {
+    if let Some(window) = app.get_webview_window("main") {
+        let size = tauri::LogicalSize::new(width, height);
+        let _ = window.set_size(size);
+    }
+    Ok(true)
+}
+
+#[tauri::command]
+fn center_window(app: tauri::AppHandle) -> Result<bool, String> {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.center();
+    }
+    Ok(true)
+}
+
+#[tauri::command]
 fn open_devtools(app: tauri::AppHandle) -> Result<bool, String> {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.show();
@@ -202,7 +289,52 @@ fn open_devtools(app: tauri::AppHandle) -> Result<bool, String> {
     Ok(true)
 }
 
+#[tauri::command]
+fn get_launch_args(state: State<'_, LaunchArgsState>) -> LaunchArgs {
+    state.0.clone()
+}
+
+
+#[tauri::command]
+fn start_mcp_server(
+    state: State<'_, McpServerState>,
+    port: u16,
+) -> Result<bool, String> {
+    let mut guard = state.0.lock().map_err(|_| "mcp mutex poisoned".to_string())?;
+    if guard.is_some() {
+        return Ok(true);
+    }
+    let path = if let Some(appdata) = std::env::var("APPDATA").ok() {
+        std::path::PathBuf::from(appdata).join("VRCX").join("VRCX.sqlite3")
+    } else if let Some(home) = std::env::var("HOME").ok() {
+        std::path::PathBuf::from(home).join(".local").join("share").join("VRCX").join("VRCX.sqlite3")
+    } else {
+        return Err("Cannot determine default database path".to_string());
+    };
+    if !path.exists() {
+        return Err(format!("Database not found: {}", path.display()));
+    }
+    let server = mcp::McpServer::start(port, path);
+    *guard = Some(server);
+    Ok(true)
+}
+#[tauri::command]
+fn stop_mcp_server(state: State<'_, McpServerState>) -> Result<bool, String> {
+    let mut guard = state.0.lock().map_err(|_| "mcp mutex poisoned".to_string())?;
+    if let Some(server) = guard.take() {
+        server.shutdown();
+    }
+    Ok(true)
+}
+
+#[tauri::command]
+fn mcp_server_status(state: State<'_, McpServerState>) -> bool {
+    state.0.lock().expect("mcp mutex poisoned").is_some()
+}
+
 pub fn run() {
+    let launch_args = parse_launch_args(&std::env::args().collect::<Vec<_>>());
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -217,6 +349,8 @@ pub fn run() {
         .manage(DotnetSidecar(Arc::new(Mutex::new(None))))
         .manage(TrayState(Mutex::new(None)))
         .manage(CloseToTray(Mutex::new(false)))
+        .manage(LaunchArgsState(launch_args))
+        .manage(McpServerState(Mutex::new(None)))
         .invoke_handler(tauri::generate_handler![
             get_arch,
             dotnet_status,
@@ -230,7 +364,13 @@ pub fn run() {
             quit_application,
             set_close_to_tray,
             show_main_window,
-            open_devtools
+            resize_window,
+            center_window,
+            open_devtools,
+            get_launch_args,
+            start_mcp_server,
+            stop_mcp_server,
+            mcp_server_status
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

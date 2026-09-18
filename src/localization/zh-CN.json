@@ -961,7 +961,25 @@
                 }
             },
             "integrations": {
-                "header": "集成"
+                "header": "集成",
+                "mcp_server": {
+                    "header": "MCP 服务器",
+                    "enable": "启用 MCP 服务器",
+                    "enable_description": "启动本地 Model Context Protocol (MCP) 服务器，允许 AI 助手查询您的 VRCX 数据。",
+                    "server_port": "服务器端口",
+                    "server_port_description": "MCP 服务器监听的端口（默认：3001）。",
+                    "port_button": "端口：{port}",
+                    "server_status": "服务器状态",
+                    "status_running": "运行中",
+                    "status_stopped": "已停止",
+                    "database_path": "数据库路径",
+                    "database_path_description": "VRCX SQLite 数据库文件的路径。",
+                    "database_path_default": "默认",
+                    "port_dialog_title": "MCP 服务器端口",
+                    "port_dialog_description": "请输入 MCP 服务器的端口号（1024-65535）。",
+                    "port_dialog_error": "请输入有效的端口号（1024-65535）。",
+                    "db_dialog_title": "选择 VRCX 数据库"
+                }
             },
             "advanced_groups": {
                 "system": {
@@ -3568,7 +3586,9 @@
                 "403_404_bailing_request": "由于最近出现的 403/404 错误，请求已中止",
                 "unavailable": "服务可能由于 VRChat 内部问题而不可用"
             }
-        }
+        },
+        "mcp_server_started": "MCP 服务器已启动",
+        "mcp_server_error": "MCP 服务器错误：{error}"
     },
     "accessibility": {
         "toggle_sidebar": "切换侧边栏",

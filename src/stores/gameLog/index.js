@@ -495,6 +495,9 @@ export const useGameLogStore = defineStore('GameLog', () => {
      *
      */
     function sweepGameLog() {
+        if (vrcxStore.maxTableSize <= 0) {
+            return; // -1 = unlimited
+        }
         const j = gameLogTableData.value.length;
         if (j > vrcxStore.maxTableSize + 50) {
             gameLogTableData.value = gameLogTableData.value.slice(0, -50);

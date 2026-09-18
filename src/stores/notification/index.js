@@ -97,57 +97,55 @@ export const useNotificationStore = defineStore('Notification', () => {
     const unseenNotifications = ref([]);
     const isNotificationsLoading = ref(false);
     const isNotificationCenterOpen = ref(false);
-
-    const friendNotifications = computed(() =>
-        notificationTable.value.data.filter(
-            (n) => getNotificationCategory(n.type) === 'friend'
-        )
-    );
-    const groupNotifications = computed(() =>
-        notificationTable.value.data.filter(
-            (n) => getNotificationCategory(n.type) === 'group'
-        )
-    );
-    const otherNotifications = computed(() =>
-        notificationTable.value.data.filter(
-            (n) => getNotificationCategory(n.type) === 'other'
-        )
-    );
     const unseenSet = computed(() => new Set(unseenNotifications.value));
-    const unseenFriendNotifications = computed(() =>
-        friendNotifications.value.filter((n) => unseenSet.value.has(n.id))
-    );
-    const unseenGroupNotifications = computed(() =>
-        groupNotifications.value.filter((n) => unseenSet.value.has(n.id))
-    );
-    const unseenOtherNotifications = computed(() =>
-        otherNotifications.value.filter((n) => unseenSet.value.has(n.id))
-    );
     const recentCutoff = computed(() => dayjs().subtract(24, 'hour').valueOf());
-    const recentFriendNotifications = computed(() =>
-        friendNotifications.value.filter(
-            (n) =>
-                !unseenSet.value.has(n.id) &&
-                n.seen !== false &&
-                getNotificationTs(n) > recentCutoff.value
-        )
-    );
-    const recentGroupNotifications = computed(() =>
-        groupNotifications.value.filter(
-            (n) =>
-                !unseenSet.value.has(n.id) &&
-                n.seen !== false &&
-                getNotificationTs(n) > recentCutoff.value
-        )
-    );
-    const recentOtherNotifications = computed(() =>
-        otherNotifications.value.filter(
-            (n) =>
-                !unseenSet.value.has(n.id) &&
-                n.seen !== false &&
-                getNotificationTs(n) > recentCutoff.value
-        )
-    );
+
+    // Single-pass categorization: avoids 9+ independent iterations over notificationTable.
+    // Computes friend/group/other, unseen*, and recent* (seen within 24h) in one loop.
+    const _categorizedNotifications = computed(() => {
+        const data = notificationTable.value.data;
+        const friend = [];
+        const group = [];
+        const other = [];
+        const unseenFriend = [];
+        const unseenGroup = [];
+        const unseenOther = [];
+        const recentFriend = [];
+        const recentGroup = [];
+        const recentOther = [];
+        const unseen = unseenSet.value;
+        const cutoff = recentCutoff.value;
+        for (let i = 0, len = data.length; i < len; i++) {
+            const n = data[i];
+            const cat = getNotificationCategory(n.type);
+            const isUnseen = unseen.has(n.id);
+            const isRecent = !isUnseen && n.seen !== false && getNotificationTs(n) > cutoff;
+            if (cat === 'friend') {
+                friend.push(n);
+                if (isUnseen) unseenFriend.push(n);
+                else if (isRecent) recentFriend.push(n);
+            } else if (cat === 'group') {
+                group.push(n);
+                if (isUnseen) unseenGroup.push(n);
+                else if (isRecent) recentGroup.push(n);
+            } else {
+                other.push(n);
+                if (isUnseen) unseenOther.push(n);
+                else if (isRecent) recentOther.push(n);
+            }
+        }
+        return { friend, group, other, unseenFriend, unseenGroup, unseenOther, recentFriend, recentGroup, recentOther };
+    });
+
+    const friendNotifications = computed(() => _categorizedNotifications.value.friend);
+    const groupNotifications = computed(() => _categorizedNotifications.value.group);
+    const otherNotifications = computed(() => _categorizedNotifications.value.other);
+    const unseenFriendNotifications = computed(() => _categorizedNotifications.value.unseenFriend);
+    const unseenGroupNotifications = computed(() => _categorizedNotifications.value.unseenGroup);
+    const unseenOtherNotifications = computed(() => _categorizedNotifications.value.unseenOther);
+    const recentFriendNotifications = computed(() => _categorizedNotifications.value.recentFriend);
+    const recentGroupNotifications = computed(() => _categorizedNotifications.value.recentGroup);
+    const recentOtherNotifications = computed(() => _categorizedNotifications.value.recentOther);
     const hasUnseenNotifications = computed(
         () => unseenNotifications.value.length > 0
     );

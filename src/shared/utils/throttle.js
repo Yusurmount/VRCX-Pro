@@ -1,16 +1,32 @@
-export function createRateLimiter({ limitPerInterval, intervalMs }) {
-    const stamps = [];
+﻿export function createRateLimiter({ limitPerInterval, intervalMs }) {
+    const timestamps = new Uint32Array(limitPerInterval);
+    let head = 0;
+    let count = 0;
+
+    function evictOld(now) {
+        const cutoff = now - intervalMs;
+        while (count > 0 && timestamps[head % limitPerInterval] <= cutoff) {
+            head = (head + 1) % limitPerInterval;
+            count--;
+        }
+    }
 
     async function throttle() {
-        const now = Date.now();
-        while (stamps.length && now - stamps[0] > intervalMs) {
-            stamps.shift();
+        const now = Date.now() >>> 0;
+        evictOld(now);
+        if (count >= limitPerInterval) {
+            const oldest = timestamps[head % limitPerInterval];
+            const wait = intervalMs - (now - oldest);
+            if (wait > 0) {
+                await new Promise((resolve) => setTimeout(resolve, wait));
+            }
+            // After waiting, evict again
+            const now2 = Date.now() >>> 0;
+            evictOld(now2);
         }
-        if (stamps.length >= limitPerInterval) {
-            const wait = intervalMs - (now - stamps[0]);
-            await new Promise((resolve) => setTimeout(resolve, wait));
-        }
-        stamps.push(Date.now());
+        const pos = (head + count) % limitPerInterval;
+        timestamps[pos] = Date.now() >>> 0;
+        count++;
     }
 
     return {
@@ -22,7 +38,8 @@ export function createRateLimiter({ limitPerInterval, intervalMs }) {
             await throttle();
         },
         clear() {
-            stamps.length = 0;
+            head = 0;
+            count = 0;
         }
     };
 }

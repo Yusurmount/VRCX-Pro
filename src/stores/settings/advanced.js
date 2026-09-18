@@ -71,6 +71,9 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
     const vrcRegistryAutoBackup = ref(true);
     const vrcRegistryAskRestore = ref(true);
     const sentryErrorReporting = ref(false);
+    const mcpServerEnabled = ref(false);
+    const mcpServerPort = ref(3001);
+    const mcpServerStatus = ref(false);
     const MIN_POLL_INTERVAL_SECONDS = 30;
     const pollMinInterval = ref(60);
     watch(
@@ -120,7 +123,9 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
             vrcRegistryAutoBackupConfig,
             vrcRegistryAskRestoreConfig,
             sentryErrorReportingConfig,
-            pollMinIntervalConfig
+            pollMinIntervalConfig,
+            mcpServerEnabledConfig,
+            mcpServerPortConfig
         ] = await Promise.all([
             configRepository.getBool('enablePrimaryPassword', false),
             configRepository.getString('VRCX_bioLanguage'),
@@ -169,10 +174,15 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
             configRepository.getBool('VRCX_saveInstanceEmoji', false),
             configRepository.getBool('VRCX_vrcRegistryAutoBackup', true),
             configRepository.getBool('VRCX_vrcRegistryAskRestore', true),
-            configRepository.getString('VRCX_SentryEnabled', '')
+            configRepository.getString('VRCX_SentryEnabled', ''),
+            configRepository.getBool('VRCX_mcpServerEnabled', false),
+            configRepository.getInt('VRCX_mcpServerPort', 3001)
         ]);
 
-        if (Number.isFinite(pollMinIntervalConfig) && pollMinIntervalConfig > 0) {
+        if (
+            Number.isFinite(pollMinIntervalConfig) &&
+            pollMinIntervalConfig > 0
+        ) {
             pollMinInterval.value = Math.max(
                 pollMinIntervalConfig,
                 MIN_POLL_INTERVAL_SECONDS
@@ -224,6 +234,9 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
         vrcRegistryAutoBackup.value = vrcRegistryAutoBackupConfig;
         vrcRegistryAskRestore.value = vrcRegistryAskRestoreConfig;
         sentryErrorReporting.value = sentryErrorReportingConfig === 'true';
+        mcpServerEnabled.value = mcpServerEnabledConfig;
+        mcpServerPort.value = mcpServerPortConfig || 3001;
+        await refreshMcpStatus();
 
         handleSetAppLauncherSettings();
 
@@ -1135,6 +1148,58 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
             .catch(() => {});
     }
 
+    async function setMcpServerEnabled(value) {
+        mcpServerEnabled.value = value;
+        await configRepository.setBool('VRCX_mcpServerEnabled', value);
+        if (value) {
+            await startMcpServer();
+        } else {
+            await stopMcpServer();
+        }
+    }
+
+    async function setMcpServerPort(value) {
+        mcpServerPort.value = value;
+        await configRepository.setInt('VRCX_mcpServerPort', value);
+        if (mcpServerEnabled.value) {
+            await stopMcpServer();
+            await startMcpServer();
+        }
+    }
+
+    async function startMcpServer() {
+        try {
+            const { invoke } = await import('@tauri-apps/api/core');
+            await invoke('start_mcp_server', {
+                port: mcpServerPort.value
+            });
+            mcpServerStatus.value = true;
+            toast.success(t('api.mcp_server_started'));
+        } catch (err) {
+            console.error('[MCP] Failed to start:', err);
+            toast.error(t('api.mcp_server_error', { error: err }));
+        }
+    }
+
+    async function stopMcpServer() {
+        try {
+            const { invoke } = await import('@tauri-apps/api/core');
+            await invoke('stop_mcp_server');
+            mcpServerStatus.value = false;
+        } catch (err) {
+            console.error('[MCP] Failed to stop:', err);
+        }
+    }
+
+    async function refreshMcpStatus() {
+        try {
+            const { invoke } = await import('@tauri-apps/api/core');
+            mcpServerStatus.value = await invoke('mcp_server_status');
+        } catch {
+            mcpServerStatus.value = false;
+        }
+    }
+
     return {
         state,
 
@@ -1179,6 +1244,9 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
         vrcRegistryAskRestore,
         sentryErrorReporting,
         pollMinInterval,
+        mcpServerEnabled,
+        mcpServerPort,
+        mcpServerStatus,
 
         setEnablePrimaryPassword,
         setEnablePrimaryPasswordConfigRepository,
@@ -1234,6 +1302,11 @@ export const useAdvancedSettingsStore = defineStore('AdvancedSettings', () => {
         checkSentryConsent,
         askDeleteAllScreenshotMetadata,
         setPollMinInterval,
-        promptPollMinInterval
+        promptPollMinInterval,
+        setMcpServerEnabled,
+        setMcpServerPort,
+        startMcpServer,
+        stopMcpServer,
+        refreshMcpStatus
     };
 });

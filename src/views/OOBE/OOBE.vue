@@ -12,7 +12,7 @@
 
         <!-- Left: centered icon with SVG stroke animation -->
         <aside class="oobe-left">
-            <Transition name="oobe-icon">
+            <Transition @enter="onIconEnter" @leave="onIconLeave" :css="false" mode="out-in">
                 <div ref="iconWrapRef" :key="currentStep" class="oobe-icon-wrap">
                     <img
                         v-if="currentStep === 1"
@@ -27,8 +27,8 @@
 
         <!-- Right: content -->
         <section class="oobe-right">
-            <div class="oobe-content">
-                <Transition name="oobe-content" mode="out-in">
+            <Transition @enter="onContentEnter" @leave="onContentLeave" :css="false" mode="out-in">
+                <div ref="contentRef" :key="currentStep" class="oobe-content">
                     <!-- Step 1: Welcome -->
                     <div v-if="currentStep === 1" class="oobe-step-panel">
                         <h2 class="oobe-title text-foreground">{{ t('oobe.welcome.title') }}</h2>
@@ -165,8 +165,13 @@
                                     v-for="cred in savedAccounts"
                                     :key="cred.user.id"
                                     class="oobe-account-item"
-                                    @click="selectedUserId = cred.user.id">
-                                    <input type="radio" :value="cred.user.id" v-model="selectedUserId" />
+                                    :class="{ 'pointer-events-none opacity-50': loginBusy }"
+                                    @click="!loginBusy && (selectedUserId = cred.user.id)">
+                                    <input
+                                        type="radio"
+                                        :value="cred.user.id"
+                                        v-model="selectedUserId"
+                                        :disabled="loginBusy" />
                                     <Avatar class="rounded-full size-7">
                                         <AvatarImage :src="userImage(cred.user, true)" />
                                         <AvatarFallback><User class="size-4 text-muted-foreground" /></AvatarFallback>
@@ -212,6 +217,7 @@
                                                     name="username"
                                                     :placeholder="t('view.login.field.username')"
                                                     :aria-invalid="!!errors.length"
+                                                    :disabled="loginBusy"
                                                     @update:modelValue="field.onChange"
                                                     @blur="field.onBlur" />
                                                 <FieldError v-if="errors.length" :errors="errors" />
@@ -233,6 +239,7 @@
                                                     :placeholder="t('view.login.field.password')"
                                                     :aria-invalid="!!errors.length"
                                                     show-password
+                                                    :disabled="loginBusy"
                                                     @keydown.delete="handleChange('', false)"
                                                     @update:modelValue="field.onChange"
                                                     @blur="field.onBlur" />
@@ -242,7 +249,7 @@
                                     </VeeField>
                                 </FieldGroup>
                                 <label class="inline-flex items-center gap-2 mr-2 mt-3 text-sm">
-                                    <Checkbox v-model="loginForm.saveCredentials" />
+                                    <Checkbox v-model="loginForm.saveCredentials" :disabled="loginBusy" />
                                     <span>{{ t('view.login.field.saveCredentials') }}</span>
                                 </label>
                                 <Field class="mt-4">
@@ -271,12 +278,15 @@
                         <h2 class="oobe-title text-foreground">{{ t('oobe.recovery.title') }}</h2>
                         <p class="oobe-desc text-muted-foreground">{{ t('oobe.recovery.subtitle') }}</p>
                         <Button size="lg" class="w-full" :disabled="recovering" @click="handleRecoverImport">
+                            <Loader2 v-if="recovering" class="size-4 animate-spin" />
                             {{ t('oobe.recovery.import') }}
                         </Button>
-                        <Button variant="ghost" class="w-full" @click="goTo(7)">
+                        <Button variant="ghost" class="w-full" :disabled="recovering" @click="goTo(7)">
                             {{ t('oobe.recovery.skip') }}
                         </Button>
-                        <Button variant="ghost" class="w-full" @click="goBack">{{ t('oobe.back') }}</Button>
+                        <Button variant="ghost" class="w-full" :disabled="recovering" @click="goBack">{{
+                            t('oobe.back')
+                        }}</Button>
                     </div>
 
                     <!-- Step 7: Complete -->
@@ -285,8 +295,8 @@
                         <p class="oobe-desc text-muted-foreground">{{ t('oobe.complete.subtitle') }}</p>
                         <Button size="lg" class="w-full" @click="finish">{{ t('oobe.complete.enter') }}</Button>
                     </div>
-                </Transition>
-            </div>
+                </div>
+            </Transition>
         </section>
 
         <OpenSourceSoftwareNoticeDialog v-if="ossDialog" v-model:ossDialog="ossDialog" />
@@ -294,7 +304,7 @@
 </template>
 
 <script setup>
-    import { computed, defineAsyncComponent, markRaw, nextTick, onMounted, ref, watch } from 'vue';
+    import { computed, defineAsyncComponent, markRaw, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import { gsap } from 'gsap';
     import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
     import {
@@ -369,6 +379,7 @@
         } catch (e) {
             console.error('[OOBE] completeOobe failed:', e);
         } finally {
+            await playCloseAnimation();
             router.replace('/login').catch((e) => console.error('[OOBE] navigation failed:', e));
         }
     }
@@ -478,14 +489,13 @@
     const currentIcon = computed(() => stepIcons[currentStep.value]);
 
     const iconWrapRef = ref(null);
+    const contentRef = ref(null);
 
-    // Draw the per-step SVG icon with a GSAP DrawSVGPlugin stroke animation
-    // (step 1 uses the static VRCX logo image, so there is no SVG to animate).
     /**
-     *
+     * Animate SVG icon stroke drawing
      */
-    function animateIcon() {
-        const svg = iconWrapRef.value?.querySelector('svg.oobe-icon-svg');
+    function animateIconDraw(el) {
+        const svg = el?.querySelector('svg.oobe-icon-svg');
         if (!svg) return;
         const shapes = svg.querySelectorAll('path, circle, line, polyline, rect');
         if (!shapes.length) return;
@@ -503,9 +513,61 @@
         );
     }
 
-    watch(currentStep, () => {
-        nextTick(() => animateIcon());
-    });
+    // ---- Icon Transition hooks (JS mode) ----
+    function onIconEnter(el, done) {
+        // Run icon rotation/scale animation and stroke draw simultaneously
+        gsap.fromTo(
+            el,
+            { opacity: 0, scale: 0.85, rotation: -10 },
+            {
+                opacity: 1,
+                scale: 1,
+                rotation: 0,
+                duration: 0.4,
+                ease: 'back.out(1.4)'
+            }
+        );
+        // Start stroke draw at the same time (delayed slightly for overlap)
+        animateIconDraw(el);
+        // Call done after the container animation finishes
+        setTimeout(done, 400);
+    }
+
+    function onIconLeave(el, done) {
+        gsap.to(el, {
+            opacity: 0,
+            scale: 1.08,
+            rotation: 10,
+            duration: 0.25,
+            ease: 'power2.in',
+            onComplete: done
+        });
+    }
+
+    // ---- Content Transition hooks (JS mode) ----
+    function onContentEnter(el, done) {
+        gsap.fromTo(
+            el,
+            { opacity: 0, y: 24 },
+            {
+                opacity: 1,
+                y: 0,
+                duration: 0.4,
+                ease: 'power3.out',
+                onComplete: done
+            }
+        );
+    }
+
+    function onContentLeave(el, done) {
+        gsap.to(el, {
+            opacity: 0,
+            y: -24,
+            duration: 0.25,
+            ease: 'power2.in',
+            onComplete: done
+        });
+    }
 
     onMounted(async () => {
         // ?debug=1 forces the wizard to start from step 1 (used by the UI debug tool)
@@ -516,6 +578,17 @@
         // Default-select the first account in the list.
         if (savedAccounts.value.length > 0) {
             selectedUserId.value = savedAccounts.value[0].user.id;
+        }
+    });
+
+    onUnmounted(() => {
+        // Kill any lingering GSAP tweens on this component's elements
+        if (iconWrapRef.value) {
+            gsap.killTweensOf(iconWrapRef.value);
+            gsap.killTweensOf(iconWrapRef.value.querySelectorAll('*'));
+        }
+        if (contentRef.value) {
+            gsap.killTweensOf(contentRef.value);
         }
     });
 
@@ -561,6 +634,7 @@
         } catch (e) {
             console.error('[OOBE] completeOobe failed:', e);
         } finally {
+            await playCloseAnimation();
             router.replace('/feed').catch((e) => console.error('[OOBE] navigation failed:', e));
         }
     }
@@ -581,6 +655,23 @@
     }
 
     const recovering = ref(false);
+
+    /**
+     * Play a closing animation then navigate away.
+     */
+    async function playCloseAnimation() {
+        const el = document.querySelector('.oobe');
+        if (!el) return;
+        await new Promise((resolve) => {
+            gsap.to(el, {
+                opacity: 0,
+                scale: 0.92,
+                duration: 0.4,
+                ease: 'power2.in',
+                onComplete: resolve
+            });
+        });
+    }
 
     /**
      * Data recovery (optional): import a backup database file, same as
@@ -699,6 +790,7 @@
         justify-content: center;
         width: 140px;
         height: 140px;
+        will-change: transform, opacity;
     }
 
     .oobe-vrcx-logo {
@@ -736,6 +828,7 @@
         display: flex;
         flex-direction: column;
         gap: 16px;
+        will-change: transform, opacity;
     }
 
     .oobe-step-panel {
@@ -843,42 +936,6 @@
 
     .oobe-setting-desc {
         font-size: 12px;
-    }
-
-    /* ---- Step content transition ---- */
-    .oobe-content-enter-active,
-    .oobe-content-leave-active {
-        transition:
-            opacity 0.3s ease,
-            transform 0.3s ease;
-    }
-
-    .oobe-content-enter-from {
-        opacity: 0;
-        transform: translateX(16px);
-    }
-
-    .oobe-content-leave-to {
-        opacity: 0;
-        transform: translateX(-16px);
-    }
-
-    /* ---- Icon transition ---- */
-    .oobe-icon-enter-active,
-    .oobe-icon-leave-active {
-        transition:
-            opacity 0.3s ease,
-            transform 0.3s ease;
-    }
-
-    .oobe-icon-enter-from {
-        opacity: 0;
-        transform: scale(0.85);
-    }
-
-    .oobe-icon-leave-to {
-        opacity: 0;
-        transform: scale(1.05);
     }
 
     /* ---- Responsive: keep the layout usable in smaller windows ---- */

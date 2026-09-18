@@ -116,23 +116,23 @@ export const useSharedFeedStore = defineStore('SharedFeed', () => {
         const vipList = Array.from(friendStore.localFavoriteFriends.values());
         const friendList = Array.from(friendStore.friends.keys());
 
-        // Filters
-        const vipFilters = Object.keys(wristFilter).filter(
-            (key) => wristFilter[key] === 'VIP'
-        );
-        const friendsFilters = Object.keys(wristFilter).filter(
-            (key) => wristFilter[key] === 'Friends'
-        );
-        const everyoneFilters = Object.keys(wristFilter).filter(
-            (key) =>
-                wristFilter[key] === 'On' || wristFilter[key] === 'Everyone'
-        );
-        const everyoneAndFriendsFilters = Object.keys(wristFilter).filter(
-            (key) =>
-                wristFilter[key] === 'Friends' ||
-                wristFilter[key] === 'On' ||
-                wristFilter[key] === 'Everyone'
-        );
+        // Single-pass filter classification (avoids 4 iterations over the same keys)
+        const vipFilters = [];
+        const friendsFilters = [];
+        const everyoneFilters = [];
+        const everyoneAndFriendsFilters = [];
+        for (const key of Object.keys(wristFilter)) {
+            const val = wristFilter[key];
+            if (val === 'VIP') {
+                vipFilters.push(key);
+            } else if (val === 'Friends') {
+                friendsFilters.push(key);
+                everyoneAndFriendsFilters.push(key);
+            } else if (val === 'On' || val === 'Everyone') {
+                everyoneFilters.push(key);
+                everyoneAndFriendsFilters.push(key);
+            }
+        }
 
         // Feed
         if (vipFilters.length) {
@@ -217,6 +217,8 @@ export const useSharedFeedStore = defineStore('SharedFeed', () => {
         newFeed.sort(compareByCreatedAt);
         newFeed.splice(maxEntries);
 
+        // Batch instance name lookups: collect unique locations, resolve in parallel
+        const locationEntries = [];
         for (const entry of newFeed) {
             const userId = entry.userId || entry.senderUserId;
             entry.isFriend = false;
@@ -228,12 +230,18 @@ export const useSharedFeedStore = defineStore('SharedFeed', () => {
                 entry.tagColour =
                     userStore.customUserTags.get(userId)?.colour ?? '';
             }
-            // tack on instance names
             const location = entry.location || entry.details?.location;
             if (location) {
-                entry.instanceDisplayName =
-                    await instanceStore.getInstanceName(location);
+                locationEntries.push({ entry, location });
             }
+        }
+        // Resolve all instance names concurrently (instead of sequentially)
+        const namePromises = locationEntries.map(({ location }) =>
+            instanceStore.getInstanceName(location).catch(() => '')
+        );
+        const names = await Promise.all(namePromises);
+        for (let i = 0; i < locationEntries.length; i++) {
+            locationEntries[i].entry.instanceDisplayName = names[i];
         }
         sharedFeedData.value = newFeed;
         rebuildOnPlayerJoining(); // also sends updated feed

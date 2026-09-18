@@ -6,12 +6,13 @@
         referrerPolicy: { type: null, required: false },
         crossOrigin: { type: null, required: false },
         asChild: { type: Boolean, required: false },
-        as: { type: null, required: false }
+        as: { type: null, required: false },
+        loading: { type: String, required: false, default: 'lazy' }
     });
 </script>
 
 <template>
-    <AvatarImage data-slot="avatar-image" v-bind="props" class="aspect-square size-full">
+    <AvatarImage data-slot="avatar-image" v-bind="props" :loading="loading" class="aspect-square size-full">
         <slot />
     </AvatarImage>
 </template>

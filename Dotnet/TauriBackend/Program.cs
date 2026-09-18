@@ -131,19 +131,70 @@ internal static class Program
         JsonValueKind.String => el.GetString(),
         _ => el.GetRawText()
     };
+    private static bool ValidateSql(string sql)
+    {
+        if (string.IsNullOrWhiteSpace(sql)) return false;
+        var upper = sql.TrimStart().ToUpperInvariant();
+        return StartsWithAllowedKeyword(upper) && !HasDangerousPattern(upper);
+    }
+
+    private static bool StartsWithAllowedKeyword(string sql)
+    {
+        string[] single = ["SELECT", "INSERT", "UPDATE", "DELETE", "PRAGMA", "BEGIN", "COMMIT", "ROLLBACK", "VACUUM", "WITH"];
+        foreach (var kw in single)
+            if (StartsWithKeyword(sql, kw)) return true;
+        string[] multi = ["CREATE TABLE", "CREATE INDEX", "ALTER TABLE", "DROP TABLE"];
+        foreach (var kw in multi)
+            if (sql.Length >= kw.Length && sql.StartsWith(kw, StringComparison.Ordinal) &&
+                (sql.Length == kw.Length || !char.IsAsciiLetter(sql[kw.Length])))
+                return true;
+        return false;
+    }
+
+    private static bool StartsWithKeyword(string sql, string keyword)
+    {
+        if (!sql.StartsWith(keyword, StringComparison.Ordinal)) return false;
+        return sql.Length == keyword.Length || !char.IsAsciiLetter(sql[keyword.Length]);
+    }
+
+    private static bool HasDangerousPattern(string sql)
+    {
+        string[] patterns = ["ATTACH", "DETACH", "LOAD_EXTENSION", "WRITABLE_SCHEMA"];
+        foreach (var p in patterns)
+            if (HasWord(sql, p)) return true;
+        return false;
+    }
+
+    private static bool HasWord(string text, string word)
+    {
+        int pos = 0;
+        while (pos <= text.Length - word.Length)
+        {
+            int idx = text.IndexOf(word, pos, StringComparison.Ordinal);
+            if (idx < 0) return false;
+            bool before = idx == 0 || !char.IsAsciiLetter(text[idx - 1]);
+            bool after = idx + word.Length >= text.Length || !char.IsAsciiLetter(text[idx + word.Length]);
+            if (before && after) return true;
+            pos = idx + 1;
+        }
+        return false;
+    }
 
     private static async Task<object?> SqliteMethod(string method, JsonElement[] args)
     {
-        await using var connection = new SqliteConnection($"Data Source={DatabaseFile}");
-        await connection.OpenAsync();
-        await using var command = connection.CreateCommand();
-        command.CommandText = args.FirstOrDefault().GetString() ?? string.Empty;
+        var sql = args.FirstOrDefault().GetString() ?? string.Empty;
+        if (!ValidateSql(sql))
+            throw new InvalidOperationException("SQL validation failed: statement type not allowed or contains dangerous patterns");
+        IDictionary<string, object>? sqlArgs = null;
         if (args.Length > 1 && args[1].ValueKind == JsonValueKind.Object)
-            foreach (var parameter in args[1].EnumerateObject()) command.Parameters.AddWithValue(parameter.Name, ToClrValue(parameter.Value));
-        if (method.Equals("ExecuteNonQuery", StringComparison.OrdinalIgnoreCase)) return await command.ExecuteNonQueryAsync();
-        await using var rows = await command.ExecuteReaderAsync();
-        var result = new List<object?[]>();
-        while (await rows.ReadAsync()) { var row = new object?[rows.FieldCount]; rows.GetValues(row); result.Add(row); }
+        {
+            sqlArgs = new Dictionary<string, object>();
+            foreach (var parameter in args[1].EnumerateObject())
+                sqlArgs[parameter.Name] = ToClrValue(parameter.Value);
+        }
+        if (method.Equals("ExecuteNonQuery", StringComparison.OrdinalIgnoreCase))
+            return Sqlite.ExecuteNonQuery(sql, sqlArgs);
+        var result = Sqlite.Execute(sql, sqlArgs);
         return method.Equals("ExecuteJson", StringComparison.OrdinalIgnoreCase) ? JsonSerializer.Serialize(result, JsonOptions) : result;
     }
 

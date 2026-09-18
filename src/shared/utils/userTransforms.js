@@ -51,32 +51,35 @@ export function computeTrustLevel(tags, developerType) {
     let trustColorKey = 'untrusted';
     let trustSortNum = 1;
 
-    if (tags.includes('admin_moderator')) {
+    // Build a Set once for O(1) lookups instead of O(n) includes() per tag.
+    const tagSet = tags instanceof Set ? tags : new Set(tags);
+
+    if (tagSet.has('admin_moderator')) {
         isModerator = true;
     }
-    if (tags.includes('system_troll')) {
+    if (tagSet.has('system_troll')) {
         isTroll = true;
     }
-    if (tags.includes('system_probable_troll') && !isTroll) {
+    if (tagSet.has('system_probable_troll') && !isTroll) {
         isProbableTroll = true;
     }
 
-    if (tags.includes('system_trust_veteran')) {
+    if (tagSet.has('system_trust_veteran')) {
         trustLevel = 'Trusted User';
         trustClass = 'x-tag-veteran';
         trustColorKey = 'veteran';
         trustSortNum = 5;
-    } else if (tags.includes('system_trust_trusted')) {
+    } else if (tagSet.has('system_trust_trusted')) {
         trustLevel = 'Known User';
         trustClass = 'x-tag-trusted';
         trustColorKey = 'trusted';
         trustSortNum = 4;
-    } else if (tags.includes('system_trust_known')) {
+    } else if (tagSet.has('system_trust_known')) {
         trustLevel = 'User';
         trustClass = 'x-tag-known';
         trustColorKey = 'known';
         trustSortNum = 3;
-    } else if (tags.includes('system_trust_basic')) {
+    } else if (tagSet.has('system_trust_basic')) {
         trustLevel = 'New User';
         trustClass = 'x-tag-basic';
         trustColorKey = 'basic';
@@ -128,40 +131,20 @@ export function diffObjectProps(ref, json, arraysMatchFn) {
     const changedProps = {};
     let hasPropChanged = false;
 
-    // Only compare primitive values
+    // Single pass: detect candidates and resolve actual changes
+    // Iterate over both ref and json properties in one combined pass
     for (const prop in ref) {
-        if (typeof json[prop] === 'undefined') {
-            continue;
-        }
-        if (ref[prop] === null || typeof ref[prop] !== 'object') {
-            changedProps[prop] = true;
-        }
-    }
-
-    // Check json props against ref (including array comparison)
-    for (const prop in json) {
-        if (typeof ref[prop] === 'undefined') {
-            continue;
-        }
-        if (Array.isArray(json[prop]) && Array.isArray(ref[prop])) {
-            if (!arraysMatchFn(json[prop], ref[prop])) {
-                changedProps[prop] = true;
-            }
-        } else if (json[prop] === null || typeof json[prop] !== 'object') {
-            changedProps[prop] = true;
-        }
-    }
-
-    // Resolve actual changes
-    for (const prop in changedProps) {
+        if (typeof json[prop] === 'undefined') continue;
         const asIs = ref[prop];
         const toBe = json[prop];
-        if (asIs === toBe) {
-            delete changedProps[prop];
-        } else {
-            hasPropChanged = true;
-            changedProps[prop] = [toBe, asIs];
+        if (asIs === toBe) continue;
+        if (Array.isArray(toBe) && Array.isArray(asIs)) {
+            if (arraysMatchFn(toBe, asIs)) continue;
+        } else if (asIs !== null && typeof asIs === 'object' && toBe !== null && typeof toBe === 'object') {
+            continue; // Skip non-primitive, non-array comparisons
         }
+        hasPropChanged = true;
+        changedProps[prop] = [toBe, asIs];
     }
 
     return { hasPropChanged, changedProps };

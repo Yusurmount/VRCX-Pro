@@ -27,16 +27,16 @@
     import { ArrowLeft } from 'lucide-vue-next';
     import { Button } from '@/components/ui/button';
     import { TooltipWrapper } from '@/components/ui/tooltip';
-    import { computed, ref } from 'vue';
+    import { computed, defineAsyncComponent, ref } from 'vue';
     import { storeToRefs } from 'pinia';
 
-    import AvatarDialog from './AvatarDialog/AvatarDialog.vue';
-    import GroupDialog from './GroupDialog/GroupDialog.vue';
-    import PreviousInstancesInfoDialog from './PreviousInstancesDialog/PreviousInstancesInfoDialog.vue';
-    import PreviousInstancesListDialog from './PreviousInstancesDialog/PreviousInstancesListDialog.vue';
-    import UserDialog from './UserDialog/UserDialog.vue';
-    import WorldDialog from './WorldDialog/WorldDialog.vue';
-    import GroupMemberModerationDialog from './GroupDialog/GroupMemberModerationDialog.vue';
+    const AvatarDialog = defineAsyncComponent(() => import('./AvatarDialog/AvatarDialog.vue'));
+    const GroupDialog = defineAsyncComponent(() => import('./GroupDialog/GroupDialog.vue'));
+    const PreviousInstancesInfoDialog = defineAsyncComponent(() => import('./PreviousInstancesDialog/PreviousInstancesInfoDialog.vue'));
+    const PreviousInstancesListDialog = defineAsyncComponent(() => import('./PreviousInstancesDialog/PreviousInstancesListDialog.vue'));
+    const UserDialog = defineAsyncComponent(() => import('./UserDialog/UserDialog.vue'));
+    const WorldDialog = defineAsyncComponent(() => import('./WorldDialog/WorldDialog.vue'));
+    const GroupMemberModerationDialog = defineAsyncComponent(() => import('./GroupDialog/GroupMemberModerationDialog.vue'));
     import { getReadableProfileThemeColor } from '@/shared/utils/user';
     import { profileBackgrounds } from '@/shared/constants/backgrounds';
 

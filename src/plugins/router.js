@@ -3,39 +3,19 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import { watchState } from '../services/watchState';
 import { isOobeCompleted } from '../services/oobe';
 
-import FavoritesAvatar from './../views/Favorites/FavoritesAvatar.vue';
-import FavoritesFriend from './../views/Favorites/FavoritesFriend.vue';
-import FavoritesWorld from './../views/Favorites/FavoritesWorld.vue';
-import Feed from './../views/Feed/Feed.vue';
-import FriendList from './../views/FriendList/FriendList.vue';
-import FriendLog from './../views/FriendLog/FriendLog.vue';
-import FriendsLocations from './../views/FriendsLocations/FriendsLocations.vue';
-import Dashboard from './../views/Dashboard/Dashboard.vue';
-import Gallery from './../views/Tools/Gallery.vue';
-import GameLog from './../views/GameLog/GameLog.vue';
-import Login from './../views/Login/Login.vue';
 import MainLayout from '../views/Layout/MainLayout.vue';
-import Moderation from './../views/Moderation/Moderation.vue';
-import MyAvatars from './../views/MyAvatars/MyAvatars.vue';
-import Notification from './../views/Notifications/Notification.vue';
-import OOBE from './../views/OOBE/OOBE.vue';
-import PlayerList from './../views/PlayerList/PlayerList.vue';
-import ScreenshotMetadata from './../views/Tools/ScreenshotMetadata.vue';
-import Search from './../views/Search/Search.vue';
-import Settings from './../views/Settings/Settings.vue';
-import Tools from './../views/Tools/Tools.vue';
 
 const routes = [
     {
         path: '/login',
         name: 'login',
-        component: Login,
+        component: () => import('./../views/Login/Login.vue'),
         meta: { public: true }
     },
     {
         path: '/oobe',
         name: 'oobe',
-        component: OOBE,
+        component: () => import('./../views/OOBE/OOBE.vue'),
         meta: { public: true }
     },
     {
@@ -44,61 +24,61 @@ const routes = [
         meta: { requiresAuth: true },
         children: [
             { path: '', redirect: { name: 'feed' } },
-            { path: 'feed', name: 'feed', component: Feed },
+            { path: 'feed', name: 'feed', component: () => import('./../views/Feed/Feed.vue') },
             {
                 path: 'friends-locations',
                 name: 'friends-locations',
-                component: FriendsLocations
+                component: () => import('./../views/FriendsLocations/FriendsLocations.vue')
             },
-            { path: 'game-log', name: 'game-log', component: GameLog },
-            { path: 'player-list', name: 'player-list', component: PlayerList },
-            { path: 'search', name: 'search', component: Search },
+            { path: 'game-log', name: 'game-log', component: () => import('./../views/GameLog/GameLog.vue') },
+            { path: 'player-list', name: 'player-list', component: () => import('./../views/PlayerList/PlayerList.vue') },
+            { path: 'search', name: 'search', component: () => import('./../views/Search/Search.vue') },
             {
                 path: 'dashboard/:id',
                 name: 'dashboard',
-                component: Dashboard,
+                component: () => import('./../views/Dashboard/Dashboard.vue'),
                 props: true,
                 meta: { navKey: 'dashboard' }
             },
             {
                 path: 'favorites/friends',
                 name: 'favorite-friends',
-                component: FavoritesFriend
+                component: () => import('./../views/Favorites/FavoritesFriend.vue')
             },
             {
                 path: 'favorites/worlds',
                 name: 'favorite-worlds',
-                component: FavoritesWorld
+                component: () => import('./../views/Favorites/FavoritesWorld.vue')
             },
             {
                 path: 'favorites/avatars',
                 name: 'favorite-avatars',
-                component: FavoritesAvatar
+                component: () => import('./../views/Favorites/FavoritesAvatar.vue')
             },
             {
                 path: 'social/friend-log',
                 name: 'friend-log',
-                component: FriendLog
+                component: () => import('./../views/FriendLog/FriendLog.vue')
             },
             {
                 path: 'social/moderation',
                 name: 'moderation',
-                component: Moderation
+                component: () => import('./../views/Moderation/Moderation.vue')
             },
             {
                 path: 'my-avatars',
                 name: 'my-avatars',
-                component: MyAvatars
+                component: () => import('./../views/MyAvatars/MyAvatars.vue')
             },
             {
                 path: 'notification',
                 name: 'notification',
-                component: Notification
+                component: () => import('./../views/Notifications/Notification.vue')
             },
             {
                 path: 'social/friend-list',
                 name: 'friend-list',
-                component: FriendList
+                component: () => import('./../views/FriendList/FriendList.vue')
             },
             {
                 path: 'charts',
@@ -135,23 +115,23 @@ const routes = [
                 component: () =>
                     import('./../views/Charts/components/RelationshipTimeline.vue')
             },
-            { path: 'tools', name: 'tools', component: Tools },
+            { path: 'tools', name: 'tools', component: () => import('./../views/Tools/Tools.vue') },
             {
                 path: 'tools/gallery',
                 name: 'gallery',
-                component: Gallery,
+                component: () => import('./../views/Tools/Gallery.vue'),
                 meta: { navKeys: ['tool-gallery', 'tools'] }
             },
             {
                 path: 'tools/screenshot-metadata',
                 name: 'screenshot-metadata',
-                component: ScreenshotMetadata,
+                component: () => import('./../views/Tools/ScreenshotMetadata.vue'),
                 meta: { navKeys: ['tool-screenshot-metadata', 'tools'] }
             },
             {
                 path: 'settings',
                 name: 'settings',
-                component: Settings,
+                component: () => import('./../views/Settings/Settings.vue'),
                 meta: { navKey: 'manage', hidesActiveMenuItem: true }
             }
         ]

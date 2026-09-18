@@ -96,7 +96,7 @@
 </template>
 
 <script setup>
-    import { computed, nextTick, onUnmounted, ref, watch } from 'vue';
+    import { computed, defineAsyncComponent, nextTick, onUnmounted, ref, watch } from 'vue';
     import { storeToRefs } from 'pinia';
     import { useRouter } from 'vue-router';
 
@@ -106,26 +106,26 @@
     import { useMainLayoutResizable } from '../../composables/useMainLayoutResizable';
     import { watchState } from '../../services/watchState';
 
-    import AvatarImportDialog from '../Favorites/dialogs/AvatarImportDialog.vue';
-    import ChangelogDialog from '../Settings/dialogs/ChangelogDialog.vue';
+    const AvatarImportDialog = defineAsyncComponent(() => import('../Favorites/dialogs/AvatarImportDialog.vue'));
+    const ChangelogDialog = defineAsyncComponent(() => import('../Settings/dialogs/ChangelogDialog.vue'));
     import AutoFollowDialog from '../../components/dialogs/AutoFollowDialog.vue';
-    import ChooseFavoriteGroupDialog from '../../components/dialogs/ChooseFavoriteGroupDialog.vue';
-    import FriendImportDialog from '../Favorites/dialogs/FriendImportDialog.vue';
-    import FullscreenImagePreview from '../../components/FullscreenImagePreview.vue';
-    import GlobalToolsDialogs from '../Tools/components/GlobalToolsDialogs.vue';
-    import InviteGroupDialog from '../../components/dialogs/InviteGroupDialog.vue';
-    import LaunchDialog from '../../components/dialogs/LaunchDialog.vue';
-    import LaunchOptionsDialog from '../Settings/dialogs/LaunchOptionsDialog.vue';
+    const ChooseFavoriteGroupDialog = defineAsyncComponent(() => import('../../components/dialogs/ChooseFavoriteGroupDialog.vue'));
+    const FriendImportDialog = defineAsyncComponent(() => import('../Favorites/dialogs/FriendImportDialog.vue'));
+    const FullscreenImagePreview = defineAsyncComponent(() => import('../../components/FullscreenImagePreview.vue'));
+    const GlobalToolsDialogs = defineAsyncComponent(() => import('../Tools/components/GlobalToolsDialogs.vue'));
+    const InviteGroupDialog = defineAsyncComponent(() => import('../../components/dialogs/InviteGroupDialog.vue'));
+    const LaunchDialog = defineAsyncComponent(() => import('../../components/dialogs/LaunchDialog.vue'));
+    const LaunchOptionsDialog = defineAsyncComponent(() => import('../Settings/dialogs/LaunchOptionsDialog.vue'));
     import MainDialogContainer from '../../components/dialogs/MainDialogContainer.vue';
     import NavMenu from '../../components/nav-menu/NavMenu.vue';
-    import PrimaryPasswordDialog from '../Settings/dialogs/PrimaryPasswordDialog.vue';
-    import SendBoopDialog from '../../components/dialogs/SendBoopDialog.vue';
+    const PrimaryPasswordDialog = defineAsyncComponent(() => import('../Settings/dialogs/PrimaryPasswordDialog.vue'));
+    const SendBoopDialog = defineAsyncComponent(() => import('../../components/dialogs/SendBoopDialog.vue'));
     import Sidebar from '../Sidebar/Sidebar.vue';
     import StatusBar from '../../components/StatusBar.vue';
-    import VRChatConfigDialog from '../Settings/dialogs/VRChatConfigDialog.vue';
-    import WorldImportDialog from '../Favorites/dialogs/WorldImportDialog.vue';
-    import WhatsNewDialog from '../../components/onboarding/WhatsNewDialog.vue';
-    import SpotlightDialog from '../../components/onboarding/SpotlightDialog.vue';
+    const VRChatConfigDialog = defineAsyncComponent(() => import('../Settings/dialogs/VRChatConfigDialog.vue'));
+    const WorldImportDialog = defineAsyncComponent(() => import('../Favorites/dialogs/WorldImportDialog.vue'));
+    const WhatsNewDialog = defineAsyncComponent(() => import('../../components/onboarding/WhatsNewDialog.vue'));
+    const SpotlightDialog = defineAsyncComponent(() => import('../../components/onboarding/SpotlightDialog.vue'));
 
     import { isAutoFollowDialogOpen } from '../../coordinators/autoFollowCoordinator';
 

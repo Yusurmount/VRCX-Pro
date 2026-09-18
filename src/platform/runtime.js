@@ -18,11 +18,15 @@ export function installRuntimeBridge() {
     if (window.platform) return;
 
     const ready = call('start_dotnet_sidecar');
+    // Fetch launch args early so they're available before hideBoot runs.
+    const launchArgsPromise = call('get_launch_args').then((args) => args || {});
 
     window.platform = {
         ready,
+        launchArgsPromise,
         getArch: () => call('get_arch'),
         getNoUpdater: () => false,
+        getLaunchArgs: () => call('get_launch_args'),
         getClipboardText: () => readText(),
         setTrayIconNotification: (notify) => call('set_tray_icon_notification', { notify }),
         openFileDialog: () => open({ directory: false, multiple: false }),
@@ -50,6 +54,8 @@ export function installRuntimeBridge() {
         restartApp: () => relaunch(),
         quitApplication: () => call('quit_application'),
         showMainWindow: () => call('show_main_window'),
+        resizeWindow: (width, height) => call('resize_window', { width, height }),
+        centerWindow: () => call('center_window'),
         setCloseToTray: (enabled) => call('set_close_to_tray', { enabled }),
         getOverlayWindow: () => call('get_overlay_window'),
         updateVr: (active, hmdOverlay, wristOverlay, menuButton, overlayHand) =>

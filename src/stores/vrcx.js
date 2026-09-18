@@ -1,4 +1,4 @@
-import { reactive, ref, watch } from 'vue';
+﻿import { reactive, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { toast } from 'vue-sonner';
 import { useI18n } from 'vue-i18n';
@@ -44,6 +44,7 @@ import { resetSearchIndexOnLogin } from '../coordinators/searchIndexCoordinator'
 import { watchState } from '../services/watchState';
 
 import configRepository from '../services/config';
+import { signalBackendReady } from '../platform/bootReady.js';
 
 export const useVrcxStore = defineStore('Vrcx', () => {
     const gameStore = useGameStore();
@@ -92,7 +93,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
     const appStartAt = Date.now();
 
     /**
-     * 鑻ュ瓨鍌ㄩ敭灏氭湭璁剧疆鍒欏啓鍏ラ粯璁ゅ€硷紝閬垮厤鍚姩鏃朵覆琛?IPC 寰€杩斻€?
+     * 閼汇儱鐡ㄩ崒銊╂暛鐏忔碍婀拋鍓х枂閸掓瑥鍟撻崗銉╃帛鐠併倕鈧》绱濋柆鍨帳閸氼垰濮╅弮鏈佃鐞?IPC 瀵扳偓鏉╂柣鈧?
      * @param {string} key
      * @param {string} defaultValue
      */
@@ -157,9 +158,13 @@ export const useVrcxStore = defineStore('Vrcx', () => {
                 return;
             }
 
-            // 骞惰璇诲彇鍏ㄩ儴閰嶇疆锛岄伩鍏嶉€愪釜璺ㄨ繘绋?IPC 寰€杩旀嫋鎱㈠惎鍔?
+            // 楠炴儼顢戠拠璇插絿閸忋劑鍎撮柊宥囩枂閿涘矂浼╅崗宥夆偓鎰嚋鐠恒劏绻樼粙?IPC 瀵扳偓鏉╂梹瀚嬮幈銏犳儙閸?
             const [
                 clearVRCXCacheFrequencyValue,
+                _databaseLocationDefault,
+                _proxyServerDefault,
+                _disableGpuDefault,
+                _disableVrGpuDefault,
                 proxyServerValue,
                 locationXValue,
                 locationYValue,
@@ -220,6 +225,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
             databaseReadyForAutoLogin.value = true;
         } finally {
             resolveDatabaseInit();
+            signalBackendReady();
         }
     }
 
@@ -888,3 +894,4 @@ export const useVrcxStore = defineStore('Vrcx', () => {
         waitForDatabaseInit
     };
 });
+

@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Microsoft.Data.Sqlite;
 
 namespace VRCX.TauriBackend;
@@ -20,7 +20,7 @@ public static class Sqlite
         Connection.Open();
         using (var command = Connection.CreateCommand())
         {
-            command.CommandText = "PRAGMA journal_mode=WAL;PRAGMA busy_timeout=5000;";
+            command.CommandText = "PRAGMA journal_mode=WAL;PRAGMA busy_timeout=5000;PRAGMA synchronous=NORMAL;PRAGMA temp_store=MEMORY;PRAGMA mmap_size=268435456;";
             command.ExecuteNonQuery();
         }
     }
@@ -44,8 +44,7 @@ public static class Sqlite
             while (reader.Read())
             {
                 var values = new object?[reader.FieldCount];
-                for (var i = 0; i < reader.FieldCount; i++)
-                    values[i] = reader.GetValue(i);
+                reader.GetValues(values);
                 result.Add(values);
             }
             return result.ToArray();

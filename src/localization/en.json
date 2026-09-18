@@ -960,7 +960,25 @@
                 }
             },
             "integrations": {
-                "header": "Integrations"
+                "header": "Integrations",
+                "mcp_server": {
+                    "header": "MCP Server",
+                    "enable": "Enable MCP Server",
+                    "enable_description": "Start a local Model Context Protocol (MCP) server that allows AI assistants to query your VRCX data.",
+                    "server_port": "Server Port",
+                    "server_port_description": "The port the MCP server listens on (default: 3001).",
+                    "port_button": "Port: {port}",
+                    "server_status": "Server Status",
+                    "status_running": "Running",
+                    "status_stopped": "Stopped",
+                    "database_path": "Database Path",
+                    "database_path_description": "Path to the VRCX SQLite database file.",
+                    "database_path_default": "Default",
+                    "port_dialog_title": "MCP Server Port",
+                    "port_dialog_description": "Enter the port number for the MCP server (1024-65535).",
+                    "port_dialog_error": "Please enter a valid port number (1024-65535).",
+                    "db_dialog_title": "Select VRCX Database"
+                }
             },
             "advanced_groups": {
                 "system": {
@@ -3567,7 +3585,9 @@
                 "403_404_bailing_request": "Bailing request due to recent 404/403",
                 "unavailable": "Service may be unavailable due to VRChat internal issues"
             }
-        }
+        },
+        "mcp_server_started": "MCP server started",
+        "mcp_server_error": "MCP server error: {error}"
     },
     "accessibility": {
         "toggle_sidebar": "Toggle Sidebar",

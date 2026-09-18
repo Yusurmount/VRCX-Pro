@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -52,7 +52,7 @@ public class WebApi
         SetProxy();
         InitializeHttpClient();
         LoadCookies();
-        _timer.Change(1000, 1000);
+        _timer.Change(5000, 5000);
     }
 
     private void InitializeHttpClient()

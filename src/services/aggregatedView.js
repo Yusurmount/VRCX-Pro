@@ -22,9 +22,19 @@ import sqliteService from './sqlite.js';
  * @returns {Map<string, object>}
  */
 export function mergeFriends(primarySortedFriends) {
+    // Fast path: no secondary accounts, avoid creating new objects for every friend
+    if (accountHub.secondarySessions.length === 0) {
+        const merged = new Map();
+        for (const ctx of primarySortedFriends) {
+            if (!ctx || !ctx.id) continue;
+            merged.set(ctx.id, ctx);
+        }
+        return merged;
+    }
+
     const merged = new Map();
 
-    // 1. Start with the primary account's friends
+    // 1. Start with the primary account friends
     for (const ctx of primarySortedFriends) {
         if (!ctx || !ctx.id) continue;
         const entry = {
@@ -39,12 +49,10 @@ export function mergeFriends(primarySortedFriends) {
     for (const session of accountHub.secondarySessions) {
         for (const [userId, ctx] of session.friendsCache) {
             if (merged.has(userId)) {
-                // Already in map – mark as shared friend, pick online state
                 const existing = merged.get(userId);
                 if (!existing.$accountIds.includes(session.userId)) {
                     existing.$accountIds.push(session.userId);
                 }
-                // Prefer the 'online' state
                 if (ctx.state === 'online' && existing.state !== 'online') {
                     existing.state = 'online';
                     if (ctx.ref?.location && ctx.ref.location !== 'offline') {
@@ -148,6 +156,24 @@ function buildUnionSelectsForPrefix(prefix, filters) {
 }
 
 function parseDbRow(dbRow) {
+let _prefixSessionMap = null;
+let _prefixSessionMapVersion = 0;
+
+function getPrefixSessionMap() {
+    const currentVersion = accountHub.allSessions.length;
+    if (_prefixSessionMap && _prefixSessionMapVersion === currentVersion) {
+        return _prefixSessionMap;
+    }
+    _prefixSessionMap = new Map();
+    for (const s of accountHub.allSessions) {
+        if (s.dbPrefix) {
+            _prefixSessionMap.set(s.dbPrefix, s);
+        }
+    }
+    _prefixSessionMapVersion = currentVersion;
+    return _prefixSessionMap;
+}
+
     const prefix = dbRow[0];
     const type = dbRow[5];
     const row = {
@@ -163,7 +189,7 @@ function parseDbRow(dbRow) {
     row.$accountId = null;
     row.$accountColor = null;
     row.$accountLabel = null;
-    const session = accountHub.allSessions.find((s) => s.dbPrefix === prefix);
+    const session = getPrefixSessionMap().get(prefix);
     if (session) {
         row.$accountId = session.userId;
         row.$accountColor = accountHub.getAccountColor(session.userId);

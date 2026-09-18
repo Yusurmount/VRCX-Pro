@@ -204,6 +204,9 @@ export const useFeedStore = defineStore('Feed', () => {
     }
 
     function sweepFeed() {
+        if (vrcxStore.maxTableSize <= 0) {
+            return; // -1 = unlimited
+        }
         const j = feedTableData.value.length;
         if (j > vrcxStore.maxTableSize + 50) {
             feedTableData.value = feedTableData.value.slice(0, -50);

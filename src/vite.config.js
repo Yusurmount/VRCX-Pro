@@ -62,11 +62,21 @@ function getAssetLanguage(assetId) {
  * @param moduleId
  */
 function getManualChunk(moduleId) {
+    // Split i18n asset chunks by language
     const basename = moduleId.split('/').pop();
     const language = getAssetLanguage(basename);
-    if (!language) return;
+    if (language) return `i18n/${language}`;
 
-    return `i18n/${language}`;
+    // Split heavy vendor libraries into separate chunks for better caching
+    if (moduleId.includes('node_modules')) {
+        if (moduleId.includes('echarts') || moduleId.includes('zrender')) return 'vendor-echarts';
+        if (moduleId.includes('lucide-vue-next')) return 'vendor-icons';
+        if (moduleId.includes('dayjs')) return 'vendor-dayjs';
+        if (moduleId.includes('vue-i18n')) return 'vendor-vue-i18n';
+        if (moduleId.includes('reka-ui')) return 'vendor-reka-ui';
+        if (moduleId.includes('pinia')) return 'vendor-pinia';
+        if (moduleId.includes('vue-sonner')) return 'vendor-sonner';
+    }
 }
 
 const defaultAssetName = '[name][extname]';

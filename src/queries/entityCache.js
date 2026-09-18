@@ -1,4 +1,4 @@
-import { AppDebug, logWebRequest, withQueryLog } from '../services/appConfig';
+﻿import { AppDebug, logWebRequest, withQueryLog } from '../services/appConfig';
 import { queryClient } from './client';
 import { queryKeys } from './keys';
 import { toQueryOptions } from './policies';
@@ -16,8 +16,8 @@ const RECENCY_FIELDS = [
     'createdAt'
 ];
 
-// 单实体查询缓存条数上限：防止快速浏览用户/世界/头像/群组时缓存无上限累积
-// （超出上限按 dataUpdatedAt 最旧淘汰；gcTime 到期仍会正常回收）
+// 鍗曞疄浣撴煡璇㈢紦瀛樻潯鏁颁笂闄愶細闃叉蹇€熸祻瑙堢敤鎴?涓栫晫/澶村儚/缇ょ粍鏃剁紦瀛樻棤涓婇檺绱Н
+// 锛堣秴鍑轰笂闄愭寜 dataUpdatedAt 鏈€鏃ф窐姹帮紱gcTime 鍒版湡浠嶄細姝ｅ父鍥炴敹锛?
 const ENTITY_CACHE_MAX_ENTRIES = Object.freeze({
     user: 400,
     avatar: 200,
@@ -26,22 +26,22 @@ const ENTITY_CACHE_MAX_ENTRIES = Object.freeze({
 });
 
 /**
- * 判断 queryKey 是否为单个实体查询键（排除成员列表/画廊/日历等复合键）
+ * 鍒ゆ柇 queryKey 鏄惁涓哄崟涓疄浣撴煡璇㈤敭锛堟帓闄ゆ垚鍛樺垪琛?鐢诲粖/鏃ュ巻绛夊鍚堥敭锛?
  */
 function isSingleEntityKey(queryKey, type) {
     if (queryKey[0] !== type) {
         return false;
     }
     if (type === 'group') {
-        // group 单实体键形如 ['group', groupId, boolean]
+        // group 鍗曞疄浣撻敭褰㈠ ['group', groupId, boolean]
         return queryKey.length === 3 && typeof queryKey[2] === 'boolean';
     }
-    // user/avatar/world 单实体键形如 ['user', userId]
+    // user/avatar/world 鍗曞疄浣撻敭褰㈠ ['user', userId]
     return queryKey.length === 2;
 }
 
 /**
- * 淘汰超出上限的实体查询缓存（按 dataUpdatedAt 最旧优先）
+ * 娣樻卑瓒呭嚭涓婇檺鐨勫疄浣撴煡璇㈢紦瀛橈紙鎸?dataUpdatedAt 鏈€鏃т紭鍏堬級
  */
 function evictExcessEntityCache() {
     for (const [type, maxEntries] of Object.entries(

@@ -1,0 +1,610 @@
+﻿use std::path::{Path, PathBuf};
+use std::sync::Arc;
+
+use axum::extract::{Json, State};
+use axum::http::StatusCode;
+use axum::response::sse::{Event, KeepAlive, Sse};
+use axum::response::IntoResponse;
+use axum::routing::post;
+use futures::Stream;
+use axum::Router;
+use rusqlite::Connection;
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+use tokio::sync::broadcast;
+
+// ---------------------------------------------------------------------------
+// MCP JSON-RPC types
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Deserialize)]
+pub struct JsonRpcRequest {
+    pub jsonrpc: String,
+    pub method: String,
+    #[serde(default)]
+    pub params: Option<Value>,
+    #[serde(default)]
+    pub id: Option<Value>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct JsonRpcResponse {
+    pub jsonrpc: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<JsonRpcError>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<Value>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct JsonRpcError {
+    pub code: i32,
+    pub message: String,
+}
+
+impl JsonRpcError {
+    fn method_not_found(method: &str) -> Self {
+        Self {
+            code: -32601,
+            message: format!("Method not found: {method}"),
+        }
+    }
+    fn invalid_params(msg: &str) -> Self {
+        Self {
+            code: -32602,
+            message: msg.to_string(),
+        }
+    }
+    fn internal(msg: &str) -> Self {
+        Self {
+            code: -32603,
+            message: msg.to_string(),
+        }
+    }
+}
+
+fn ok_response(result: Value, id: Option<Value>) -> JsonRpcResponse {
+    JsonRpcResponse {
+        jsonrpc: "2.0".into(),
+        result: Some(result),
+        error: None,
+        id,
+    }
+}
+
+fn err_response(err: JsonRpcError, id: Option<Value>) -> JsonRpcResponse {
+    JsonRpcResponse {
+        jsonrpc: "2.0".into(),
+        result: None,
+        error: Some(err),
+        id,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Application state shared across handlers
+// ---------------------------------------------------------------------------
+
+#[derive(Clone)]
+pub struct AppState {
+    db_path: Arc<PathBuf>,
+    /// Broadcast channel for SSE -C every new event is fanned-out.
+    tx: broadcast::Sender<Value>,
+}
+
+// ---------------------------------------------------------------------------
+// Database helpers
+// ---------------------------------------------------------------------------
+
+fn open_db(path: &Path) -> Result<Connection, String> {
+    let conn = Connection::open(path).map_err(|e| format!("Failed to open database: {e}"))?;
+    conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;")
+        .map_err(|e| format!("Failed to set PRAGMA: {e}"))?;
+    Ok(conn)
+}
+
+/// Run a read-only SQL query and return the rows as a JSON array of objects.
+fn query_to_json(path: &Path, sql: &str) -> Result<Value, String> {
+    let conn = open_db(path)?;
+    let mut stmt = conn.prepare(sql).map_err(|e| format!("SQL error: {e}"))?;
+    let columns: Vec<String> = stmt
+        .column_names()
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    let mut rows = stmt
+        .query([])
+        .map_err(|e| format!("SQL error: {e}"))?;
+    let mut result: Vec<Value> = Vec::new();
+    while let Some(row) = rows.next().map_err(|e| format!("SQL error: {e}"))? {
+        let mut obj = serde_json::Map::new();
+        for (i, col) in columns.iter().enumerate() {
+            let value: Value = row
+                .get::<_, Option<String>>(i)
+                .unwrap_or(None)
+                .map(Value::String)
+                .or_else(|| {
+                    row.get::<_, Option<i64>>(i)
+                        .unwrap_or(None)
+                        .map(|n| json!(n))
+                })
+                .or_else(|| {
+                    row.get::<_, Option<f64>>(i)
+                        .unwrap_or(None)
+                        .map(|f| json!(f))
+                })
+                .unwrap_or(Value::Null);
+            obj.insert(col.clone(), value);
+        }
+        result.push(Value::Object(obj));
+    }
+    Ok(Value::Array(result))
+}
+
+/// Return the user prefix used for per-user tables.
+/// The prefix is the userId with `-` and `_` removed; if it starts with a
+/// digit an underscore is prepended.
+fn user_prefix(user_id: &str) -> String {
+    let mut prefix: String = user_id.chars().filter(|c| *c != '-' && *c != '_').collect();
+    if prefix.starts_with(char::is_numeric) {
+        prefix.insert(0, '_');
+    }
+    prefix
+}
+
+// ---------------------------------------------------------------------------
+// MCP tool definitions
+// ---------------------------------------------------------------------------
+
+fn mcp_tools() -> Vec<Value> {
+    vec![
+        json!({
+            "name": "vrcx_get_friends",
+            "description": "--ȡ--ǰ-----б--------״̬-------------Ϣ-------غ--ѵ- userId--displayName--trustLevel -- friendNumber--",
+            "inputSchema": {
+                "type": "object",
+                "properties": {}
+            }
+        }),
+        json!({
+            "name": "vrcx_get_friend_activity",
+            "description": "--ȡ---ѽ--ڻ--¼------/---ߡ-״̬------- Avatar--GPS -ƶ--ȣ---",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["gps", "status", "avatar", "bio", "online_offline"],
+                        "description": "----͹--ˣ---շ---ȫ--"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "-----------ޣ-Ĭ-- 20--"
+                    }
+                }
+            }
+        }),
+        json!({
+            "name": "vrcx_get_favorites",
+            "description": "--ȡ-ղ--б-------ղء------ղء-Avatar -ղأ---",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["friend", "world", "avatar"],
+                        "description": "-ղ----ͣ---շ---ȫ--"
+                    }
+                }
+            }
+        }),
+        json!({
+            "name": "vrcx_get_memos",
+            "description": "--ȡ-----û-----¼-----籸--¼--",
+            "inputSchema": {
+                "type": "object",
+                "properties": {}
+            }
+        }),
+        json!({
+            "name": "vrcx_get_game_log",
+            "description": "--ȡ--Ϸ--־------λ-ü-¼------/-뿪-----------ɡ---Ƶ---ŵȣ---",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["location", "join_leave", "portal_spawn", "video_play"],
+                        "description": "--־---͹--ˣ---շ---ȫ--"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "-----------ޣ-Ĭ-- 50--"
+                    }
+                }
+            }
+        }),
+        json!({
+            "name": "vrcx_get_notifications",
+            "description": "--ȡ VRChat ֪ͨ-б-----롢----------------ȣ---",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "limit": {
+                        "type": "integer",
+                        "description": "-----------ޣ-Ĭ-- 20--"
+                    }
+                }
+            }
+        }),
+        json!({
+            "name": "vrcx_get_moderation",
+            "description": "--ȡ---/-----б-----κ;-----û-----",
+            "inputSchema": {
+                "type": "object",
+                "properties": {}
+            }
+        }),
+        json!({
+            "name": "vrcx_get_cached_worlds",
+            "description": "-ӱ--ػ----в-ѯ VRChat ------Ϣ----------------",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "search": {
+                        "type": "string",
+                        "description": "-------ƹؼ--ʣ-ģ--ƥ-䣩"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "-----------ޣ-Ĭ-- 20--"
+                    }
+                }
+            }
+        }),
+        json!({
+            "name": "vrcx_get_cached_avatars",
+            "description": "-ӱ--ػ----в-ѯ VRChat Avatar --Ϣ----------------",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "search": {
+                        "type": "string",
+                        "description": "Avatar ---ƹؼ--ʣ-ģ--ƥ-䣩"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "-----------ޣ-Ĭ-- 20--"
+                    }
+                }
+            }
+        }),
+        json!({
+            "name": "vrcx_list_tables",
+            "description": "-г----ݿ------б-----ƺ------------˽⵱ǰ---ݿ-ṹ--",
+            "inputSchema": {
+                "type": "object",
+                "properties": {}
+            }
+        }),
+    ]
+}
+
+// ---------------------------------------------------------------------------
+// Tool call dispatcher
+// ---------------------------------------------------------------------------
+
+fn handle_tool_call(name: &str, args: &Value, db_path: &Path) -> Result<Value, String> {
+    match name {
+        "vrcx_get_friends" => {
+            // Discover user-specific tables for friend_log_current
+            let conn = open_db(db_path)?;
+            let tables: Vec<String> = {
+                let mut stmt = conn
+                    .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+                    .map_err(|e| e.to_string())?;
+                let rows = stmt.query_map([], |row| row.get(0)).map_err(|e| e.to_string())?;
+                rows.filter_map(|r| r.ok()).collect()
+            };
+            // Find the friend_log_current table
+            let flc = tables
+                .iter()
+                .find(|t| t.ends_with("_friend_log_current"))
+                .ok_or("friend_log_current table not found")?;
+            query_to_json(db_path, &format!("SELECT * FROM \"{flc}\" ORDER BY friend_number ASC"))
+        }
+        "vrcx_get_friend_activity" => {
+            let conn = open_db(db_path)?;
+            let tables: Vec<String> = {
+                let mut stmt = conn
+                    .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+                    .map_err(|e| e.to_string())?;
+                let rows = stmt.query_map([], |row| row.get(0)).map_err(|e| e.to_string())?;
+                rows.filter_map(|r| r.ok()).collect()
+            };
+            let activity_type = args
+                .get("type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let limit = args
+                .get("limit")
+                .and_then(|v| v.as_i64())
+                .unwrap_or(20);
+            let mut results: Vec<Value> = Vec::new();
+            let feed_tables = [
+                ("gps", "_feed_gps"),
+                ("status", "_feed_status"),
+                ("avatar", "_feed_avatar"),
+                ("bio", "_feed_bio"),
+                ("online_offline", "_feed_online_offline"),
+            ];
+            for (key, suffix) in feed_tables {
+                if !activity_type.is_empty() && activity_type != key {
+                    continue;
+                }
+                if let Some(tbl) = tables.iter().find(|t| t.ends_with(suffix)) {
+                    let sql = format!(
+                        "SELECT * FROM \"{tbl}\" ORDER BY rowid DESC LIMIT {limit}"
+                    );
+                    if let Ok(data) = query_to_json(db_path, &sql) {
+                        if let Some(arr) = data.as_array() {
+                            for item in arr {
+                                let mut obj = item.clone();
+                                if let Some(o) = obj.as_object_mut() {
+                                    o.insert("_feed_type".into(), json!(key));
+                                }
+                                results.push(obj);
+                            }
+                        }
+                    }
+                }
+            }
+            Ok(json!(results))
+        }
+        "vrcx_get_favorites" => {
+            let fav_type = args
+                .get("type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let mut result = serde_json::Map::new();
+            if fav_type.is_empty() || fav_type == "friend" {
+                if let Ok(data) = query_to_json(db_path, "SELECT * FROM favorite_friend") {
+                    result.insert("friend".into(), data);
+                }
+            }
+            if fav_type.is_empty() || fav_type == "world" {
+                if let Ok(data) = query_to_json(db_path, "SELECT * FROM favorite_world") {
+                    result.insert("world".into(), data);
+                }
+            }
+            if fav_type.is_empty() || fav_type == "avatar" {
+                if let Ok(data) = query_to_json(db_path, "SELECT * FROM favorite_avatar") {
+                    result.insert("avatar".into(), data);
+                }
+            }
+            Ok(Value::Object(result))
+        }
+        "vrcx_get_memos" => {
+            let mut result = serde_json::Map::new();
+            if let Ok(data) = query_to_json(db_path, "SELECT * FROM memos") {
+                result.insert("user_memos".into(), data);
+            }
+            if let Ok(data) = query_to_json(db_path, "SELECT * FROM world_memos") {
+                result.insert("world_memos".into(), data);
+            }
+            Ok(Value::Object(result))
+        }
+        "vrcx_get_game_log" => {
+            let log_type = args
+                .get("type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let limit = args
+                .get("limit")
+                .and_then(|v| v.as_i64())
+                .unwrap_or(50);
+            let mut result = serde_json::Map::new();
+            let log_tables = [
+                ("location", "gamelog_location"),
+                ("join_leave", "gamelog_join_leave"),
+                ("portal_spawn", "gamelog_portal_spawn"),
+                ("video_play", "gamelog_video_play"),
+            ];
+            for (key, tbl) in log_tables {
+                if !log_type.is_empty() && log_type != key {
+                    continue;
+                }
+                let sql = format!("SELECT * FROM \"{tbl}\" ORDER BY rowid DESC LIMIT {limit}");
+                if let Ok(data) = query_to_json(db_path, &sql) {
+                    result.insert(key.into(), data);
+                }
+            }
+            Ok(Value::Object(result))
+        }
+        "vrcx_get_notifications" => {
+            let conn = open_db(db_path)?;
+            let tables: Vec<String> = {
+                let mut stmt = conn
+                    .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+                    .map_err(|e| e.to_string())?;
+                let rows = stmt.query_map([], |row| row.get(0)).map_err(|e| e.to_string())?;
+                rows.filter_map(|r| r.ok()).collect()
+            };
+            let limit = args
+                .get("limit")
+                .and_then(|v| v.as_i64())
+                .unwrap_or(20);
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_notifications")) {
+                let sql = format!(
+                    "SELECT * FROM \"{tbl}\" ORDER BY rowid DESC LIMIT {limit}"
+                );
+                query_to_json(db_path, &sql)
+            } else {
+                Ok(json!([]))
+            }
+        }
+        "vrcx_get_moderation" => {
+            let conn = open_db(db_path)?;
+            let tables: Vec<String> = {
+                let mut stmt = conn
+                    .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+                    .map_err(|e| e.to_string())?;
+                let rows = stmt.query_map([], |row| row.get(0)).map_err(|e| e.to_string())?;
+                rows.filter_map(|r| r.ok()).collect()
+            };
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_moderation")) {
+                let sql = format!("SELECT * FROM \"{tbl}\"");
+                query_to_json(db_path, &sql)
+            } else {
+                Ok(json!([]))
+            }
+        }
+        "vrcx_get_cached_worlds" => {
+            let search = args
+                .get("search")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let limit = args
+                .get("limit")
+                .and_then(|v| v.as_i64())
+                .unwrap_or(20);
+            let sql = if search.is_empty() {
+                format!("SELECT * FROM cache_world ORDER BY rowid DESC LIMIT {limit}")
+            } else {
+                let escaped = search.replace('\'', "''");
+                format!(
+                    "SELECT * FROM cache_world WHERE name LIKE '%{escaped}%' ORDER BY rowid DESC LIMIT {limit}"
+                )
+            };
+            query_to_json(db_path, &sql)
+        }
+        "vrcx_get_cached_avatars" => {
+            let search = args
+                .get("search")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let limit = args
+                .get("limit")
+                .and_then(|v| v.as_i64())
+                .unwrap_or(20);
+            let sql = if search.is_empty() {
+                format!("SELECT * FROM cache_avatar ORDER BY rowid DESC LIMIT {limit}")
+            } else {
+                let escaped = search.replace('\'', "''");
+                format!(
+                    "SELECT * FROM cache_avatar WHERE name LIKE '%{escaped}%' ORDER BY rowid DESC LIMIT {limit}"
+                )
+            };
+            query_to_json(db_path, &sql)
+        }
+        "vrcx_list_tables" => {
+            let conn = open_db(db_path)?;
+            let mut stmt = conn
+                .prepare(
+                    "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
+                )
+                .map_err(|e| e.to_string())?;
+            let table_names: Vec<String> = stmt
+                .query_map([], |row| row.get(0))
+                .map_err(|e| e.to_string())?
+                .filter_map(|r| r.ok())
+                .collect();
+            let mut tables_info = Vec::new();
+            for name in &table_names {
+                let count_sql = format!("SELECT COUNT(*) FROM \"{name}\"");
+                let count: i64 = conn
+                    .query_row(&count_sql, [], |row| row.get(0))
+                    .unwrap_or(0);
+                tables_info.push(json!({
+                    "name": name,
+                    "row_count": count
+                }));
+            }
+            Ok(json!(tables_info))
+        }
+        _ => Err(format!("Unknown tool: {name}")),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// MCP protocol handler
+// ---------------------------------------------------------------------------
+
+fn handle_mcp_message(request: &JsonRpcRequest, state: &AppState) -> JsonRpcResponse {
+    match request.method.as_str() {
+        "initialize" => ok_response(
+            json!({
+                "protocolVersion": "2024-11-05",
+                "capabilities": {
+                    "tools": { "listChanged": false }
+                },
+                "serverInfo": {
+                    "name": "vrcx-pro-mcp",
+                    "version": env!("CARGO_PKG_VERSION")
+                }
+            }),
+            request.id.clone(),
+        ),
+        "notifications/initialized" => {
+            // Notification -C no response body required.
+            // Return a dummy that will be discarded.
+            ok_response(json!(null), None)
+        }
+        "tools/list" => ok_response(json!({ "tools": mcp_tools() }), request.id.clone()),
+        "tools/call" => {
+            let params = request.params.as_ref().unwrap_or(&Value::Null);
+            let tool_name = match params.get("name").and_then(|v| v.as_str()) {
+                Some(n) => n,
+                None => {
+                    return err_response(
+                        JsonRpcError::invalid_params("Missing tool name"),
+                        request.id.clone(),
+                    );
+                }
+            };
+            let arguments = params
+                .get("arguments")
+                .cloned()
+                .unwrap_or(Value::Object(serde_json::Map::new()));
+            match handle_tool_call(tool_name, &arguments, &state.db_path) {
+                Ok(result) => ok_response(
+                    json!({
+                        "content": [{
+                            "type": "text",
+                            "text": serde_json::to_string_pretty(&result).unwrap_or_default()
+                        }]
+                    }),
+                    request.id.clone(),
+                ),
+                Err(e) => ok_response(
+                    json!({
+                        "content": [{
+                            "type": "text",
+                            "text": format!("Error: {e}")
+                        }],
+                        "isError": true
+                    }),
+                    request.id.clone(),
+                ),
+            }
+        }
+        "ping" => ok_response(json!({}), request.id.clone()),
+        _ => err_response(
+            JsonRpcError::method_not_found(&request.method),
+            request.id.clone(),
+        ),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// HTTP handlers
+// ---------------------------------------------------------------------------
+
+/// POST /mcp  -C accepts a single JSON-RPC request and returns the response.
+async fn mcp_post(
+    State(state): State<AppState>,
+    Json(request): Json<JsonRpcRequest>,
+) -> impl IntoResponse {
+    let response = handle_mcp_message(&request, &state);

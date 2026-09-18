@@ -308,32 +308,50 @@ export const useFriendStore = defineStore('Friend', () => {
         { immediate: true, deep: true }
     );
 
+    // Single-pass categorization: avoids N independent iterations over sortedFriends
+    const _categorizedFriends = computed(() => {
+        const sorted = sortedFriends.value;
+        const vip = [];
+        const online = [];
+        const active = [];
+        const offline = [];
+        for (let i = 0, len = sorted.length; i < len; i++) {
+            const f = sorted[i];
+            if (f.state === 'online') {
+                if (f.isVIP) {
+                    vip.push(f);
+                } else {
+                    online.push(f);
+                }
+            } else if (f.state === 'active') {
+                active.push(f);
+            } else {
+                offline.push(f);
+            }
+        }
+        return { vip, online, active, offline };
+    });
+
     const vipFriends = computed(() => {
-        const result = sortedFriends.value.filter(
-            (f) => f.state === 'online' && f.isVIP
-        );
+        const result = _categorizedFriends.value.vip;
         trackDerivedDebug('vipFriends', result.length);
         return result;
     });
 
     const onlineFriends = computed(() => {
-        const result = sortedFriends.value.filter(
-            (f) => f.state === 'online' && !f.isVIP
-        );
+        const result = _categorizedFriends.value.online;
         trackDerivedDebug('onlineFriends', result.length);
         return result;
     });
 
     const activeFriends = computed(() => {
-        const result = sortedFriends.value.filter((f) => f.state === 'active');
+        const result = _categorizedFriends.value.active;
         trackDerivedDebug('activeFriends', result.length);
         return result;
     });
 
     const offlineFriends = computed(() => {
-        const result = sortedFriends.value.filter(
-            (f) => f.state === 'offline' || !f.state
-        );
+        const result = _categorizedFriends.value.offline;
         trackDerivedDebug('offlineFriends', result.length);
         return result;
     });

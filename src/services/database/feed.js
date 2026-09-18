@@ -1,9 +1,40 @@
-import { dbVars } from '../database';
+﻿import { dbVars } from '../database';
 
 import sqliteService from '../sqlite.js';
 
 // Fallback fetch limit when maxTableSize/searchTableSize are unusable.
 const DEFAULT_FEED_ENTRY_LIMIT = 25;
+
+function parseFeedFilters(filters) {
+    const types = { gps: true, status: true, bio: true, avatar: true, online: true, offline: true };
+    if (filters.length > 0) {
+        types.gps = false; types.status = false; types.bio = false;
+        types.avatar = false; types.online = false; types.offline = false;
+        for (const f of filters) {
+            if (f === 'GPS') types.gps = true;
+            else if (f === 'Status') types.status = true;
+            else if (f === 'Bio') types.bio = true;
+            else if (f === 'Avatar') types.avatar = true;
+            else if (f === 'Online') types.online = true;
+            else if (f === 'Offline') types.offline = true;
+        }
+    }
+    return types;
+}
+
+function buildVipQuery(vipList) {
+    if (!vipList || vipList.length === 0) return { vipQuery: '', vipArgs: {} };
+    const vipPlaceholders = [];
+    const vipArgs = {};
+    for (let i = 0; i < vipList.length; i++) {
+        const key = `@vip_${i}`;
+        vipArgs[key] = vipList[i];
+        vipPlaceholders.push(key);
+    }
+    return { vipQuery: `AND user_id IN (${vipPlaceholders.join(', ')})`, vipArgs };
+}
+
+const BASE_COLUMNS = 'id, created_at, user_id, display_name, type, location, world_name, previous_location, time, group_name, status, status_description, previous_status, previous_status_description, bio, previous_bio, owner_id, avatar_name, current_avatar_image_url, current_avatar_thumbnail_image_url, previous_current_avatar_image_url, previous_current_avatar_thumbnail_image_url';
 
 const feed = {
     addGPSToDatabase(entry) {
@@ -274,17 +305,7 @@ const feed = {
         if (search.startsWith('wrld_') || search.startsWith('grp_')) {
             return this.getFeedByInstanceId(search, filters, vipList);
         }
-        let vipQuery = '';
-        const vipArgs = {};
-        if (vipList.length > 0) {
-            const vipPlaceholders = [];
-            vipList.forEach((vip, i) => {
-                const key = `@vip_${i}`;
-                vipArgs[key] = vip;
-                vipPlaceholders.push(key);
-            });
-            vipQuery = `AND user_id IN (${vipPlaceholders.join(', ')})`;
-        }
+        const { vipQuery, vipArgs } = buildVipQuery(vipList);
         let dateQuery = '';
         if (dateFrom) {
             dateQuery += 'AND created_at >= @dateFrom ';
@@ -292,70 +313,13 @@ const feed = {
         if (dateTo) {
             dateQuery += 'AND created_at <= @dateTo ';
         }
-        let gps = true;
-        let status = true;
-        let bio = true;
-        let avatar = true;
-        let online = true;
-        let offline = true;
+        const { gps, status, bio, avatar, online, offline } = parseFeedFilters(filters);
         const aviPublic = search.includes('public');
         const aviPrivate = search.includes('private');
-        if (filters.length > 0) {
-            gps = false;
-            status = false;
-            bio = false;
-            avatar = false;
-            online = false;
-            offline = false;
-            filters.forEach((filter) => {
-                switch (filter) {
-                    case 'GPS':
-                        gps = true;
-                        break;
-                    case 'Status':
-                        status = true;
-                        break;
-                    case 'Bio':
-                        bio = true;
-                        break;
-                    case 'Avatar':
-                        avatar = true;
-                        break;
-                    case 'Online':
-                        online = true;
-                        break;
-                    case 'Offline':
-                        offline = true;
-                        break;
-                }
-            });
-        }
         const searchLike = `%${search}%`;
         const selects = [];
-        const baseColumns = [
-            'id',
-            'created_at',
-            'user_id',
-            'display_name',
-            'type',
-            'location',
-            'world_name',
-            'previous_location',
-            'time',
-            'group_name',
-            'status',
-            'status_description',
-            'previous_status',
-            'previous_status_description',
-            'bio',
-            'previous_bio',
-            'owner_id',
-            'avatar_name',
-            'current_avatar_image_url',
-            'current_avatar_thumbnail_image_url',
-            'previous_current_avatar_image_url',
-            'previous_current_avatar_thumbnail_image_url'
-        ].join(', ');
+
+        
         if (gps) {
             selects.push(
                 `SELECT * FROM (SELECT id, created_at, user_id, display_name, 'GPS' AS type, location, world_name, previous_location, time, group_name, NULL AS status, NULL AS status_description, NULL AS previous_status, NULL AS previous_status_description, NULL AS bio, NULL AS previous_bio, NULL AS owner_id, NULL AS avatar_name, NULL AS current_avatar_image_url, NULL AS current_avatar_thumbnail_image_url, NULL AS previous_current_avatar_image_url, NULL AS previous_current_avatar_thumbnail_image_url FROM ${dbVars.userPrefix}_feed_gps WHERE (display_name LIKE @searchLike OR world_name LIKE @searchLike OR group_name LIKE @searchLike) ${dateQuery} ${vipQuery} ORDER BY created_at DESC, id DESC LIMIT @perTable)`
@@ -457,7 +421,7 @@ const feed = {
                 }
                 feedDatabase.push(row);
             },
-            `SELECT ${baseColumns} FROM (${selects.join(' UNION ALL ')}) ORDER BY created_at DESC, id DESC LIMIT @limit`,
+            `SELECT ${BASE_COLUMNS} FROM (${selects.join(' UNION ALL ')}) ORDER BY created_at DESC, id DESC LIMIT @limit`,
             args
         );
         return feedDatabase;
@@ -474,78 +438,11 @@ const feed = {
         if (!Number.isFinite(maxEntries)) maxEntries = dbVars.maxTableSize;
         if (!Number.isFinite(maxEntries)) maxEntries = DEFAULT_FEED_ENTRY_LIMIT;
         if (maxEntries < -1) maxEntries = -1;
-        let vipQuery = '';
-        const vipArgs = {};
-        if (vipList.length > 0) {
-            const vipPlaceholders = [];
-            vipList.forEach((vip, i) => {
-                const key = `@vip_${i}`;
-                vipArgs[key] = vip;
-                vipPlaceholders.push(key);
-            });
-            vipQuery = `AND user_id IN (${vipPlaceholders.join(', ')})`;
-        }
-        let gps = true;
-        let status = true;
-        let bio = true;
-        let avatar = true;
-        let online = true;
-        let offline = true;
-        if (filters.length > 0) {
-            gps = false;
-            status = false;
-            bio = false;
-            avatar = false;
-            online = false;
-            offline = false;
-            filters.forEach((filter) => {
-                switch (filter) {
-                    case 'GPS':
-                        gps = true;
-                        break;
-                    case 'Status':
-                        status = true;
-                        break;
-                    case 'Bio':
-                        bio = true;
-                        break;
-                    case 'Avatar':
-                        avatar = true;
-                        break;
-                    case 'Online':
-                        online = true;
-                        break;
-                    case 'Offline':
-                        offline = true;
-                        break;
-                }
-            });
-        }
+        const { vipQuery, vipArgs } = buildVipQuery(vipList);
+        const { gps, status, bio, avatar, online, offline } = parseFeedFilters(filters);
         const selects = [];
-        const baseColumns = [
-            'id',
-            'created_at',
-            'user_id',
-            'display_name',
-            'type',
-            'location',
-            'world_name',
-            'previous_location',
-            'time',
-            'group_name',
-            'status',
-            'status_description',
-            'previous_status',
-            'previous_status_description',
-            'bio',
-            'previous_bio',
-            'owner_id',
-            'avatar_name',
-            'current_avatar_image_url',
-            'current_avatar_thumbnail_image_url',
-            'previous_current_avatar_image_url',
-            'previous_current_avatar_thumbnail_image_url'
-        ].join(', ');
+
+        
         if (gps) {
             selects.push(
                 `SELECT * FROM (SELECT id, created_at, user_id, display_name, 'GPS' AS type, location, world_name, previous_location, time, group_name, NULL AS status, NULL AS status_description, NULL AS previous_status, NULL AS previous_status_description, NULL AS bio, NULL AS previous_bio, NULL AS owner_id, NULL AS avatar_name, NULL AS current_avatar_image_url, NULL AS current_avatar_thumbnail_image_url, NULL AS previous_current_avatar_image_url, NULL AS previous_current_avatar_thumbnail_image_url FROM ${dbVars.userPrefix}_feed_gps WHERE 1=1 ${vipQuery} ORDER BY id DESC LIMIT @perTable)`
@@ -634,24 +531,14 @@ const feed = {
                 }
                 feedDatabase.push(row);
             },
-            `SELECT ${baseColumns} FROM (${selects.join(' UNION ALL ')}) ORDER BY created_at DESC, id DESC LIMIT @limit`,
+            `SELECT ${BASE_COLUMNS} FROM (${selects.join(' UNION ALL ')}) ORDER BY created_at DESC, id DESC LIMIT @limit`,
             args
         );
         return feedDatabase;
     },
 
     async getFeedByInstanceId(instanceId, filters, vipList) {
-        let vipQuery = '';
-        const vipArgs = {};
-        if (vipList.length > 0) {
-            const vipPlaceholders = [];
-            vipList.forEach((vip, i) => {
-                const key = `@vip_${i}`;
-                vipArgs[key] = vip;
-                vipPlaceholders.push(key);
-            });
-            vipQuery = `AND user_id IN (${vipPlaceholders.join(', ')})`;
-        }
+        const { vipQuery, vipArgs } = buildVipQuery(vipList);
         let gps = true;
         let online = true;
         let offline = true;
@@ -674,30 +561,8 @@ const feed = {
             });
         }
         const selects = [];
-        const baseColumns = [
-            'id',
-            'created_at',
-            'user_id',
-            'display_name',
-            'type',
-            'location',
-            'world_name',
-            'previous_location',
-            'time',
-            'group_name',
-            'status',
-            'status_description',
-            'previous_status',
-            'previous_status_description',
-            'bio',
-            'previous_bio',
-            'owner_id',
-            'avatar_name',
-            'current_avatar_image_url',
-            'current_avatar_thumbnail_image_url',
-            'previous_current_avatar_image_url',
-            'previous_current_avatar_thumbnail_image_url'
-        ].join(', ');
+
+        
         if (gps) {
             selects.push(
                 `SELECT * FROM (SELECT id, created_at, user_id, display_name, 'GPS' AS type, location, world_name, previous_location, time, group_name, NULL AS status, NULL AS status_description, NULL AS previous_status, NULL AS previous_status_description, NULL AS bio, NULL AS previous_bio, NULL AS owner_id, NULL AS avatar_name, NULL AS current_avatar_image_url, NULL AS current_avatar_thumbnail_image_url, NULL AS previous_current_avatar_image_url, NULL AS previous_current_avatar_thumbnail_image_url FROM ${dbVars.userPrefix}_feed_gps WHERE location LIKE @instanceLike ${vipQuery} ORDER BY created_at DESC, id DESC LIMIT @perTable)`
@@ -754,7 +619,7 @@ const feed = {
                 }
                 feedDatabase.push(row);
             },
-            `SELECT ${baseColumns} FROM (${selects.join(' UNION ALL ')}) ORDER BY created_at DESC, id DESC LIMIT @limit`,
+            `SELECT ${BASE_COLUMNS} FROM (${selects.join(' UNION ALL ')}) ORDER BY created_at DESC, id DESC LIMIT @limit`,
             args
         );
         return feedDatabase;

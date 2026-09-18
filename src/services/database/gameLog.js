@@ -2,6 +2,18 @@ import { dbVars } from '../database';
 
 import sqliteService from '../sqlite.js';
 
+function buildVipQuery(vipList) {
+    if (!vipList || vipList.length === 0) return { vipQuery: '', vipArgs: {} };
+    const vipPlaceholders = [];
+    const vipArgs = {};
+    for (let i = 0; i < vipList.length; i++) {
+        const key = `@vip_${i}`;
+        vipArgs[key] = vipList[i];
+        vipPlaceholders.push(key);
+    }
+    return { vipQuery: `AND user_id IN (${vipPlaceholders.join(',')})`, vipArgs };
+}
+
 const gameLog = {
     async getGamelogDatabase() {
         var gamelogDatabase = [];
@@ -537,29 +549,30 @@ const gameLog = {
         ref.joinCount = instances.size;
         return ref;
     },
-
     async getAllUserStats(userIds, displayNames) {
         if (!userIds.length && !displayNames.length) {
             return [];
         }
         var data = [];
-        // this makes me most sad
-        var userIdsString = '';
-        for (var userId of userIds) {
-            userIdsString += `'${userId}', `;
-        }
-        userIdsString = userIdsString.slice(0, -2);
-        var displayNamesString = '';
-        for (var displayName of displayNames) {
-            displayNamesString += `'${displayName.replaceAll("'", "''")}', `;
-        }
-        displayNamesString = displayNamesString.slice(0, -2);
+        var args = {};
         var whereClauses = [];
-        if (userIdsString) {
-            whereClauses.push(`g.user_id IN (${userIdsString})`);
+        if (userIds.length) {
+            var placeholders = [];
+            for (var i = 0; i < userIds.length; i++) {
+                var key = `@uid_${i}`;
+                args[key] = userIds[i];
+                placeholders.push(key);
+            }
+            whereClauses.push(`g.user_id IN (${placeholders.join(',')})`);
         }
-        if (displayNamesString) {
-            whereClauses.push(`g.display_name IN (${displayNamesString})`);
+        if (displayNames.length) {
+            var placeholders = [];
+            for (var i = 0; i < displayNames.length; i++) {
+                var key = `@dn_${i}`;
+                args[key] = displayNames[i];
+                placeholders.push(key);
+            }
+            whereClauses.push(`g.display_name IN (${placeholders.join(',')})`);
         }
 
         await sqliteService.execute(
@@ -583,29 +596,20 @@ const gameLog = {
             FROM
                 gamelog_join_leave g
             WHERE
-                ${whereClauses.join('\n                OR ')}
+                ${whereClauses.join('\\n                OR ')}
             GROUP BY
                 g.user_id,
                 g.display_name
             ORDER BY
                 g.user_id DESC
-            `
+            `,
+            args
         );
         return data;
     },
 
     async getGameLogByLocation(instanceId, filters, vipList = []) {
-        let vipQuery = '';
-        const vipArgs = {};
-        if (vipList.length > 0) {
-            const vipPlaceholders = [];
-            vipList.forEach((vip, i) => {
-                const key = `@vip_${i}`;
-                vipArgs[key] = vip;
-                vipPlaceholders.push(key);
-            });
-            vipQuery = `AND user_id IN (${vipPlaceholders.join(', ')})`;
-        }
+        const { vipQuery, vipArgs } = buildVipQuery(vipList);
         let location = true;
         let onplayerjoined = true;
         let onplayerleft = true;
@@ -798,17 +802,7 @@ const gameLog = {
             'data',
             'message'
         ].join(', ');
-        let vipQuery = '';
-        if (vipList.length > 0) {
-            vipQuery = 'AND user_id IN (';
-            for (var i = 0; i < vipList.length; i++) {
-                vipQuery += `'${vipList[i].replaceAll("'", "''")}'`;
-                if (i < vipList.length - 1) {
-                    vipQuery += ', ';
-                }
-            }
-            vipQuery += ')';
-        }
+        const { vipQuery, vipArgs } = buildVipQuery(vipList);
         let location = true;
         let onplayerjoined = true;
         let onplayerleft = true;
@@ -918,7 +912,8 @@ const gameLog = {
         const gamelogDatabase = [];
         const args = {
             '@limit': maxEntries,
-            '@perTable': maxEntries
+            '@perTable': maxEntries,
+            ...vipArgs
         };
         await sqliteService.execute(
             (dbRow) => {
@@ -997,17 +992,7 @@ const gameLog = {
         if (search.startsWith('wrld_') || search.startsWith('grp_')) {
             return this.getGameLogByLocation(search, filters, vipList);
         }
-        let vipQuery = '';
-        const vipArgs = {};
-        if (vipList.length > 0) {
-            const vipPlaceholders = [];
-            vipList.forEach((vip, i) => {
-                const key = `@vip_${i}`;
-                vipArgs[key] = vip;
-                vipPlaceholders.push(key);
-            });
-            vipQuery = `AND user_id IN (${vipPlaceholders.join(', ')})`;
-        }
+        const { vipQuery, vipArgs } = buildVipQuery(vipList);
         let location = true;
         let onplayerjoined = true;
         let onplayerleft = true;
@@ -1806,7 +1791,7 @@ const gameLog = {
 
     /**
      * Get self (current user) presence records for a list of locations.
-     * Returns a map from location → array of { selfLeave: string, selfTime: number }.
+     * Returns a map from location 鈫?array of { selfLeave: string, selfTime: number }.
      * @param {string} userId - The current user's ID
      * @param {string[]} locations - Array of location strings
      * @returns {Promise<Map<string, Array<{selfLeave: string, selfTime: number}>>>}
@@ -2040,7 +2025,7 @@ const gameLog = {
         return results;
     },
 
-    // ── Sessions view queries (read-only, no existing behavior changed) ──
+    // 鈹€鈹€ Sessions view queries (read-only, no existing behavior changed) 鈹€鈹€
 
     /**
      * Get Location segments paginated by cursor (id DESC).

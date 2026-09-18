@@ -960,7 +960,25 @@
                 }
             },
             "integrations": {
-                "header": "整合"
+                "header": "整合",
+                "mcp_server": {
+                    "header": "MCP 伺服器",
+                    "enable": "啟用 MCP 伺服器",
+                    "enable_description": "啟動本機 Model Context Protocol (MCP) 伺服器，允許 AI 助理查詢您的 VRCX 資料。",
+                    "server_port": "伺服器連接埠",
+                    "server_port_description": "MCP 伺服器監聽的連接埠（預設：3001）。",
+                    "port_button": "連接埠：{port}",
+                    "server_status": "伺服器狀態",
+                    "status_running": "執行中",
+                    "status_stopped": "已停止",
+                    "database_path": "資料庫路徑",
+                    "database_path_description": "VRCX SQLite 資料庫檔案的路徑。",
+                    "database_path_default": "預設",
+                    "port_dialog_title": "MCP 伺服器連接埠",
+                    "port_dialog_description": "請輸入 MCP 伺服器的連接埠號碼（1024-65535）。",
+                    "port_dialog_error": "請輸入有效的連接埠號碼（1024-65535）。",
+                    "db_dialog_title": "選擇 VRCX 資料庫"
+                }
             },
             "advanced_groups": {
                 "system": {
@@ -3567,7 +3585,9 @@
                 "403_404_bailing_request": "由於最近發生 404 / 403 錯誤而放棄請求",
                 "unavailable": "服務可能因 VRChat 內部問題而無法使用"
             }
-        }
+        },
+        "mcp_server_started": "MCP 伺服器已啟動",
+        "mcp_server_error": "MCP 伺服器錯誤：{error}"
     },
     "accessibility": {
         "toggle_sidebar": "切換側邊欄",

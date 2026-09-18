@@ -40,4 +40,17 @@ const result = spawnSync(
     ],
     { stdio: 'inherit' }
 );
+
+// Framework-dependent builds must not contain native .NET hosting DLLs
+// (hostfxr, hostpolicy, coreclr, clrjit). If these are left over from a
+// previous self-contained publish, the .NET host uses them instead of the
+// system-installed runtime and then fails to locate the framework in the
+// app-local probe path ("No frameworks were found").
+if (!selfContained && result.status === 0) {
+    for (const dll of ['hostfxr.dll', 'hostpolicy.dll', 'coreclr.dll', 'clrjit.dll']) {
+        const p = path.join(outputDir, dll);
+        if (fs.existsSync(p)) fs.unlinkSync(p);
+    }
+}
+
 process.exit(result.status ?? 1);

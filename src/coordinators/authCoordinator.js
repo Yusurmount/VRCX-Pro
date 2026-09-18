@@ -1,9 +1,7 @@
 import { i18n } from '../plugins/i18n';
-
-import Noty from 'noty';
+import { toast } from 'vue-sonner';
 
 import { closeWebSocket, initWebsocket } from '../services/websocket';
-import { escapeTag } from '../shared/utils';
 import { queryClient } from '../queries';
 import { useAuthStore } from '../stores/auth';
 import { useNotificationStore } from '../stores/notification';
@@ -25,12 +23,9 @@ export async function runLogoutFlow() {
     const t = i18n.global.t;
 
     if (watchState.isLoggedIn) {
-        new Noty({
-            type: 'success',
-            text: t('message.auth.logout_greeting', {
-                name: `<strong>${escapeTag(userStore.currentUser.displayName)}</strong>`
-            })
-        }).show();
+        toast.success(t('message.auth.logout_greeting', {
+            name: userStore.currentUser.displayName
+        }));
     }
 
     userStore.setUserDialogVisible(false);

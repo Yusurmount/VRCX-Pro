@@ -157,6 +157,34 @@
             </SettingsItem>
         </SettingsGroup>
 
+        <!-- MCP Server -->
+        <SettingsGroup :title="t('view.settings.integrations.mcp_server.header')">
+            <SettingsItem
+                :label="t('view.settings.integrations.mcp_server.enable')"
+                :description="t('view.settings.integrations.mcp_server.enable_description')">
+                <Switch :model-value="mcpServerEnabled" @update:modelValue="setMcpServerEnabled" />
+            </SettingsItem>
+
+            <SettingsItem
+                v-if="mcpServerEnabled"
+                :label="t('view.settings.integrations.mcp_server.server_port')"
+                :description="t('view.settings.integrations.mcp_server.server_port_description')">
+                <Button size="sm" variant="outline" @click="promptMcpPort">
+                    {{ t('view.settings.integrations.mcp_server.port_button', { port: mcpServerPort }) }}
+                </Button>
+            </SettingsItem>
+
+            <SettingsItem
+                v-if="mcpServerEnabled"
+                :label="t('view.settings.integrations.mcp_server.server_status')">
+                <span
+                    :class="mcpServerStatus ? 'text-green-500' : 'text-red-500'"
+                    class="text-sm font-medium">
+                    {{ mcpServerStatus ? t('view.settings.integrations.mcp_server.status_running') : t('view.settings.integrations.mcp_server.status_stopped') }}
+                </span>
+            </SettingsItem>
+        </SettingsGroup>
+
         <TranslationApiDialog v-model:isTranslationApiDialogVisible="isTranslationApiDialogVisible" />
         <YouTubeApiDialog v-model:isYouTubeApiDialogVisible="isYouTubeApiDialogVisible" />
         <AvatarProviderDialog v-model:isAvatarProviderDialogVisible="isAvatarProviderDialogVisible" />
@@ -175,6 +203,7 @@
         useAdvancedSettingsStore,
         useAvatarProviderStore,
         useDiscordPresenceSettingsStore,
+        useModalStore,
         useVrStore
     } from '@/stores';
 
@@ -215,8 +244,15 @@
     const { showVRChatConfig } = advancedSettingsStore;
 
     const { avatarRemoteDatabase, youTubeApi, translationApi } = storeToRefs(advancedSettingsStore);
+    const {
+        mcpServerEnabled,
+        mcpServerPort,
+        mcpServerStatus
+    } = storeToRefs(advancedSettingsStore);
 
-    const { setAvatarRemoteDatabase } = advancedSettingsStore;
+    const { setAvatarRemoteDatabase, setMcpServerEnabled, setMcpServerPort } = advancedSettingsStore;
+
+    const modalStore = useModalStore();
 
     const { isAvatarProviderDialogVisible } = storeToRefs(useAvatarProviderStore());
     const { showAvatarProviderDialog } = useAvatarProviderStore();
@@ -258,5 +294,25 @@
         if (configKey === 'VRCX_translationAPI') {
             advancedSettingsStore.setTranslationApi();
         }
+    }
+
+    function promptMcpPort() {
+        modalStore
+            .prompt({
+                title: t('view.settings.integrations.mcp_server.port_dialog_title'),
+                description: t('view.settings.integrations.mcp_server.port_dialog_description'),
+                confirmText: t('common.actions.confirm'),
+                cancelText: t('common.actions.cancel'),
+                inputValue: mcpServerPort.value.toString(),
+                pattern: /^[1-9]\d{3,4}$/,
+                errorMessage: t('view.settings.integrations.mcp_server.port_dialog_error')
+            })
+            .then(async ({ ok, value }) => {
+                if (!ok) return;
+                if (value && !isNaN(parseInt(value, 10))) {
+                    await setMcpServerPort(parseInt(value, 10));
+                }
+            })
+            .catch(() => {});
     }
 </script>
