@@ -128,6 +128,64 @@ const groupReq = {
             return args;
         });
     },
+
+    /**
+     * @type {import('../types/api/group').CheckTransferGroup}
+     */
+    checkTransferGroup(params) {
+        return request(`groups/${params.groupId}/transfer`, {
+            method: 'GET',
+            params: {
+                transferTargetId: params.transferTargetId
+            }
+        }).then((json) => {
+            const args = {
+                json,
+                params
+            };
+            return args;
+        });
+    },
+
+    /**
+     * @param {{ groupId: string, transferTargetId: string }} params
+     * @returns { Promise<{json: any, params}> }
+     */
+    transferGroup(params) {
+        return request(`groups/${params.groupId}/transfer`, {
+            method: 'POST',
+            params: {
+                transferTargetId: params.transferTargetId
+            }
+        }).then((json) => {
+            const args = {
+                json,
+                params
+            };
+            refetchActiveGroupScope(params.groupId);
+            return args;
+        });
+    },
+
+    /**
+     * @param {{ groupId: string, hardDelete?: boolean }} params
+     * @returns { Promise<{json: any, params}> }
+     */
+    deleteGroup(params) {
+        return request(`groups/${params.groupId}`, {
+            method: 'DELETE',
+            params: {
+                hardDelete: params.hardDelete ?? false
+            }
+        }).then((json) => {
+            const args = {
+                json,
+                params
+            };
+            return args;
+        });
+    },
+
     /**
      * @param {{ groupId: string }} params
      * @returns { Promise<{json: any, params}> }
@@ -883,22 +941,19 @@ const groupReq = {
      * startsAt: string,
      * endsAt: string,
      * title: string,
-     * accessType: 'group' | 'public',
+     * accessType: string, // 'group' | 'public',
      * description: string,
      * category: string,
      * tags: Array<string>,
-     * isDraft: boolean,
      * imageId: string,
      * roleIds: Array<string>,
-     * parentId: null,
+     * parentId?: null,
      * platforms: Array<string>,
      * languages: Array<string>,
      * sendCreationNotification: boolean,
-     * featured: boolean,
      * hostEarlyJoinMinutes: number,
      * guestEarlyJoinMinutes: number,
      * closeInstanceAfterEndMinutes: number,
-     * usesInstanceOverflow: boolean,
      * groupId: string
      * }} params
      * @returns { Promise<{json: any, params}> }
@@ -921,29 +976,26 @@ const groupReq = {
      * startsAt?: string,
      * endsAt?: string,
      * title?: string,
-     * accessType?: 'group' | 'public',
+     * accessType?: string, // 'group' | 'public',
      * description?: string,
      * category?: string,
      * tags?: Array<string>,
-     * isDraft?: boolean,
      * imageId?: string,
      * roleIds?: Array<string>,
      * parentId?: null,
      * platforms?: Array<string>,
      * languages?: Array<string>,
-     * sendCreationNotification?: boolean,
      * featured?: boolean,
      * hostEarlyJoinMinutes?: number,
      * guestEarlyJoinMinutes?: number,
      * closeInstanceAfterEndMinutes?: number,
-     * usesInstanceOverflow?: boolean,
      * groupId: string,
      * eventId: string
      * }} params
      * @returns { Promise<{json: any, params}> }
      */
     editGroupEvent(params) {
-        return request(`calendar/${params.groupId}/${params.eventId}`, {
+        return request(`calendar/${params.groupId}/${params.eventId}/event`, {
             method: 'PUT',
             params
         }).then((json) => {
@@ -961,7 +1013,7 @@ const groupReq = {
      * shortCode: string,
      * description: string,
      * joinState: 'open' | 'request' | 'invite' | 'closed',
-     * privacy: 'public' | 'private',
+     * privacy: 'public' | 'default',
      * roleTemplate: 'default' | 'managedFree' | 'managedInvite' | 'managedRequest',
      * bannerId: string,
      * iconId: string
@@ -988,7 +1040,7 @@ const groupReq = {
      * shortCode: string,
      * description: string,
      * joinState: 'open' | 'request' | 'invite' | 'closed',
-     * language: string,
+     * languages: Array<string>,
      * rules: string,
      * links: Array<string>,
      * bannerId: string,

@@ -41,18 +41,6 @@
                     " />
             </SettingsItem>
 
-            <SettingsItem
-                :label="t('view.settings.appearance.appearance.vrcplus_profile_icons')"
-                :description="t('view.settings.appearance.appearance.vrcplus_profile_icons_description')">
-                <Switch
-                    :model-value="displayVRCPlusIconsAsAvatar"
-                    :ariaLabel="t('view.settings.appearance.appearance.vrcplus_profile_icons')"
-                    @update:modelValue="
-                        setDisplayVRCPlusIconsAsAvatar();
-                        saveOpenVROption();
-                    " />
-            </SettingsItem>
-
             <SettingsItem :label="t('view.settings.appearance.appearance.vrc_profile_themes')">
                 <Switch
                     :model-value="displayVRCProfileThemes"
@@ -422,7 +410,6 @@
 
     const {
         appLanguage,
-        displayVRCPlusIconsAsAvatar,
         displayVRCProfileThemes,
         displayVRCProfileBackgrounds,
         profileBackgroundOpacity,
@@ -450,7 +437,6 @@
     const appLanguageDisplayName = computed(() => getLanguageName(String(appLanguage.value)));
 
     const {
-        setDisplayVRCPlusIconsAsAvatar,
         setDisplayVRCProfileThemes,
         setDisplayVRCProfileBackgrounds,
         setProfileBackgroundOpacity,

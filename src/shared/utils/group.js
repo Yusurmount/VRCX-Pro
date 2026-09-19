@@ -36,7 +36,9 @@ function hasGroupModerationPermission(group) {
         hasGroupPermission(group, 'group-members-remove') ||
         hasGroupPermission(group, 'group-roles-assign') ||
         hasGroupPermission(group, 'group-roles-manage') ||
-        hasGroupPermission(group, 'group-default-role-manage')
+        hasGroupPermission(group, 'group-default-role-manage') ||
+        hasGroupPermission(group, 'group-announcement-manage') ||
+        hasGroupPermission(group, 'group-calendar-manage')
     );
 }
 

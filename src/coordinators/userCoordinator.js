@@ -382,6 +382,7 @@ export function showUserDialog(userId) {
             D.$homeLocationName = worldName;
         });
     }
+    updateUserDialogProfile();
     AppApi.SendIpc('ShowUserDialog', userId);
     queryRequest
         .fetch('user', {
@@ -533,7 +534,6 @@ export function showUserDialog(userId) {
                     .then((args1) => {
                         handleGroupRepresented(args1);
                     });
-                updateUserDialogProfile();
                 D.visible = true;
                 userStore.applyUserDialogLocation(true);
             }
@@ -861,6 +861,13 @@ export function applyCurrentUser(json) {
             steamId: '',
             tags: [],
             temporaryExpiryDate: null,
+            twitchDetails: {
+                display_name: '',
+                id: '',
+                login: '',
+                profile_image_url: ''
+            },
+            twitchId: '',
             twoFactorAuthEnabled: false,
             twoFactorAuthEnabledDate: null,
             unsubscribe: false,

@@ -63,6 +63,10 @@
 
         <InviteGroupDialog></InviteGroupDialog>
 
+        <GroupEditDialog></GroupEditDialog>
+
+        <GroupEventEditDialog></GroupEventEditDialog>
+
         <FullscreenImagePreview></FullscreenImagePreview>
 
         <LaunchDialog></LaunchDialog>
@@ -109,10 +113,18 @@
     const AvatarImportDialog = defineAsyncComponent(() => import('../Favorites/dialogs/AvatarImportDialog.vue'));
     const ChangelogDialog = defineAsyncComponent(() => import('../Settings/dialogs/ChangelogDialog.vue'));
     import AutoFollowDialog from '../../components/dialogs/AutoFollowDialog.vue';
-    const ChooseFavoriteGroupDialog = defineAsyncComponent(() => import('../../components/dialogs/ChooseFavoriteGroupDialog.vue'));
+    const ChooseFavoriteGroupDialog = defineAsyncComponent(
+        () => import('../../components/dialogs/ChooseFavoriteGroupDialog.vue')
+    );
     const FriendImportDialog = defineAsyncComponent(() => import('../Favorites/dialogs/FriendImportDialog.vue'));
     const FullscreenImagePreview = defineAsyncComponent(() => import('../../components/FullscreenImagePreview.vue'));
     const GlobalToolsDialogs = defineAsyncComponent(() => import('../Tools/components/GlobalToolsDialogs.vue'));
+    const GroupEditDialog = defineAsyncComponent(
+        () => import('../../components/dialogs/GroupDialog/GroupEditDialog.vue')
+    );
+    const GroupEventEditDialog = defineAsyncComponent(
+        () => import('../../components/dialogs/GroupDialog/GroupEventEditDialog.vue')
+    );
     const InviteGroupDialog = defineAsyncComponent(() => import('../../components/dialogs/InviteGroupDialog.vue'));
     const LaunchDialog = defineAsyncComponent(() => import('../../components/dialogs/LaunchDialog.vue'));
     const LaunchOptionsDialog = defineAsyncComponent(() => import('../Settings/dialogs/LaunchOptionsDialog.vue'));

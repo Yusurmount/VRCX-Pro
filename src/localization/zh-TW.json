@@ -594,6 +594,9 @@
                         "gift": "已接收禮物"
                     },
                     "alert": "經濟提醒"
+                },
+                "twitchdrop": {
+                    "fulfilled": "Twitch 掉寶已發放"
                 }
             }
         },
@@ -1105,8 +1108,6 @@
                     "theme_mode_pink": "粉色",
                     "theme_mode_material3": "Material 3",
                     "zoom": "介面縮放",
-                    "vrcplus_profile_icons": "VRChat+ 個人資料圖示",
-                    "vrcplus_profile_icons_description": "在可用的情況下，使用 VRChat+ 獨家設定檔圖示。",
                     "show_instance_id": "顯示房間 ID",
                     "show_status_bar": "顯示狀態列",
                     "age_gated_instances": "年齡限制房間",
@@ -1904,8 +1905,10 @@
                 "show_discord_connections": "顯示 Discord 連結",
                 "instance_closed_at": "關閉時間",
                 "instance_minimum_avatar_performance": "最低化身效能等級",
+                "economy_creator": "創作者經濟成員",
                 "bio_diff_toggle": "切換簡介比對",
-                "instance_closed": "房間已關閉"
+                "instance_closed": "房間已關閉",
+                "instance_announcement_tooltip": "傳送房間公告"
             },
             "groups": {
                 "header": "群組",
@@ -1922,7 +1925,9 @@
                     "members": "成員",
                     "in_game": "遊戲內順序"
                 },
-                "leave_group_tooltip": "離開群組"
+                "leave_group_tooltip": "離開群組",
+                "create_requires_vrc_plus": "建立群組需要 VRC+",
+                "create_limit_reached": "你已達到群組擁有數上限"
             },
             "worlds": {
                 "header": "世界",
@@ -2235,7 +2240,10 @@
                 "block": "封鎖群組",
                 "unblock": "解除封鎖群組",
                 "subscribe_event": "訂閱活動",
-                "unsubscribe_event": "取消訂閱活動"
+                "unsubscribe_event": "取消訂閱活動",
+                "create_event": "建立活動",
+                "transfer": "轉讓群組",
+                "delete": "刪除群組"
             },
             "info": {
                 "header": "資訊",
@@ -2258,7 +2266,11 @@
                 "role_permissions": "權限：",
                 "last_visited": "上次造訪",
                 "past_events": "過去的活動",
-                "upcoming_events": "即將到來的活動"
+                "upcoming_events": "即將到來的活動",
+                "online_members": "線上成員",
+                "member_info": "成員資訊",
+                "visibility": "可見性",
+                "short_code": "群組代碼"
             },
             "posts": {
                 "header": "貼文",
@@ -2297,6 +2309,26 @@
             },
             "json": {
                 "header": "原始資料"
+            },
+            "transfer": {
+                "header": "轉讓群組",
+                "description": "搜尋將接受 {groupName} 所有權移轉的成員。",
+                "search_placeholder": "搜尋群組成員",
+                "search_minimum": "至少輸入 {count} 個字元才能搜尋。",
+                "no_results": "找不到符合的成員。",
+                "cancel": "取消",
+                "submit": "轉讓群組",
+                "requirements_title": "無法轉讓群組",
+                "requirements_description": "{displayName} 未符合擁有此群組的所有要求。未符合的要求：{requirements}。",
+                "requirements": {
+                    "group_not_monetized": "該群組不能商業化",
+                    "has_vrc_plus": "該成員必須擁有 VRC+",
+                    "has_verified_email": "該成員必須有已驗證的電子郵件地址",
+                    "can_own_more_groups": "該成員不能超過群組擁有數上限",
+                    "is_group_member": "該使用者必須是該群組成員"
+                },
+                "confirm_title": "轉讓群組所有權",
+                "confirm_description": "確定要傳送將 {groupName} 的所有權移轉給 {displayName} 的要求嗎？"
             }
         },
         "favorite": {
@@ -2936,6 +2968,133 @@
         "avatar_database_provider": {
             "header": "角色資料庫提供方",
             "add_provider": "新增提供方"
+        },
+        "group_edit": {
+            "create_header": "建立群組",
+            "edit_header": "編輯群組",
+            "name": "名稱",
+            "short_code": "群組代碼",
+            "description": "描述",
+            "join_state": "加入狀態",
+            "privacy": "隱私",
+            "role_template": "身分組範本",
+            "loading_role_templates": "正在載入身分組範本...",
+            "language": "語言",
+            "no_language": "無語言",
+            "rules": "規則",
+            "links": "連結",
+            "add_link": "新增連結",
+            "allow_join_prompt": "自動群組邀請",
+            "allow_join_prompt_description": "自動向在此群組房間中停留超過 5 分鐘或在其中結交好友的非成員玩家傳送邀請。僅適用於公開群組。",
+            "banner": "橫幅",
+            "icon": "圖示",
+            "select_image": "選擇圖片",
+            "clear_image": "清除圖片",
+            "saving": "儲存中...",
+            "save": "儲存變更",
+            "create": "建立群組",
+            "create_success": "群組已建立",
+            "edit_success": "群組已更新"
+        },
+        "group_event_edit": {
+            "create_header": "建立群組活動",
+            "edit_header": "編輯群組活動",
+            "title": "標題",
+            "description": "描述",
+            "starts_at": "開始時間",
+            "ends_at": "結束時間",
+            "invalid_date_range": "活動的結束時間必須晚於開始時間。",
+            "access_type": "存取權限",
+            "access_group": "群組",
+            "access_public": "公開",
+            "category": "分類",
+            "categories": {
+                "arts": "藝術",
+                "avatars": "模型",
+                "dance": "舞蹈",
+                "education": "教育",
+                "exploration": "探索",
+                "film_media": "影視與媒體",
+                "gaming": "遊戲",
+                "hangout": "閒聊聚會",
+                "music": "音樂",
+                "other": "其他",
+                "performance": "表演",
+                "roleplaying": "角色扮演",
+                "wellness": "身心健康"
+            },
+            "tags": "標籤",
+            "tags_help": "最多用逗號分隔五個標籤。每個標籤最多 100 個字元。",
+            "languages": "語言",
+            "platforms": "平台",
+            "platform_values": {
+                "android": "Android",
+                "ios": "iOS",
+                "standalonewindows": "Windows"
+            },
+            "none_selected": "未選擇",
+            "roles": "身分組",
+            "all_members": "所有成員",
+            "image": "圖片",
+            "select_image": "選擇圖片",
+            "clear_image": "清除圖片",
+            "host_early_join": "主持人提前加入（分鐘）",
+            "guest_early_join": "訪客提前加入（分鐘）",
+            "close_after_end": "結束後關閉（分鐘）",
+            "send_notification": "傳送建立通知",
+            "repeat": "重複",
+            "repeat_every": "重複間隔",
+            "repeat_values": {
+                "none": "從不",
+                "weekly": "週",
+                "monthly": "月",
+                "yearly": "年"
+            },
+            "weekly_pattern": "每週重複模式",
+            "weekly_pattern_values": {
+                "every_week": "每週",
+                "weekdays": "每個工作日",
+                "weekend": "每個週末",
+                "custom": "自訂日期"
+            },
+            "custom_days": "選擇日期",
+            "weekday_values": {
+                "MO": "星期一",
+                "TU": "星期二",
+                "WE": "星期三",
+                "TH": "星期四",
+                "FR": "星期五",
+                "SA": "星期六",
+                "SU": "星期日"
+            },
+            "ends": "結束",
+            "ends_values": {
+                "never": "從不",
+                "after_occurrences": "按次數",
+                "after_date": "按日期"
+            },
+            "occurrence_count": "重複次數",
+            "end_date": "結束日期",
+            "saving": "儲存中...",
+            "save": "儲存變更",
+            "edit_parent": "編輯母活動",
+            "create": "建立活動",
+            "create_success": "群組活動已建立",
+            "edit_success": "群組活動已更新",
+            "delete_success": "群組活動已刪除",
+            "save_error": "群組活動儲存失敗",
+            "delete_error": "群組活動刪除失敗",
+            "load_error": "群組活動載入失敗",
+            "delete_confirm": "確定要刪除此群組活動嗎？"
+        },
+        "instance_announcement": {
+            "header": "傳送房間公告",
+            "message": "訊息",
+            "image": "圖片（選填）",
+            "clear_image": "清除圖片",
+            "select_image": "選擇圖片",
+            "sending": "傳送中...",
+            "send": "傳送公告"
         }
     },
     "confirm": {
@@ -2970,7 +3129,10 @@
         "bulk_unfavorite_title": "刪除 {count} 個收藏？",
         "restart_required_title": "需要重新啟動",
         "restart_now": "立即重新啟動",
-        "restart_later": "稍後再說"
+        "restart_later": "稍後再說",
+        "command_question_toggle": "確定要{action}{command}嗎？",
+        "enable_action": "啟用",
+        "disable_action": "停用"
     },
     "prompt": {
         "totp": {
@@ -3206,7 +3368,8 @@
             "closed": "房間已關閉",
             "removed_form_queue": "已從佇列中移除房間 {worldName}",
             "not_allowed": "你沒有權限進入此房間",
-            "create_failed": "建立房間失敗"
+            "create_failed": "建立房間失敗",
+            "announcement_sent": "房間公告已傳送"
         },
         "avatar": {
             "selected": "已更換角色",
@@ -3250,7 +3413,8 @@
             "join_request_sent": "已發送加入群組請求",
             "visibility_updated": "群組可見性已更新",
             "subscription_updated": "群組訂閱設定已更新",
-            "event_announcement_updated": "群組公告已更新"
+            "event_announcement_updated": "群組公告已更新",
+            "transfer_requested": "已傳送群組轉讓要求"
         },
         "invite": {
             "self_sent": "已送出給自己的邀請",

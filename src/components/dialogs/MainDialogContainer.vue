@@ -32,11 +32,17 @@
 
     const AvatarDialog = defineAsyncComponent(() => import('./AvatarDialog/AvatarDialog.vue'));
     const GroupDialog = defineAsyncComponent(() => import('./GroupDialog/GroupDialog.vue'));
-    const PreviousInstancesInfoDialog = defineAsyncComponent(() => import('./PreviousInstancesDialog/PreviousInstancesInfoDialog.vue'));
-    const PreviousInstancesListDialog = defineAsyncComponent(() => import('./PreviousInstancesDialog/PreviousInstancesListDialog.vue'));
+    const PreviousInstancesInfoDialog = defineAsyncComponent(
+        () => import('./PreviousInstancesDialog/PreviousInstancesInfoDialog.vue')
+    );
+    const PreviousInstancesListDialog = defineAsyncComponent(
+        () => import('./PreviousInstancesDialog/PreviousInstancesListDialog.vue')
+    );
     const UserDialog = defineAsyncComponent(() => import('./UserDialog/UserDialog.vue'));
     const WorldDialog = defineAsyncComponent(() => import('./WorldDialog/WorldDialog.vue'));
-    const GroupMemberModerationDialog = defineAsyncComponent(() => import('./GroupDialog/GroupMemberModerationDialog.vue'));
+    const GroupMemberModerationDialog = defineAsyncComponent(
+        () => import('./GroupDialog/GroupMemberModerationDialog.vue')
+    );
     import { getReadableProfileThemeColor } from '@/shared/utils/user';
     import { profileBackgrounds } from '@/shared/constants/backgrounds';
 
@@ -157,6 +163,7 @@
     const dialogClass = computed(() => {
         switch (activeType.value) {
             case 'user':
+            case 'group':
                 return 'x-dialog translate-y-0 sm:max-w-270 overflow-hidden flex flex-col';
             case 'group-member-moderation':
                 return 'x-dialog translate-y-0 max-w-none flex flex-col sm:min-w-[90vw] sm:max-w-[90vw] sm:min-h-[80vh] sm:max-h-[80vh]';
@@ -167,7 +174,6 @@
                 return 'x-dialog translate-y-0 sm:max-w-250';
             case 'world':
             case 'avatar':
-            case 'group':
             default:
                 return 'x-dialog translate-y-0 sm:max-w-235 overflow-hidden flex flex-col';
         }

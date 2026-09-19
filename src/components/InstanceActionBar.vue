@@ -47,6 +47,20 @@
                     </Button>
                 </TooltipWrapper>
             </div>
+            <TooltipWrapper
+                v-if="instanceInfoState.canSendAnnouncement"
+                side="top"
+                :content="t('dialog.user.info.instance_announcement_tooltip')">
+                <Button
+                    class="rounded-full h-6 w-6 text-xs text-muted-foreground hover:text-foreground"
+                    :style="buttonStyle"
+                    size="icon-sm"
+                    variant="outline"
+                    :ariaLabel="t('dialog.user.info.instance_announcement_tooltip')"
+                    @click="instanceAnnouncementDialogVisible = true">
+                    <Megaphone class="h-4 w-4" />
+                </Button>
+            </TooltipWrapper>
             <TooltipWrapper v-if="showRefreshButton" side="top" :content="refreshTooltip">
                 <Button
                     class="rounded-full w-6 h-6 text-xs text-muted-foreground hover:text-foreground"
@@ -175,6 +189,10 @@
                 </TooltipWrapper>
             </template>
         </div>
+        <InstanceAnnouncementDialog
+            v-if="instanceAnnouncementDialogVisible"
+            v-model:open="instanceAnnouncementDialogVisible"
+            :location="resolvedInstanceLocation" />
     </div>
 </template>
 
@@ -185,6 +203,7 @@
         LogIn,
         Mail,
         MapPin,
+        Megaphone,
         PowerIcon,
         RefreshCw,
         UsersRound,
@@ -212,6 +231,7 @@
     import { hasGroupPermission, parseLocation } from '../shared/utils';
     import { useInviteChecks } from '../composables/useInviteChecks';
     import { instanceRequest, miscRequest } from '../api';
+    import InstanceAnnouncementDialog from './dialogs/InstanceAnnouncementDialog.vue';
 
     defineOptions({
         inheritAttrs: false
@@ -327,6 +347,7 @@
     const showHistoryButton = computed(() => props.showHistory && typeof props.onHistory === 'function');
 
     const lastJoin = ref(null);
+    const instanceAnnouncementDialogVisible = ref(false);
     const showLastJoinIndicator = computed(() => props.showLastJoin && lastJoin.value);
     const hasInstanceMetadata = computed(() => {
         return !!(
@@ -346,6 +367,7 @@
     const instanceInfoState = reactive({
         isValidInstance: false,
         canCloseInstance: false,
+        canSendAnnouncement: false,
         isAgeGated: false,
         isRoleRestricted: false,
         disabledContentSettings: ''
@@ -402,6 +424,7 @@
         Object.assign(instanceInfoState, {
             isValidInstance: false,
             canCloseInstance: false,
+            canSendAnnouncement: false,
             isAgeGated: false,
             isRoleRestricted: false,
             disabledContentSettings: ''
@@ -415,6 +438,9 @@
         } else if (props.instance.ownerId?.startsWith('grp_')) {
             const group = groupStore.cachedGroups.get(props.instance.ownerId);
             instanceInfoState.canCloseInstance = hasGroupPermission(group, 'group-instance-moderate');
+            instanceInfoState.canSendAnnouncement =
+                hasGroupPermission(group, 'group-instance-announcement-create') &&
+                resolvedInstanceLocation.value === locationStore.lastLocation.location;
         }
         instanceInfoState.isAgeGated = props.instance.ageGate === true;
         if (resolvedInstanceLocation.value?.includes('~ageGate')) instanceInfoState.isAgeGated = true;

@@ -33,10 +33,8 @@
                 <img
                     v-else
                     class="w-full h-full object-cover cursor-pointer"
-                    :src="userImage(userDialog.ref, true, '256', true)"
-                    @click.stop="
-                        showFullscreenImageDialog(userDialog.ref.userIcon || userDialog.ref.currentAvatarImageUrl)
-                    "
+                    :src="userImage(userDialog.publicProfileRef, true, '256')"
+                    @click.stop="showFullscreenImageDialog(userDialog.publicProfileRef?.iconUrl)"
                     @error="userIconError = true"
                     loading="lazy" />
             </div>
@@ -67,6 +65,12 @@
                             class="font-bold cursor-pointer wrap-anywhere"
                             v-text="userDialog.ref.displayName"
                             @click="copyUserDisplayName(userDialog.ref.displayName)"></span>
+                        <TooltipWrapper
+                            v-if="userDialog.publicProfileRef?.isEconomyCreator"
+                            side="top"
+                            :content="t('dialog.user.info.economy_creator')">
+                            <BadgeCheck class="h-3.5 w-3.5 text-[#3b82f6]" />
+                        </TooltipWrapper>
                         <TooltipWrapper v-if="userDialog.ref.pronouns" side="top" :content="t('dialog.user.pronouns')">
                             <span class="x-grey font-mono text-xs" v-text="userDialog.ref.pronouns"></span>
                         </TooltipWrapper>
@@ -222,8 +226,10 @@
                 </Badge>
             </div>
 
-            <div v-if="userDialog.ref.badges && userDialog.ref.badges.length" class="flex flex-wrap gap-1.5">
-                <TooltipWrapper v-for="badge in userDialog.ref.badges" :key="badge.badgeId" side="top">
+            <div
+                v-if="userDialog.publicProfileRef?.badges && userDialog.publicProfileRef?.badges.length"
+                class="flex flex-wrap gap-1.5">
+                <TooltipWrapper v-for="badge in userDialog.publicProfileRef?.badges" :key="badge.badgeId" side="top">
                     <template #content>
                         <span>{{ badge.badgeName }}</span>
                         <span v-if="badge.hidden">&nbsp;(Hidden)</span>
@@ -418,6 +424,7 @@
 <script setup>
     import {
         Apple,
+        BadgeCheck,
         ChevronDown,
         IdCard,
         Image,

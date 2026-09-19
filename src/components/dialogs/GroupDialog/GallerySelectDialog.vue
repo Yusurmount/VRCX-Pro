@@ -40,7 +40,11 @@
                             v-if="image.versions[image.versions.length - 1].file.url"
                             class="h-[200px] w-[200px] rounded-[20px] cursor-pointer overflow-hidden mr-5"
                             @click="
-                                selectImageGallerySelect(image.versions[image.versions.length - 1].file.url, image.id)
+                                selectImageGallerySelect(
+                                    image.versions[image.versions.length - 1].file.url,
+                                    image.id,
+                                    image.versions[image.versions.length - 1].version
+                                )
                             ">
                             <img
                                 :src="image.versions[image.versions.length - 1].file.url"
@@ -108,12 +112,14 @@
      *
      * @param imageUrl
      * @param fileId
+     * @param fileVersion
      */
-    function selectImageGallerySelect(imageUrl, fileId) {
+    function selectImageGallerySelect(imageUrl, fileId, fileVersion) {
         const D = props.gallerySelectDialog;
         D.selectedFileId = fileId;
         D.selectedImageUrl = imageUrl;
-        emit('select-image', { imageUrl, fileId });
+        D.selectedFileVersion = fileVersion;
+        emit('select-image', { imageUrl, fileId, fileVersion });
         D.visible = false;
     }
 
@@ -153,7 +159,7 @@
         const r = new FileReader();
         r.onload = function () {
             const base64Body = btoa(r.result.toString());
-            if (isLocalUserVrcPlusSupporter.value) {
+            if (props.gallerySelectDialog.isIconGallerySelectDialog) {
                 vrcPlusIconRequest.uploadVRCPlusIcon(base64Body).then((args) => {
                     handleGalleryImageAdd(args);
                     toast.success(t('message.gallery.uploaded'));
@@ -162,7 +168,6 @@
                     }
                     return args;
                 });
-
                 return;
             }
             vrcPlusImageRequest.uploadGalleryImage(base64Body).then((args) => {

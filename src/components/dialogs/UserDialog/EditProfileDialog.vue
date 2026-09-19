@@ -101,12 +101,12 @@
 
                     <div class="flex items-center gap-2">
                         <img
-                            :src="editProfileDialog.userIcon || currentUser.currentAvatarThumbnailImageUrl"
+                            :src="editProfileDialog.iconUrl || currentUser.currentAvatarThumbnailImageUrl"
                             class="inline-block h-16 aspect-square rounded-md object-cover"
                             :alt="t('dialog.edit_profile.icon')"
                             loading="lazy" />
                         <Button
-                            v-if="editProfileDialog.userIcon"
+                            v-if="editProfileDialog.iconUrl"
                             size="sm"
                             variant="outline"
                             :disabled="editProfileDialog.loading"
@@ -928,7 +928,7 @@
     function handleGalleryImageSelect({ imageUrl }) {
         const D = props.editProfileDialog;
         if (gallerySelectDialog.value.isIconGallerySelectDialog) {
-            D.userIcon = imageUrl;
+            D.iconUrl = imageUrl;
         } else {
             if (!imageUrl) {
                 D.bannerType = 'color';
@@ -941,7 +941,7 @@
 
     function clearUserIcon() {
         const D = props.editProfileDialog;
-        D.userIcon = '';
+        D.iconUrl = '';
     }
 
     function handleAddUserLanguage(language) {
@@ -1014,8 +1014,8 @@
         if (D.bannerType !== currentUser.value.bannerType) {
             profilePayload.bannerType = D.bannerType;
         }
-        if (D.userIcon !== currentUser.value.userIcon) {
-            profilePayload.userIcon = D.userIcon;
+        if (D.iconUrl !== currentUser.value.iconUrl) {
+            profilePayload.userIcon = D.iconUrl;
         }
         if (D.themeId !== D.selfProfileRef.themeId) {
             profilePayload.themeId = D.themeId;
