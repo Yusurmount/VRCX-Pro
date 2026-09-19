@@ -19,6 +19,12 @@
                     <TabsTrigger value="components">
                         {{ t('view.settings.advanced.advanced.ui_debug.tabs.components') }}
                     </TabsTrigger>
+                    <TabsTrigger value="app_state">
+                        {{ t('view.settings.advanced.advanced.ui_debug.tabs.app_state') }}
+                    </TabsTrigger>
+                    <TabsTrigger value="previews">
+                        {{ t('view.settings.advanced.advanced.ui_debug.tabs.previews') }}
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="notifications">
@@ -66,6 +72,135 @@
                     </p>
                     <UIComponentGallery />
                 </TabsContent>
+
+                <TabsContent value="app_state">
+                    <div class="space-y-4">
+                        <section>
+                            <h3 class="text-sm font-semibold text-foreground mb-2">
+                                {{ t(tk('app_state.current_user')) }}
+                            </h3>
+                            <div class="rounded-md border p-3 text-xs font-mono space-y-1">
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">displayName:</span>
+                                    <span class="text-foreground">{{ currentUser.displayName ?? '—' }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">id:</span>
+                                    <span class="text-foreground">{{ currentUser.id ?? '—' }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">status:</span>
+                                    <span class="text-foreground">{{ currentUser.status ?? '—' }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">statusDescription:</span>
+                                    <span class="text-foreground truncate max-w-[200px]">{{ currentUser.statusDescription ?? '—' }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">location:</span>
+                                    <span class="text-foreground truncate max-w-[200px]">{{ currentUser.location ?? '—' }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">$trustLevel:</span>
+                                    <span class="text-foreground">{{ currentUser.$trustLevel ?? '—' }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">$isVRCPlus:</span>
+                                    <span class="text-foreground">{{ currentUser.$isVRCPlus ?? '—' }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">friendCount:</span>
+                                    <span class="text-foreground">{{ currentUser.friends?.length ?? '—' }}</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h3 class="text-sm font-semibold text-foreground mb-2">
+                                {{ t(tk('app_state.appearance_settings')) }}
+                            </h3>
+                            <div class="rounded-md border p-3 text-xs font-mono space-y-1">
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">appLanguage:</span>
+                                    <span class="text-foreground">{{ appearanceSettings.appLanguage }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">themeMode:</span>
+                                    <span class="text-foreground">{{ appearanceSettings.themeMode }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">isDarkMode:</span>
+                                    <span class="text-foreground">{{ appearanceSettings.isDarkMode }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">tableDensity:</span>
+                                    <span class="text-foreground">{{ appearanceSettings.tableDensity }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">displayVRCProfileCosmetics:</span>
+                                    <span class="text-foreground">{{ appearanceSettings.displayVRCProfileCosmetics }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">sidebarCosmetics:</span>
+                                    <span class="text-foreground">{{ appearanceSettings.sidebarCosmetics }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">hideNicknames:</span>
+                                    <span class="text-foreground">{{ appearanceSettings.hideNicknames }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">randomUserColours:</span>
+                                    <span class="text-foreground">{{ appearanceSettings.randomUserColours }}</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h3 class="text-sm font-semibold text-foreground mb-2">
+                                {{ t(tk('app_state.store_counts')) }}
+                            </h3>
+                            <div class="rounded-md border p-3 text-xs font-mono space-y-1">
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">cachedUsers:</span>
+                                    <span class="text-foreground">{{ userStore.cachedUsers?.size ?? 0 }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">cachedProfileEffects:</span>
+                                    <span class="text-foreground">{{ userStore.cachedProfileEffects?.size ?? 0 }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">cachedIconFrames:</span>
+                                    <span class="text-foreground">{{ userStore.cachedIconFrames?.size ?? 0 }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">cachedNameplateEffects:</span>
+                                    <span class="text-foreground">{{ userStore.cachedNameplateEffects?.size ?? 0 }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">currentTravelers:</span>
+                                    <span class="text-foreground">{{ userStore.currentTravelers?.size ?? 0 }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">customUserTags:</span>
+                                    <span class="text-foreground">{{ userStore.customUserTags?.size ?? 0 }}</span>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="previews">
+                    <div class="grid gap-3">
+                        <button
+                            v-for="item in previewItems"
+                            :key="item.id"
+                            class="ui-debug-row border-border bg-card hover:border-ring hover:bg-accent"
+                            @click="item.run">
+                            <span class="ui-debug-name text-foreground">{{ item.label }}</span>
+                            <span class="ui-debug-desc text-muted-foreground">{{ item.desc }}</span>
+                        </button>
+                    </div>
+                </TabsContent>
             </Tabs>
         </DialogContent>
     </Dialog>
@@ -82,7 +217,9 @@
     import configRepository from '@/services/config';
     import { resetOobe } from '@/services/oobe';
     import { getLatestWhatsNewRelease } from '@/shared/constants/whatsNewReleases';
+    import { useAppearanceSettingsStore } from '@/stores/settings/appearance';
     import { useModalStore } from '@/stores/modal';
+    import { useUserStore } from '@/stores/user';
     import { useVRCXUpdaterStore } from '@/stores/vrcxUpdater';
 
     import UIComponentGallery from './UIComponentGallery.vue';
@@ -98,7 +235,11 @@
     const { t } = useI18n();
     const router = useRouter();
     const modalStore = useModalStore();
+    const userStore = useUserStore();
+    const appearanceSettings = useAppearanceSettingsStore();
     const vrcxUpdater = useVRCXUpdaterStore();
+
+    const currentUser = computed(() => userStore.currentUser ?? {});
 
     /**
      * @param {string} suffix
@@ -520,6 +661,41 @@
             label: t(tk('dialogs.update.label')),
             desc: t(tk('dialogs.update.desc')),
             run: showVrcxUpdateDialog
+        }
+    ]);
+
+    // --- Dialog Previews ---
+
+    function previewEditProfile() {
+        userStore.showEditProfileDialog();
+    }
+
+    function previewUserDialog() {
+        if (userStore.currentUser?.id) {
+            userStore.setUserDialogVisible(true, userStore.currentUser.id);
+        } else {
+            toast.warning(t(tk('previews.no_user')));
+        }
+    }
+
+    const previewItems = computed(() => [
+        {
+            id: 'edit_profile',
+            label: t(tk('previews.edit_profile.label')),
+            desc: t(tk('previews.edit_profile.desc')),
+            run: previewEditProfile
+        },
+        {
+            id: 'user_dialog',
+            label: t(tk('previews.user_dialog.label')),
+            desc: t(tk('previews.user_dialog.desc')),
+            run: previewUserDialog
+        },
+        {
+            id: 'data_export',
+            label: t(tk('previews.data_export.label')),
+            desc: t(tk('previews.data_export.desc')),
+            run: () => userStore.userDialog.dataExportDialog = true
         }
     ]);
 </script>
