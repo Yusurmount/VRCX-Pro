@@ -1,4 +1,4 @@
-﻿import { dbVars } from '../database';
+import { dbVars } from '../database';
 
 import sqliteService from '../sqlite.js';
 
@@ -754,6 +754,190 @@ const feed = {
                 '@worldId': worldId,
                 '@daysOffset': `-${days} days`
             }
+        );
+        return results;
+    },
+
+    /**
+     * @param {string} worldId - The world ID (e.g. wrld_xxx)
+     * @param {number} days - Number of days to look back
+     * @returns {Promise<Array>} Daily visit counts for the world
+     */
+    async getWorldVisitTrend(worldId, days = 30) {
+        if (!dbVars.userPrefix) {
+            return [];
+        }
+        const results = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                results.push({
+                    date: dbRow[0],
+                    visitCount: dbRow[1],
+                    uniqueFriends: dbRow[2]
+                });
+            },
+            \SELECT
+                DATE(created_at) AS date,
+                COUNT(*) AS visit_count,
+                COUNT(DISTINCT user_id) AS unique_friends
+            FROM \_feed_gps
+            WHERE SUBSTR(location, 1, INSTR(location, ':') - 1) = @worldId
+                AND created_at >= datetime('now', @daysOffset)
+                AND location LIKE 'wrld_%'
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC\,
+            {
+                '@worldId': worldId,
+                '@daysOffset': \-\ days            }
+        );
+        return results;
+    },
+
+    /**
+     * @param {number} days - Number of days to look back
+     * @param {number} limit - Max number of avatars to return
+     * @returns {Promise<Object>} Avatar usage statistics
+     */
+    async getAvatarUsageStats(days = 30, limit = 50) {
+        if (!dbVars.userPrefix) {
+            return { topAvatars: [], selfVsOther: { selfOwned: 0, others: 0 }, totalChanges: 0, dailyChanges: [], topAuthors: [] };
+        }
+        const topAvatars = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                topAvatars.push({
+                    avatarName: dbRow[0],
+                    ownerId: dbRow[1],
+                    changeCount: dbRow[2],
+                    uniqueUsers: dbRow[3],
+                    lastUsed: dbRow[4]
+                });
+            },
+            \SELECT
+                avatar_name,
+                owner_id,
+                COUNT(*) AS change_count,
+                COUNT(DISTINCT user_id) AS unique_users,
+                MAX(created_at) AS last_used
+            FROM \_feed_avatar
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND avatar_name IS NOT NULL AND avatar_name != ''
+            GROUP BY avatar_name, owner_id
+            ORDER BY change_count DESC
+            LIMIT @limit\,
+            {
+                '@daysOffset': \-\ days\,
+                '@limit': limit
+            }
+        );
+
+        const selfVsOther = { selfOwned: 0, others: 0 };
+        await sqliteService.execute(
+            (dbRow) => {
+                if (dbRow[0] === dbRow[1]) {
+                    selfVsOther.selfOwned = dbRow[2];
+                } else {
+                    selfVsOther.others = dbRow[2];
+                }
+            },
+            \SELECT
+                user_id,
+                owner_id,
+                COUNT(*) AS change_count
+            FROM \_feed_avatar
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND avatar_name IS NOT NULL AND avatar_name != ''
+            GROUP BY user_id, owner_id\,
+            {
+                '@daysOffset': \-\ days            }
+        );
+
+        let totalChanges = 0;
+        await sqliteService.execute(
+            (dbRow) => {
+                totalChanges = dbRow[0] || 0;
+            },
+            \SELECT COUNT(*) FROM \_feed_avatar
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND avatar_name IS NOT NULL AND avatar_name != ''\,
+            {
+                '@daysOffset': \-\ days            }
+        );
+
+        const dailyChanges = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                dailyChanges.push({
+                    date: dbRow[0],
+                    count: dbRow[1]
+                });
+            },
+            \SELECT
+                DATE(created_at) AS date,
+                COUNT(*) AS count
+            FROM \_feed_avatar
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND avatar_name IS NOT NULL AND avatar_name != ''
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC\,
+            {
+                '@daysOffset': \-\ days            }
+        );
+
+        const topAuthors = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                topAuthors.push({
+                    ownerId: dbRow[0],
+                    avatarCount: dbRow[1],
+                    changeCount: dbRow[2]
+                });
+            },
+            \SELECT
+                owner_id,
+                COUNT(DISTINCT avatar_name) AS avatar_count,
+                COUNT(*) AS change_count
+            FROM \_feed_avatar
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND avatar_name IS NOT NULL AND avatar_name != ''
+            GROUP BY owner_id
+            ORDER BY change_count DESC
+            LIMIT 10\,
+            {
+                '@daysOffset': \-\ days            }
+        );
+
+        return { topAvatars, selfVsOther, totalChanges, dailyChanges, topAuthors };
+    },
+
+    /**
+     * @param {number} days - Number of days to look back
+     * @returns {Promise<Array>} Daily avatar change counts
+     */
+    async getAvatarChangeTimeline(days = 30) {
+        if (!dbVars.userPrefix) {
+            return [];
+        }
+        const results = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                results.push({
+                    date: dbRow[0],
+                    count: dbRow[1],
+                    uniqueUsers: dbRow[2]
+                });
+            },
+            \SELECT
+                DATE(created_at) AS date,
+                COUNT(*) AS count,
+                COUNT(DISTINCT user_id) AS unique_users
+            FROM \_feed_avatar
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND avatar_name IS NOT NULL AND avatar_name != ''
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC\,
+            {
+                '@daysOffset': \-\ days            }
         );
         return results;
     }

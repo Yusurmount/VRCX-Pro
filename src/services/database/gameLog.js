@@ -2033,6 +2033,74 @@ const gameLog = {
      * @param {number} limit - how many segments to fetch.
      * @returns {Promise<Array<{id: number, created_at: string, location: string, worldId: string, worldName: string, time: number, groupName: string}>>}
      */
+    /**
+     * Get aggregated friendship metrics for all friends.
+     * Returns per-friend total online time, join count, first/last seen, and distinct days.
+     * @returns {Promise<Array<{userId: string, displayName: string, totalTime: number, joinCount: number, firstSeen: string, lastSeen: string, distinctDays: number}>>}
+     */
+    async getFriendshipMetrics() {
+        if (!dbVars.userId) return [];
+        const results = [];
+        await sqliteService.execute(
+            (row) => {
+                results.push({
+                    userId: row[0],
+                    displayName: row[1],
+                    totalTime: row[2],
+                    joinCount: row[3],
+                    firstSeen: row[4],
+                    lastSeen: row[5],
+                    distinctDays: row[6]
+                });
+            },
+            SELECT
+                user_id,
+                display_name,
+                SUM(time) AS total_time,
+                COUNT(DISTINCT location) AS join_count,
+                MIN(created_at) AS first_seen,
+                MAX(created_at) AS last_seen,
+                COUNT(DISTINCT date(created_at)) AS distinct_days
+            FROM gamelog_join_leave
+            WHERE type = 'OnPlayerLeft'
+                AND user_id != ''
+                AND user_id != @currentUserId
+                AND time > 0
+                AND location NOT IN ('', 'traveling')
+            GROUP BY user_id
+            ORDER BY total_time DESC,
+            { '@currentUserId': dbVars.userId }
+        );
+        return results;
+    },
+
+    /**
+     * Get all online sessions (OnPlayerLeft records) for a specific user.
+     * @param {string} userId
+     * @returns {Promise<Array<{createdAt: string, location: string, time: number}>>}
+     */
+    async getOnlineSessionsForUser(userId) {
+        const results = [];
+        await sqliteService.execute(
+            (row) => {
+                results.push({
+                    createdAt: row[0],
+                    location: row[1],
+                    time: row[2]
+                });
+            },
+            SELECT created_at, location, time
+            FROM gamelog_join_leave
+            WHERE user_id = @userId
+                AND type = 'OnPlayerLeft'
+                AND time > 0
+                AND location NOT IN ('', 'traveling')
+            ORDER BY created_at ASC,
+            { '@userId': userId }
+        );
+        return results;
+    },
+
     async getSessionsLocationSegments(beforeId, limit) {
         const data = [];
         const cursorClause = beforeId != null ? 'AND id < @beforeId' : '';

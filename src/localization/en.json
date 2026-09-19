@@ -775,7 +775,8 @@
                     "cooling": "cooling"
                 },
                 "sheet": {
-                    "friends_who_visited": "Friends who visited"
+                    "friends_who_visited": "Friends who visited",
+                    "visit_trend": "Visit Trend"
                 },
                 "no_friend_data": "No friend visit data",
                 "friend_visits": "{count} visits"
@@ -823,6 +824,140 @@
                     "show_others": "Show Others",
                     "show_friends_only": "Friends Only"
                 }
+            },
+            "social_network": {
+                "header": "Social Network Graph",
+                "build": "Build Graph",
+                "rebuild": "Rebuild Graph",
+                "build_tooltip": "Build the social network graph from mutual friend data",
+                "building": "Building...",
+                "building_tooltip": "Graph is being built, please wait",
+                "empty_hint": "Click Build Graph to generate the social network visualization",
+                "stats": {
+                    "title": "Graph Statistics",
+                    "nodes": "Nodes",
+                    "edges": "Edges",
+                    "communities": "Communities",
+                    "bridges": "Bridges",
+                    "isolates": "Isolates"
+                },
+                "community": "Community",
+                "community_list": "Communities",
+                "bridges_title": "Bridge Nodes",
+                "context_menu": {
+                    "view_details": "View Details"
+                }
+            },
+            "intimacy": {
+                "header": "Relationship Intimacy",
+                "refresh": "Refresh",
+                "tips": {
+                    "description": "Scores relationship intimacy based on online overlap time, co-world visitation frequency, recency of interactions, and consistency of daily engagement."
+                },
+                "distribution": "Score Distribution",
+                "top_friends": "Top Friends by Intimacy",
+                "detail_title": "Detailed Breakdown",
+                "dimension": {
+                    "online_overlap": "Online Overlap",
+                    "co_world_frequency": "Co-World Frequency",
+                    "recency": "Recency",
+                    "consistency": "Consistency"
+                }
+            },
+            "timeline_comparison": {
+                "header": "Timeline Comparison",
+                "tips": {
+                    "description": "Compares the interaction timeline between two friends. See how shared activity evolved over time and whether the relationship is growing or declining."
+                },
+                "select_friend_a": "Select Friend A",
+                "select_friend_b": "Select Friend B",
+                "search_friend": "Search friends...",
+                "swap_friends": "Swap friends",
+                "friends": "Friends",
+                "momentum": "Trend",
+                "momentum_growing": "Growing",
+                "momentum_declining": "Declining",
+                "momentum_stable": "Stable",
+                "peak_month": "Peak Month",
+                "total_encounters": "Total Encounters",
+                "total_months": "Active Months",
+                "co_time_minutes": "Minutes",
+                "co_presence": "Co-presence Time",
+                "visits": "Visit Count",
+                "chart_label": "Monthly co-presence timeline"
+            },
+            "group_recommendations": {
+                "header": "Friend Group Recommendations",
+                "tips": {
+                    "description": "Analyzes interaction patterns to suggest friend group adjustments. Finds pairs with similar activity patterns that could benefit from being grouped together."
+                },
+                "analyze": "Run Analysis",
+                "analyze_tooltip": "Analyze interaction patterns to find group recommendations",
+                "empty_hint": "Click Run Analysis to discover group recommendations",
+                "similarity": "Similarity",
+                "reason_merge": "Similar activity pattern across groups:",
+                "reason_no_group": "High interaction similarity but not in any group"
+            },
+            "avatar_usage": {
+                "header": "Avatar Usage Analysis",
+                "tab_label": "Avatar Usage",
+                "tips": {
+                    "description": "Analyzes avatar change patterns among your friends. Shows most popular avatars, change frequency, and self-created vs others preference."
+                },
+                "period": {
+                    "days_7": "Last 7d",
+                    "days_30": "Last 30d",
+                    "days_90": "Last 90d"
+                },
+                "stats": {
+                    "total_changes": "total changes",
+                    "top_avatar": "most used",
+                    "avg_daily": "avg daily"
+                },
+                "charts": {
+                    "change_frequency": "Daily Avatar Changes",
+                    "self_vs_other": "Self-Created vs Others",
+                    "top_avatars": "Most Used Avatars",
+                    "change_timeline": "Change Frequency Timeline"
+                },
+                "labels": {
+                    "self_owned": "Self-Created",
+                    "others": "Others"
+                }
+            },
+            "report_export": {
+                "header": "Export Report",
+                "tab_label": "Report Export",
+                "tips": {
+                    "description": "Generate a standalone HTML report with your activity data. Reports include hot worlds and avatar usage statistics."
+                },
+                "weekly_report": "Weekly Report",
+                "monthly_report": "Monthly Report",
+                "weekly_description": "Generate a summary of the past 7 days of activity.",
+                "monthly_description": "Generate a summary of the past 30 days of activity.",
+                "generate": "Generate Report",
+                "generating": "Generating...",
+                "report_ready": "Report Generated",
+                "open_report": "Open Report",
+                "download": "Download HTML",
+                "success": "Report generated successfully",
+                "error": "Failed to generate report",
+                "period_weekly": "Weekly",
+                "period_monthly": "Monthly",
+                "generated_on": "Generated on",
+                "section_hot_worlds": "Hot Worlds",
+                "section_avatar_usage": "Avatar Usage",
+                "table_world": "World",
+                "table_visits": "Visits",
+                "table_friends": "Friends",
+                "table_trend": "Trend",
+                "table_avatar": "Avatar",
+                "table_changes": "Changes",
+                "table_users": "Users",
+                "no_data": "No data available for this period",
+                "total_avatar_changes": "Total avatar changes",
+                "self_owned": "Self-Created",
+                "others": "Others"
             }
         },
         "tools": {
@@ -1268,6 +1403,57 @@
                         "play": "Play",
                         "tts_test_placeholder": "Play Test TTS"
                     }
+                },
+                "custom_rules": {
+                    "header": "Custom Notification Rules",
+                    "title": "Custom Notification Rules",
+                    "description": "Create rules that trigger notifications based on specific events.",
+                    "no_rules": "No rules configured. Select a type above to add one.",
+                    "select_type": "Select Rule Type...",
+                    "type": "Type",
+                    "manage": "Manage Custom Rules",
+                    "manage_description": "Create and manage custom notification rules for friend online/offline, world events, avatar deletion, and status changes.",
+                    "manage_button": "Open Rules",
+                    "target_user_id": "Target User ID",
+                    "user_id_placeholder": "e.g. usr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "display_name_placeholder": "Display name (for display only)",
+                    "world_id": "World ID",
+                    "world_id_placeholder": "e.g. wrld_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "world_name_placeholder": "World name (for display only)",
+                    "avatar_id": "Avatar ID",
+                    "avatar_id_placeholder": "e.g. avtr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "avatar_name_placeholder": "Avatar name (for display only)",
+                    "min_players": "Min Player Count",
+                    "cooldown": "Cooldown",
+                    "channels": "Channels",
+                    "channel_desktop": "Desktop",
+                    "channel_tts": "TTS",
+                    "channel_email": "Email"
+                },
+                "email": {
+                    "header": "Email Notifications",
+                    "enable": "Enable Email Notifications",
+                    "enable_description": "Send notifications via email using SMTP.",
+                    "smtp_host": "SMTP Server",
+                    "smtp_host_placeholder": "e.g. smtp.gmail.com",
+                    "smtp_port": "SMTP Port",
+                    "smtp_ssl": "Use SSL/TLS",
+                    "smtp_username": "SMTP Username",
+                    "smtp_username_placeholder": "Your email or username",
+                    "smtp_password": "SMTP Password",
+                    "smtp_password_placeholder": "Your password or app password",
+                    "from_address": "From Address",
+                    "from_address_placeholder": "sender@example.com",
+                    "from_name": "From Name",
+                    "recipient_address": "Recipient Email",
+                    "recipient_address_placeholder": "recipient@example.com",
+                    "recipient_name": "Recipient Name",
+                    "test": "Test Email",
+                    "send_test": "Send Test",
+                    "sending": "Sending...",
+                    "test_success": "Test email sent successfully!",
+                    "test_failed": "Test email failed. Check your settings.",
+                    "test_error": "Failed to send test email."
                 }
             },
             "wrist_overlay": {

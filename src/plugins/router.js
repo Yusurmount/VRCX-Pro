@@ -115,6 +115,42 @@ const routes = [
                 component: () =>
                     import('./../views/Charts/components/RelationshipTimeline.vue')
             },
+            {
+                path: 'charts/social-network',
+                name: 'charts-social-network',
+                component: () =>
+                    import('./../views/Charts/components/SocialNetworkGraph.vue')
+            },
+            {
+                path: 'charts/intimacy',
+                name: 'charts-intimacy',
+                component: () =>
+                    import('./../views/Charts/components/RelationshipIntimacy.vue')
+            },
+            {
+                path: 'charts/timeline-comparison',
+                name: 'charts-timeline-comparison',
+                component: () =>
+                    import('./../views/Charts/components/TimelineComparison.vue')
+            },
+            {
+                path: 'charts/group-recommendations',
+                name: 'charts-group-recommendations',
+                component: () =>
+                    import('./../views/Charts/components/GroupRecommendations.vue')
+            },
+            {
+                path: 'charts/avatar-usage',
+                name: 'charts-avatar-usage',
+                component: () =>
+                    import('./../views/Charts/components/AvatarUsage.vue')
+            },
+            {
+                path: 'charts/report-export',
+                name: 'charts-report-export',
+                component: () =>
+                    import('./../views/Charts/components/ReportExport.vue')
+            },
             { path: 'tools', name: 'tools', component: () => import('./../views/Tools/Tools.vue') },
             {
                 path: 'tools/gallery',

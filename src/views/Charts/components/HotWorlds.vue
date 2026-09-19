@@ -168,6 +168,15 @@
 
                 <Separator />
 
+                <div v-if="worldVisitTrend.length > 0">
+                    <div class="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
+                        {{ t('view.charts.hot_worlds.sheet.visit_trend') }}
+                    </div>
+                    <div ref="trendChartRef" style="width: 100%; height: 140px" />
+                </div>
+
+                <Separator v-if="worldVisitTrend.length > 0" />
+
                 <div>
                     <div class="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
                         {{ t('view.charts.hot_worlds.sheet.friends_who_visited') }}
@@ -201,7 +210,7 @@
 <script setup>
     defineOptions({ name: 'ChartsHotWorlds' });
 
-    import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+    import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
     import { Info, MapPin, RefreshCcw, TrendingDown, TrendingUp, Users } from 'lucide-vue-next';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
@@ -216,6 +225,7 @@
 
     import { showUserDialog } from '@/coordinators/userCoordinator';
     import { showWorldDialog } from '@/coordinators/worldCoordinator';
+    import * as echarts from 'echarts';
     import { database } from '@/services/database';
     import { useAppearanceSettingsStore } from '@/stores';
 
@@ -228,6 +238,9 @@
     const selectedDays = ref(30);
     const hotWorlds = ref([]);
     const friendDetail = ref([]);
+    const worldVisitTrend = ref([]);
+    const trendChartRef = ref(null);
+    let trendChart = null;
 
     // Sheet state
     const isSheetOpen = ref(false);
@@ -298,12 +311,20 @@
         isSheetOpen.value = true;
         isLoadingDetail.value = true;
         try {
-            friendDetail.value = await database.getHotWorldFriendDetail(world.worldId, selectedDays.value);
+            const [friends, trend] = await Promise.all([
+                database.getHotWorldFriendDetail(world.worldId, selectedDays.value),
+                database.getWorldVisitTrend(world.worldId, selectedDays.value)
+            ]);
+            friendDetail.value = friends;
+            worldVisitTrend.value = trend;
         } catch (error) {
             console.error('Error loading friend detail:', error);
             friendDetail.value = [];
+            worldVisitTrend.value = [];
         } finally {
             isLoadingDetail.value = false;
+            await nextTick();
+            initTrendChart();
         }
     }
 
@@ -312,7 +333,34 @@
             isSheetOpen.value = false;
             selectedWorld.value = null;
             friendDetail.value = [];
+            worldVisitTrend.value = [];
+            disposeTrendChart();
         }
+    }
+
+    function disposeTrendChart() {
+        if (trendChart) {
+            trendChart.dispose();
+            trendChart = null;
+        }
+    }
+
+    function initTrendChart() {
+        disposeTrendChart();
+        if (!trendChartRef.value || !worldVisitTrend.value.length) return;
+        trendChart = echarts.init(trendChartRef.value, isDarkMode.value ? 'dark' : undefined);
+        trendChart.setOption({
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', data: worldVisitTrend.value.map((d) => d.date), axisLabel: { color: isDarkMode.value ? '#9ca3af' : '#6b7280' } },
+            yAxis: { type: 'value', axisLabel: { color: isDarkMode.value ? '#9ca3af' : '#6b7280' } },
+            series: [{
+                type: 'line', data: worldVisitTrend.value.map((d) => d.visitCount), smooth: true,
+                lineStyle: { color: '#6366f1', width: 2 },
+                areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(99,102,241,0.3)' }, { offset: 1, color: 'rgba(99,102,241,0.02)' }]) },
+                itemStyle: { color: '#6366f1' }
+            }],
+            grid: { left: 40, right: 10, top: 10, bottom: 30 }
+        });
     }
 
     function handleWorldClick() {
@@ -337,5 +385,6 @@
         if (hotWorldsRef.value) {
             containerResizeObserver.unobserve(hotWorldsRef.value);
         }
+        disposeTrendChart();
     });
 </script>

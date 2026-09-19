@@ -50,6 +50,7 @@ import { useInstanceStore } from '../instance';
 import { useLocationStore } from '../location';
 import { useModalStore } from '../modal';
 import { useNotificationsSettingsStore } from '../settings/notifications';
+import { useNotificationRulesStore } from '../notificationRules';
 import { useSharedFeedStore } from '../sharedFeed';
 import { useUiStore } from '../ui';
 import { useUserStore } from '../user';
@@ -74,6 +75,7 @@ export const useNotificationStore = defineStore('Notification', () => {
     const sharedFeedStore = useSharedFeedStore();
     const instanceStore = useInstanceStore();
     const modalStore = useModalStore();
+    const notificationRulesStore = useNotificationRulesStore();
 
     const notificationInitStatus = ref(false);
     const notificationTable = ref({
@@ -159,6 +161,7 @@ export const useNotificationStore = defineStore('Notification', () => {
             notificationTable.value.data = [];
             if (isLoggedIn) {
                 initNotifications();
+                notificationRulesStore.initRules();
             }
         },
         { flush: 'sync' }

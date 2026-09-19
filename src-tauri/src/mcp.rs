@@ -143,6 +143,28 @@ fn list_tables_with_count(path: &Path) -> Result<Value, String> {
 fn find_table(tables: &[String], suffix: &str) -> Option<String> {
     tables.iter().find(|t| t.ends_with(suffix)).cloned()
 }
+fn execute_non_query(path: &Path, sql: &str) -> Result<(), String> {
+    let conn = open_db(path)?;
+    conn.execute(sql, []).map_err(|e| format!("SQL error: {e}"))?;
+    Ok(())
+}
+
+fn query_single_value(path: &Path, sql: &str) -> Result<Value, String> {
+    let conn = open_db(path)?;
+    let result = conn
+        .query_row(sql, [], |row| {
+            let v: Value = row
+                .get::<_, Option<String>>(0)
+                .unwrap_or(None)
+                .map(Value::String)
+                .or_else(|| row.get::<_, Option<i64>>(0).unwrap_or(None).map(|n| json!(n)))
+                .or_else(|| row.get::<_, Option<f64>>(0).unwrap_or(None).map(|f| json!(f)))
+                .unwrap_or(Value::Null);
+            Ok(v)
+        })
+        .unwrap_or(Value::Null);
+    Ok(result)
+}
 
 fn get_user_tables(path: &Path) -> Result<Vec<String>, String> {
     let conn = open_db(path)?;
@@ -282,6 +304,88 @@ fn mcp_tools() -> Vec<Value> {
                 "properties": {
                     "user_id": { "type": "string", "description": "Filter by specific user ID" },
                     "limit": { "type": "integer", "description": "Max results (default 50)" }
+                }
+            }
+        }),
+        json!({
+            "name": "vrcx_social_insights",
+            "description": "Get pre-computed social analytics: most active friends, online time patterns, most visited worlds, and avatar change stats.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "days": { "type": "integer", "description": "Analysis period in days (default 7)" }
+                }
+            }
+        }),
+        json!({
+            "name": "vrcx_get_friend_schedule",
+            "description": "Get the online schedule pattern for a specific friend: which hours they are typically online, which days are most active.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "user_id": { "type": "string", "description": "VRChat user ID to analyze" },
+                    "days": { "type": "integer", "description": "Analysis period in days (default 14)" }
+                },
+                "required": ["user_id"]
+            }
+        }),
+        json!({
+            "name": "vrcx_search_friends",
+            "description": "Search friends by name, status, trust level, or current location.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query": { "type": "string", "description": "Search keyword (matches display name)" },
+                    "status": { "type": "string", "enum": ["active", "join me", "ask me", "busy", "offline"], "description": "Filter by online status" },
+                    "trust_level": { "type": "string", "description": "Filter by trust level" },
+                    "location_search": { "type": "string", "description": "Search by world/location name" },
+                    "limit": { "type": "integer", "description": "Max results (default 50)" }
+                }
+            }
+        }),
+        json!({
+            "name": "vrcx_get_world_analytics",
+            "description": "Get world visit analytics: most visited worlds, visit frequency, and time spent.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "days": { "type": "integer", "description": "Analysis period in days (default 7)" },
+                    "limit": { "type": "integer", "description": "Max worlds to return (default 20)" }
+                }
+            }
+        }),
+        json!({
+            "name": "vrcx_get_user_profile",
+            "description": "Get a comprehensive profile for a specific user: basic info, latest location/status/bio, avatar, memos, notes, and recent activity.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "user_id": { "type": "string", "description": "VRChat user ID" }
+                },
+                "required": ["user_id"]
+            }
+        }),
+        json!({
+            "name": "vrcx_set_note",
+            "description": "Set or update a local note/memo for a user. Write operation that persists to the local database.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "user_id": { "type": "string", "description": "VRChat user ID" },
+                    "note": { "type": "string", "description": "Note content to save" }
+                },
+                "required": ["user_id", "note"]
+            }
+        }),
+        json!({
+            "name": "vrcx_get_co_location",
+            "description": "Find friends who have been in the same world/instance as the specified user (or yourself).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "user_id": { "type": "string", "description": "VRChat user ID to check (leave empty for yourself)" },
+                    "days": { "type": "integer", "description": "Look back period in days (default 7)" },
+                    "limit": { "type": "integer", "description": "Max results (default 20)" }
                 }
             }
         }),
@@ -575,6 +679,205 @@ fn handle_tool_call(name: &str, args: &Value, db_path: &Path) -> Result<Value, S
                 Ok(json!([]))
             }
         }
+        "vrcx_social_insights" => {
+            let tables = get_user_tables(db_path)?;
+            let days = args.get("days").and_then(|v| v.as_i64()).unwrap_or(7);
+            let cutoff = format!("-{days} days");
+            let mut insights = serde_json::Map::new();
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_gps")) {
+                let sql = format!("SELECT display_name, user_id, COUNT(*) as visit_count FROM \"{}\" WHERE created_at >= datetime(\"now\", \"{}\") GROUP BY user_id ORDER BY visit_count DESC LIMIT 10", tbl, cutoff);
+                if let Ok(data) = query_to_json(db_path, &sql) { insights.insert("most_active_friends".into(), data); }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_online_offline")) {
+                let sql = format!("SELECT CAST(strftime(\"%H\", created_at) AS INTEGER) as hour, COUNT(*) as count FROM \"{}\" WHERE type = \"online\" AND created_at >= datetime(\"now\", \"{}\") GROUP BY hour ORDER BY hour", tbl, cutoff);
+                if let Ok(data) = query_to_json(db_path, &sql) { insights.insert("online_hour_distribution".into(), data); }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_gps")) {
+                let sql = format!("SELECT world_name, COUNT(*) as visits FROM \"{}\" WHERE created_at >= datetime(\"now\", \"{}\") AND world_name IS NOT NULL AND world_name != \"\" GROUP BY world_name ORDER BY visits DESC LIMIT 10", tbl, cutoff);
+                if let Ok(data) = query_to_json(db_path, &sql) { insights.insert("most_visited_worlds".into(), data); }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_avatar")) {
+                let sql = format!("SELECT display_name, user_id, COUNT(*) as changes FROM \"{}\" WHERE created_at >= datetime(\"now\", \"{}\") GROUP BY user_id ORDER BY changes DESC LIMIT 10", tbl, cutoff);
+                if let Ok(data) = query_to_json(db_path, &sql) { insights.insert("most_avatar_changes".into(), data); }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_friend_log_current")) {
+                let sql = format!("SELECT COUNT(*) FROM \"{}\"", tbl);
+                if let Ok(data) = query_single_value(db_path, &sql) { insights.insert("total_friends".into(), data); }
+            }
+            insights.insert("analysis_period_days".into(), json!(days));
+            Ok(Value::Object(insights))
+        }
+        "vrcx_get_friend_schedule" => {
+            let tables = get_user_tables(db_path)?;
+            let user_id = args.get("user_id").and_then(|v| v.as_str()).ok_or("Missing required parameter: user_id")?;
+            let days = args.get("days").and_then(|v| v.as_i64()).unwrap_or(14);
+            let cutoff = format!("-{days} days");
+            let escaped = user_id.replace('\'', "\'\'\'");
+            let mut schedule = serde_json::Map::new();
+            schedule.insert("user_id".into(), json!(user_id));
+            schedule.insert("analysis_period_days".into(), json!(days));
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_online_offline")) {
+                let sql = format!("SELECT CAST(strftime(\"%H\", created_at) AS INTEGER) as hour, COUNT(*) as online_count FROM \"{}\" WHERE user_id = \'{}\' AND type = \"online\" AND created_at >= datetime(\"now\", \"{}\") GROUP BY hour ORDER BY hour", tbl, escaped, cutoff);
+                if let Ok(data) = query_to_json(db_path, &sql) { schedule.insert("hourly_online_pattern".into(), data); }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_online_offline")) {
+                let sql = format!("SELECT CAST(strftime(\"%w\", created_at) AS INTEGER) as day_of_week, COUNT(*) as count FROM \"{}\" WHERE user_id = \'{}\' AND type = \"online\" AND created_at >= datetime(\"now\", \"{}\") GROUP BY day_of_week ORDER BY day_of_week", tbl, escaped, cutoff);
+                if let Ok(data) = query_to_json(db_path, &sql) { schedule.insert("day_of_week_pattern".into(), data); }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_online_offline")) {
+                let sql = format!("SELECT type, created_at FROM \"{}\" WHERE user_id = \'{}\' AND created_at >= datetime(\"now\", \"{}\") ORDER BY id DESC LIMIT 100", tbl, escaped, cutoff);
+                if let Ok(data) = query_to_json(db_path, &sql) { schedule.insert("recent_online_events".into(), data); }
+            }
+            Ok(Value::Object(schedule))
+        }
+        "vrcx_search_friends" => {
+            let tables = get_user_tables(db_path)?;
+            let query = args.get("query").and_then(|v| v.as_str()).unwrap_or("");
+            let status_filter = args.get("status").and_then(|v| v.as_str()).unwrap_or("");
+            let trust_filter = args.get("trust_level").and_then(|v| v.as_str()).unwrap_or("");
+            let location_filter = args.get("location_search").and_then(|v| v.as_str()).unwrap_or("");
+            let limit = args.get("limit").and_then(|v| v.as_i64()).unwrap_or(50);
+            let tbl = find_table(&tables, "_friend_log_current").ok_or("friend_log_current table not found")?;
+            let mut conditions = Vec::new();
+            if !query.is_empty() {
+                let q = query.replace('\'', "\'\'\'");
+                conditions.push(format!("display_name LIKE '%{}%'", q));
+            }
+            if !trust_filter.is_empty() {
+                let t = trust_filter.replace('\'', "\'\'\'");
+                conditions.push(format!("trust_level = '{}'", t));
+            }
+            let where_clause = if conditions.is_empty() { String::new() } else { format!(" WHERE {}", conditions.join(" AND ")) };
+            let sql = format!("SELECT * FROM \"{}\"{} ORDER BY friend_number ASC LIMIT {}", tbl, where_clause, limit);
+            let mut results = query_to_json(db_path, &sql)?;
+            if !status_filter.is_empty() {
+                if let Some(st) = tables.iter().find(|t| t.ends_with("_feed_status")) {
+                    let sql = format!("SELECT DISTINCT user_id FROM \"{}\" WHERE status = '{}' AND created_at >= datetime(\"now\", \"-1 hours\")", st, status_filter);
+                    if let Ok(au) = query_to_json(db_path, &sql) {
+                        if let Some(arr) = au.as_array() {
+                            let ids: std::collections::HashSet<String> = arr.iter().filter_map(|v| v.get("user_id").and_then(|u| u.as_str()).map(String::from)).collect();
+                            if let Some(r) = results.as_array_mut() { r.retain(|item| item.get("user_id").and_then(|u| u.as_str()).map(|id| ids.contains(id)).unwrap_or(false)); }
+                        }
+                    }
+                }
+            }
+            if !location_filter.is_empty() {
+                let loc = location_filter.replace('\'', "\'\'\'");
+                if let Some(gt) = tables.iter().find(|t| t.ends_with("_feed_gps")) {
+                    let sql = format!("SELECT DISTINCT user_id FROM \"{}\" WHERE (world_name LIKE '%{}%' OR location LIKE '%{}%') AND created_at >= datetime(\"now\", \"-24 hours\")", gt, loc, loc);
+                    if let Ok(lu) = query_to_json(db_path, &sql) {
+                        if let Some(arr) = lu.as_array() {
+                            let ids: std::collections::HashSet<String> = arr.iter().filter_map(|v| v.get("user_id").and_then(|u| u.as_str()).map(String::from)).collect();
+                            if let Some(r) = results.as_array_mut() { r.retain(|item| item.get("user_id").and_then(|u| u.as_str()).map(|id| ids.contains(id)).unwrap_or(false)); }
+                        }
+                    }
+                }
+            }
+            Ok(results)
+        }
+        "vrcx_get_world_analytics" => {
+            let tables = get_user_tables(db_path)?;
+            let days = args.get("days").and_then(|v| v.as_i64()).unwrap_or(7);
+            let limit = args.get("limit").and_then(|v| v.as_i64()).unwrap_or(20);
+            let cutoff = format!("-{days} days");
+            let mut analytics = serde_json::Map::new();
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_gps")) {
+                let sql = format!("SELECT world_name, location, COUNT(*) as visits, MIN(created_at) as first_visit, MAX(created_at) as last_visit FROM \"{}\" WHERE created_at >= datetime(\"now\", \"{}\") AND world_name IS NOT NULL AND world_name != \"\" GROUP BY world_name ORDER BY visits DESC LIMIT {}", tbl, cutoff, limit);
+                if let Ok(data) = query_to_json(db_path, &sql) { analytics.insert("most_visited_worlds".into(), data); }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_gps")) {
+                let sql = format!("SELECT DATE(created_at) as date, COUNT(*) as visits, COUNT(DISTINCT world_name) as unique_worlds FROM \"{}\" WHERE created_at >= datetime(\"now\", \"{}\") GROUP BY date ORDER BY date", tbl, cutoff);
+                if let Ok(data) = query_to_json(db_path, &sql) { analytics.insert("daily_visit_trend".into(), data); }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_gps")) {
+                let sql = format!("SELECT display_name, user_id, COUNT(DISTINCT world_name) as unique_worlds, COUNT(*) as total_visits FROM \"{}\" WHERE created_at >= datetime(\"now\", \"{}\") GROUP BY user_id ORDER BY total_visits DESC LIMIT 10", tbl, cutoff);
+                if let Ok(data) = query_to_json(db_path, &sql) { analytics.insert("most_active_visitors".into(), data); }
+            }
+            analytics.insert("analysis_period_days".into(), json!(days));
+            Ok(Value::Object(analytics))
+        }
+        "vrcx_get_user_profile" => {
+            let tables = get_user_tables(db_path)?;
+            let user_id = args.get("user_id").and_then(|v| v.as_str()).ok_or("Missing required parameter: user_id")?;
+            let escaped = user_id.replace('\'', "\'\'\'");
+            let mut profile = serde_json::Map::new();
+            profile.insert("user_id".into(), json!(user_id));
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_friend_log_current")) {
+                let sql = format!("SELECT * FROM \"{}\" WHERE user_id = '{}'", tbl, escaped);
+                if let Ok(data) = query_to_json(db_path, &sql) {
+                    if let Some(arr) = data.as_array() { if let Some(first) = arr.first() { profile.insert("basic_info".into(), first.clone()); } }
+                }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_avatar")) {
+                let sql = format!("SELECT avatar_name, current_avatar_image_url, current_avatar_thumbnail_image_url, created_at FROM \"{}\" WHERE user_id = '{}' ORDER BY id DESC LIMIT 1", tbl, escaped);
+                if let Ok(data) = query_to_json(db_path, &sql) {
+                    if let Some(arr) = data.as_array() { if let Some(first) = arr.first() { profile.insert("current_avatar".into(), first.clone()); } }
+                }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_status")) {
+                let sql = format!("SELECT status, status_description, created_at FROM \"{}\" WHERE user_id = '{}' ORDER BY id DESC LIMIT 1", tbl, escaped);
+                if let Ok(data) = query_to_json(db_path, &sql) {
+                    if let Some(arr) = data.as_array() { if let Some(first) = arr.first() { profile.insert("current_status".into(), first.clone()); } }
+                }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_bio")) {
+                let sql = format!("SELECT bio, created_at FROM \"{}\" WHERE user_id = '{}' ORDER BY id DESC LIMIT 1", tbl, escaped);
+                if let Ok(data) = query_to_json(db_path, &sql) {
+                    if let Some(arr) = data.as_array() { if let Some(first) = arr.first() { profile.insert("current_bio".into(), first.clone()); } }
+                }
+            }
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_gps")) {
+                let sql = format!("SELECT location, world_name, created_at FROM \"{}\" WHERE user_id = '{}' ORDER BY id DESC LIMIT 1", tbl, escaped);
+                if let Ok(data) = query_to_json(db_path, &sql) {
+                    if let Some(arr) = data.as_array() { if let Some(first) = arr.first() { profile.insert("current_location".into(), first.clone()); } }
+                }
+            }
+            if let Ok(data) = query_to_json(db_path, &format!("SELECT memo FROM memos WHERE user_id = '{}'", escaped)) {
+                if let Some(arr) = data.as_array() { if let Some(first) = arr.first() { profile.insert("memo".into(), first.clone()); } }
+            }
+            if let Ok(data) = query_to_json(db_path, &format!("SELECT note FROM notes WHERE user_id = '{}'", escaped)) {
+                if let Some(arr) = data.as_array() { if let Some(first) = arr.first() { profile.insert("note".into(), first.clone()); } }
+            }
+            let activity_types = [("_feed_gps", "location_changes"), ("_feed_status", "status_changes"), ("_feed_avatar", "avatar_changes")];
+            let mut recent_activity = serde_json::Map::new();
+            for (suffix, key) in &activity_types {
+                if let Some(tbl) = tables.iter().find(|t| t.ends_with(suffix)) {
+                    let sql = format!("SELECT COUNT(*) FROM \"{}\" WHERE user_id = '{}' AND created_at >= datetime(\"now\", \"-7 days\")", tbl, escaped);
+                    if let Ok(data) = query_single_value(db_path, &sql) { recent_activity.insert(key.to_string(), data); }
+                }
+            }
+            profile.insert("recent_activity_7d".into(), Value::Object(recent_activity));
+            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_friend_log_history")) {
+                let sql = format!("SELECT * FROM \"{}\" WHERE user_id = '{}' ORDER BY rowid DESC LIMIT 10", tbl, escaped);
+                if let Ok(data) = query_to_json(db_path, &sql) { profile.insert("recent_history".into(), data); }
+            }
+            Ok(Value::Object(profile))
+        }
+        "vrcx_set_note" => {
+            let user_id = args.get("user_id").and_then(|v| v.as_str()).ok_or("Missing required parameter: user_id")?;
+            let note = args.get("note").and_then(|v| v.as_str()).ok_or("Missing required parameter: note")?;
+            let escaped_uid = user_id.replace('\'', "\'\'\'");
+            let escaped_note = note.replace('\'', "\'\'\'");
+            let sql = format!("INSERT OR REPLACE INTO notes (user_id, note) VALUES ('{}', '{}')", escaped_uid, escaped_note);
+            execute_non_query(db_path, &sql)?;
+            Ok(json!({ "success": true, "user_id": user_id, "message": "Note saved successfully" }))
+        }
+        "vrcx_get_co_location" => {
+            let tables = get_user_tables(db_path)?;
+            let user_id = args.get("user_id").and_then(|v| v.as_str()).unwrap_or("");
+            let days = args.get("days").and_then(|v| v.as_i64()).unwrap_or(7);
+            let limit = args.get("limit").and_then(|v| v.as_i64()).unwrap_or(20);
+            let cutoff = format!("-{days} days");
+            let gps_tbl = tables.iter().find(|t| t.ends_with("_feed_gps")).ok_or("feed_gps table not found")?;
+            if user_id.is_empty() {
+                let sql = format!("SELECT display_name, user_id, world_name, COUNT(*) as shared_visits FROM \"{}\" WHERE world_name IN (SELECT world_name FROM \"{}\" WHERE created_at >= datetime(\"now\", \"{}\") AND world_name IS NOT NULL AND world_name != \"\" GROUP BY world_name HAVING COUNT(*) > 1) AND created_at >= datetime(\"now\", \"{}\") GROUP BY user_id, world_name ORDER BY shared_visits DESC LIMIT {}", gps_tbl, gps_tbl, cutoff, cutoff, limit);
+                query_to_json(db_path, &sql)
+            } else {
+                let escaped = user_id.replace('\'', "\'\'\'");
+                let sql = format!("SELECT g2.display_name, g2.user_id, g1.world_name, COUNT(*) as co_visits FROM \"{}\" g1 JOIN \"{}\" g2 ON g1.world_name = g2.world_name AND g1.user_id != g2.user_id WHERE g1.user_id = '{}' AND g1.created_at >= datetime(\"now\", \"{}\") AND g2.created_at >= datetime(\"now\", \"{}\") AND g1.world_name IS NOT NULL AND g1.world_name != \"\" GROUP BY g2.user_id, g1.world_name ORDER BY co_visits DESC LIMIT {}", gps_tbl, gps_tbl, escaped, cutoff, cutoff, limit);
+                query_to_json(db_path, &sql)
+            }
+        }
         _ => Err(format!("Unknown tool: {name}")),
     }
 }
@@ -588,7 +891,7 @@ fn handle_mcp_message(request: &JsonRpcRequest, state: &AppState) -> JsonRpcResp
         "initialize" => ok_response(
             json!({
                 "protocolVersion": "2024-11-05",
-                "capabilities": { "tools": { "listChanged": false } },
+                "capabilities": { "tools": { "listChanged": false }, "resources": { "listChanged": false } },
                 "serverInfo": { "name": "vrcx-pro-mcp", "version": env!("CARGO_PKG_VERSION") }
             }),
             request.id.clone(),
@@ -627,6 +930,32 @@ fn handle_mcp_message(request: &JsonRpcRequest, state: &AppState) -> JsonRpcResp
                     }),
                     request.id.clone(),
                 ),
+            }
+        }
+        "resources/list" => {
+            let resources = json!({
+                "resources": [
+                    {"uri": "vrcx://schema/tables", "name": "Database Schema", "description": "List all database tables with row counts", "mimeType": "application/json"},
+                    {"uri": "vrcx://context/server", "name": "MCP Server Context", "description": "Server version and available capabilities", "mimeType": "application/json"}
+                ]
+            });
+            ok_response(resources, request.id.clone())
+        }
+        "resources/read" => {
+            let params = request.params.as_ref().unwrap_or(&Value::Null);
+            let uri = params.get("uri").and_then(|v| v.as_str()).unwrap_or("");
+            match uri {
+                "vrcx://schema/tables" => match list_tables_with_count(&state.db_path) {
+                    Ok(data) => ok_response(json!({"contents": [{"uri": uri, "mimeType": "application/json", "text": serde_json::to_string_pretty(&data).unwrap_or_default()}]}), request.id.clone()),
+                    Err(e) => err_response(JsonRpcError::invalid_params(&e), request.id.clone()),
+                },
+                "vrcx://context/server" => ok_response(json!({"contents": [{"uri": uri, "mimeType": "application/json", "text": serde_json::to_string_pretty(&json!({
+                    "server": "vrcx-pro-mcp", "version": env!("CARGO_PKG_VERSION"),
+                    "description": "VRCX-Pro MCP Server - AI assistant data interface for VRChat friendship management",
+                    "capabilities": ["Friend list and status queries", "Activity feed and history", "Favorites management", "Game log analysis", "User notes and memos", "Social analytics and insights", "World visit analytics", "Co-location detection", "Write-back notes"],
+                    "tips": ["Use vrcx_social_insights for quick activity summaries", "Use vrcx_get_user_profile for complete user picture", "Use vrcx_get_friend_schedule to understand when friends are online", "Use vrcx_set_note to save observations about users", "Use vrcx_get_co_location to find shared social spaces"]
+                })).unwrap_or_default()}]}), request.id.clone()),
+                _ => err_response(JsonRpcError::invalid_params("Unknown resource URI"), request.id.clone()),
             }
         }
         "ping" => ok_response(json!({}), request.id.clone()),

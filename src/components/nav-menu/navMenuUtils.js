@@ -47,7 +47,9 @@ export function sanitizeLayout(
     const chartsKeys = [
         'charts-instance',
         'charts-mutual',
-        'charts-hot-worlds'
+        'charts-hot-worlds',
+        'charts-avatar-usage',
+        'charts-report-export'
     ];
 
     const appendItemEntry = (key, target = normalized) => {

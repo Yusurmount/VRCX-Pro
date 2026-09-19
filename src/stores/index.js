@@ -29,6 +29,8 @@ import { useManualRelationsStore } from './manualRelations';
 import { useModalStore } from './modal';
 import { useModerationStore } from './moderation';
 import { useNotificationStore } from './notification';
+import { useNotificationRulesStore } from './notificationRules';
+import { useEmailNotificationsSettingsStore } from './settings/emailNotifications';
 import { useNotificationsSettingsStore } from './settings/notifications';
 import { usePhotonStore } from './photon';
 import { useSearchStore } from './search';
@@ -146,6 +148,8 @@ export function createGlobalStores() {
         invite: useInviteStore(),
         gallery: useGalleryStore(),
         notification: useNotificationStore(),
+        notificationRules: useNotificationRulesStore(),
+        emailNotificationsSettings: useEmailNotificationsSettingsStore(),
         feed: useFeedStore(),
         ui: useUiStore(),
         tools: useToolsStore(),
@@ -188,6 +192,7 @@ export {
     useLocationStore,
     useManualRelationsStore,
     useModerationStore,
+    useNotificationRulesStore,
     useNotificationStore,
     usePhotonStore,
     useSearchStore,
@@ -199,6 +204,7 @@ export {
     useDiscordPresenceSettingsStore,
     useGeneralSettingsStore,
     useNotificationsSettingsStore,
+    useEmailNotificationsSettingsStore,
     useWristOverlaySettingsStore,
     useToolsStore,
     useTrackedNonFriendsStore,

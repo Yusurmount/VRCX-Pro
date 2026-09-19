@@ -30,6 +30,7 @@ import { request } from './request';
 import { runUpdateFriendFlow } from '../coordinators/friendPresenceCoordinator';
 import { runSetCurrentUserLocationFlow } from '../coordinators/locationCoordinator';
 import { watchState } from './watchState';
+import { useNotificationRulesStore } from '../stores/notificationRules';
 
 import * as workerTimers from 'worker-timers';
 
@@ -131,6 +132,7 @@ function connectWebSocket(token) {
             webSocketClosedGracefully = true;
             notificationStore.refreshNotifications();
             friendStore.refreshFriends();
+            notificationRulesStore.initRules();
         }
         if (AppDebug.debugWebSocket) {
             console.log('WebSocket connected');
@@ -276,6 +278,7 @@ function handlePipeline(args) {
     const groupStore = useGroupStore();
     const uiStore = useUiStore();
     const instanceStore = useInstanceStore();
+    const notificationRulesStore = useNotificationRulesStore();
     const { type, content, err } = args.json;
     if (typeof err !== 'undefined') {
         console.error('PIPELINE: error', args);
@@ -395,6 +398,7 @@ function handlePipeline(args) {
                 console.error('friend-online missing user id', content);
                 runUpdateFriendFlow(content.userId, 'online');
             }
+            notificationRulesStore.evaluateRules('friend_online', { userId: content.userId, displayName: content.user?.displayName || '' });
             break;
 
         case 'friend-active':
@@ -435,6 +439,7 @@ function handlePipeline(args) {
                 travelingToInstance: 'offline'
             };
             applyUser(offlineJson);
+            notificationRulesStore.evaluateRules('friend_offline', { userId: content.userId, displayName: '' });
             break;
 
         case 'friend-update':

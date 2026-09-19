@@ -819,10 +819,145 @@
                     "cooling": "冷卻"
                 },
                 "sheet": {
-                    "friends_who_visited": "造訪過的好友"
+                    "friends_who_visited": "造訪過的好友",
+                    "visit_trend": "訪問趨勢"
                 },
                 "no_friend_data": "沒有好友造訪資料",
                 "friend_visits": "{count} 次造訪"
+            },
+            "social_network": {
+                "header": "社交關係網路",
+                "build": "建構圖譜",
+                "rebuild": "重新建構",
+                "build_tooltip": "基於共同好友資料建構社交關係網路圖",
+                "building": "建構中...",
+                "building_tooltip": "圖譜正在建構中，請稍候",
+                "empty_hint": "點擊「建構圖譜」生成社交關係網路視覺化",
+                "stats": {
+                    "title": "圖譜統計",
+                    "nodes": "節點",
+                    "edges": "邊",
+                    "communities": "社群",
+                    "bridges": "橋梁節點",
+                    "isolates": "孤立節點"
+                },
+                "community": "社群",
+                "community_list": "社群列表",
+                "bridges_title": "橋梁節點",
+                "context_menu": {
+                    "view_details": "檢視詳情"
+                }
+            },
+            "intimacy": {
+                "header": "關係親密",
+                "refresh": "重新整理",
+                "tips": {
+                    "description": "基於線上重疊時間、同世界頻次、互動最近度和參與一致性來量化關係親密度。每個維度歸一化為0-100，加權計算得出最終評分。"
+                },
+                "distribution": "評分分布",
+                "top_friends": "親密度排行",
+                "detail_title": "詳細評分",
+                "dimension": {
+                    "online_overlap": "線上重疊",
+                    "co_world_frequency": "同世界頻次",
+                    "recency": "最近度",
+                    "consistency": "參與一致性"
+                }
+            },
+            "timeline_comparison": {
+                "header": "時間軸對比",
+                "tips": {
+                    "description": "對比兩位好友的互動時間軸。查看共同活動隨時間的變化趨勢，了解關係的發展或疏遠。"
+                },
+                "select_friend_a": "選擇好友 A",
+                "select_friend_b": "選擇好友 B",
+                "search_friend": "搜尋好友...",
+                "swap_friends": "交換好友",
+                "friends": "好友",
+                "momentum": "趨勢",
+                "momentum_growing": "增長中",
+                "momentum_declining": "下降中",
+                "momentum_stable": "穩定",
+                "peak_month": "峰值月份",
+                "total_encounters": "總相遇次數",
+                "total_months": "活躍月數",
+                "co_time_minutes": "分鐘",
+                "co_presence": "共處時間",
+                "visits": "訪問次數",
+                "chart_label": "月度共處時間軸"
+            },
+            "group_recommendations": {
+                "header": "好友分組推薦",
+                "tips": {
+                    "description": "分析互動資料模式，推薦好友分組調整。發現具有相似活動模式的使用者對，建議將其歸入同一分組。"
+                },
+                "analyze": "開始分析",
+                "analyze_tooltip": "分析互動模式以發現分組推薦",
+                "empty_hint": "點擊「開始分析」查看分組推薦",
+                "similarity": "相似度",
+                "reason_merge": "相似活動模式跨越多個分組：",
+                "reason_no_group": "互動相似度高但未加入任何分組"
+            },
+            "avatar_usage": {
+                "header": "模型使用分析",
+                "tab_label": "模型使用",
+                "tips": {
+                    "description": "分析好友的模型更換模式。展示最熱門模型、更換頻率以及自製與他人模型的偏好。"
+                },
+                "period": {
+                    "days_7": "最近7天",
+                    "days_30": "最近30天",
+                    "days_90": "最近90天"
+                },
+                "stats": {
+                    "total_changes": "次更換",
+                    "top_avatar": "最常用",
+                    "avg_daily": "日均"
+                },
+                "charts": {
+                    "change_frequency": "每日模型更換次數",
+                    "self_vs_other": "自製 vs 他人模型",
+                    "top_avatars": "最常用模型",
+                    "change_timeline": "更換頻率趨勢"
+                },
+                "labels": {
+                    "self_owned": "自製模型",
+                    "others": "他人模型"
+                }
+            },
+            "report_export": {
+                "header": "匯出報告",
+                "tab_label": "報告匯出",
+                "tips": {
+                    "description": "生成包含活動資料的獨立 HTML 報告。報告包含熱門世界和模型使用統計。"
+                },
+                "weekly_report": "週報",
+                "monthly_report": "月報",
+                "weekly_description": "生成過去 7 天活動的摘要報告。",
+                "monthly_description": "生成過去 30 天活動的摘要報告。",
+                "generate": "生成報告",
+                "generating": "生成中...",
+                "report_ready": "報告已生成",
+                "open_report": "打開報告",
+                "download": "下載 HTML",
+                "success": "報告生成成功",
+                "error": "報告生成失敗",
+                "period_weekly": "週報",
+                "period_monthly": "月報",
+                "generated_on": "生成時間",
+                "section_hot_worlds": "熱門世界",
+                "section_avatar_usage": "模型使用",
+                "table_world": "世界",
+                "table_visits": "訪問次數",
+                "table_friends": "好友數",
+                "table_trend": "趨勢",
+                "table_avatar": "模型",
+                "table_changes": "更換次數",
+                "table_users": "使用者數",
+                "no_data": "該時間段內暫無資料",
+                "total_avatar_changes": "模型更換總次數",
+                "self_owned": "自製模型",
+                "others": "他人模型"
             }
         },
         "tools": {
@@ -1265,6 +1400,57 @@
                         "play": "播放",
                         "tts_test_placeholder": "測試文字轉語音"
                     }
+                },
+                "custom_rules": {
+                    "header": "自訂通知規則",
+                    "title": "自訂通知規則",
+                    "description": "建立基於特定事件觸發通知的規則。",
+                    "no_rules": "尚無規則設定。請在上方選擇規則類型以新增。",
+                    "select_type": "選擇規則類型...",
+                    "type": "類型",
+                    "manage": "管理自訂規則",
+                    "manage_description": "建立和管理好友上線/離線、世界事件、模型刪除、狀態變化等自訂通知規則。",
+                    "manage_button": "開啟規則",
+                    "target_user_id": "目標使用者 ID",
+                    "user_id_placeholder": "例如 usr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "display_name_placeholder": "顯示名稱（僅供顯示）",
+                    "world_id": "世界 ID",
+                    "world_id_placeholder": "例如 wrld_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "world_name_placeholder": "世界名稱（僅供顯示）",
+                    "avatar_id": "模型 ID",
+                    "avatar_id_placeholder": "例如 avtr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "avatar_name_placeholder": "模型名稱（僅供顯示）",
+                    "min_players": "最少玩家數",
+                    "cooldown": "冷卻時間",
+                    "channels": "通知管道",
+                    "channel_desktop": "桌面",
+                    "channel_tts": "語音",
+                    "channel_email": "郵件"
+                },
+                "email": {
+                    "header": "郵件通知",
+                    "enable": "啟用郵件通知",
+                    "enable_description": "透過 SMTP 發送郵件通知。",
+                    "smtp_host": "SMTP 伺服器",
+                    "smtp_host_placeholder": "例如 smtp.gmail.com",
+                    "smtp_port": "SMTP 連接埠",
+                    "smtp_ssl": "使用 SSL/TLS",
+                    "smtp_username": "SMTP 使用者名稱",
+                    "smtp_username_placeholder": "您的郵箱或使用者名稱",
+                    "smtp_password": "SMTP 密碼",
+                    "smtp_password_placeholder": "您的密碼或應用程式密碼",
+                    "from_address": "寄件者地址",
+                    "from_address_placeholder": "sender@example.com",
+                    "from_name": "寄件者名稱",
+                    "recipient_address": "收件者郵箱",
+                    "recipient_address_placeholder": "recipient@example.com",
+                    "recipient_name": "收件者名稱",
+                    "test": "測試郵件",
+                    "send_test": "發送測試",
+                    "sending": "發送中...",
+                    "test_success": "測試郵件發送成功！",
+                    "test_failed": "測試郵件發送失敗，請檢查設定。",
+                    "test_error": "發送測試郵件時出錯。"
                 }
             },
             "wrist_overlay": {

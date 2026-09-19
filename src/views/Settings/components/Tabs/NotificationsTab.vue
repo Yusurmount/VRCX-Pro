@@ -151,7 +151,109 @@
             </div>
         </SettingsGroup>
 
+        <SettingsGroup :title="t('view.settings.notifications.custom_rules.header')">
+            <SettingsItem
+                :label="t('view.settings.notifications.custom_rules.manage')"
+                :description="t('view.settings.notifications.custom_rules.manage_description')">
+                <Button size="sm" variant="outline" @click="notificationRulesDialogVisible = true">
+                    {{ t('view.settings.notifications.custom_rules.manage_button') }}
+                    <span v-if="customRulesCount > 0" class="ml-1 text-xs text-muted-foreground">
+                        ({{ customRulesCount }})
+                    </span>
+                </Button>
+            </SettingsItem>
+        </SettingsGroup>
+
+        <SettingsGroup :title="t('view.settings.notifications.email.header')">
+            <SettingsItem
+                :label="t('view.settings.notifications.email.enable')"
+                :description="t('view.settings.notifications.email.enable_description')">
+                <Switch
+                    :model-value="emailEnabled"
+                    @update:modelValue="emailStore.setEnabled" />
+            </SettingsItem>
+
+            <template v-if="emailEnabled">
+                <SettingsItem :label="t('view.settings.notifications.email.smtp_host')">
+                    <input
+                        v-model="emailSmtpHost"
+                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        :placeholder="t('view.settings.notifications.email.smtp_host_placeholder')"
+                        @change="emailStore.setSmtpHost(emailSmtpHost)" />
+                </SettingsItem>
+
+                <SettingsItem :label="t('view.settings.notifications.email.smtp_port')">
+                    <input
+                        v-model.number="emailSmtpPort"
+                        type="number"
+                        class="text-sm bg-background border rounded px-2 py-1 w-20"
+                        @change="emailStore.setSmtpPort(emailSmtpPort)" />
+                </SettingsItem>
+
+                <SettingsItem :label="t('view.settings.notifications.email.smtp_ssl')">
+                    <Switch
+                        :model-value="emailSmtpUseSsl"
+                        @update:modelValue="emailStore.setSmtpUseSsl" />
+                </SettingsItem>
+
+                <SettingsItem :label="t('view.settings.notifications.email.smtp_username')">
+                    <input
+                        v-model="emailSmtpUsername"
+                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        :placeholder="t('view.settings.notifications.email.smtp_username_placeholder')"
+                        @change="emailStore.setSmtpUsername(emailSmtpUsername)" />
+                </SettingsItem>
+
+                <SettingsItem :label="t('view.settings.notifications.email.smtp_password')">
+                    <input
+                        v-model="emailSmtpPassword"
+                        type="password"
+                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        :placeholder="t('view.settings.notifications.email.smtp_password_placeholder')"
+                        @change="emailStore.setSmtpPassword(emailSmtpPassword)" />
+                </SettingsItem>
+
+                <SettingsItem :label="t('view.settings.notifications.email.from_address')">
+                    <input
+                        v-model="emailSmtpFromAddress"
+                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        :placeholder="t('view.settings.notifications.email.from_address_placeholder')"
+                        @change="emailStore.setSmtpFromAddress(emailSmtpFromAddress)" />
+                </SettingsItem>
+
+                <SettingsItem :label="t('view.settings.notifications.email.from_name')">
+                    <input
+                        v-model="emailSmtpFromName"
+                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        @change="emailStore.setSmtpFromName(emailSmtpFromName)" />
+                </SettingsItem>
+
+                <SettingsItem :label="t('view.settings.notifications.email.recipient_address')">
+                    <input
+                        v-model="emailRecipientAddress"
+                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        :placeholder="t('view.settings.notifications.email.recipient_address_placeholder')"
+                        @change="emailStore.setRecipientAddress(emailRecipientAddress)" />
+                </SettingsItem>
+
+                <SettingsItem :label="t('view.settings.notifications.email.recipient_name')">
+                    <input
+                        v-model="emailRecipientName"
+                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        @change="emailStore.setRecipientName(emailRecipientName)" />
+                </SettingsItem>
+
+                <SettingsItem :label="t('view.settings.notifications.email.test')">
+                    <Button size="sm" variant="outline" @click="testEmail" :disabled="isEmailSending">
+                        <Play class="h-4 w-4" />
+                        {{ isEmailSending ? t('view.settings.notifications.email.sending') : t('view.settings.notifications.email.send_test') }}
+                    </Button>
+                </SettingsItem>
+            </template>
+        </SettingsGroup>
+
         <FeedFiltersDialog v-model:feedFiltersDialogMode="feedFiltersDialogMode" />
+        <NotificationRulesDialog v-model:visible="notificationRulesDialogVisible" />
     </div>
 </template>
 
@@ -164,17 +266,26 @@
     import { InputGroupTextareaField } from '@/components/ui/input-group';
     import { Play } from 'lucide-vue-next';
     import { storeToRefs } from 'pinia';
+    import { toast } from 'vue-sonner';
     import { useI18n } from 'vue-i18n';
 
-    import { useNotificationStore, useNotificationsSettingsStore } from '@/stores';
+    import {
+        useNotificationStore,
+        useNotificationsSettingsStore,
+        useNotificationRulesStore,
+        useEmailNotificationsSettingsStore
+    } from '@/stores';
 
     import FeedFiltersDialog from '../../dialogs/FeedFiltersDialog.vue';
+    import NotificationRulesDialog from '../../dialogs/NotificationRulesDialog.vue';
     import SettingsGroup from '../SettingsGroup.vue';
     import SettingsItem from '../SettingsItem.vue';
 
     const { t } = useI18n();
 
     const notificationsSettingsStore = useNotificationsSettingsStore();
+    const notificationRulesStore = useNotificationRulesStore();
+    const emailStore = useEmailNotificationsSettingsStore();
 
     const {
         desktopToast,
@@ -201,6 +312,21 @@
     const { testNotification, markAllAsSeen } = useNotificationStore();
 
     const feedFiltersDialogMode = ref('');
+    const notificationRulesDialogVisible = ref(false);
+    const customRulesCount = computed(() => notificationRulesStore.rules.length);
+
+    // Email settings
+    const emailEnabled = computed(() => emailStore.enabled);
+    const emailSmtpHost = ref(emailStore.smtpHost);
+    const emailSmtpPort = ref(emailStore.smtpPort);
+    const emailSmtpUseSsl = computed(() => emailStore.smtpUseSsl);
+    const emailSmtpUsername = ref(emailStore.smtpUsername);
+    const emailSmtpPassword = ref(emailStore.smtpPassword);
+    const emailSmtpFromAddress = ref(emailStore.smtpFromAddress);
+    const emailSmtpFromName = ref(emailStore.smtpFromName);
+    const emailRecipientAddress = ref(emailStore.recipientAddress);
+    const emailRecipientName = ref(emailStore.recipientName);
+    const isEmailSending = ref(false);
 
     const ttsVoiceIndex = computed({
         get: () => {
@@ -217,12 +343,31 @@
 
     onMounted(() => {
         markAllAsSeen();
+        emailStore.initEmailSettings();
+        notificationRulesStore.initRules();
     });
 
-    /**
-     *
-     */
     function showNotyFeedFiltersDialog() {
         feedFiltersDialogMode.value = 'noty';
+    }
+
+    async function testEmail() {
+        isEmailSending.value = true;
+        try {
+            const { sendEmail } = await import('@/services/emailNotification.js');
+            const result = await sendEmail({
+                subject: 'VRCX-Pro Test Notification',
+                body: `This is a test email from VRCX-Pro.\n\nSent at: ${new Date().toLocaleString()}\n\nIf you received this, your email notification settings are configured correctly.`
+            });
+            if (result) {
+                toast.success(t('view.settings.notifications.email.test_success'));
+            } else {
+                toast.error(t('view.settings.notifications.email.test_failed'));
+            }
+        } catch (err) {
+            toast.error(t('view.settings.notifications.email.test_error'));
+        } finally {
+            isEmailSending.value = false;
+        }
     }
 </script>

@@ -35,6 +35,13 @@ MCP 服务器为 AI 助手提供了以下能力：
 | 审核列表     | 查询屏蔽和静音的用户列表                            |
 | 缓存搜索     | 按名称搜索本地缓存的世界和模型信息                  |
 | 数据库探索   | 列出所有数据表及行数，了解数据结构                  |
+| 社交分析洞察 | 预计算社交分析：活跃好友、在线时间分布、热门世界    |
+| 好友在线规律 | 分析特定好友的在线时间模式和活跃规律                |
+| 好友搜索     | 按名称、状态、信任等级、位置搜索好友                |
+| 世界分析     | 世界访问统计、访问趋势、活跃访客排行                |
+| 用户档案     | 综合用户画像：基础信息+最新状态+头像+备忘+近期活动 |
+| 写入备忘     | 为用户设置或更新本地备注（写操作）                  |
+| 共同位置发现 | 发现与特定用户在同一世界出现过的好友                |
 
 ---
 
@@ -60,6 +67,11 @@ MCP 服务器为 AI 助手提供了以下能力：
 - "最近谁换了模型？"
 - "帮我搜索名字里带 'Japan' 的世界"
 - "我的好友收藏分组有哪些？"
+- "帮我分析一下最近一周的社交活跃情况"（vrcx_social_insights）
+- "XX 通常什么时候在线？"（vrcx_get_friend_schedule）
+- "哪些好友最近在 Japan 世界？"（vrcx_search_friends）
+- "帮我给 XX 备注一下：喜欢动捕"（vrcx_set_note）
+- "谁和我在同一个世界出现过？"（vrcx_get_co_location）"
 
 ---
 
@@ -309,6 +321,153 @@ MCP 服务器为 AI 助手提供了以下能力：
 
 ---
 
+
+### `vrcx_social_insights`
+
+获取预计算的社交分析数据：活跃好友排行、在线时间分布、最常访问的世界、模型更换频率等。适用于生成社交报告或回答关于好友活跃模式的问题。
+
+```json
+{
+    "days": 7
+}
+```
+
+**参数**（可选）:
+- `days`: 分析周期天数（默认 7）
+
+**返回字段**: `most_active_friends`, `online_hour_distribution`, `most_visited_worlds`, `most_avatar_changes`, `total_friends`
+
+---
+
+### `vrcx_get_friend_schedule`
+
+获取特定好友的在线时间规律：通常几点在线、哪天最活跃、平均在线时长。
+
+```json
+{
+    "user_id": "usr_xxx",
+    "days": 14
+}
+```
+
+**参数**:
+- `user_id`（必填）: VRChat 用户 ID
+- `days`（可选）: 分析周期天数（默认 14）
+
+**返回字段**: `hourly_online_pattern`, `day_of_week_pattern`, `recent_online_events`
+
+---
+
+### `vrcx_search_friends`
+
+按名称、状态、信任等级或位置搜索好友。
+
+```json
+{
+    "query": "Japan",
+    "status": "active",
+    "trust_level": "trusted",
+    "location_search": "Japan",
+    "limit": 50
+}
+```
+
+**参数**（均可选）:
+- `query`: 名称关键词（模糊匹配）
+- `status`: 在线状态过滤（`active` / `join me` / `ask me` / `busy` / `offline`）
+- `trust_level`: 信任等级过滤
+- `location_search`: 世界/位置名称搜索
+- `limit`: 最大返回数（默认 50）
+
+---
+
+### `vrcx_get_world_analytics`
+
+获取世界访问分析：最常访问的世界、每日访问趋势、活跃访客排行。
+
+```json
+{
+    "days": 7,
+    "limit": 20
+}
+```
+
+**参数**（可选）:
+- `days`: 分析周期天数（默认 7）
+- `limit`: 最大返回世界数（默认 20）
+
+**返回字段**: `most_visited_worlds`, `daily_visit_trend`, `most_active_visitors`
+
+---
+
+### `vrcx_get_user_profile`
+
+获取指定用户的综合档案：基础信息、最新头像/状态/签名/位置、备忘录、笔记、近期活动统计和变更历史。
+
+```json
+{
+    "user_id": "usr_xxx"
+}
+```
+
+**参数**:
+- `user_id`（必填）: VRChat 用户 ID
+
+**返回字段**: `basic_info`, `current_avatar`, `current_status`, `current_bio`, `current_location`, `memo`, `note`, `recent_activity_7d`, `recent_history`
+
+---
+
+### `vrcx_set_note`
+
+为用户设置或更新本地备注。这是**写操作**，会持久化到本地数据库。
+
+```json
+{
+    "user_id": "usr_xxx",
+    "note": "喜欢动捕，在 Japan 世界常驻"
+}
+```
+
+**参数**:
+- `user_id`（必填）: VRChat 用户 ID
+- `note`（必填）: 备注内容
+
+**返回**: `{ "success": true, "user_id": "usr_xxx", "message": "Note saved successfully" }`
+
+---
+
+### `vrcx_get_co_location`
+
+发现与指定用户（或自己）在同一世界出现过的好友。用于发现社交关联和共同空间。
+
+```json
+{
+    "user_id": "usr_xxx",
+    "days": 7,
+    "limit": 20
+}
+```
+
+**参数**（均可选）:
+- `user_id`: VRChat 用户 ID（留空则分析自己）
+- `days`: 回溯天数（默认 7）
+- `limit`: 最大返回数（默认 20）
+
+**返回字段**: `display_name`, `user_id`, `world_name`, `shared_visits` / `co_visits`
+
+---
+
+## MCP Resources
+
+MCP 服务器还提供了 Resource 端点，AI 客户端可以通过 `resources/list` 和 `resources/read` 获取服务器上下文信息：
+
+| URI                        | 说明                     |
+| -------------------------- | ------------------------ |
+| `vrcx://schema/tables`     | 数据库所有表及行数       |
+| `vrcx://context/server`    | 服务器版本和功能说明     |
+
+---
+
 ## AI 客户端配置示例
 
 ### Claude Desktop
@@ -359,6 +518,8 @@ AI 客户端 (Claude Desktop / Cursor / ...)
 |  +-- initialize                   |
 |  +-- tools/list                   |
 |  +-- tools/call                   |
+|  +-- resources/list               |
+|  +-- resources/read               |
 |  +-- ping                         |
 +----------------+------------------+
                  |
@@ -391,7 +552,7 @@ AI 客户端 (Claude Desktop / Cursor / ...)
 ### 安全设计
 
 - **仅监听本地**: 服务器绑定 `127.0.0.1`，不暴露到网络
-- **只读访问**: 仅执行 SELECT 查询，不修改任何数据
+- **受限写入**: 仅 `vrcx_set_note` 可写入本地备注，其余均为只读查询
 - **WAL 模式**: 使用 SQLite WAL 日志模式，支持与 .NET sidecar 并发读取
 - **Busy Timeout**: 设置 5000ms 忙等待超时，避免数据库锁定错误
 - **默认关闭**: MCP 服务器默认不启用，需用户主动开启
@@ -423,7 +584,15 @@ AI 客户端 (Claude Desktop / Cursor / ...)
 
 MCP 服务器：
 
-- 仅读取本地数据库，不上传任何数据
+- 主要为只读操作，仅 `vrcx_set_note` 会写入本地备注数据
 - 不访问 VRChat API
 - 仅监听本地回环地址
 - 不存储或转发任何信息到第三方服务
+
+### Q: AI 助手如何生成社交报告？
+
+使用 `vrcx_social_insights` 工具获取预计算的社交分析数据，AI 助手可以自动生成包含活跃好友排行、在线时间分布、热门世界等信息的社交报告。也可以使用 `vrcx_get_world_analytics` 获取更详细的世界访问分析。
+
+### Q: 如何用 AI 助手给好友添加备注？
+
+使用 `vrcx_set_note` 工具，传入 `user_id` 和 `note` 参数即可。例如告诉 AI 助手："帮我给 XX 备注一下：喜欢动捕"，AI 会自动调用该工具保存备注。

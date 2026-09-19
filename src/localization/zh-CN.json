@@ -776,7 +776,8 @@
                     "cooling": "下降"
                 },
                 "sheet": {
-                    "friends_who_visited": "访问过的好友"
+                    "friends_who_visited": "访问过的好友",
+                    "visit_trend": "访问趋势"
                 },
                 "no_friend_data": "没有好友访问数据",
                 "friend_visits": "{count} 次访问"
@@ -824,6 +825,140 @@
                     "show_others": "显示其他",
                     "show_friends_only": "仅显示好友"
                 }
+            },
+            "social_network": {
+                "header": "社交关系网络",
+                "build": "构建图谱",
+                "rebuild": "重新构建",
+                "build_tooltip": "基于共同好友数据构建社交关系网络图",
+                "building": "构建中...",
+                "building_tooltip": "图谱正在构建中，请稍候",
+                "empty_hint": "点击「构建图谱」生成社交关系网络可视化",
+                "stats": {
+                    "title": "图谱统计",
+                    "nodes": "节点",
+                    "edges": "边",
+                    "communities": "社群",
+                    "bridges": "桥梁节点",
+                    "isolates": "孤立节点"
+                },
+                "community": "社群",
+                "community_list": "社群列表",
+                "bridges_title": "桥梁节点",
+                "context_menu": {
+                    "view_details": "查看详情"
+                }
+            },
+            "intimacy": {
+                "header": "关系亲密度",
+                "refresh": "刷新",
+                "tips": {
+                    "description": "基于在线重叠时间、同世界频次、互动最近度和参与一致性来量化关系亲密度。每个维度归一化为0-100，加权计算得出最终评分。"
+                },
+                "distribution": "评分分布",
+                "top_friends": "亲密度排行",
+                "detail_title": "详细评分",
+                "dimension": {
+                    "online_overlap": "在线重叠",
+                    "co_world_frequency": "同世界频次",
+                    "recency": "最近度",
+                    "consistency": "参与一致性"
+                }
+            },
+            "timeline_comparison": {
+                "header": "时间线对比",
+                "tips": {
+                    "description": "对比两位好友的互动时间线。查看共同活动随时间的变化趋势，了解关系的发展或疏远。"
+                },
+                "select_friend_a": "选择好友 A",
+                "select_friend_b": "选择好友 B",
+                "search_friend": "搜索好友...",
+                "swap_friends": "交换好友",
+                "friends": "好友",
+                "momentum": "趋势",
+                "momentum_growing": "增长中",
+                "momentum_declining": "下降中",
+                "momentum_stable": "稳定",
+                "peak_month": "峰值月份",
+                "total_encounters": "总相遇次数",
+                "total_months": "活跃月数",
+                "co_time_minutes": "分钟",
+                "co_presence": "共处时间",
+                "visits": "访问次数",
+                "chart_label": "月度共处时间线"
+            },
+            "group_recommendations": {
+                "header": "好友分组推荐",
+                "tips": {
+                    "description": "分析互动数据模式，推荐好友分组调整。发现具有相似活动模式的用户对，建议将其归入同一分组。"
+                },
+                "analyze": "开始分析",
+                "analyze_tooltip": "分析互动模式以发现分组推荐",
+                "empty_hint": "点击「开始分析」查看分组推荐",
+                "similarity": "相似度",
+                "reason_merge": "相似活动模式跨越多个分组：",
+                "reason_no_group": "互动相似度高但未加入任何分组"
+            },
+            "avatar_usage": {
+                "header": "模型使用分析",
+                "tab_label": "模型使用",
+                "tips": {
+                    "description": "分析好友的模型更换模式。展示最热门模型、更换频率以及自制与他人模型的偏好。"
+                },
+                "period": {
+                    "days_7": "最近7天",
+                    "days_30": "最近30天",
+                    "days_90": "最近90天"
+                },
+                "stats": {
+                    "total_changes": "次更换",
+                    "top_avatar": "最常用",
+                    "avg_daily": "日均"
+                },
+                "charts": {
+                    "change_frequency": "每日模型更换次数",
+                    "self_vs_other": "自制 vs 他人模型",
+                    "top_avatars": "最常用模型",
+                    "change_timeline": "更换频率趋势"
+                },
+                "labels": {
+                    "self_owned": "自制模型",
+                    "others": "他人模型"
+                }
+            },
+            "report_export": {
+                "header": "导出报告",
+                "tab_label": "报告导出",
+                "tips": {
+                    "description": "生成包含活动数据的独立 HTML 报告。报告包含热门世界和模型使用统计。"
+                },
+                "weekly_report": "周报",
+                "monthly_report": "月报",
+                "weekly_description": "生成过去 7 天活动的摘要报告。",
+                "monthly_description": "生成过去 30 天活动的摘要报告。",
+                "generate": "生成报告",
+                "generating": "生成中...",
+                "report_ready": "报告已生成",
+                "open_report": "打开报告",
+                "download": "下载 HTML",
+                "success": "报告生成成功",
+                "error": "报告生成失败",
+                "period_weekly": "周报",
+                "period_monthly": "月报",
+                "generated_on": "生成时间",
+                "section_hot_worlds": "热门世界",
+                "section_avatar_usage": "模型使用",
+                "table_world": "世界",
+                "table_visits": "访问次数",
+                "table_friends": "好友数",
+                "table_trend": "趋势",
+                "table_avatar": "模型",
+                "table_changes": "更换次数",
+                "table_users": "用户数",
+                "no_data": "该时间段内暂无数据",
+                "total_avatar_changes": "模型更换总次数",
+                "self_owned": "自制模型",
+                "others": "他人模型"
             }
         },
         "tools": {
@@ -1266,6 +1401,57 @@
                         "play": "播放",
                         "tts_test_placeholder": "测试 TTS"
                     }
+                },
+                "custom_rules": {
+                    "header": "自定义通知规则",
+                    "title": "自定义通知规则",
+                    "description": "创建基于特定事件触发通知的规则。",
+                    "no_rules": "暂无规则配置。请在上方选择规则类型以添加。",
+                    "select_type": "选择规则类型...",
+                    "type": "类型",
+                    "manage": "管理自定义规则",
+                    "manage_description": "创建和管理好友上线/下线、世界事件、模型删除、状态变化等自定义通知规则。",
+                    "manage_button": "打开规则",
+                    "target_user_id": "目标用户 ID",
+                    "user_id_placeholder": "例如 usr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "display_name_placeholder": "显示名称（仅用于显示）",
+                    "world_id": "世界 ID",
+                    "world_id_placeholder": "例如 wrld_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "world_name_placeholder": "世界名称（仅用于显示）",
+                    "avatar_id": "模型 ID",
+                    "avatar_id_placeholder": "例如 avtr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "avatar_name_placeholder": "模型名称（仅用于显示）",
+                    "min_players": "最少玩家数",
+                    "cooldown": "冷却时间",
+                    "channels": "通知渠道",
+                    "channel_desktop": "桌面",
+                    "channel_tts": "语音",
+                    "channel_email": "邮件"
+                },
+                "email": {
+                    "header": "邮件通知",
+                    "enable": "启用邮件通知",
+                    "enable_description": "通过 SMTP 发送邮件通知。",
+                    "smtp_host": "SMTP 服务器",
+                    "smtp_host_placeholder": "例如 smtp.gmail.com",
+                    "smtp_port": "SMTP 端口",
+                    "smtp_ssl": "使用 SSL/TLS",
+                    "smtp_username": "SMTP 用户名",
+                    "smtp_username_placeholder": "您的邮箱或用户名",
+                    "smtp_password": "SMTP 密码",
+                    "smtp_password_placeholder": "您的密码或应用密码",
+                    "from_address": "发件人地址",
+                    "from_address_placeholder": "sender@example.com",
+                    "from_name": "发件人名称",
+                    "recipient_address": "收件人邮箱",
+                    "recipient_address_placeholder": "recipient@example.com",
+                    "recipient_name": "收件人名称",
+                    "test": "测试邮件",
+                    "send_test": "发送测试",
+                    "sending": "发送中...",
+                    "test_success": "测试邮件发送成功！",
+                    "test_failed": "测试邮件发送失败，请检查设置。",
+                    "test_error": "发送测试邮件时出错。"
                 }
             },
             "wrist_overlay": {
