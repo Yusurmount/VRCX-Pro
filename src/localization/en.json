@@ -1570,9 +1570,7 @@
                             "store_counts": "Store Counts"
                         },
                         "previews": {
-                            "no_user": "No current user available. Please log in first.",
-                            "no_id": "Please enter a valid ID.",
-                            "open": "Open",
+                            "hint": "Visual layout previews of the application's main dialog windows. Tabs and content are represented schematically.",
                             "edit_profile": {
                                 "label": "Edit Profile Dialog",
                                 "desc": "Open the edit profile dialog for the current user."

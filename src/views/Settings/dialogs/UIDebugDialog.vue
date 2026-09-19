@@ -94,11 +94,15 @@
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-muted-foreground">statusDescription:</span>
-                                    <span class="text-foreground truncate max-w-[200px]">{{ currentUser.statusDescription ?? '—' }}</span>
+                                    <span class="text-foreground truncate max-w-[200px]">{{
+                                        currentUser.statusDescription ?? '—'
+                                    }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-muted-foreground">location:</span>
-                                    <span class="text-foreground truncate max-w-[200px]">{{ currentUser.location ?? '—' }}</span>
+                                    <span class="text-foreground truncate max-w-[200px]">{{
+                                        currentUser.location ?? '—'
+                                    }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-muted-foreground">$trustLevel:</span>
@@ -138,7 +142,9 @@
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-muted-foreground">displayVRCProfileCosmetics:</span>
-                                    <span class="text-foreground">{{ appearanceSettings.displayVRCProfileCosmetics }}</span>
+                                    <span class="text-foreground">{{
+                                        appearanceSettings.displayVRCProfileCosmetics
+                                    }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-muted-foreground">sidebarCosmetics:</span>
@@ -174,7 +180,9 @@
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-muted-foreground">cachedNameplateEffects:</span>
-                                    <span class="text-foreground">{{ userStore.cachedNameplateEffects?.size ?? 0 }}</span>
+                                    <span class="text-foreground">{{
+                                        userStore.cachedNameplateEffects?.size ?? 0
+                                    }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-muted-foreground">currentTravelers:</span>
@@ -190,29 +198,200 @@
                 </TabsContent>
 
                 <TabsContent value="previews">
-                    <div class="space-y-3">
-                        <div
-                            v-for="item in previewItems"
-                            :key="item.id"
-                            class="rounded-md border border-border bg-card p-3">
-                            <div class="flex items-center justify-between gap-2">
-                                <div class="min-w-0 flex-1">
-                                    <span class="ui-debug-name text-foreground">{{ item.label }}</span>
-                                    <p class="ui-debug-desc text-muted-foreground">{{ item.desc }}</p>
+                    <p class="text-muted-foreground mb-3 text-xs">
+                        {{ t(tk('previews.hint')) }}
+                    </p>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <!-- Edit Profile Preview -->
+                        <div class="rounded-lg border border-border bg-card p-3">
+                            <h4 class="text-xs font-semibold text-foreground mb-2">
+                                {{ t(tk('previews.edit_profile.label')) }}
+                            </h4>
+                            <div class="rounded-md border border-border bg-muted/50 p-2 text-xs space-y-1.5">
+                                <div class="flex items-center gap-2">
+                                    <div class="h-6 w-6 rounded-full bg-primary/20" />
+                                    <div class="h-2 w-20 rounded bg-foreground/20" />
                                 </div>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    :disabled="item.disabled"
-                                    @click="item.run">
-                                    {{ item.buttonLabel ?? t(tk('previews.open')) }}
-                                </Button>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-muted-foreground w-16 shrink-0">Status</span>
+                                    <div class="h-2 flex-1 rounded bg-foreground/10" />
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-muted-foreground w-16 shrink-0">Bio</span>
+                                    <div class="h-2 flex-1 rounded bg-foreground/10" />
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-muted-foreground w-16 shrink-0">Links</span>
+                                    <div class="h-2 w-12 rounded bg-foreground/10" />
+                                    <div class="h-2 w-12 rounded bg-foreground/10" />
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-muted-foreground w-16 shrink-0">Theme</span>
+                                    <div class="h-4 w-4 rounded bg-primary/30" />
+                                    <div class="h-4 w-4 rounded bg-secondary/30" />
+                                    <div class="h-4 w-4 rounded bg-accent/30" />
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-muted-foreground w-16 shrink-0">Effects</span>
+                                    <div class="h-2 w-16 rounded bg-foreground/10" />
+                                </div>
                             </div>
-                            <div v-if="item.inputLabel" class="mt-2">
-                                <Input
-                                    v-model="item.inputValue.value"
-                                    :placeholder="item.inputPlaceholder"
-                                    class="h-8 text-xs" />
+                        </div>
+
+                        <!-- User Dialog Preview -->
+                        <div class="rounded-lg border border-border bg-card p-3">
+                            <h4 class="text-xs font-semibold text-foreground mb-2">
+                                {{ t(tk('previews.user_dialog.label')) }}
+                            </h4>
+                            <div class="rounded-md border border-border bg-muted/50 p-2 text-xs">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="h-8 w-8 rounded-full bg-primary/20" />
+                                    <div>
+                                        <div class="h-2 w-16 rounded bg-foreground/30 mb-1" />
+                                        <div class="h-1.5 w-10 rounded bg-foreground/10" />
+                                    </div>
+                                </div>
+                                <div class="flex gap-1 mb-2">
+                                    <div
+                                        class="h-4 flex-1 rounded bg-primary/10 text-center text-[8px] leading-4 text-primary/60">
+                                        Info
+                                    </div>
+                                    <div
+                                        class="h-4 flex-1 rounded bg-muted text-center text-[8px] leading-4 text-muted-foreground">
+                                        Avatars
+                                    </div>
+                                    <div
+                                        class="h-4 flex-1 rounded bg-muted text-center text-[8px] leading-4 text-muted-foreground">
+                                        Worlds
+                                    </div>
+                                    <div
+                                        class="h-4 flex-1 rounded bg-muted text-center text-[8px] leading-4 text-muted-foreground">
+                                        Groups
+                                    </div>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="h-1.5 w-full rounded bg-foreground/10" />
+                                    <div class="h-1.5 w-3/4 rounded bg-foreground/10" />
+                                    <div class="h-1.5 w-5/6 rounded bg-foreground/10" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Group Dialog Preview -->
+                        <div class="rounded-lg border border-border bg-card p-3">
+                            <h4 class="text-xs font-semibold text-foreground mb-2">
+                                {{ t(tk('previews.group_dialog.label')) }}
+                            </h4>
+                            <div class="rounded-md border border-border bg-muted/50 p-2 text-xs">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="h-8 w-8 rounded bg-primary/20" />
+                                    <div>
+                                        <div class="h-2 w-20 rounded bg-foreground/30 mb-1" />
+                                        <div class="h-1.5 w-14 rounded bg-foreground/10" />
+                                    </div>
+                                </div>
+                                <div class="flex gap-1 mb-2">
+                                    <div
+                                        class="h-4 flex-1 rounded bg-primary/10 text-center text-[8px] leading-4 text-primary/60">
+                                        Info
+                                    </div>
+                                    <div
+                                        class="h-4 flex-1 rounded bg-muted text-center text-[8px] leading-4 text-muted-foreground">
+                                        Posts
+                                    </div>
+                                    <div
+                                        class="h-4 flex-1 rounded bg-muted text-center text-[8px] leading-4 text-muted-foreground">
+                                        Members
+                                    </div>
+                                    <div
+                                        class="h-4 flex-1 rounded bg-muted text-center text-[8px] leading-4 text-muted-foreground">
+                                        Gallery
+                                    </div>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="h-1.5 w-full rounded bg-foreground/10" />
+                                    <div class="h-1.5 w-2/3 rounded bg-foreground/10" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- World Dialog Preview -->
+                        <div class="rounded-lg border border-border bg-card p-3">
+                            <h4 class="text-xs font-semibold text-foreground mb-2">
+                                {{ t(tk('previews.world_dialog.label')) }}
+                            </h4>
+                            <div class="rounded-md border border-border bg-muted/50 p-2 text-xs">
+                                <div class="mb-2 h-10 w-full rounded bg-primary/10" />
+                                <div class="h-2 w-24 rounded bg-foreground/30 mb-1.5" />
+                                <div class="flex gap-1 mb-2">
+                                    <div
+                                        class="h-4 flex-1 rounded bg-primary/10 text-center text-[8px] leading-4 text-primary/60">
+                                        Info
+                                    </div>
+                                    <div
+                                        class="h-4 flex-1 rounded bg-muted text-center text-[8px] leading-4 text-muted-foreground">
+                                        Instances
+                                    </div>
+                                    <div
+                                        class="h-4 flex-1 rounded bg-muted text-center text-[8px] leading-4 text-muted-foreground">
+                                        Cache
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-1">
+                                    <div class="h-1.5 rounded bg-foreground/10" />
+                                    <div class="h-1.5 rounded bg-foreground/10" />
+                                    <div class="h-1.5 rounded bg-foreground/10" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Avatar Dialog Preview -->
+                        <div class="rounded-lg border border-border bg-card p-3">
+                            <h4 class="text-xs font-semibold text-foreground mb-2">
+                                {{ t(tk('previews.avatar_dialog.label')) }}
+                            </h4>
+                            <div class="rounded-md border border-border bg-muted/50 p-2 text-xs">
+                                <div class="mb-2 h-12 w-full rounded bg-primary/10" />
+                                <div class="h-2 w-20 rounded bg-foreground/30 mb-1.5" />
+                                <div class="flex gap-1 mb-2">
+                                    <div
+                                        class="h-4 flex-1 rounded bg-primary/10 text-center text-[8px] leading-4 text-primary/60">
+                                        Info
+                                    </div>
+                                    <div
+                                        class="h-4 flex-1 rounded bg-muted text-center text-[8px] leading-4 text-muted-foreground">
+                                        Gallery
+                                    </div>
+                                    <div
+                                        class="h-4 flex-1 rounded bg-muted text-center text-[8px] leading-4 text-muted-foreground">
+                                        Cache
+                                    </div>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="h-1.5 w-full rounded bg-foreground/10" />
+                                    <div class="h-1.5 w-4/5 rounded bg-foreground/10" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Launch Dialog Preview -->
+                        <div class="rounded-lg border border-border bg-card p-3">
+                            <h4 class="text-xs font-semibold text-foreground mb-2">
+                                {{ t(tk('previews.launch_dialog.label')) }}
+                            </h4>
+                            <div class="rounded-md border border-border bg-muted/50 p-2 text-xs space-y-1.5">
+                                <div class="h-1.5 w-full rounded bg-foreground/10" />
+                                <div class="h-1.5 w-3/4 rounded bg-foreground/10" />
+                                <div class="flex gap-1 mt-2">
+                                    <div
+                                        class="h-5 flex-1 rounded bg-primary/20 text-center text-[8px] leading-5 text-primary/60">
+                                        Join
+                                    </div>
+                                    <div
+                                        class="h-5 flex-1 rounded bg-muted text-center text-[8px] leading-5 text-muted-foreground">
+                                        Cancel
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -223,24 +402,17 @@
 </template>
 
 <script setup>
-    import { computed, ref } from 'vue';
+    import { computed } from 'vue';
     import { useI18n } from 'vue-i18n';
     import { useRouter } from 'vue-router';
     import { toast } from 'vue-sonner';
 
-    import { showAvatarDialog } from '@/coordinators/avatarCoordinator';
-    import { showGroupDialog } from '@/coordinators/groupCoordinator';
-    import { showWorldDialog } from '@/coordinators/worldCoordinator';
-    import { Button } from '@/components/ui/button';
     import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-    import { Input } from '@/components/ui/input';
     import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
     import configRepository from '@/services/config';
     import { resetOobe } from '@/services/oobe';
     import { getLatestWhatsNewRelease } from '@/shared/constants/whatsNewReleases';
     import { useAppearanceSettingsStore } from '@/stores/settings/appearance';
-    import { useInstanceStore } from '@/stores/instance';
-    import { useLaunchStore } from '@/stores/launch';
     import { useModalStore } from '@/stores/modal';
     import { useUserStore } from '@/stores/user';
     import { useVRCXUpdaterStore } from '@/stores/vrcxUpdater';
@@ -260,8 +432,6 @@
     const modalStore = useModalStore();
     const userStore = useUserStore();
     const appearanceSettings = useAppearanceSettingsStore();
-    const instanceStore = useInstanceStore();
-    const launchStore = useLaunchStore();
     const vrcxUpdater = useVRCXUpdaterStore();
 
     const currentUser = computed(() => userStore.currentUser ?? {});
@@ -686,128 +856,6 @@
             label: t(tk('dialogs.update.label')),
             desc: t(tk('dialogs.update.desc')),
             run: showVrcxUpdateDialog
-        }
-    ]);
-
-    // --- Dialog Previews ---
-
-    function previewEditProfile() {
-        userStore.showEditProfileDialog();
-    }
-
-    function previewUserDialog() {
-        if (userStore.currentUser?.id) {
-            userStore.setUserDialogVisible(true, userStore.currentUser.id);
-        } else {
-            toast.warning(t(tk('previews.no_user')));
-        }
-    }
-
-    const groupIdInput = ref('');
-    const worldIdInput = ref('');
-    const avatarIdInput = ref('');
-    const launchTagInput = ref('');
-
-    function previewGroupDialog() {
-        const id = groupIdInput.value.trim();
-        if (!id) {
-            toast.warning(t(tk('previews.no_id')));
-            return;
-        }
-        showGroupDialog(id);
-    }
-
-    function previewWorldDialog() {
-        const tag = worldIdInput.value.trim();
-        if (!tag) {
-            toast.warning(t(tk('previews.no_id')));
-            return;
-        }
-        showWorldDialog(tag);
-    }
-
-    function previewAvatarDialog() {
-        const id = avatarIdInput.value.trim();
-        if (!id) {
-            toast.warning(t(tk('previews.no_id')));
-            return;
-        }
-        showAvatarDialog(id);
-    }
-
-    function previewLaunchDialog() {
-        const tag = launchTagInput.value.trim();
-        if (!tag) {
-            toast.warning(t(tk('previews.no_id')));
-            return;
-        }
-        launchStore.showLaunchDialog(tag);
-    }
-
-    function previewPreviousInstances() {
-        instanceStore.showPreviousInstancesInfoDialog('');
-    }
-
-    const previewItems = computed(() => [
-        {
-            id: 'edit_profile',
-            label: t(tk('previews.edit_profile.label')),
-            desc: t(tk('previews.edit_profile.desc')),
-            run: previewEditProfile
-        },
-        {
-            id: 'user_dialog',
-            label: t(tk('previews.user_dialog.label')),
-            desc: t(tk('previews.user_dialog.desc')),
-            run: previewUserDialog
-        },
-        {
-            id: 'group_dialog',
-            label: t(tk('previews.group_dialog.label')),
-            desc: t(tk('previews.group_dialog.desc')),
-            run: previewGroupDialog,
-            inputLabel: 'groupId',
-            inputValue: groupIdInput,
-            inputPlaceholder: 'grp_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-        },
-        {
-            id: 'world_dialog',
-            label: t(tk('previews.world_dialog.label')),
-            desc: t(tk('previews.world_dialog.desc')),
-            run: previewWorldDialog,
-            inputLabel: 'worldId / tag',
-            inputValue: worldIdInput,
-            inputPlaceholder: 'wrld_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-        },
-        {
-            id: 'avatar_dialog',
-            label: t(tk('previews.avatar_dialog.label')),
-            desc: t(tk('previews.avatar_dialog.desc')),
-            run: previewAvatarDialog,
-            inputLabel: 'avatarId',
-            inputValue: avatarIdInput,
-            inputPlaceholder: 'avtr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-        },
-        {
-            id: 'launch_dialog',
-            label: t(tk('previews.launch_dialog.label')),
-            desc: t(tk('previews.launch_dialog.desc')),
-            run: previewLaunchDialog,
-            inputLabel: 'location tag',
-            inputValue: launchTagInput,
-            inputPlaceholder: 'wrld_xxxx:12345~REGION(us)'
-        },
-        {
-            id: 'previous_instances',
-            label: t(tk('previews.previous_instances.label')),
-            desc: t(tk('previews.previous_instances.desc')),
-            run: previewPreviousInstances
-        },
-        {
-            id: 'data_export',
-            label: t(tk('previews.data_export.label')),
-            desc: t(tk('previews.data_export.desc')),
-            run: () => { userStore.userDialog.dataExportDialog = true; }
         }
     ]);
 </script>
