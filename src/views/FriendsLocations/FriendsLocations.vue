@@ -36,6 +36,14 @@
                                         </FieldContent>
                                     </Field>
                                     <Field orientation="horizontal" class="friend-view__settings-row">
+                                        <FieldLabel class="friend-view__settings-label">{{
+                                            t('view.settings.appearance.appearance.show_cosmetics')
+                                        }}</FieldLabel>
+                                        <FieldContent class="items-end">
+                                            <Switch v-model="showCosmetics" />
+                                        </FieldContent>
+                                    </Field>
+                                    <Field orientation="horizontal" class="friend-view__settings-row">
                                         <FieldLabel class="friend-view__settings-label">
                                             {{ t('view.friends_locations.scale') }}
                                         </FieldLabel>
@@ -125,6 +133,7 @@
                                     :friend="card.friend"
                                     :card-scale="cardScale"
                                     :card-spacing="cardSpacing"
+                                    :show-cosmetics="showCosmetics"
                                     :display-instance-info="card.displayInstanceInfo" />
                             </div>
                         </template>
@@ -255,6 +264,16 @@
         set: (value) => {
             showSameInstanceBase.value = value;
             configRepository.setBool('VRCX_FriendLocationShowSameInstance', value);
+        }
+    });
+
+    const showCosmeticsBase = ref(true);
+
+    const showCosmetics = computed({
+        get: () => showCosmeticsBase.value,
+        set: (value) => {
+            showCosmeticsBase.value = value;
+            configRepository.setBool('VRCX_FriendLocationShowCosmetics', value);
         }
     });
 
@@ -889,10 +908,11 @@
      */
     async function loadInitialSettings() {
         try {
-            const [storedScale, storedSpacing, storedShowSameInstance] = await Promise.all([
+            const [storedScale, storedSpacing, storedShowSameInstance, storedShowCosmetics] = await Promise.all([
                 configRepository.getString('VRCX_FriendLocationCardScale', '1'),
                 configRepository.getString('VRCX_FriendLocationCardSpacing', '1'),
-                configRepository.getBool('VRCX_FriendLocationShowSameInstance', null)
+                configRepository.getBool('VRCX_FriendLocationShowSameInstance', null),
+                configRepository.getBool('VRCX_FriendLocationShowCosmetics', true)
             ]);
 
             const parsedScale = parseFloat(storedScale);
@@ -908,6 +928,7 @@
             if (storedShowSameInstance !== null && storedShowSameInstance !== undefined) {
                 showSameInstanceBase.value = Boolean(storedShowSameInstance);
             }
+            showCosmeticsBase.value = Boolean(storedShowCosmetics);
         } catch (error) {
             console.error('Failed to load Friend Location preferences', error);
         } finally {

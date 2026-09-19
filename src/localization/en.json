@@ -1142,7 +1142,10 @@
                     "vrc_profile_backgrounds_opacity": "Profile Background Opacity",
                     "use_advanced_material": "Use Advanced Material (Beta)",
                     "use_advanced_material_description": "Add frosted-glass blur and edge highlights to dialogs, popovers and menus, with ambient lighting at the bottom of the main window.",
-                    "theme_color_adapting": "Currently adapting"
+                    "theme_color_adapting": "Currently adapting",
+                    "vrc_profile_cosmetics": "Profile Cosmetics",
+                    "cosmetics_description": "Shows icon frame and profile effects",
+                    "show_cosmetics": "Show Cosmetics"
                 },
                 "display": {
                     "header": "Display"
@@ -1761,7 +1764,11 @@
             "profile_background_type_image": "Image",
             "profile_background_type_none": "None",
             "profile_theme": "Profile Theme",
-            "theme_name_placeholder": "Theme name..."
+            "theme_name_placeholder": "Theme name...",
+            "nameplate_effect": "Nameplate Effect",
+            "profile_effect": "Profile Effect",
+            "icon_frame": "Icon Frame",
+            "select_effect": "Select an effect"
         },
         "user": {
             "status": {

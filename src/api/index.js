@@ -10,6 +10,7 @@ import avatarModerationRequest from './avatarModeration';
 import avatarRequest from './avatar';
 import favoriteRequest from './favorite';
 import friendRequest from './friend';
+import cosmeticsRequest from './cosmetics';
 import groupRequest from './group';
 import imageRequest from './image';
 import instanceRequest from './instance';
@@ -42,6 +43,7 @@ window.request = {
     miscRequest,
     authRequest,
     groupRequest,
+    cosmeticsRequest,
     inventoryRequest,
     propRequest,
     imageRequest,
@@ -65,6 +67,7 @@ export {
     miscRequest,
     authRequest,
     groupRequest,
+    cosmeticsRequest,
     inventoryRequest,
     propRequest,
     imageRequest,

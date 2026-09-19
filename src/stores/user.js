@@ -13,7 +13,7 @@ import {
     replaceBioSymbols
 } from '../shared/utils';
 import { getAllUserMemos } from '../coordinators/memoCoordinator';
-import { instanceRequest, userRequest } from '../api';
+import { cosmeticsRequest, instanceRequest, userRequest } from '../api';
 import { AppDebug } from '../services/appConfig';
 import { database } from '../services/database';
 import { runUpdateCurrentUserLocationFlow } from '../coordinators/locationCoordinator';
@@ -309,7 +309,10 @@ export const useUserStore = defineStore('User', () => {
         backgroundType: 'default',
         backgroundTextureId: '',
         backgroundGradientBottom: '',
-        backgroundGradientTop: ''
+        backgroundGradientTop: '',
+        nameplateEffect: '',
+        profileEffect: '',
+        iconFrame: ''
     });
 
     const currentTravelers = reactive(new Map());
@@ -330,6 +333,9 @@ export const useUserStore = defineStore('User', () => {
 
     const cachedUsers = shallowReactive(new Map());
     const cachedUserIdsByDisplayName = shallowReactive(new Map());
+    const cachedProfileEffects = shallowReactive(new Map());
+    const cachedIconFrames = shallowReactive(new Map());
+    const cachedNameplateEffects = shallowReactive(new Map());
 
     function addCachedUserDisplayNameEntry(displayName, userId) {
         if (!displayName || !userId) {
@@ -406,10 +412,36 @@ export const useUserStore = defineStore('User', () => {
         () => currentUser.value.$isVRCPlus || AppDebug.debugVrcPlus
     );
 
+    async function getCosmetics() {
+        try {
+            const [profileEffects, iconFrames, nameplateEffects] = await Promise.all([
+                cosmeticsRequest.getProfileEffects(),
+                cosmeticsRequest.getIconFrames(),
+                cosmeticsRequest.gatNameplateEffects()
+            ]);
+            cachedProfileEffects.clear();
+            cachedIconFrames.clear();
+            cachedNameplateEffects.clear();
+            for (const item of profileEffects.json) {
+                cachedProfileEffects.set(item.id, item);
+            }
+            for (const item of iconFrames.json) {
+                cachedIconFrames.set(item.id, item);
+            }
+            for (const item of nameplateEffects.json) {
+                cachedNameplateEffects.set(item.id, item);
+            }
+        } catch (e) {
+            console.warn('Failed to fetch cosmetics:', e);
+        }
+    }
+
     watch(
         () => watchState.isLoggedIn,
         (isLoggedIn) => {
-            if (!isLoggedIn) {
+            if (isLoggedIn) {
+                getCosmetics();
+            } else {
                 currentTravelers.clear();
                 showUserDialogHistory.clear();
                 state.instancePlayerCount.clear();
@@ -865,6 +897,9 @@ export const useUserStore = defineStore('User', () => {
             D.backgroundTextureId = ref.backgroundTextureId;
             D.backgroundGradientBottom = ref.backgroundGradientBottom;
             D.backgroundGradientTop = ref.backgroundGradientTop;
+            D.nameplateEffect = ref.nameplateEffect;
+            D.profileEffect = ref.profileEffect;
+            D.iconFrame = ref.iconFrame;
         });
 
         D.visible = true;
@@ -996,6 +1031,9 @@ export const useUserStore = defineStore('User', () => {
         cachedUsers,
         cachedUserIdsByDisplayName,
         isLocalUserVrcPlusSupporter,
+        cachedProfileEffects,
+        cachedIconFrames,
+        cachedNameplateEffects,
         applyUserLanguage,
         applyPresenceLocation,
         applyUserDialogLocation,
@@ -1024,6 +1062,7 @@ export const useUserStore = defineStore('User', () => {
         toggleAllowBooping,
         toggleAvatarCopying,
         changePassword,
-        changeContentFilterSettings
+        changeContentFilterSettings,
+        getCosmetics
     };
 });

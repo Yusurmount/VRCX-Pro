@@ -1,5 +1,6 @@
 <template>
-    <div class="rounded-xl bg-muted/80 overflow-hidden flex flex-col">
+    <div class="rounded-xl bg-muted/80 overflow-hidden flex flex-col relative">
+        <ProfileEffect :profile-effect="userDialog.ref.profileEffect" class="z-1" />
         <div class="relative aspect-17/6">
             <div
                 v-if="
@@ -37,8 +38,11 @@
                     @click.stop="showFullscreenImageDialog(userDialog.publicProfileRef?.iconUrl)"
                     @error="userIconError = true"
                     loading="lazy" />
+                <IconFrame :icon-frame="userDialog.ref.iconFrame" class="z-2" />
             </div>
         </div>
+
+        <NameplateEffect :nameplate-effect="userDialog.ref.nameplateEffect" />
 
         <div class="flex flex-col gap-2 px-3 pb-3 pt-15">
             <div class="flex items-start gap-1.5">
@@ -446,6 +450,9 @@
     import { useGalleryStore, useUserStore } from '../../../stores';
     import { Badge } from '../../ui/badge';
     import { Checkbox } from '../../ui/checkbox';
+    import IconFrame from '../../IconFrame.vue';
+    import NameplateEffect from '../../NameplateEffect.vue';
+    import ProfileEffect from '../../ProfileEffect.vue';
 
     import UserActionDropdown from './UserActionDropdown.vue';
     import { showGroupDialog } from '@/coordinators/groupCoordinator';
