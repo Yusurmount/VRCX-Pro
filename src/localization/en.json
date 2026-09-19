@@ -1571,6 +1571,8 @@
                         },
                         "previews": {
                             "no_user": "No current user available. Please log in first.",
+                            "no_id": "Please enter a valid ID.",
+                            "open": "Open",
                             "edit_profile": {
                                 "label": "Edit Profile Dialog",
                                 "desc": "Open the edit profile dialog for the current user."
@@ -1578,6 +1580,26 @@
                             "user_dialog": {
                                 "label": "User Dialog",
                                 "desc": "Open the user dialog for the current user."
+                            },
+                            "group_dialog": {
+                                "label": "Group Dialog",
+                                "desc": "Open a group dialog by group ID."
+                            },
+                            "world_dialog": {
+                                "label": "World Dialog",
+                                "desc": "Open a world dialog by world ID or location tag."
+                            },
+                            "avatar_dialog": {
+                                "label": "Avatar Dialog",
+                                "desc": "Open an avatar dialog by avatar ID."
+                            },
+                            "launch_dialog": {
+                                "label": "Launch Dialog",
+                                "desc": "Open the launch/join instance dialog."
+                            },
+                            "previous_instances": {
+                                "label": "Previous Instances",
+                                "desc": "Open the previous instances info dialog."
                             },
                             "data_export": {
                                 "label": "Data Export Dialog",

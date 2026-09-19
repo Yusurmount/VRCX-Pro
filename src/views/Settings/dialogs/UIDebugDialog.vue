@@ -190,15 +190,31 @@
                 </TabsContent>
 
                 <TabsContent value="previews">
-                    <div class="grid gap-3">
-                        <button
+                    <div class="space-y-3">
+                        <div
                             v-for="item in previewItems"
                             :key="item.id"
-                            class="ui-debug-row border-border bg-card hover:border-ring hover:bg-accent"
-                            @click="item.run">
-                            <span class="ui-debug-name text-foreground">{{ item.label }}</span>
-                            <span class="ui-debug-desc text-muted-foreground">{{ item.desc }}</span>
-                        </button>
+                            class="rounded-md border border-border bg-card p-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="min-w-0 flex-1">
+                                    <span class="ui-debug-name text-foreground">{{ item.label }}</span>
+                                    <p class="ui-debug-desc text-muted-foreground">{{ item.desc }}</p>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    :disabled="item.disabled"
+                                    @click="item.run">
+                                    {{ item.buttonLabel ?? t(tk('previews.open')) }}
+                                </Button>
+                            </div>
+                            <div v-if="item.inputLabel" class="mt-2">
+                                <Input
+                                    v-model="item.inputValue.value"
+                                    :placeholder="item.inputPlaceholder"
+                                    class="h-8 text-xs" />
+                            </div>
+                        </div>
                     </div>
                 </TabsContent>
             </Tabs>
@@ -207,17 +223,24 @@
 </template>
 
 <script setup>
-    import { computed } from 'vue';
+    import { computed, ref } from 'vue';
     import { useI18n } from 'vue-i18n';
     import { useRouter } from 'vue-router';
     import { toast } from 'vue-sonner';
 
+    import { showAvatarDialog } from '@/coordinators/avatarCoordinator';
+    import { showGroupDialog } from '@/coordinators/groupCoordinator';
+    import { showWorldDialog } from '@/coordinators/worldCoordinator';
+    import { Button } from '@/components/ui/button';
     import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+    import { Input } from '@/components/ui/input';
     import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
     import configRepository from '@/services/config';
     import { resetOobe } from '@/services/oobe';
     import { getLatestWhatsNewRelease } from '@/shared/constants/whatsNewReleases';
     import { useAppearanceSettingsStore } from '@/stores/settings/appearance';
+    import { useInstanceStore } from '@/stores/instance';
+    import { useLaunchStore } from '@/stores/launch';
     import { useModalStore } from '@/stores/modal';
     import { useUserStore } from '@/stores/user';
     import { useVRCXUpdaterStore } from '@/stores/vrcxUpdater';
@@ -237,6 +260,8 @@
     const modalStore = useModalStore();
     const userStore = useUserStore();
     const appearanceSettings = useAppearanceSettingsStore();
+    const instanceStore = useInstanceStore();
+    const launchStore = useLaunchStore();
     const vrcxUpdater = useVRCXUpdaterStore();
 
     const currentUser = computed(() => userStore.currentUser ?? {});
@@ -678,6 +703,51 @@
         }
     }
 
+    const groupIdInput = ref('');
+    const worldIdInput = ref('');
+    const avatarIdInput = ref('');
+    const launchTagInput = ref('');
+
+    function previewGroupDialog() {
+        const id = groupIdInput.value.trim();
+        if (!id) {
+            toast.warning(t(tk('previews.no_id')));
+            return;
+        }
+        showGroupDialog(id);
+    }
+
+    function previewWorldDialog() {
+        const tag = worldIdInput.value.trim();
+        if (!tag) {
+            toast.warning(t(tk('previews.no_id')));
+            return;
+        }
+        showWorldDialog(tag);
+    }
+
+    function previewAvatarDialog() {
+        const id = avatarIdInput.value.trim();
+        if (!id) {
+            toast.warning(t(tk('previews.no_id')));
+            return;
+        }
+        showAvatarDialog(id);
+    }
+
+    function previewLaunchDialog() {
+        const tag = launchTagInput.value.trim();
+        if (!tag) {
+            toast.warning(t(tk('previews.no_id')));
+            return;
+        }
+        launchStore.showLaunchDialog(tag);
+    }
+
+    function previewPreviousInstances() {
+        instanceStore.showPreviousInstancesInfoDialog('');
+    }
+
     const previewItems = computed(() => [
         {
             id: 'edit_profile',
@@ -692,10 +762,52 @@
             run: previewUserDialog
         },
         {
+            id: 'group_dialog',
+            label: t(tk('previews.group_dialog.label')),
+            desc: t(tk('previews.group_dialog.desc')),
+            run: previewGroupDialog,
+            inputLabel: 'groupId',
+            inputValue: groupIdInput,
+            inputPlaceholder: 'grp_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+        },
+        {
+            id: 'world_dialog',
+            label: t(tk('previews.world_dialog.label')),
+            desc: t(tk('previews.world_dialog.desc')),
+            run: previewWorldDialog,
+            inputLabel: 'worldId / tag',
+            inputValue: worldIdInput,
+            inputPlaceholder: 'wrld_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+        },
+        {
+            id: 'avatar_dialog',
+            label: t(tk('previews.avatar_dialog.label')),
+            desc: t(tk('previews.avatar_dialog.desc')),
+            run: previewAvatarDialog,
+            inputLabel: 'avatarId',
+            inputValue: avatarIdInput,
+            inputPlaceholder: 'avtr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+        },
+        {
+            id: 'launch_dialog',
+            label: t(tk('previews.launch_dialog.label')),
+            desc: t(tk('previews.launch_dialog.desc')),
+            run: previewLaunchDialog,
+            inputLabel: 'location tag',
+            inputValue: launchTagInput,
+            inputPlaceholder: 'wrld_xxxx:12345~REGION(us)'
+        },
+        {
+            id: 'previous_instances',
+            label: t(tk('previews.previous_instances.label')),
+            desc: t(tk('previews.previous_instances.desc')),
+            run: previewPreviousInstances
+        },
+        {
             id: 'data_export',
             label: t(tk('previews.data_export.label')),
             desc: t(tk('previews.data_export.desc')),
-            run: () => userStore.userDialog.dataExportDialog = true
+            run: () => { userStore.userDialog.dataExportDialog = true; }
         }
     ]);
 </script>

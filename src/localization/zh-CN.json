@@ -1442,7 +1442,9 @@
                             "notifications": "通知",
                             "onboarding": "引导",
                             "dialogs": "对话框",
-                            "components": "组件"
+                            "components": "组件",
+                            "app_state": "应用状态",
+                            "previews": "预览"
                         },
                         "gallery": {
                             "hint": "VRCX 组件库的可视化展示。"
@@ -1558,6 +1560,48 @@
                             "update": {
                                 "label": "VRCX 更新对话框",
                                 "desc": "显示 VRCX 更新对话框。"
+                            }
+                        },
+                        "app_state": {
+                            "current_user": "当前用户",
+                            "appearance_settings": "外观设置",
+                            "store_counts": "Store 缓存统计"
+                        },
+                        "previews": {
+                            "no_user": "当前没有已登录的用户，请先登录。",
+                            "no_id": "请输入有效的 ID。",
+                            "open": "打开",
+                            "edit_profile": {
+                                "label": "编辑资料对话框",
+                                "desc": "打开当前用户的编辑资料对话框。"
+                            },
+                            "user_dialog": {
+                                "label": "用户对话框",
+                                "desc": "打开当前用户的用户对话框。"
+                            },
+                            "group_dialog": {
+                                "label": "群组对话框",
+                                "desc": "通过群组 ID 打开群组对话框。"
+                            },
+                            "world_dialog": {
+                                "label": "世界对话框",
+                                "desc": "通过世界 ID 或位置标签打开世界对话框。"
+                            },
+                            "avatar_dialog": {
+                                "label": "模型对话框",
+                                "desc": "通过模型 ID 打开模型对话框。"
+                            },
+                            "launch_dialog": {
+                                "label": "启动对话框",
+                                "desc": "打开启动/加入实例对话框。"
+                            },
+                            "previous_instances": {
+                                "label": "历史实例",
+                                "desc": "打开历史实例信息对话框。"
+                            },
+                            "data_export": {
+                                "label": "数据导出对话框",
+                                "desc": "打开数据导出对话框。"
                             }
                         },
                         "open": {

@@ -1441,7 +1441,9 @@
                             "notifications": "通知",
                             "onboarding": "引導",
                             "dialogs": "對話框",
-                            "components": "組件"
+                            "components": "組件",
+                            "app_state": "應用狀態",
+                            "previews": "預覽"
                         },
                         "gallery": {
                             "hint": "VRCX 組件庫的視覺化展示。"
@@ -1557,6 +1559,48 @@
                             "update": {
                                 "label": "VRCX 更新對話框",
                                 "desc": "顯示 VRCX 更新對話框。"
+                            }
+                        },
+                        "app_state": {
+                            "current_user": "當前使用者",
+                            "appearance_settings": "外觀設定",
+                            "store_counts": "Store 快取統計"
+                        },
+                        "previews": {
+                            "no_user": "當前沒有已登入的使用者，請先登入。",
+                            "no_id": "請輸入有效的 ID。",
+                            "open": "開啟",
+                            "edit_profile": {
+                                "label": "編輯資料對話框",
+                                "desc": "開啟當前使用者的編輯資料對話框。"
+                            },
+                            "user_dialog": {
+                                "label": "使用者對話框",
+                                "desc": "開啟當前使用者的使用者對話框。"
+                            },
+                            "group_dialog": {
+                                "label": "群組對話框",
+                                "desc": "透過群組 ID 開啟群組對話框。"
+                            },
+                            "world_dialog": {
+                                "label": "世界對話框",
+                                "desc": "透過世界 ID 或位置標籤開啟世界對話框。"
+                            },
+                            "avatar_dialog": {
+                                "label": "模型對話框",
+                                "desc": "透過模型 ID 開啟模型對話框。"
+                            },
+                            "launch_dialog": {
+                                "label": "啟動對話框",
+                                "desc": "開啟啟動/加入實例對話框。"
+                            },
+                            "previous_instances": {
+                                "label": "歷史實例",
+                                "desc": "開啟歷史實例資訊對話框。"
+                            },
+                            "data_export": {
+                                "label": "資料匯出對話框",
+                                "desc": "開啟資料匯出對話框。"
                             }
                         },
                         "open": {
