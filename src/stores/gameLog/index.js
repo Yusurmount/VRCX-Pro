@@ -35,7 +35,7 @@ const SESSIONS_EVENT_FILTER_TYPES = [
     'VideoPlay'
 ];
 const SESSIONS_DATE_RANGE_MAX_DAYS = 7;
-const SESSIONS_GLOBAL_SEARCH_INITIAL_LOCATIONS = 500;
+const SESSIONS_GLOBAL_SEARCH_INITIAL_LOCATIONS = 50;
 const SESSIONS_SEARCH_BATCH_ATTEMPTS = 3;
 
 export const useGameLogStore = defineStore('GameLog', () => {
@@ -77,6 +77,7 @@ export const useGameLogStore = defineStore('GameLog', () => {
     const sessionsDateTo = ref('');
     const sessionsRawLocations = shallowRef([]);
     const sessionsRawEvents = shallowRef([]);
+    let sessionsReloadPending = false;
     const sessionsEventFilterSelection = computed({
         get() {
             return sessionsEventFilters.value.length === 0
@@ -752,6 +753,9 @@ export const useGameLogStore = defineStore('GameLog', () => {
      * Rebuild sessions output from raw data (immediate).
      */
     function rebuildSessions() {
+        if (sessionsReloadPending) {
+            return;
+        }
         const events = filterSessionsEventsByFilters(sessionsRawEvents.value);
         const result = buildGameLogSessions(sessionsRawLocations.value, events);
         sessionsSegments.value = applySessionsSearchFilter(
@@ -874,6 +878,14 @@ export const useGameLogStore = defineStore('GameLog', () => {
         };
     }
 
+    async function finishSessionsLoad() {
+        sessionsLoading.value = false;
+        if (sessionsReloadPending) {
+            sessionsReloadPending = false;
+            await loadSessionsSegments();
+        }
+    }
+
     /**
      * Load the initial batch of session segments.
      * Uses maxTableSize as a total-event budget: divide by ~50 to estimate
@@ -881,7 +893,10 @@ export const useGameLogStore = defineStore('GameLog', () => {
      * the oldest to ensure the boundary has complete event data.
      */
     async function loadSessionsSegments() {
-        if (sessionsLoading.value) return;
+        if (sessionsLoading.value) {
+            sessionsReloadPending = true;
+            return;
+        }
         sessionsLoading.value = true;
         try {
             sessionsCursor.value = null;
@@ -1027,7 +1042,7 @@ export const useGameLogStore = defineStore('GameLog', () => {
             sessionsCursor.value = locations[locations.length - 1].id;
             sessionsHasMore.value = hasExtraTail;
         } finally {
-            sessionsLoading.value = false;
+            await finishSessionsLoad();
         }
     }
 
@@ -1105,7 +1120,7 @@ export const useGameLogStore = defineStore('GameLog', () => {
                         moreLocations[moreLocations.length - 1].created_at
                     ) >= toSessionsEpoch(sessionsDateFrom.value));
         } finally {
-            sessionsLoading.value = false;
+            await finishSessionsLoad();
         }
     }
 
@@ -1153,7 +1168,7 @@ export const useGameLogStore = defineStore('GameLog', () => {
             sessionsCursor.value = locations[locations.length - 1].id;
             sessionsHasMore.value = true;
         } finally {
-            sessionsLoading.value = false;
+            await finishSessionsLoad();
         }
     }
 
