@@ -6,7 +6,6 @@
             id="x-app"
             class="flex w-screen h-screen overflow-hidden cursor-default [&>.x-container]:pt-[15px]"
             :class="{ 'pt-7': isMacOS }">
-            <AdvancedMaterialBackground></AdvancedMaterialBackground>
             <RouterView></RouterView>
             <Toaster position="top-center" :theme="theme"></Toaster>
 
@@ -37,7 +36,6 @@
     import { initNoty } from './plugins/noty';
 
     import AlertDialogModal from './components/ui/alert-dialog/AlertDialogModal.vue';
-    import AdvancedMaterialBackground from './components/AdvancedMaterialBackground.vue';
     import DatabaseUpgradeDialog from './components/dialogs/DatabaseUpgradeDialog.vue';
     import MacOSTitleBar from './components/MacOSTitleBar.vue';
     import OpenExternalLinkDialog from './components/dialogs/OpenExternalLinkDialog.vue';

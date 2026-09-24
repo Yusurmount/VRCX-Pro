@@ -71,18 +71,9 @@
                             <RefreshCw v-else />
                         </Button>
                     </TooltipWrapper>
-                    <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showExportDialog = true">
-                        <Download class="h-4 w-4" />
-                    </Button>
                 </div>
             </template>
         </DataTableLayout>
-        <DataExportDialog
-            v-model:visible="showExportDialog"
-            :title="t('view.notification.header')"
-            default-file-name="notifications"
-            :sheet-name="t('view.notification.header')"
-            :get-data="getExportData" />
         <SendInviteResponseDialog
             v-model:send-invite-response-dialog="sendInviteResponseDialog"
             v-model:sendInviteResponseDialogVisible="sendInviteResponseDialogVisible" />
@@ -97,7 +88,7 @@
     import { computed, ref, watch } from 'vue';
     import { Button } from '@/components/ui/button';
     import { InputGroupField } from '@/components/ui/input-group';
-    import { RefreshCw, Download } from 'lucide-vue-next';
+    import { RefreshCw } from 'lucide-vue-next';
     import { Spinner } from '@/components/ui/spinner';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
@@ -116,7 +107,6 @@
     import { createColumns } from './columns.jsx';
     import { useVrcxVueTable } from '../../lib/table/useVrcxVueTable';
     import { TooltipWrapper } from '../../components/ui/tooltip';
-    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
 
     import SendInviteRequestResponseDialog from './dialogs/SendInviteRequestResponseDialog.vue';
     import SendInviteResponseDialog from './dialogs/SendInviteResponseDialog.vue';
@@ -139,12 +129,6 @@
     const { showFullscreenImageDialog } = useGalleryStore();
     const appearanceSettingsStore = useAppearanceSettingsStore();
     const vrcxStore = useVrcxStore();
-
-    const showExportDialog = ref(false);
-
-    function getExportData() {
-        return notificationTable.value.data ?? [];
-    }
 
     const { t } = useI18n();
 

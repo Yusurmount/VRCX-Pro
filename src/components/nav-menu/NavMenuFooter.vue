@@ -10,8 +10,8 @@
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="right" align="start" class="w-56">
-                        <DropdownMenuItem @click="emit('show-changelog')">
-                            <span>{{ t('nav_menu.changelog') }}</span>
+                        <DropdownMenuItem @click="emit('show-vrcx-update-dialog')">
+                            <span>{{ t('nav_menu.check_updates') }}</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -68,7 +68,6 @@
                                     v-for="theme in themes"
                                     :key="theme"
                                     :model-value="themeMode === theme"
-                                    :disabled="isAdvancedMaterial && theme === 'midnight'"
                                     indicator-position="right"
                                     @select="emit('theme-select', theme)">
                                     <span>{{ themeDisplayName(theme) }}</span>
@@ -85,14 +84,14 @@
                                             <button
                                                 type="button"
                                                 :disabled="isApplyingThemeColor"
-                                                :aria-disabled="isAdvancedMaterial || isApplyingThemeColor"
+                                                :aria-disabled="isApplyingThemeColor"
                                                 :aria-pressed="currentThemeColor === theme.key"
                                                 :aria-label="themeColorTooltip(theme)"
                                                 :title="themeColorTooltip(theme)"
                                                 @click="handleThemeColorClick(theme)"
                                                 class="h-3.5 w-3.5 shrink-0 rounded-sm transition-transform hover:scale-125 cursor-pointer"
                                                 :class="
-                                                    isAdvancedMaterial || isApplyingThemeColor
+                                                    isApplyingThemeColor
                                                         ? 'opacity-50 cursor-not-allowed hover:scale-100'
                                                         : ''
                                                 "
@@ -184,10 +183,6 @@
             type: Boolean,
             default: false
         },
-        isAdvancedMaterial: {
-            type: Boolean,
-            default: false
-        },
         hasPendingUpdate: {
             type: Boolean,
             default: false
@@ -239,7 +234,6 @@
     });
 
     const emit = defineEmits([
-        'show-changelog',
         'support-link',
         'toggle-theme',
         'show-vrcx-update-dialog',
@@ -257,14 +251,10 @@
     const router = useRouter();
     const isSettingsRoute = ref(false);
 
-    // 高级材质激活时,主题色板禁用,悬停提示"正在适配"
-    const themeColorTooltip = (theme) =>
-        props.isAdvancedMaterial
-            ? t('view.settings.appearance.appearance.theme_color_adapting')
-            : props.themeColorDisplayName(theme);
+    const themeColorTooltip = (theme) => props.themeColorDisplayName(theme);
 
     const handleThemeColorClick = (theme) => {
-        if (props.isAdvancedMaterial || props.isApplyingThemeColor) {
+        if (props.isApplyingThemeColor) {
             return;
         }
         emit('theme-color-select', theme);

@@ -1,8 +1,10 @@
 import { ref, computed } from 'vue';
 import dayjs from 'dayjs';
+import { useUserStore } from '../../../stores';
 import { database } from '../../../services/database';
 
 export function useTimelineComparison() {
+    const userStore = useUserStore();
     const isLoading = ref(false);
     const rawResults = ref([]);
     const friendAId = ref(null);
@@ -105,6 +107,13 @@ export function useTimelineComparison() {
         friendBId.value = userIdB;
         rawResults.value = [];
         try {
+            const contextReady = await database.ensureUserContext(
+                userStore.currentUser?.id
+            );
+            if (!contextReady) {
+                rawResults.value = [];
+                return;
+            }
             rawResults.value = await database.getCoInstanceHistoryBetweenFriends(
                 userIdA,
                 userIdB

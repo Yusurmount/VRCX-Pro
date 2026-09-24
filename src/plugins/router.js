@@ -118,8 +118,7 @@ const routes = [
             {
                 path: 'charts/social-network',
                 name: 'charts-social-network',
-                component: () =>
-                    import('./../views/Charts/components/SocialNetworkGraph.vue')
+                redirect: { name: 'charts-mutual' }
             },
             {
                 path: 'charts/intimacy',
@@ -132,12 +131,6 @@ const routes = [
                 name: 'charts-timeline-comparison',
                 component: () =>
                     import('./../views/Charts/components/TimelineComparison.vue')
-            },
-            {
-                path: 'charts/group-recommendations',
-                name: 'charts-group-recommendations',
-                component: () =>
-                    import('./../views/Charts/components/GroupRecommendations.vue')
             },
             {
                 path: 'charts/avatar-usage',

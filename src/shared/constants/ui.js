@@ -121,11 +121,39 @@ const navDefinitions = [
         routeName: 'charts-hot-worlds'
     },
     {
+        key: 'charts-avatar-usage',
+        icon: 'ri-user-star-line',
+        tooltip: 'view.charts.avatar_usage.tab_label',
+        labelKey: 'view.charts.avatar_usage.tab_label',
+        routeName: 'charts-avatar-usage'
+    },
+    {
+        key: 'charts-report-export',
+        icon: 'ri-file-download-line',
+        tooltip: 'view.charts.report_export.tab_label',
+        labelKey: 'view.charts.report_export.tab_label',
+        routeName: 'charts-report-export'
+    },
+    {
         key: 'charts-timeline',
         icon: 'ri-time-line',
         tooltip: 'view.charts.relationship_timeline.header',
         labelKey: 'view.charts.relationship_timeline.header',
         routeName: 'charts-timeline'
+    },
+    {
+        key: 'charts-intimacy',
+        icon: 'ri-heart-pulse-line',
+        tooltip: 'view.charts.intimacy.header',
+        labelKey: 'view.charts.intimacy.header',
+        routeName: 'charts-intimacy'
+    },
+    {
+        key: 'charts-timeline-comparison',
+        icon: 'ri-line-chart-line',
+        tooltip: 'view.charts.timeline_comparison.header',
+        labelKey: 'view.charts.timeline_comparison.header',
+        routeName: 'charts-timeline-comparison'
     },
     {
         key: 'tools',

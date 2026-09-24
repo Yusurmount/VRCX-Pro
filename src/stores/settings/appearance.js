@@ -116,16 +116,15 @@ export const useAppearanceSettingsStore = defineStore(
                 'charts-instance',
                 'charts-mutual',
                 'charts-hot-worlds',
-                'charts-two-person'
+                'charts-two-person',
+                'charts-intimacy',
+                'charts-timeline-comparison'
             ].includes(currentRouteName);
         });
 
         const isDataTableStriped = ref(false);
         const accessibleStatusIndicators = ref(false);
         const useOfficialStatusColors = ref(true);
-        const useAdvancedMaterial = ref(false);
-        // 启用高级材质时被强制遮蔽的主题模式（midnight），关闭时恢复
-        const themeModeBackup = ref('');
         const showNewDashboardButton = ref(true);
         const tableLimitsDialog = ref({
             visible: false,
@@ -408,17 +407,6 @@ export const useAppearanceSettingsStore = defineStore(
             applyAccessibleStatusClass();
             applyOfficialStatusColorsClass();
 
-            useAdvancedMaterial.value = await configRepository.getBool(
-                'VRCX_useAdvancedMaterial',
-                false
-            );
-            applyAdvancedMaterialClass();
-            // 高级材质激活时午夜模式暂不可用:若持久化配置为午夜,强制切到暗色
-            if (useAdvancedMaterial.value && themeMode.value === 'midnight') {
-                themeModeBackup.value = themeMode.value;
-                setThemeMode('dark');
-            }
-
             await configRepository.remove('VRCX_navWidth');
 
             // Migrate old settings
@@ -566,17 +554,6 @@ export const useAppearanceSettingsStore = defineStore(
          * @param {string} mode
          */
         function setThemeMode(mode) {
-            // 高级材质激活时,午夜模式暂不可用:统一按暗色处理
-            if (useAdvancedMaterial.value && mode === 'midnight') {
-                mode = 'dark';
-            } else if (
-                useAdvancedMaterial.value &&
-                themeModeBackup.value &&
-                mode !== 'dark'
-            ) {
-                // 用户在高级材质激活期间手动选择了其它主题,放弃启用时的偏好恢复
-                themeModeBackup.value = '';
-            }
             themeMode.value = mode;
             configRepository.setString('VRCX_ThemeMode', mode);
             if (THEME_CONFIG[mode]?.isDark === true) {
@@ -1081,42 +1058,6 @@ export const useAppearanceSettingsStore = defineStore(
         /**
          *
          */
-        function applyAdvancedMaterialClass() {
-            const classList = document.documentElement.classList;
-            classList.toggle(
-                'use-advanced-material',
-                useAdvancedMaterial.value
-            );
-        }
-
-        /**
-         *
-         */
-        function setUseAdvancedMaterial() {
-            useAdvancedMaterial.value = !useAdvancedMaterial.value;
-            configRepository.setBool(
-                'VRCX_useAdvancedMaterial',
-                useAdvancedMaterial.value
-            );
-            if (useAdvancedMaterial.value) {
-                // 激活:午夜模式暂不可用,自动切到暗色并平滑过渡
-                if (themeMode.value === 'midnight') {
-                    themeModeBackup.value = themeMode.value;
-                    setThemeMode('dark');
-                }
-            } else {
-                // 关闭:若主题仍处于被强制切到暗色的状态,恢复用户原主题偏好
-                if (themeModeBackup.value && themeMode.value === 'dark') {
-                    setThemeMode(themeModeBackup.value);
-                }
-                themeModeBackup.value = '';
-            }
-            applyAdvancedMaterialClass();
-        }
-
-        /**
-         *
-         */
         function setShowNewDashboardButton() {
             showNewDashboardButton.value = !showNewDashboardButton.value;
             configRepository.setBool(
@@ -1366,7 +1307,6 @@ export const useAppearanceSettingsStore = defineStore(
             isDataTableStriped,
             accessibleStatusIndicators,
             useOfficialStatusColors,
-            useAdvancedMaterial,
             showNewDashboardButton,
             tableLimitsDialog,
             TABLE_MAX_SIZE_MIN,
@@ -1408,7 +1348,6 @@ export const useAppearanceSettingsStore = defineStore(
             toggleStripedDataTable,
             toggleAccessibleStatusIndicators,
             toggleOfficialStatusColors,
-            setUseAdvancedMaterial,
             setShowNewDashboardButton,
             setTableDensity,
             setTrustColor,

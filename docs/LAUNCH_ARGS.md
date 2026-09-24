@@ -9,7 +9,7 @@
 - [1. 概述](#1-概述)
 - [2. 参数列表](#2-参数列表)
 - [3. 参数详细说明](#3-参数详细说明)
-  - [3.1 --startup](#31---startup)
+  - [3.1 --startup / --minimized](#31---startup---minimized)
   - [3.2 --debug](#32---debug)
   - [3.3 --overlay](#33---overlay)
   - [3.4 --config=](#34---config)
@@ -17,6 +17,9 @@
   - [3.6 --width= 和 --height=](#36---width-和---height)
   - [3.7 --center](#37---center)
   - [3.8 --disable-gpu](#38---disable-gpu)
+  - [3.9 --maximized](#39---maximized)
+  - [3.10 --fullscreen](#310---fullscreen)
+  - [3.11 --reset-window](#311---reset-window)
 - [4. 使用示例](#4-使用示例)
 - [5. 配置方法](#5-配置方法)
 - [6. 注意事项](#6-注意事项)
@@ -38,7 +41,7 @@ VRCX-Pro 支持通过命令行参数自定义启动行为。这些参数可以�
 
 | 参数 | 语法 | 说明 |
 |------|------|------|
-| `--startup` | `--startup` | 启动时最小化到系统托盘 |
+| `--startup` / `--minimized` | `--startup` 或 `--minimized` | 启动时最小化到系统托盘 |
 | `--debug` | `--debug` | 启用调试模式 |
 | `--overlay` | `--overlay` | 启用 VR 覆盖模式 |
 | `--config=` | `--config=<路径>` | 指定自定义配置目录 |
@@ -47,12 +50,15 @@ VRCX-Pro 支持通过命令行参数自定义启动行为。这些参数可以�
 | `--height=` | `--height=<像素>` | 设置窗口高度 |
 | `--center` | `--center` | 窗口居中显示 |
 | `--disable-gpu` | `--disable-gpu` | 禁用 GPU 加速 |
+| `--maximized` | `--maximized` | 启动时最大化窗口 |
+| `--fullscreen` | `--fullscreen` | 启动时全屏显示 |
+| `--reset-window` | `--reset-window` | 重置窗口尺寸和位置 |
 
 ---
 
 ## 3. 参数详细说明
 
-### 3.1 --startup
+### 3.1 --startup / --minimized
 
 **功能：** 启动时最小化到系统托盘，不显示主窗口。
 
@@ -68,6 +74,7 @@ VRCX-Pro 支持通过命令行参数自定义启动行为。这些参数可以�
 **示例：**
 ```bash
 VRCX-Pro.exe --startup
+VRCX-Pro.exe --minimized
 ```
 
 ### 3.2 --debug
@@ -227,6 +234,38 @@ VRCX-Pro.exe --width=1280 --height=800 --center
 **示例：**
 ```bash
 VRCX-Pro.exe --disable-gpu
+```
+
+### 3.9 --maximized
+
+**功能：** 启动时将主窗口最大化。
+
+**示例：**
+```bash
+VRCX-Pro.exe --maximized
+```
+
+### 3.10 --fullscreen
+
+**功能：** 启动时以全屏模式显示主窗口。与 `--maximized` 同时使用时，全屏模式优先。
+
+**示例：**
+```bash
+VRCX-Pro.exe --fullscreen
+```
+
+### 3.11 --reset-window
+
+**功能：** 清除保存的窗口尺寸和位置，并以默认尺寸启动。
+
+**使用场景：**
+- 窗口尺寸异常
+- 窗口位置超出可见屏幕
+- 多显示器配置变更后恢复默认布局
+
+**示例：**
+```bash
+VRCX-Pro.exe --reset-window
 ```
 
 ---
@@ -402,11 +441,14 @@ VRCX-Pro.exe --width=1600 --height=900 --center
 
 ```rust
 struct LaunchArgs {
-    startup: bool,           // --startup
+    startup: bool,           // --startup / --minimized
     debug: bool,             // --debug
     overlay: bool,           // --overlay
     disable_gpu: bool,       // --disable-gpu
     center: bool,            // --center
+    maximized: bool,         // --maximized
+    fullscreen: bool,        // --fullscreen
+    reset_window: bool,      // --reset-window
     config_directory: Option<String>,  // --config=
     proxy_server: Option<String>,      // --proxy-server=
     width: Option<u32>,      // --width=
@@ -418,6 +460,11 @@ struct LaunchArgs {
 ---
 
 ## 8. 更新日志
+
+### v3.4.0
+- 新增 `--minimized` 参数，作为 `--startup` 的别名
+- 新增 `--maximized` 和 `--fullscreen` 参数，支持指定窗口显示状态
+- 新增 `--reset-window` 参数，支持重置窗口尺寸和位置
 
 ### v3.3.0 (2025-09-19)
 - 新增 `--width` 和 `--height` 参数，支持指定窗口大小
@@ -441,4 +488,4 @@ struct LaunchArgs {
 
 ---
 
-**最后更新：** 2025-09-19
+**最后更新：** 2026-09-24

@@ -6,7 +6,6 @@ const mocks = vi.hoisted(() => ({
         getString: vi.fn(),
         setString: vi.fn()
     },
-    changeLogRemoveLinks: vi.fn((value) => value),
     toast: {
         error: vi.fn(),
         success: vi.fn(),
@@ -18,8 +17,8 @@ vi.mock('../../services/config', () => ({
     default: mocks.configRepository
 }));
 
-vi.mock('../../shared/utils', () => ({
-    changeLogRemoveLinks: (...args) => mocks.changeLogRemoveLinks(...args)
+vi.mock('../../services/appConfig', () => ({
+    logWebRequest: vi.fn()
 }));
 
 vi.mock('vue-sonner', () => ({
@@ -60,6 +59,9 @@ describe('useVRCXUpdaterStore.setAutoUpdateVRCX', () => {
         globalThis.AppApi = {
             GetVersion: vi.fn().mockResolvedValue('2026.1.0')
         };
+        globalThis.webApiService = {
+            execute: vi.fn()
+        };
 
         setActivePinia(createPinia());
         useVRCXUpdaterStore();
@@ -93,5 +95,35 @@ describe('useVRCXUpdaterStore.setAutoUpdateVRCX', () => {
             'VRCX_autoUpdateVRCX',
             'Notify'
         );
+    });
+
+    test('loads the change log from GitHub releases', async () => {
+        const release = {
+            name: 'VRCX-Pro 2026.2.0',
+            tag_name: 'v2026.2.0',
+            body: '## Improvements\n- Updated release notes',
+            assets: []
+        };
+        globalThis.webApiService.execute.mockResolvedValue({
+            status: 200,
+            data: JSON.stringify([release])
+        });
+        const store = useVRCXUpdaterStore();
+
+        const result = await store.showChangeLogDialog({ prefetch: true });
+
+        expect(result).toEqual({ shown: true, checkedForUpdates: true });
+        expect(globalThis.webApiService.execute).toHaveBeenCalledWith(
+            expect.objectContaining({
+                url: 'https://api.github.com/repos/Yusurmount/VRCX-Pro/releases',
+                method: 'GET'
+            })
+        );
+        expect(store.changeLogDialog.buildName).toBe(release.name);
+        expect(store.changeLogDialog.changeLog).toBe(release.body);
+        expect(store.changeLogDialog.loaded).toBe(true);
+        expect(store.changeLogDialog.loading).toBe(false);
+        expect(store.latestAppVersion).toBe(release.tag_name);
+        expect(store.pendingVRCXUpdate).toBe(true);
     });
 });

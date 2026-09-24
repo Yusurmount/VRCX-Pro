@@ -40,6 +40,12 @@ export async function executeToolAction(
         return;
     }
 
+    if (action.type === 'export') {
+        toolsStore.setActiveExportSource(action.source);
+        toolsStore.openDialog('dataExport');
+        return;
+    }
+
     if (action.type === 'store-action') {
         const targetStore = {
             advancedSettings: advancedSettingsStore,

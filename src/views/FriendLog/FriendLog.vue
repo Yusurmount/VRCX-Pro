@@ -41,18 +41,9 @@
                         v-model="friendLogTable.filters[1].value"
                         :placeholder="t('view.friend_log.search_placeholder')"
                         style="flex: 0.4" />
-                    <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showExportDialog = true">
-                        <Download class="h-4 w-4" />
-                    </Button>
                 </div>
             </template>
         </DataTableLayout>
-        <DataExportDialog
-            v-model:visible="showExportDialog"
-            :title="t('view.friend_log.header')"
-            default-file-name="friend-log"
-            :sheet-name="t('view.friend_log.header')"
-            :get-data="getExportData" />
     </div>
 </template>
 
@@ -72,8 +63,6 @@
         SelectValue
     } from '../../components/ui/select';
     import { Button } from '../../components/ui/button';
-    import { Download } from 'lucide-vue-next';
-    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
     import { useAppearanceSettingsStore, useFriendStore, useModalStore, useVrcxStore } from '../../stores';
     import { DataTableLayout } from '../../components/ui/data-table';
     import { InputGroupField } from '../../components/ui/input-group';
@@ -91,11 +80,6 @@
     const { friendLogTable } = storeToRefs(useFriendStore());
 
     const friendLogRef = ref(null);
-    const showExportDialog = ref(false);
-
-    function getExportData() {
-        return friendLogTable.value.data ?? [];
-    }
 
     const friendLogDisplayData = computed(() => {
         const data = friendLogTable.value.data;

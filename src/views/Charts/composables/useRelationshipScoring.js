@@ -1,6 +1,5 @@
 import { ref, computed } from 'vue';
-import { storeToRefs } from 'pinia';
-import { useFriendStore, useUserStore } from '../../../stores';
+import { useUserStore } from '../../../stores';
 import { database } from '../../../services/database';
 
 const WEIGHTS = {
@@ -26,10 +25,7 @@ function recencyScore(lastSeenTimestamp) {
 }
 
 export function useRelationshipScoring() {
-    const friendStore = useFriendStore();
     const userStore = useUserStore();
-    const { friends } = storeToRefs(friendStore);
-
     const rawMetrics = ref([]);
     const isLoading = ref(false);
 
@@ -99,7 +95,7 @@ export function useRelationshipScoring() {
         }
         const maxCount = Math.max(...buckets, 1);
         return buckets.map((count, i) => ({
-            range: ${i * 10}-,
+            range: `${i * 10}-${(i + 1) * 10}`,
             count,
             percent: Math.round((count / maxCount) * 100)
         }));
@@ -108,6 +104,13 @@ export function useRelationshipScoring() {
     async function loadScores() {
         isLoading.value = true;
         try {
+            const contextReady = await database.ensureUserContext(
+                userStore.currentUser?.id
+            );
+            if (!contextReady) {
+                rawMetrics.value = [];
+                return;
+            }
             rawMetrics.value = await database.getFriendshipMetrics();
         } catch (err) {
             console.error('[useRelationshipScoring] Failed to load metrics', err);

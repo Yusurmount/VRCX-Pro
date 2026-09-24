@@ -121,7 +121,6 @@
         <NavMenuFooter
             :is-collapsed="isCollapsed"
             :is-dark-mode="isDarkMode"
-            :is-advanced-material="useAdvancedMaterial"
             :has-pending-update="pendingVRCXUpdate"
             :has-pending-install="!!pendingVRCXInstall"
             :version="version"
@@ -134,7 +133,6 @@
             :is-applying-theme-color="isApplyingThemeColor"
             :theme-display-name="themeDisplayName"
             :theme-color-display-name="themeColorDisplayName"
-            @show-changelog="showChangeLogDialog"
             @support-link="handleSupportLink"
             @toggle-theme="handleThemeToggle"
             @show-vrcx-update-dialog="showVRCXUpdateDialog"
@@ -214,7 +212,7 @@
 
     const VRCXUpdaterStore = useVRCXUpdaterStore();
     const { pendingVRCXUpdate, pendingVRCXInstall, appVersion } = storeToRefs(VRCXUpdaterStore);
-    const { showVRCXUpdateDialog, showChangeLogDialog } = VRCXUpdaterStore;
+    const { showVRCXUpdateDialog } = VRCXUpdaterStore;
 
     const dashboardStore = useDashboardStore();
     const { dashboards } = storeToRefs(dashboardStore);
@@ -235,8 +233,7 @@
         tableDensity,
         isDarkMode,
         isNavCollapsed: isCollapsed,
-        showNewDashboardButton,
-        useAdvancedMaterial
+        showNewDashboardButton
     } = storeToRefs(appearanceSettingsStore);
 
     const {

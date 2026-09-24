@@ -40,10 +40,10 @@
                                             :src="userImage(item.user, true)"
                                             loading="lazy" />
                                     </div>
-                                    <div class="min-w-0 flex-1 overflow-hidden">
-                                        <span
-                                            class="block truncate font-medium leading-[18px]"
-                                            :style="{ color: item.user. }">
+                                        <div class="min-w-0 flex-1 overflow-hidden">
+                                            <span
+                                                class="block truncate font-medium leading-[18px]"
+                                                :style="{ color: item.user.$userColour }">
                                             {{ item.user.displayName }}
                                         </span>
                                     </div>
@@ -91,7 +91,7 @@
                                     <div class="min-w-0 flex-1 overflow-hidden">
                                         <span
                                             class="block truncate font-medium leading-[18px]"
-                                            :style="{ color: item.user. }">
+                                            :style="{ color: item.user.$userColour }">
                                             {{ item.user.displayName }}
                                         </span>
                                     </div>
@@ -150,11 +150,10 @@
 </template>
 
 <script setup>
-    import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
+    import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
     import * as echarts from 'echarts';
-    import dayjs from 'dayjs';
     import { RefreshCcw, Info, Check, ArrowLeftRight } from 'lucide-vue-next';
 
     import BackToTop from '@/components/BackToTop.vue';
@@ -164,7 +163,7 @@
     import HoverCardTrigger from '@/components/ui/hover-card/HoverCardTrigger.vue';
     import HoverCardContent from '@/components/ui/hover-card/HoverCardContent.vue';
     import TooltipWrapper from '@/components/ui/tooltip/TooltipWrapper.vue';
-    import VirtualCombobox from '@/components/ui/combobox/VirtualCombobox.vue';
+    import { VirtualCombobox } from '@/components/ui/virtual-combobox';
 
     import {
         useAppearanceSettingsStore,
@@ -185,7 +184,6 @@
 
     const {
         isLoading,
-        sharedInstances,
         monthlyTimeline,
         trendSummary,
         loadTimeline
@@ -306,10 +304,17 @@
                     formatter(params) {
                         if (!params?.length) return '';
                         const month = params[0].axisValue;
-                        let html = <div class="font-medium"></div>;
+                        let html = '<div class="font-medium">' + month + '</div>';
                         for (const p of params) {
                             const mins = Math.round(p.value / 60000);
-                            html += <div> :  min</div>;
+                            html +=
+                                '<div>' +
+                                p.seriesName +
+                                ': ' +
+                                mins +
+                                ' ' +
+                                t('view.charts.timeline_comparison.co_time_minutes') +
+                                '</div>';
                         }
                         return html;
                     }
@@ -389,6 +394,17 @@
     watch(monthlyTimeline, () => {
         if (echartsInstance) updateChart();
     });
+
+    watch([() => currentUser.value?.id, friends], ([userId]) => {
+        if (!userId) return;
+        if (selectedFriendAId.value && selectedFriendBId.value) return;
+        const friendList = Array.from(friends.value?.keys() || []);
+        if (friendList.length >= 2) {
+            selectedFriendAId.value = friendList[0];
+            selectedFriendBId.value = friendList[1];
+            loadTimeline(friendList[0], friendList[1]);
+        }
+    }, { immediate: true });
 
     onBeforeUnmount(() => {
         disposeChart();

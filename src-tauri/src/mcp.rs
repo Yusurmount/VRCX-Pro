@@ -143,6 +143,11 @@ fn list_tables_with_count(path: &Path) -> Result<Value, String> {
 fn find_table(tables: &[String], suffix: &str) -> Option<String> {
     tables.iter().find(|t| t.ends_with(suffix)).cloned()
 }
+
+fn escape_sql_string(value: &str) -> String {
+    value.replace('\'', "''")
+}
+
 fn execute_non_query(path: &Path, sql: &str) -> Result<(), String> {
     let conn = open_db(path)?;
     conn.execute(sql, []).map_err(|e| format!("SQL error: {e}"))?;
@@ -689,8 +694,8 @@ fn handle_tool_call(name: &str, args: &Value, db_path: &Path) -> Result<Value, S
                 if let Ok(data) = query_to_json(db_path, &sql) { insights.insert("most_active_friends".into(), data); }
             }
             if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_online_offline")) {
-                let sql = format!("SELECT CAST(strftime(\"%H\", created_at) AS INTEGER) as hour, COUNT(*) as count FROM \"{}\" WHERE type = \"online\" AND created_at >= datetime(\"now\", \"{}\") GROUP BY hour ORDER BY hour", tbl, cutoff);
-                if let Ok(data) = query_to_json(db_path, &sql) { insights.insert("online_hour_distribution".into(), data); }
+                let sql = format!("SELECT CAST(strftime('%H', created_at) AS INTEGER) as hour, COUNT(*) as count FROM \"{tbl}\" WHERE LOWER(type) = 'online' AND created_at >= datetime('now', '{cutoff}') GROUP BY hour ORDER BY hour");
+                insights.insert("online_hour_distribution".into(), query_to_json(db_path, &sql)?);
             }
             if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_gps")) {
                 let sql = format!("SELECT world_name, COUNT(*) as visits FROM \"{}\" WHERE created_at >= datetime(\"now\", \"{}\") AND world_name IS NOT NULL AND world_name != \"\" GROUP BY world_name ORDER BY visits DESC LIMIT 10", tbl, cutoff);
@@ -712,21 +717,21 @@ fn handle_tool_call(name: &str, args: &Value, db_path: &Path) -> Result<Value, S
             let user_id = args.get("user_id").and_then(|v| v.as_str()).ok_or("Missing required parameter: user_id")?;
             let days = args.get("days").and_then(|v| v.as_i64()).unwrap_or(14);
             let cutoff = format!("-{days} days");
-            let escaped = user_id.replace('\'', "\'\'\'");
+            let escaped = escape_sql_string(user_id);
             let mut schedule = serde_json::Map::new();
             schedule.insert("user_id".into(), json!(user_id));
             schedule.insert("analysis_period_days".into(), json!(days));
             if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_online_offline")) {
-                let sql = format!("SELECT CAST(strftime(\"%H\", created_at) AS INTEGER) as hour, COUNT(*) as online_count FROM \"{}\" WHERE user_id = \'{}\' AND type = \"online\" AND created_at >= datetime(\"now\", \"{}\") GROUP BY hour ORDER BY hour", tbl, escaped, cutoff);
-                if let Ok(data) = query_to_json(db_path, &sql) { schedule.insert("hourly_online_pattern".into(), data); }
-            }
-            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_online_offline")) {
-                let sql = format!("SELECT CAST(strftime(\"%w\", created_at) AS INTEGER) as day_of_week, COUNT(*) as count FROM \"{}\" WHERE user_id = \'{}\' AND type = \"online\" AND created_at >= datetime(\"now\", \"{}\") GROUP BY day_of_week ORDER BY day_of_week", tbl, escaped, cutoff);
-                if let Ok(data) = query_to_json(db_path, &sql) { schedule.insert("day_of_week_pattern".into(), data); }
-            }
-            if let Some(tbl) = tables.iter().find(|t| t.ends_with("_feed_online_offline")) {
-                let sql = format!("SELECT type, created_at FROM \"{}\" WHERE user_id = \'{}\' AND created_at >= datetime(\"now\", \"{}\") ORDER BY id DESC LIMIT 100", tbl, escaped, cutoff);
-                if let Ok(data) = query_to_json(db_path, &sql) { schedule.insert("recent_online_events".into(), data); }
+                let hourly_sql = format!("SELECT CAST(strftime('%H', created_at) AS INTEGER) as hour, COUNT(*) as online_count FROM \"{tbl}\" WHERE user_id = '{escaped}' AND LOWER(type) = 'online' AND created_at >= datetime('now', '{cutoff}') GROUP BY hour ORDER BY hour");
+                let weekday_sql = format!("SELECT CAST(strftime('%w', created_at) AS INTEGER) as day_of_week, COUNT(*) as count FROM \"{tbl}\" WHERE user_id = '{escaped}' AND LOWER(type) = 'online' AND created_at >= datetime('now', '{cutoff}') GROUP BY day_of_week ORDER BY day_of_week");
+                let events_sql = format!("SELECT type, created_at FROM \"{tbl}\" WHERE user_id = '{escaped}' AND created_at >= datetime('now', '{cutoff}') ORDER BY id DESC LIMIT 100");
+                schedule.insert("hourly_online_pattern".into(), query_to_json(db_path, &hourly_sql)?);
+                schedule.insert("day_of_week_pattern".into(), query_to_json(db_path, &weekday_sql)?);
+                schedule.insert("recent_online_events".into(), query_to_json(db_path, &events_sql)?);
+            } else {
+                schedule.insert("hourly_online_pattern".into(), json!([]));
+                schedule.insert("day_of_week_pattern".into(), json!([]));
+                schedule.insert("recent_online_events".into(), json!([]));
             }
             Ok(Value::Object(schedule))
         }
@@ -740,29 +745,41 @@ fn handle_tool_call(name: &str, args: &Value, db_path: &Path) -> Result<Value, S
             let tbl = find_table(&tables, "_friend_log_current").ok_or("friend_log_current table not found")?;
             let mut conditions = Vec::new();
             if !query.is_empty() {
-                let q = query.replace('\'', "\'\'\'");
+                let q = escape_sql_string(query);
                 conditions.push(format!("display_name LIKE '%{}%'", q));
             }
             if !trust_filter.is_empty() {
-                let t = trust_filter.replace('\'', "\'\'\'");
+                let t = escape_sql_string(trust_filter);
                 conditions.push(format!("trust_level = '{}'", t));
             }
             let where_clause = if conditions.is_empty() { String::new() } else { format!(" WHERE {}", conditions.join(" AND ")) };
-            let sql = format!("SELECT * FROM \"{}\"{} ORDER BY friend_number ASC LIMIT {}", tbl, where_clause, limit);
+            let sql = format!("SELECT * FROM \"{}\"{} ORDER BY friend_number ASC", tbl, where_clause);
             let mut results = query_to_json(db_path, &sql)?;
             if !status_filter.is_empty() {
-                if let Some(st) = tables.iter().find(|t| t.ends_with("_feed_status")) {
-                    let sql = format!("SELECT DISTINCT user_id FROM \"{}\" WHERE status = '{}' AND created_at >= datetime(\"now\", \"-1 hours\")", st, status_filter);
-                    if let Ok(au) = query_to_json(db_path, &sql) {
-                        if let Some(arr) = au.as_array() {
-                            let ids: std::collections::HashSet<String> = arr.iter().filter_map(|v| v.get("user_id").and_then(|u| u.as_str()).map(String::from)).collect();
-                            if let Some(r) = results.as_array_mut() { r.retain(|item| item.get("user_id").and_then(|u| u.as_str()).map(|id| ids.contains(id)).unwrap_or(false)); }
+                let status_table = tables.iter().find(|t| t.ends_with("_feed_status")).ok_or("feed_status table not found")?;
+                let presence_table = tables.iter().find(|t| t.ends_with("_feed_online_offline")).ok_or("feed_online_offline table not found")?;
+                let status_sql = format!("SELECT user_id, status FROM (SELECT user_id, status, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY id DESC) AS row_number FROM \"{status_table}\") WHERE row_number = 1");
+                let presence_sql = format!("SELECT user_id, type FROM (SELECT user_id, type, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY id DESC) AS row_number FROM \"{presence_table}\") WHERE row_number = 1");
+                let current_statuses = query_to_json(db_path, &status_sql)?;
+                let current_presences = query_to_json(db_path, &presence_sql)?;
+                let status_by_user = current_statuses.as_array().map(|rows| rows.iter().filter_map(|row| Some((row.get("user_id")?.as_str()?.to_string(), row.get("status")?.as_str()?.to_lowercase()))).collect::<std::collections::HashMap<_, _>>()).unwrap_or_default();
+                let presence_by_user = current_presences.as_array().map(|rows| rows.iter().filter_map(|row| Some((row.get("user_id")?.as_str()?.to_string(), row.get("type")?.as_str()?.to_lowercase()))).collect::<std::collections::HashMap<_, _>>()).unwrap_or_default();
+                let requested_status = status_filter.trim().to_lowercase();
+                if let Some(rows) = results.as_array_mut() {
+                    rows.retain(|item| {
+                        let Some(user_id) = item.get("user_id").and_then(|value| value.as_str()) else { return false; };
+                        let status = status_by_user.get(user_id).map(String::as_str).unwrap_or("");
+                        let presence = presence_by_user.get(user_id).map(String::as_str).unwrap_or("offline");
+                        if requested_status == "offline" {
+                            status == "offline" || presence != "online"
+                        } else {
+                            presence == "online" && status == requested_status
                         }
-                    }
+                    });
                 }
             }
             if !location_filter.is_empty() {
-                let loc = location_filter.replace('\'', "\'\'\'");
+                let loc = escape_sql_string(location_filter);
                 if let Some(gt) = tables.iter().find(|t| t.ends_with("_feed_gps")) {
                     let sql = format!("SELECT DISTINCT user_id FROM \"{}\" WHERE (world_name LIKE '%{}%' OR location LIKE '%{}%') AND created_at >= datetime(\"now\", \"-24 hours\")", gt, loc, loc);
                     if let Ok(lu) = query_to_json(db_path, &sql) {
@@ -772,6 +789,9 @@ fn handle_tool_call(name: &str, args: &Value, db_path: &Path) -> Result<Value, S
                         }
                     }
                 }
+            }
+            if let Some(rows) = results.as_array_mut() {
+                rows.truncate(usize::try_from(limit).unwrap_or(0));
             }
             Ok(results)
         }
@@ -799,7 +819,7 @@ fn handle_tool_call(name: &str, args: &Value, db_path: &Path) -> Result<Value, S
         "vrcx_get_user_profile" => {
             let tables = get_user_tables(db_path)?;
             let user_id = args.get("user_id").and_then(|v| v.as_str()).ok_or("Missing required parameter: user_id")?;
-            let escaped = user_id.replace('\'', "\'\'\'");
+            let escaped = escape_sql_string(user_id);
             let mut profile = serde_json::Map::new();
             profile.insert("user_id".into(), json!(user_id));
             if let Some(tbl) = tables.iter().find(|t| t.ends_with("_friend_log_current")) {
@@ -856,8 +876,8 @@ fn handle_tool_call(name: &str, args: &Value, db_path: &Path) -> Result<Value, S
         "vrcx_set_note" => {
             let user_id = args.get("user_id").and_then(|v| v.as_str()).ok_or("Missing required parameter: user_id")?;
             let note = args.get("note").and_then(|v| v.as_str()).ok_or("Missing required parameter: note")?;
-            let escaped_uid = user_id.replace('\'', "\'\'\'");
-            let escaped_note = note.replace('\'', "\'\'\'");
+            let escaped_uid = escape_sql_string(user_id);
+            let escaped_note = escape_sql_string(note);
             let sql = format!("INSERT OR REPLACE INTO notes (user_id, note) VALUES ('{}', '{}')", escaped_uid, escaped_note);
             execute_non_query(db_path, &sql)?;
             Ok(json!({ "success": true, "user_id": user_id, "message": "Note saved successfully" }))
@@ -873,7 +893,7 @@ fn handle_tool_call(name: &str, args: &Value, db_path: &Path) -> Result<Value, S
                 let sql = format!("SELECT display_name, user_id, world_name, COUNT(*) as shared_visits FROM \"{}\" WHERE world_name IN (SELECT world_name FROM \"{}\" WHERE created_at >= datetime(\"now\", \"{}\") AND world_name IS NOT NULL AND world_name != \"\" GROUP BY world_name HAVING COUNT(*) > 1) AND created_at >= datetime(\"now\", \"{}\") GROUP BY user_id, world_name ORDER BY shared_visits DESC LIMIT {}", gps_tbl, gps_tbl, cutoff, cutoff, limit);
                 query_to_json(db_path, &sql)
             } else {
-                let escaped = user_id.replace('\'', "\'\'\'");
+                let escaped = escape_sql_string(user_id);
                 let sql = format!("SELECT g2.display_name, g2.user_id, g1.world_name, COUNT(*) as co_visits FROM \"{}\" g1 JOIN \"{}\" g2 ON g1.world_name = g2.world_name AND g1.user_id != g2.user_id WHERE g1.user_id = '{}' AND g1.created_at >= datetime(\"now\", \"{}\") AND g2.created_at >= datetime(\"now\", \"{}\") AND g1.world_name IS NOT NULL AND g1.world_name != \"\" GROUP BY g2.user_id, g1.world_name ORDER BY co_visits DESC LIMIT {}", gps_tbl, gps_tbl, escaped, cutoff, cutoff, limit);
                 query_to_json(db_path, &sql)
             }
@@ -1046,5 +1066,119 @@ impl McpServer {
 
     pub fn shutdown(&self) {
         let _ = self.shutdown_tx.send(());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static TEST_DB_ID: AtomicU64 = AtomicU64::new(0);
+
+    fn create_test_db() -> PathBuf {
+        let id = TEST_DB_ID.fetch_add(1, Ordering::Relaxed);
+        let path = std::env::temp_dir().join(format!(
+            "vrcx-pro-mcp-test-{}-{id}.db",
+            std::process::id()
+        ));
+        let conn = Connection::open(&path).unwrap();
+        conn.execute_batch(
+            "CREATE TABLE test_friend_log_current (user_id TEXT PRIMARY KEY, display_name TEXT, trust_level TEXT, friend_number INTEGER);
+             CREATE TABLE test_feed_status (id INTEGER PRIMARY KEY, created_at TEXT, user_id TEXT, display_name TEXT, status TEXT, status_description TEXT, previous_status TEXT, previous_status_description TEXT);
+             CREATE TABLE test_feed_online_offline (id INTEGER PRIMARY KEY, created_at TEXT, user_id TEXT, display_name TEXT, type TEXT, location TEXT, world_name TEXT, time INTEGER, group_name TEXT);
+             INSERT INTO test_friend_log_current VALUES ('usr_active', 'Alice', 'trusted', 3);
+             INSERT INTO test_friend_log_current VALUES ('usr_latest', 'Bob', 'known', 2);
+             INSERT INTO test_friend_log_current VALUES ('usr_offline', 'Carol', 'user', 1);
+             INSERT INTO test_feed_status (created_at, user_id, display_name, status) VALUES (datetime('now', '-3 hours'), 'usr_active', 'Alice', 'active');
+             INSERT INTO test_feed_status (created_at, user_id, display_name, status) VALUES (datetime('now', '-3 hours'), 'usr_latest', 'Bob', 'busy');
+             INSERT INTO test_feed_status (created_at, user_id, display_name, status) VALUES (datetime('now', '-2 hours'), 'usr_latest', 'Bob', 'active');
+             INSERT INTO test_feed_status (created_at, user_id, display_name, status) VALUES (datetime('now', '-2 hours'), 'usr_offline', 'Carol', 'active');
+             INSERT INTO test_feed_online_offline (created_at, user_id, display_name, type) VALUES (datetime('now', '-4 hours'), 'usr_active', 'Alice', 'Online');
+             INSERT INTO test_feed_online_offline (created_at, user_id, display_name, type) VALUES (datetime('now', '-4 hours'), 'usr_latest', 'Bob', 'Online');
+             INSERT INTO test_feed_online_offline (created_at, user_id, display_name, type) VALUES (datetime('now', '-3 hours'), 'usr_offline', 'Carol', 'Online');
+             INSERT INTO test_feed_online_offline (created_at, user_id, display_name, type) VALUES (datetime('now', '-2 hours'), 'usr_offline', 'Carol', 'Offline');
+             INSERT INTO test_feed_online_offline (created_at, user_id, display_name, type) VALUES (datetime('now', '-90 minutes'), 'usr_target''quoted', 'Target', 'Online');
+             INSERT INTO test_feed_online_offline (created_at, user_id, display_name, type) VALUES (datetime('now', '-30 minutes'), 'usr_target''quoted', 'Target', 'Offline');",
+        )
+        .unwrap();
+        drop(conn);
+        path
+    }
+
+    fn remove_test_db(path: &Path) {
+        for suffix in ["", "-wal", "-shm"] {
+            let _ = std::fs::remove_file(format!("{}{suffix}", path.display()));
+        }
+    }
+
+    #[test]
+    fn social_insights_include_online_hour_distribution() {
+        let path = create_test_db();
+        let result =
+            handle_tool_call("vrcx_social_insights", &json!({ "days": 7 }), &path).unwrap();
+        let distribution = result
+            .get("online_hour_distribution")
+            .and_then(Value::as_array)
+            .unwrap();
+        assert!(!distribution.is_empty());
+        remove_test_db(&path);
+    }
+
+    #[test]
+    fn friend_schedule_returns_events_for_mixed_case_types_and_escaped_user_id() {
+        let path = create_test_db();
+        let result = handle_tool_call(
+            "vrcx_get_friend_schedule",
+            &json!({ "user_id": "usr_target'quoted", "days": 7 }),
+            &path,
+        )
+        .unwrap();
+        assert_eq!(
+            result.get("hourly_online_pattern").and_then(Value::as_array).unwrap().len(),
+            1
+        );
+        assert_eq!(
+            result.get("day_of_week_pattern").and_then(Value::as_array).unwrap().len(),
+            1
+        );
+        assert_eq!(
+            result.get("recent_online_events").and_then(Value::as_array).unwrap().len(),
+            2
+        );
+        remove_test_db(&path);
+    }
+
+    #[test]
+    fn friend_status_filter_uses_latest_status_and_presence() {
+        let path = create_test_db();
+        let active = handle_tool_call(
+            "vrcx_search_friends",
+            &json!({ "status": "active", "limit": 1 }),
+            &path,
+        )
+        .unwrap();
+        let active_names: Vec<_> = active
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|row| row.get("display_name").unwrap().as_str().unwrap())
+            .collect();
+        assert_eq!(active_names, ["Bob"]);
+
+        let offline = handle_tool_call(
+            "vrcx_search_friends",
+            &json!({ "status": "offline", "limit": 50 }),
+            &path,
+        )
+        .unwrap();
+        let offline_names: Vec<_> = offline
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|row| row.get("display_name").unwrap().as_str().unwrap())
+            .collect();
+        assert_eq!(offline_names, ["Carol"]);
+        remove_test_db(&path);
     }
 }

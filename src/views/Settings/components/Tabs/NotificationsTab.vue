@@ -316,10 +316,9 @@
     const customRulesCount = computed(() => notificationRulesStore.rules.length);
 
     // Email settings
-    const emailEnabled = computed(() => emailStore.enabled);
+    const { enabled: emailEnabled, smtpUseSsl: emailSmtpUseSsl } = storeToRefs(emailStore);
     const emailSmtpHost = ref(emailStore.smtpHost);
     const emailSmtpPort = ref(emailStore.smtpPort);
-    const emailSmtpUseSsl = computed(() => emailStore.smtpUseSsl);
     const emailSmtpUsername = ref(emailStore.smtpUsername);
     const emailSmtpPassword = ref(emailStore.smtpPassword);
     const emailSmtpFromAddress = ref(emailStore.smtpFromAddress);

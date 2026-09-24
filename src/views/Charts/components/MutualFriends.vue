@@ -272,6 +272,20 @@
                         </SheetContent>
                     </Sheet>
 
+                    <TooltipWrapper
+                        v-if="graphReady"
+                        :content="t('view.charts.mutual_friend.analysis.title')"
+                        side="top">
+                        <Button
+                            class="rounded-full"
+                            size="icon"
+                            :variant="isAnalysisPanelOpen ? 'secondary' : 'ghost'"
+                            :aria-expanded="isAnalysisPanelOpen"
+                            @click="isAnalysisPanelOpen = !isAnalysisPanelOpen">
+                            <NetworkIcon />
+                        </Button>
+                    </TooltipWrapper>
+
                     <div
                         v-if="isFetching"
                         class="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] items-center rounded-md bg-transparent p-3 w-70">
@@ -290,31 +304,109 @@
                 </div>
             </div>
 
-            <ContextMenu @update:open="onNodeMenuOpenChange">
-                <ContextMenuTrigger as-child>
-                    <div
-                        v-show="!(hasFetched && !isFetching && !graphReady)"
-                        ref="graphContainerRef"
-                        class="mt-3 h-[calc(100vh-260px)] min-h-[520px] w-full flex-1 rounded-lg bg-transparent"
-                        :style="{ backgroundColor: canvasBackground }"></div>
-                </ContextMenuTrigger>
-                <ContextMenuContent v-if="contextMenuNodeId" class="min-w-40">
-                    <ContextMenuItem @click="handleNodeMenuViewDetails">
-                        <UserIcon class="size-4" />
-                        {{ t('view.charts.mutual_friend.context_menu.view_details') }}
-                    </ContextMenuItem>
-                    <ContextMenuSeparator />
-                    <ContextMenuItem @click="handleNodeMenuRefresh">
-                        <RefreshCwIcon class="size-4" />
-                        {{ t('view.charts.mutual_friend.context_menu.refresh_mutuals') }}
-                    </ContextMenuItem>
-                    <ContextMenuSeparator />
-                    <ContextMenuItem @click="handleNodeMenuHide">
-                        <EyeOffIcon class="size-4" />
-                        {{ t('view.charts.mutual_friend.context_menu.hide_friend') }}
-                    </ContextMenuItem>
-                </ContextMenuContent>
-            </ContextMenu>
+            <div class="mt-3 flex h-[calc(100vh-260px)] min-h-[520px] w-full flex-1 gap-3">
+                <div class="min-w-0 flex-1">
+                    <ContextMenu @update:open="onNodeMenuOpenChange">
+                        <ContextMenuTrigger as-child>
+                            <div
+                                v-show="!(hasFetched && !isFetching && !graphReady)"
+                                ref="graphContainerRef"
+                                class="h-full w-full rounded-lg bg-transparent"
+                                :style="{ backgroundColor: canvasBackground }"></div>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent v-if="contextMenuNodeId" class="min-w-40">
+                            <ContextMenuItem @click="handleNodeMenuViewDetails">
+                                <UserIcon class="size-4" />
+                                {{ t('view.charts.mutual_friend.context_menu.view_details') }}
+                            </ContextMenuItem>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem @click="handleNodeMenuRefresh">
+                                <RefreshCwIcon class="size-4" />
+                                {{ t('view.charts.mutual_friend.context_menu.refresh_mutuals') }}
+                            </ContextMenuItem>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem @click="handleNodeMenuHide">
+                                <EyeOffIcon class="size-4" />
+                                {{ t('view.charts.mutual_friend.context_menu.hide_friend') }}
+                            </ContextMenuItem>
+                        </ContextMenuContent>
+                    </ContextMenu>
+                </div>
+
+                <aside
+                    v-if="graphReady"
+                    class="shrink-0 overflow-hidden border-l bg-card transition-[width] duration-200 ease-out"
+                    :class="[
+                        isAnalysisPanelOpen ? 'w-72 opacity-100' : 'w-0 border-l-0 opacity-0'
+                    ]"
+                    :aria-hidden="!isAnalysisPanelOpen">
+                    <div class="h-full w-72 space-y-5 overflow-y-auto p-4 text-sm">
+                        <h2 class="font-medium">{{ t('view.charts.mutual_friend.analysis.title') }}</h2>
+                        <div>
+                            <h3 class="mb-2 font-medium">
+                                {{ t('view.charts.mutual_friend.analysis.stats.title') }}
+                            </h3>
+                            <div class="space-y-1 text-xs text-muted-foreground">
+                                <div class="flex justify-between">
+                                    <span>{{ t('view.charts.mutual_friend.analysis.stats.nodes') }}</span>
+                                    <span class="tabular-nums">{{ graphNodeCount }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>{{ t('view.charts.mutual_friend.analysis.stats.edges') }}</span>
+                                    <span class="tabular-nums">{{ graphEdgeCount }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>{{ t('view.charts.mutual_friend.analysis.stats.communities') }}</span>
+                                    <span class="tabular-nums">{{ communityInsights.length }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>{{ t('view.charts.mutual_friend.analysis.stats.bridges') }}</span>
+                                    <span class="tabular-nums">{{ bridgeNodes.length }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>{{ t('view.charts.mutual_friend.analysis.stats.isolates') }}</span>
+                                    <span class="tabular-nums">{{ isolateNodes.length }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="communityInsights.length">
+                            <h3 class="mb-2 font-medium">
+                                {{ t('view.charts.mutual_friend.analysis.community_list') }}
+                            </h3>
+                            <div class="space-y-1 text-xs">
+                                <div
+                                    v-for="community in communityInsights"
+                                    :key="community.id"
+                                    class="flex items-center gap-2">
+                                    <div
+                                        class="size-2 shrink-0 rounded-full"
+                                        :style="{ backgroundColor: community.color }"></div>
+                                    <span class="truncate">{{ community.label }}</span>
+                                    <span class="ml-auto tabular-nums text-muted-foreground">
+                                        {{ community.count }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="mb-2 font-medium">
+                                {{ t('view.charts.mutual_friend.analysis.bridges_title') }}
+                            </h3>
+                            <div v-if="bridgeNodes.length" class="space-y-1 text-xs">
+                                <div
+                                    v-for="nodeId in bridgeNodes"
+                                    :key="nodeId"
+                                    class="truncate text-muted-foreground">
+                                    {{ getGraphNodeLabel(nodeId) }}
+                                </div>
+                            </div>
+                            <div v-else class="text-xs text-muted-foreground">
+                                {{ t('view.charts.mutual_friend.analysis.bridges_empty') }}
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
 
             <Empty v-if="hasFetched && !isFetching && !graphReady" class="mt-3 w-full flex-1">
                 <EmptyHeader>
@@ -348,6 +440,7 @@
         Check as CheckIcon,
         EyeOff as EyeOffIcon,
         Link as LinkIcon,
+        Network as NetworkIcon,
         RefreshCw as RefreshCwIcon,
         Settings,
         Users as UsersIcon,
@@ -629,6 +722,10 @@
     });
 
     const graphNodeCount = ref(0);
+    const graphEdgeCount = ref(0);
+    const communityInsights = ref([]);
+    const bridgeNodes = ref([]);
+    const isolateNodes = ref([]);
     const isLoadingSnapshot = ref(false);
     const totalFriends = computed(() => friends.value.size);
     const isOptOut = computed(() => Boolean(currentUser.value?.hasSharedConnectionsOptOut));
@@ -659,6 +756,7 @@
     const selectedFriendId = ref(null);
 
     const contextMenuNodeId = ref(null);
+    const isAnalysisPanelOpen = ref(false);
     const graphMeta = ref(new Map());
     const isRefreshingNode = ref(false);
     const showNonFriends = ref(true);
@@ -948,6 +1046,88 @@
         });
     }
 
+    function detectBridgeNodes(graph) {
+        const bridges = [];
+        const visited = new Set();
+        const low = new Map();
+        const discovered = new Map();
+        const parents = new Map();
+        const adjacency = new Map();
+        let timer = 0;
+
+        graph.forEachNode((node) => adjacency.set(node, []));
+        graph.forEachEdge((edgeId, attributes, source, target) => {
+            adjacency.get(source)?.push(target);
+            adjacency.get(target)?.push(source);
+        });
+
+        function visit(node) {
+            visited.add(node);
+            discovered.set(node, ++timer);
+            low.set(node, timer);
+
+            for (const neighbor of adjacency.get(node) || []) {
+                if (!visited.has(neighbor)) {
+                    parents.set(neighbor, node);
+                    visit(neighbor);
+                    low.set(node, Math.min(low.get(node), low.get(neighbor)));
+                    if (low.get(neighbor) > discovered.get(node)) {
+                        bridges.push(node);
+                    }
+                } else if (neighbor !== parents.get(node)) {
+                    low.set(node, Math.min(low.get(node), discovered.get(neighbor)));
+                }
+            }
+        }
+
+        for (const node of graph.nodes()) {
+            if (!visited.has(node)) visit(node);
+        }
+        return [...new Set(bridges)];
+    }
+
+    function getGraphNodeLabel(nodeId) {
+        return (
+            currentGraph?.getNodeAttribute(nodeId, 'label') ||
+            cachedUsers.get(nodeId)?.displayName ||
+            nodeId
+        );
+    }
+
+    function updateGraphInsights(graph) {
+        const communityMap = new Map();
+        const bridgeSet = new Set(detectBridgeNodes(graph));
+        const isolates = [];
+
+        graph.forEachNode((node, attributes) => {
+            const communityId = attributes.community ?? 'default';
+            const color = attributes.color || COLORS_PALETTE[0];
+            if (!communityMap.has(communityId)) {
+                communityMap.set(communityId, {
+                    id: communityId,
+                    color,
+                    nodes: []
+                });
+            }
+            communityMap.get(communityId).nodes.push(node);
+            graph.setNodeAttribute(node, 'isBridge', bridgeSet.has(node));
+            if (graph.degree(node) === 0) isolates.push(node);
+        });
+
+        graphNodeCount.value = graph.order;
+        graphEdgeCount.value = graph.size;
+        bridgeNodes.value = [...bridgeSet];
+        isolateNodes.value = isolates;
+        communityInsights.value = Array.from(communityMap.values())
+            .map((community) => ({
+                id: community.id,
+                color: community.color,
+                label: `${t('view.charts.mutual_friend.analysis.community')} ${community.id}`,
+                count: community.nodes.length
+            }))
+            .sort((a, b) => b.count - a.count);
+    }
+
     async function buildGraphFromMutualMap(mutualMap, meta = null) {
         const graph = new Graph({
             type: 'undirected',
@@ -1052,7 +1232,7 @@
             applyEdgeCurvature(graph);
         }
 
-        graphNodeCount.value = graph.order;
+        updateGraphInsights(graph);
         return graph;
     }
 
@@ -1082,10 +1262,7 @@
         let cameraState = null;
 
         if (sigmaInstance && forceRecreate) {
-            try {
-                const cam = sigmaInstance.getCamera?.();
-                cameraState = cam?.getState?.() || null;
-            } catch (e) {}
+            cameraState = sigmaInstance.getCamera?.()?.getState?.() || null;
             sigmaInstance.kill();
             sigmaInstance = null;
         }
@@ -1164,10 +1341,7 @@
         }
 
         if (cameraState) {
-            try {
-                const cam = sigmaInstance.getCamera?.();
-                cam?.setState?.(cameraState);
-            } catch (e) {}
+            sigmaInstance.getCamera?.()?.setState?.(cameraState);
         }
 
         let hovered = null;
@@ -1186,6 +1360,12 @@
 
             if (data.optedOut) {
                 res.borderColor = '#9ca3af';
+            }
+
+            if (data.isBridge) {
+                res.borderColor = '#f59e0b';
+                res.size = (data.size || 4) + 1.5;
+                res.zIndex = 2;
             }
 
             // Non-friends: grey

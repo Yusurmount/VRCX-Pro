@@ -24,3 +24,4 @@ export * from './i18n';
 export * from './components';
 export * from './sentry';
 export * from './router';
+export { initDayjs, initInteropApi, initUi, initUiForVrOverlay };

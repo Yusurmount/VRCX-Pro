@@ -47,8 +47,12 @@ export function sanitizeLayout(
     const chartsKeys = [
         'charts-instance',
         'charts-mutual',
+        'charts-two-person',
         'charts-hot-worlds',
         'charts-avatar-usage',
+        'charts-timeline',
+        'charts-intimacy',
+        'charts-timeline-comparison',
         'charts-report-export'
     ];
 
@@ -123,13 +127,15 @@ export function sanitizeLayout(
                 const chartsFolder = normalized.find(
                     (entry) =>
                         entry.type === 'folder' &&
-                        entry.id === 'default-folder-charts'
+                        (entry.id === 'default-folder-charts' ||
+                            entry.items?.some((key) => chartsKeys.includes(key)))
                 );
                 if (chartsFolder && Array.isArray(chartsFolder.items)) {
                     chartsFolder.items.push(item.key);
                     usedKeys.add(item.key);
                     return;
                 }
+                return;
             }
             appendItemEntry(item.key);
         }

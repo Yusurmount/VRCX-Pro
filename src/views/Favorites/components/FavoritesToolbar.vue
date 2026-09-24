@@ -90,9 +90,6 @@
                     <DropdownMenuItem @click="$emit('import')">
                         {{ t('view.favorite.import') }}
                     </DropdownMenuItem>
-                    <DropdownMenuItem @click="$emit('export')">
-                        {{ t('view.favorite.export') }}
-                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -139,8 +136,7 @@
         'update:cardScaleValue',
         'update:cardSpacingValue',
         'search',
-        'import',
-        'export'
+        'import'
     ]);
 
     const { t } = useI18n();

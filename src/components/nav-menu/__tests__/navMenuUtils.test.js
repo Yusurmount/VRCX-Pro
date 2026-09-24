@@ -14,8 +14,12 @@ const testDefinitions = [
     { key: 'tools', routeName: 'tools' },
     { key: 'charts-instance', routeName: 'charts-instance' },
     { key: 'charts-mutual', routeName: 'charts-mutual' },
+    { key: 'charts-two-person', routeName: 'charts-two-person' },
     { key: 'charts-hot-worlds', routeName: 'charts-hot-worlds' },
     { key: 'charts-avatar-usage', routeName: 'charts-avatar-usage' },
+    { key: 'charts-timeline', routeName: 'charts-timeline' },
+    { key: 'charts-intimacy', routeName: 'charts-intimacy' },
+    { key: 'charts-timeline-comparison', routeName: 'charts-timeline-comparison' },
     { key: 'charts-report-export', routeName: 'charts-report-export' },
     { key: 'notification', routeName: 'notification' },
     { key: 'direct-access', action: 'direct-access' }
@@ -287,8 +291,12 @@ describe('sanitizeLayout', () => {
         expect(chartsFolder.items).toEqual([
             'charts-instance',
             'charts-mutual',
+            'charts-two-person',
             'charts-hot-worlds',
             'charts-avatar-usage',
+            'charts-timeline',
+            'charts-intimacy',
+            'charts-timeline-comparison',
             'charts-report-export'
         ]);
     });

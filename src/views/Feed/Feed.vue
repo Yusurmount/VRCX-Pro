@@ -107,24 +107,15 @@
                         style="flex: 0.4"
                         @keyup.enter="feedTableLookup"
                         @change="feedTableLookup" />
-                    <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showExportDialog = true">
-                        <Download class="h-4 w-4" />
-                    </Button>
                 </div>
             </template>
         </DataTableLayout>
-        <DataExportDialog
-            v-model:visible="showExportDialog"
-            :title="t('view.feed.header')"
-            default-file-name="feed"
-            :sheet-name="t('view.feed.header')"
-            :get-data="getExportData" />
     </div>
 </template>
 
 <script setup>
     import { computed, onMounted, ref } from 'vue';
-    import { ListFilter, Star, Upload, Download } from 'lucide-vue-next';
+    import { ListFilter, Star, Upload } from 'lucide-vue-next';
     import { getLocalTimeZone, today } from '@internationalized/date';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
@@ -141,7 +132,6 @@
     import { RangeCalendar } from '../../components/ui/range-calendar';
     import { Toggle } from '../../components/ui/toggle';
     import { TooltipWrapper } from '../../components/ui/tooltip';
-    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
     import { columns as baseColumns } from './columns.jsx';
     import { useVrcxVueTable } from '../../lib/table/useVrcxVueTable';
 
@@ -160,12 +150,6 @@
     const dateRange = ref(undefined);
     const hasDateFilter = computed(() => !!(feedTable.value.dateFrom || feedTable.value.dateTo));
     const activeFilterCount = computed(() => (hasDateFilter.value ? 1 : 0));
-
-    const showExportDialog = ref(false);
-
-    function getExportData() {
-        return feedTableData.value ?? [];
-    }
 
     // Drag-and-drop state
     const isDraggingOver = ref(false);

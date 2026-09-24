@@ -482,6 +482,7 @@
         if (!selectedFriendAId.value || !selectedFriendBId.value) return;
         isLoading.value = true;
         try {
+            await database.ensureUserContext(currentUser.value?.id);
             const results = await database.getCoInstanceHistoryBetweenFriends(
                 selectedFriendAId.value,
                 selectedFriendBId.value

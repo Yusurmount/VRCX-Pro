@@ -14,6 +14,23 @@ function buildVipQuery(vipList) {
     return { vipQuery: `AND user_id IN (${vipPlaceholders.join(',')})`, vipArgs };
 }
 
+function buildPresenceSessionsQuery(userPrefix) {
+    const gpsTable = userPrefix + '_feed_gps';
+    const offlineTable = userPrefix + '_feed_online_offline';
+    return [
+        'SELECT user_id, display_name, previous_location AS location, created_at, time',
+        'FROM ' + gpsTable,
+        "WHERE previous_location NOT IN ('', 'offline', 'traveling', 'private', 'private:private')",
+        'AND time > 0',
+        'UNION',
+        'SELECT user_id, display_name, location, created_at, time',
+        'FROM ' + offlineTable,
+        "WHERE type = 'Offline'",
+        "AND location NOT IN ('', 'offline', 'traveling', 'private', 'private:private')",
+        'AND time > 0'
+    ].join('\n');
+}
+
 const gameLog = {
     async getGamelogDatabase() {
         var gamelogDatabase = [];
@@ -596,7 +613,7 @@ const gameLog = {
             FROM
                 gamelog_join_leave g
             WHERE
-                ${whereClauses.join('\\n                OR ')}
+                ${whereClauses.join(' OR ')}
             GROUP BY
                 g.user_id,
                 g.display_name
@@ -1993,7 +2010,14 @@ const gameLog = {
      * @returns {Promise<Array<{userId: string, displayName: string, day: string, totalTime: number, joinCount: number}>>}
      */
     async getRelationshipTimelineData() {
+        if (!dbVars.userPrefix) return [];
         const results = [];
+        const query =
+            'SELECT user_id, display_name, date(created_at) AS day, ' +
+            'SUM(time) AS total_time, COUNT(*) AS joinCount ' +
+            'FROM (' + buildPresenceSessionsQuery(dbVars.userPrefix) + ') sessions ' +
+            "WHERE user_id != '' AND user_id != @currentUserId " +
+            'GROUP BY user_id, day ORDER BY day ASC';
         await sqliteService.execute(
             (row) => {
                 results.push({
@@ -2004,20 +2028,7 @@ const gameLog = {
                     joinCount: row[4]
                 });
             },
-            `SELECT
-                user_id,
-                display_name,
-                date(created_at) AS day,
-                SUM(time) AS total_time,
-                COUNT(DISTINCT location) AS joinCount
-            FROM gamelog_join_leave
-            WHERE type = 'OnPlayerLeft'
-                AND user_id != ''
-                AND user_id != @currentUserId
-                AND time > 0
-                AND location NOT IN ('', 'traveling')
-            GROUP BY user_id, day
-            ORDER BY day ASC`,
+            query,
             {
                 '@currentUserId': dbVars.userId
             }
@@ -2039,8 +2050,16 @@ const gameLog = {
      * @returns {Promise<Array<{userId: string, displayName: string, totalTime: number, joinCount: number, firstSeen: string, lastSeen: string, distinctDays: number}>>}
      */
     async getFriendshipMetrics() {
-        if (!dbVars.userId) return [];
+        if (!dbVars.userPrefix) return [];
         const results = [];
+        const query =
+            'SELECT user_id, display_name, SUM(time) AS total_time, ' +
+            'COUNT(*) AS join_count, MIN(created_at) AS first_seen, ' +
+            'MAX(created_at) AS last_seen, ' +
+            'COUNT(DISTINCT date(created_at)) AS distinct_days ' +
+            'FROM (' + buildPresenceSessionsQuery(dbVars.userPrefix) + ') sessions ' +
+            "WHERE user_id != '' AND user_id != @currentUserId " +
+            'GROUP BY user_id ORDER BY total_time DESC';
         await sqliteService.execute(
             (row) => {
                 results.push({
@@ -2053,22 +2072,7 @@ const gameLog = {
                     distinctDays: row[6]
                 });
             },
-            SELECT
-                user_id,
-                display_name,
-                SUM(time) AS total_time,
-                COUNT(DISTINCT location) AS join_count,
-                MIN(created_at) AS first_seen,
-                MAX(created_at) AS last_seen,
-                COUNT(DISTINCT date(created_at)) AS distinct_days
-            FROM gamelog_join_leave
-            WHERE type = 'OnPlayerLeft'
-                AND user_id != ''
-                AND user_id != @currentUserId
-                AND time > 0
-                AND location NOT IN ('', 'traveling')
-            GROUP BY user_id
-            ORDER BY total_time DESC,
+            query,
             { '@currentUserId': dbVars.userId }
         );
         return results;
@@ -2089,13 +2093,13 @@ const gameLog = {
                     time: row[2]
                 });
             },
-            SELECT created_at, location, time
+            `SELECT created_at, location, time
             FROM gamelog_join_leave
             WHERE user_id = @userId
                 AND type = 'OnPlayerLeft'
                 AND time > 0
                 AND location NOT IN ('', 'traveling')
-            ORDER BY created_at ASC,
+            ORDER BY created_at ASC`,
             { '@userId': userId }
         );
         return results;

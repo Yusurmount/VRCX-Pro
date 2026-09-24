@@ -14,11 +14,7 @@
                 :card-spacing-slider="friendCardSpacingSlider"
                 @update:sort-value="handleSortFavoritesChange"
                 @search="searchFriendFavorites"
-                @import="handleFriendImportClick"
-                @export="handleFriendExportClick" />
-            <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showExportDialog = true">
-                <Download class="h-4 w-4" />
-            </Button>
+                @import="handleFriendImportClick" />
             <ResizablePanelGroup
                 ref="splitterGroupRef"
                 direction="horizontal"
@@ -302,18 +298,11 @@
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>
-        <FriendExportDialog v-model:friendExportDialogVisible="friendExportDialogVisible" />
-        <DataExportDialog
-            v-model:visible="showExportDialog"
-            :title="t('view.favorites.friends')"
-            default-file-name="favorite-friends"
-            sheet-name="Favorite Friends"
-            :get-data="getExportData" />
     </div>
 </template>
 
 <script setup>
-    import { Download, Ellipsis, MoreHorizontal, Plus, RefreshCcw, RefreshCw, User } from 'lucide-vue-next';
+    import { Ellipsis, MoreHorizontal, Plus, RefreshCcw, RefreshCw, User } from 'lucide-vue-next';
     import { computed, ref, watch } from 'vue';
     import { Button } from '@/components/ui/button';
     import { DataTableEmpty } from '@/components/ui/data-table';
@@ -353,8 +342,6 @@
     import FavoritesContentHeader from './components/FavoritesContentHeader.vue';
     import FavoritesFriendItem from './components/FavoritesFriendItem.vue';
     import FavoritesToolbar from './components/FavoritesToolbar.vue';
-    import FriendExportDialog from './dialogs/FriendExportDialog.vue';
-    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
 
     const friendGroupVisibilityOptions = ref(['public', 'friends', 'private']);
 
@@ -434,26 +421,6 @@
         }
     });
 
-    const friendExportDialogVisible = ref(false);
-    const showExportDialog = ref(false);
-
-    /**
-     *
-     */
-    function getExportData() {
-        const result = [];
-        for (const [groupName, userIds] of Object.entries(localFriendFavorites.value)) {
-            for (const userId of userIds) {
-                const user = cachedUsers.value.get(userId);
-                result.push({
-                    groupId: groupName,
-                    userId,
-                    displayName: user?.displayName || userId
-                });
-            }
-        }
-        return result;
-    }
     const friendFavoriteSearch = ref('');
     const friendFavoriteSearchResults = ref([]);
     const friendEditMode = ref(false);
@@ -508,14 +475,6 @@
     function handleFriendImportClick() {
         closeFriendToolbarMenu();
         showFriendImportDialog();
-    }
-
-    /**
-     *
-     */
-    function handleFriendExportClick() {
-        closeFriendToolbarMenu();
-        showFriendExportDialog();
     }
 
     const searchableFriendEntries = computed(() => {
@@ -598,13 +557,6 @@
             case 'private':
                 return 'destructive';
         }
-    }
-
-    /**
-     *
-     */
-    function showFriendExportDialog() {
-        friendExportDialogVisible.value = true;
     }
 
     /**

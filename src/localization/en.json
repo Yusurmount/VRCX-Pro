@@ -76,7 +76,7 @@
         "get_help": "GET HELP",
         "github": "VRCX on GitHub",
         "discord": "Join our Discord",
-        "changelog": "Changelog",
+        "check_updates": "Check for Updates",
         "update_available": "Update available",
         "update": "Update",
         "mark_all_read": "Mark All as Read",
@@ -693,6 +693,21 @@
                     "exclude_friends_placeholder": "Select friends to exclude",
                     "exclude_friends_help": "Selected friends will be hidden from the graph."
                 },
+                "analysis": {
+                    "title": "Network Analysis",
+                    "stats": {
+                        "title": "Graph Statistics",
+                        "nodes": "Nodes",
+                        "edges": "Edges",
+                        "communities": "Communities",
+                        "bridges": "Bridge Nodes",
+                        "isolates": "Isolates"
+                    },
+                    "community": "Community",
+                    "community_list": "Communities",
+                    "bridges_title": "Bridge Nodes",
+                    "bridges_empty": "No bridge nodes"
+                },
                 "context_menu": {
                     "view_details": "View Details",
                     "hide_friend": "Hide from Graph",
@@ -825,29 +840,6 @@
                     "show_friends_only": "Friends Only"
                 }
             },
-            "social_network": {
-                "header": "Social Network Graph",
-                "build": "Build Graph",
-                "rebuild": "Rebuild Graph",
-                "build_tooltip": "Build the social network graph from mutual friend data",
-                "building": "Building...",
-                "building_tooltip": "Graph is being built, please wait",
-                "empty_hint": "Click Build Graph to generate the social network visualization",
-                "stats": {
-                    "title": "Graph Statistics",
-                    "nodes": "Nodes",
-                    "edges": "Edges",
-                    "communities": "Communities",
-                    "bridges": "Bridges",
-                    "isolates": "Isolates"
-                },
-                "community": "Community",
-                "community_list": "Communities",
-                "bridges_title": "Bridge Nodes",
-                "context_menu": {
-                    "view_details": "View Details"
-                }
-            },
             "intimacy": {
                 "header": "Relationship Intimacy",
                 "refresh": "Refresh",
@@ -886,18 +878,6 @@
                 "visits": "Visit Count",
                 "chart_label": "Monthly co-presence timeline"
             },
-            "group_recommendations": {
-                "header": "Friend Group Recommendations",
-                "tips": {
-                    "description": "Analyzes interaction patterns to suggest friend group adjustments. Finds pairs with similar activity patterns that could benefit from being grouped together."
-                },
-                "analyze": "Run Analysis",
-                "analyze_tooltip": "Analyze interaction patterns to find group recommendations",
-                "empty_hint": "Click Run Analysis to discover group recommendations",
-                "similarity": "Similarity",
-                "reason_merge": "Similar activity pattern across groups:",
-                "reason_no_group": "High interaction similarity but not in any group"
-            },
             "avatar_usage": {
                 "header": "Avatar Usage Analysis",
                 "tab_label": "Avatar Usage",
@@ -915,14 +895,8 @@
                     "avg_daily": "avg daily"
                 },
                 "charts": {
-                    "change_frequency": "Daily Avatar Changes",
-                    "self_vs_other": "Self-Created vs Others",
                     "top_avatars": "Most Used Avatars",
                     "change_timeline": "Change Frequency Timeline"
-                },
-                "labels": {
-                    "self_owned": "Self-Created",
-                    "others": "Others"
                 }
             },
             "report_export": {
@@ -957,7 +931,29 @@
                 "no_data": "No data available for this period",
                 "total_avatar_changes": "Total avatar changes",
                 "self_owned": "Self-Created",
-                "others": "Others"
+                "others": "Others",
+                "save": "Save Report",
+                "saved": "Saved to",
+                "generated": "Report generated",
+                "section_friend_activity": "Friend Activity",
+                "section_status_changes": "Status Changes",
+                "section_online_activity": "Online Activity",
+                "total_visits": "Total Visits",
+                "unique_friends": "Unique Friends",
+                "unique_worlds": "Unique Worlds",
+                "unique_users": "Unique Users",
+                "total_status_changes": "Status Changes",
+                "online_events": "Online Events",
+                "offline_events": "Offline Events",
+                "table_friend": "Friend",
+                "table_worlds": "Worlds",
+                "table_status": "Status",
+                "table_description": "Description",
+                "table_online_count": "Online Count",
+                "top_users": "Top Users",
+                "top_players": "Top Players",
+                "table_player": "Player",
+                "table_unique_avatars": "Unique Avatars"
             }
         },
         "tools": {
@@ -970,7 +966,20 @@
             "user": {
                 "discord_names_description": "Find the Discord usernames of your VRChat friends",
                 "export_friend_list_description": "Export your friends list from VRChat",
-                "export_own_avatars_description": "Export your personal avatars from VRChat"
+                "export_own_avatars_description": "Export your personal avatars from VRChat",
+                "export_feed_description": "Export feed data to a local file (JSON/Excel)",
+                "export_friend_log_description": "Export friend log data to a local file (JSON/Excel)",
+                "export_friend_list_data_description": "Export friends list data to a local file (JSON/Excel)",
+                "export_game_log_description": "Export game log data to a local file (JSON/Excel)",
+                "export_moderation_description": "Export moderation list data to a local file (JSON/Excel)",
+                "export_notifications_description": "Export notifications data to a local file (JSON/Excel)",
+                "export_my_avatars_description": "Export my avatars data to a local file (JSON/Excel)",
+                "export_favorite_worlds_description": "Export favorite worlds data to a local file (JSON/Excel)",
+                "export_favorite_friends_description": "Export favorite friends data to a local file (JSON/Excel)",
+                "export_favorite_avatars_description": "Export favorite avatars data to a local file (JSON/Excel)",
+                "world_export_description": "Copy world favorites as CSV text",
+                "avatar_export_description": "Copy avatar favorites as CSV text",
+                "friend_export_description": "Copy favorite friends as CSV text"
             },
             "export": {
                 "header": "Export",
@@ -1115,7 +1124,16 @@
                     "port_dialog_title": "MCP Server Port",
                     "port_dialog_description": "Enter the port number for the MCP server (1024-65535).",
                     "port_dialog_error": "Please enter a valid port number (1024-65535).",
-                    "db_dialog_title": "Select VRCX Database"
+                    "db_dialog_title": "Select VRCX Database",
+                    "ai_tools": "AI Tools",
+                    "ai_tools_description": "Tools available to connected AI assistants. Call them from Claude Desktop, Cursor, or any MCP client.",
+                    "tool_social_insights": "Social analytics: active friends, online time distribution, top worlds.",
+                    "tool_friend_schedule": "Friend online schedule: typical hours, active days.",
+                    "tool_search_friends": "Friend search by name, status, trust level, location.",
+                    "tool_world_analytics": "World visit analytics: top worlds, daily trends, active visitors.",
+                    "tool_user_profile": "User profile: latest status, avatar, bio, memo, recent activity.",
+                    "tool_set_note": "Set a local note for a user (write operation).",
+                    "tool_co_location": "Co-location: friends who shared the same world."
                 }
             },
             "advanced_groups": {
@@ -1275,9 +1293,6 @@
                     "vrc_profile_themes": "Display VRChat Profile Themes",
                     "vrc_profile_backgrounds": "Display Player Profile Backgrounds",
                     "vrc_profile_backgrounds_opacity": "Profile Background Opacity",
-                    "use_advanced_material": "Use Advanced Material (Beta)",
-                    "use_advanced_material_description": "Add frosted-glass blur and edge highlights to dialogs, popovers and menus, with ambient lighting at the bottom of the main window.",
-                    "theme_color_adapting": "Currently adapting",
                     "vrc_profile_cosmetics": "Profile Cosmetics",
                     "cosmetics_description": "Shows icon frame and profile effects",
                     "show_cosmetics": "Show Cosmetics"
@@ -1443,10 +1458,10 @@
                     "smtp_password": "SMTP Password",
                     "smtp_password_placeholder": "Your password or app password",
                     "from_address": "From Address",
-                    "from_address_placeholder": "sender@example.com",
+                    "from_address_placeholder": "sender\\@example.com",
                     "from_name": "From Name",
                     "recipient_address": "Recipient Email",
-                    "recipient_address_placeholder": "recipient@example.com",
+                    "recipient_address_placeholder": "recipient\\@example.com",
                     "recipient_name": "Recipient Name",
                     "test": "Test Email",
                     "send_test": "Send Test",
@@ -3252,19 +3267,21 @@
         },
         "vrcx_updater": {
             "header": "VRCX Updater",
+            "checking": "Checking for updates",
+            "checking_description": "Fetching the latest release information.",
+            "downloading": "Downloading update",
+            "current_version": "Current version",
+            "update_available": "A new version is available.",
             "latest_version": "VRCX is up to date.",
             "ready_for_update": "Ready for install, restart VRCX to apply.",
-            "branch_stable": "Stable",
-            "branch_nightly": "Nightly",
-            "nightly_title": "Nightly builds",
-            "nightly_notice": "Nightly builds are for testing. For stability, use stable build.",
-            "release": "Release",
+            "change_version": "Change Version",
             "download": "Download",
             "install": "Install",
             "cancel": "Cancel"
         },
         "change_log": {
             "header": "Change Log",
+            "loading": "Loading update notes from GitHub Releases...",
             "description": "Consider donating to support future development of VRCX",
             "close": "Close",
             "donate": "Donate",
@@ -3315,6 +3332,7 @@
         "data_export": {
             "description": "Select format and save to file",
             "format": "Format",
+            "loading": "Loading data...",
             "record_count": "{count} records",
             "no_data": "No data to export",
             "cancel": "Cancel",

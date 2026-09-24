@@ -17,11 +17,7 @@
                 :card-spacing-slider="worldCardSpacingSlider"
                 @update:sort-value="handleSortValueChange"
                 @search="searchWorldFavorites"
-                @import="handleWorldImportClick"
-                @export="handleWorldExportClick" />
-            <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showDataExportDialog = true">
-                <Download class="h-4 w-4" />
-            </Button>
+                @import="handleWorldImportClick" />
             <ResizablePanelGroup
                 ref="splitterGroupRef"
                 direction="horizontal"
@@ -344,19 +340,12 @@
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>
-        <WorldExportDialog v-model:worldExportDialogVisible="worldExportDialogVisible" />
-        <DataExportDialog
-            v-model:visible="showDataExportDialog"
-            :title="t('view.favorites.worlds')"
-            default-file-name="favorite-worlds"
-            sheet-name="Favorite Worlds"
-            :get-data="getExportData" />
     </div>
 </template>
 
 <script setup>
     import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-    import { Download, Ellipsis, MoreHorizontal, Plus, RefreshCcw, RefreshCw } from 'lucide-vue-next';
+    import { Ellipsis, MoreHorizontal, Plus, RefreshCcw, RefreshCw } from 'lucide-vue-next';
     import { Button } from '@/components/ui/button';
     import { DataTableEmpty } from '@/components/ui/data-table';
     import { InputGroupField } from '@/components/ui/input-group';
@@ -396,8 +385,6 @@
     import FavoritesContentHeader from './components/FavoritesContentHeader.vue';
     import FavoritesToolbar from './components/FavoritesToolbar.vue';
     import FavoritesWorldItem from './components/FavoritesWorldItem.vue';
-    import WorldExportDialog from './dialogs/WorldExportDialog.vue';
-    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
 
     import * as workerTimers from 'worker-timers';
 
@@ -484,28 +471,6 @@
         handleLayout,
         setDragging: splitterSetDragging
     } = useFavoritesSplitter({ configKey: 'VRCX_FavoritesWorldSplitter' });
-    const worldExportDialogVisible = ref(false);
-    const showDataExportDialog = ref(false);
-
-    /**
-     *
-     */
-    function getExportData() {
-        const result = [];
-        for (const [groupName, worlds] of Object.entries(localWorldFavorites.value)) {
-            for (const world of worlds) {
-                result.push({ groupId: groupName, worldId: world.id });
-            }
-        }
-        for (const fav of favoriteWorlds.value) {
-            result.push({
-                groupKey: fav.groupKey,
-                worldId: fav.id,
-                worldName: fav.ref?.name || fav.name || ''
-            });
-        }
-        return result;
-    }
     const worldFavoriteSearch = ref('');
     const worldFavoriteSearchResults = ref([]);
     const worldGroupPlaceholders = WORLD_GROUP_PLACEHOLDERS;
@@ -569,14 +534,6 @@
     function handleWorldImportClick() {
         closeWorldToolbarMenu();
         showWorldImportDialog();
-    }
-
-    /**
-     *
-     */
-    function handleWorldExportClick() {
-        closeWorldToolbarMenu();
-        showExportDialog();
     }
 
     const groupedWorldFavorites = computed(() => {
@@ -909,13 +866,6 @@
         });
         selectedFavoriteWorlds.value = [];
         worldEditMode.value = false;
-    }
-
-    /**
-     *
-     */
-    function showExportDialog() {
-        worldExportDialogVisible.value = true;
     }
 
     /**

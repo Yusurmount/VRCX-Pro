@@ -37,6 +37,9 @@ struct LaunchArgs {
     disable_gpu: bool,
     /// Center window on screen (pass `--center`).
     center: bool,
+    maximized: bool,
+    fullscreen: bool,
+    reset_window: bool,
     /// Custom config directory (pass `--config=<dir>`).
     config_directory: Option<String>,
     /// Proxy server URL (pass `--proxy-server=<url>`).
@@ -56,6 +59,9 @@ fn parse_launch_args(args: &[String]) -> LaunchArgs {
         overlay: false,
         disable_gpu: false,
         center: false,
+        maximized: false,
+        fullscreen: false,
+        reset_window: false,
         config_directory: None,
         proxy_server: None,
         width: None,
@@ -63,7 +69,7 @@ fn parse_launch_args(args: &[String]) -> LaunchArgs {
         launch_command: None,
     };
     for arg in args {
-        if arg == "--startup" {
+        if arg == "--startup" || arg == "--minimized" {
             result.startup = true;
         } else if arg == "--debug" {
             result.debug = true;
@@ -73,6 +79,12 @@ fn parse_launch_args(args: &[String]) -> LaunchArgs {
             result.disable_gpu = true;
         } else if arg == "--center" {
             result.center = true;
+        } else if arg == "--maximized" {
+            result.maximized = true;
+        } else if arg == "--fullscreen" {
+            result.fullscreen = true;
+        } else if arg == "--reset-window" {
+            result.reset_window = true;
         } else if let Some(rest) = arg.strip_prefix("--config=") {
             result.config_directory = Some(rest.trim_matches(|c| c == '"' || c == '\'').to_string());
         } else if let Some(rest) = arg.strip_prefix("--proxy-server=") {
@@ -394,6 +406,17 @@ pub fn run() {
 
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_title("VRCX-Pro");
+                let launch_args = app.state::<LaunchArgsState>().0.clone();
+                if launch_args.reset_window {
+                    let size = tauri::LogicalSize::new(1280.0, 800.0);
+                    let _ = window.set_size(size);
+                    let _ = window.center();
+                }
+                if launch_args.fullscreen {
+                    let _ = window.set_fullscreen(true);
+                } else if launch_args.maximized {
+                    let _ = window.maximize();
+                }
             }
 
             let show_item = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
@@ -439,4 +462,34 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running VRCX-Pro");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_launch_args;
+
+    fn args(values: &[&str]) -> Vec<String> {
+        values.iter().map(|value| value.to_string()).collect()
+    }
+
+    #[test]
+    fn minimized_is_an_alias_for_startup() {
+        let launch_args = parse_launch_args(&args(&["VRCX-Pro.exe", "--minimized"]));
+
+        assert!(launch_args.startup);
+    }
+
+    #[test]
+    fn parses_window_state_arguments() {
+        let launch_args = parse_launch_args(&args(&[
+            "VRCX-Pro.exe",
+            "--maximized",
+            "--fullscreen",
+            "--reset-window",
+        ]));
+
+        assert!(launch_args.maximized);
+        assert!(launch_args.fullscreen);
+        assert!(launch_args.reset_window);
+    }
 }

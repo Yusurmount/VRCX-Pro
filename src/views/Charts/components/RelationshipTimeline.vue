@@ -127,13 +127,18 @@
         computeZoomRange
     } from './relationshipTimelineUtils';
     import { debounce } from '../../../shared/utils';
-    import { useAppearanceSettingsStore, useFriendStore } from '../../../stores';
+    import {
+        useAppearanceSettingsStore,
+        useFriendStore,
+        useUserStore
+    } from '../../../stores';
 
     const { t } = useI18n();
 
     const appearanceStore = useAppearanceSettingsStore();
     const { isDarkMode } = storeToRefs(appearanceStore);
     const friendStore = useFriendStore();
+    const userStore = useUserStore();
     const { friends } = storeToRefs(friendStore);
 
     const containerRef = ref(null);
@@ -473,6 +478,13 @@
         isLoading.value = true;
         rawRows.value = [];
         try {
+            const contextReady = await database.ensureUserContext(
+                userStore.currentUser?.id
+            );
+            if (!contextReady) {
+                rawRows.value = [];
+                return;
+            }
             rawRows.value = await database.getRelationshipTimelineData();
         } catch (err) {
             console.error('[RelationshipTimeline] Failed to load data', err);
@@ -493,6 +505,15 @@
             nextTick(() => initChart());
         }
     });
+
+    watch(
+        () => userStore.currentUser?.id,
+        (userId, previousUserId) => {
+            if (userId && userId !== previousUserId && containerRef.value) {
+                loadData();
+            }
+        }
+    );
 
     onMounted(() => {
         loadData();

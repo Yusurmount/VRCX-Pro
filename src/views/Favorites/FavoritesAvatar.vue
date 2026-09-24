@@ -14,11 +14,7 @@
                 :card-spacing-slider="avatarCardSpacingSlider"
                 @update:sort-value="handleSortFavoritesChange"
                 @search="searchAvatarFavorites"
-                @import="handleAvatarImportClick"
-                @export="handleAvatarExportClick" />
-            <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showExportDialog = true">
-                <Download class="h-4 w-4" />
-            </Button>
+                @import="handleAvatarImportClick" />
             <ResizablePanelGroup
                 ref="splitterGroupRef"
                 direction="horizontal"
@@ -422,19 +418,12 @@
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>
-        <AvatarExportDialog v-model:avatarExportDialogVisible="avatarExportDialogVisible" />
-        <DataExportDialog
-            v-model:visible="showExportDialog"
-            :title="t('view.favorites.avatars')"
-            default-file-name="favorite-avatars"
-            sheet-name="Favorite Avatars"
-            :get-data="getExportData" />
     </div>
 </template>
 
 <script setup>
     import { computed, markRaw, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue';
-    import { Download, Ellipsis, Loader, MoreHorizontal, Plus, RefreshCcw, RefreshCw } from 'lucide-vue-next';
+    import { Ellipsis, Loader, MoreHorizontal, Plus, RefreshCcw, RefreshCw } from 'lucide-vue-next';
     import { Button } from '@/components/ui/button';
     import { DataTableEmpty } from '@/components/ui/data-table';
     import { InputGroupField } from '@/components/ui/input-group';
@@ -479,8 +468,6 @@
         removeInvalidLocalAvatars
     } from '../../coordinators/favoriteCoordinator';
 
-    import AvatarExportDialog from './dialogs/AvatarExportDialog.vue';
-    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
     import FavoritesAvatarItem from './components/FavoritesAvatarItem.vue';
     import FavoritesAvatarLocalHistoryItem from './components/FavoritesAvatarLocalHistoryItem.vue';
     import FavoritesContentHeader from './components/FavoritesContentHeader.vue';
@@ -572,28 +559,6 @@
         }
     });
 
-    const avatarExportDialogVisible = ref(false);
-    const showExportDialog = ref(false);
-
-    /**
-     *
-     */
-    function getExportData() {
-        const result = [];
-        for (const [groupName, avatars] of Object.entries(localAvatarFavorites.value)) {
-            for (const avatar of avatars) {
-                result.push({ groupId: groupName, avatarId: avatar.id });
-            }
-        }
-        for (const fav of favoriteAvatars.value) {
-            result.push({
-                groupKey: fav.groupKey,
-                avatarId: fav.id,
-                avatarName: fav.ref?.name || fav.name || ''
-            });
-        }
-        return result;
-    }
     const avatarFavoriteSearch = ref('');
     const avatarFavoriteSearchResults = ref([]);
     const avatarEditMode = ref(false);
@@ -657,14 +622,6 @@
     function handleAvatarImportClick() {
         closeAvatarToolbarMenu();
         showAvatarImportDialog();
-    }
-
-    /**
-     *
-     */
-    function handleAvatarExportClick() {
-        closeAvatarToolbarMenu();
-        showAvatarExportDialog();
     }
 
     const groupedAvatarFavorites = computed(() => {
@@ -790,13 +747,6 @@
      */
     function clearSelectedAvatars() {
         selectedFavoriteAvatars.value = [];
-    }
-
-    /**
-     *
-     */
-    function showAvatarExportDialog() {
-        avatarExportDialogVisible.value = true;
     }
 
     /**

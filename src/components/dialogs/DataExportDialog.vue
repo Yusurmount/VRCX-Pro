@@ -22,7 +22,10 @@
                         </SelectContent>
                     </Select>
                 </div>
-                <div v-if="previewData.length > 0" class="text-xs text-muted-foreground">
+                <div v-if="loading" class="text-xs text-muted-foreground">
+                    {{ t('dialog.data_export.loading') }}
+                </div>
+                <div v-else-if="previewData.length > 0" class="text-xs text-muted-foreground">
                     {{ t('dialog.data_export.record_count', { count: previewData.length }) }}
                 </div>
                 <div v-else class="text-xs text-muted-foreground">
@@ -33,7 +36,7 @@
                 <Button variant="outline" size="sm" @click="isVisible = false">
                     {{ t('dialog.data_export.cancel') }}
                 </Button>
-                <Button size="sm" :disabled="exporting || previewData.length === 0" @click="handleExport">
+                <Button size="sm" :disabled="loading || exporting || previewData.length === 0" @click="handleExport">
                     <Loader2 v-if="exporting" class="mr-1 h-3.5 w-3.5 animate-spin" />
                     {{ t('dialog.data_export.export') }}
                 </Button>
@@ -81,7 +84,7 @@
             type: String,
             default: 'Data'
         },
-        /** 获取导出数据的函数，返回数组 */
+        /** 获取导出数据的函数，返回数组或 Promise（数组） */
         getData: {
             type: Function,
             required: true
@@ -97,20 +100,35 @@
 
     const exportFormat = ref('json');
     const exporting = ref(false);
+    const loading = ref(false);
     const previewData = ref([]);
+    let loadToken = 0;
 
     watch(
         () => props.visible,
-        (v) => {
+        async (v) => {
             if (v) {
                 exportFormat.value = 'json';
                 exporting.value = false;
-                // 延迟计算数据，避免阻塞 UI
+                const token = ++loadToken;
+                loading.value = true;
+                previewData.value = [];
                 try {
-                    previewData.value = props.getData() ?? [];
+                    const data = await props.getData();
+                    if (token !== loadToken) {
+                        return;
+                    }
+                    previewData.value = data ?? [];
                 } catch (e) {
+                    if (token !== loadToken) {
+                        return;
+                    }
                     console.error('DataExportDialog getData error:', e);
                     previewData.value = [];
+                } finally {
+                    if (token === loadToken) {
+                        loading.value = false;
+                    }
                 }
             }
         }

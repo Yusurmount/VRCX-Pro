@@ -6,10 +6,21 @@ import sqliteService from '../sqlite.js';
 const DEFAULT_FEED_ENTRY_LIMIT = 25;
 
 function parseFeedFilters(filters) {
-    const types = { gps: true, status: true, bio: true, avatar: true, online: true, offline: true };
+    const types = {
+        gps: true,
+        status: true,
+        bio: true,
+        avatar: true,
+        online: true,
+        offline: true
+    };
     if (filters.length > 0) {
-        types.gps = false; types.status = false; types.bio = false;
-        types.avatar = false; types.online = false; types.offline = false;
+        types.gps = false;
+        types.status = false;
+        types.bio = false;
+        types.avatar = false;
+        types.online = false;
+        types.offline = false;
         for (const f of filters) {
             if (f === 'GPS') types.gps = true;
             else if (f === 'Status') types.status = true;
@@ -31,10 +42,14 @@ function buildVipQuery(vipList) {
         vipArgs[key] = vipList[i];
         vipPlaceholders.push(key);
     }
-    return { vipQuery: `AND user_id IN (${vipPlaceholders.join(', ')})`, vipArgs };
+    return {
+        vipQuery: `AND user_id IN (${vipPlaceholders.join(', ')})`,
+        vipArgs
+    };
 }
 
-const BASE_COLUMNS = 'id, created_at, user_id, display_name, type, location, world_name, previous_location, time, group_name, status, status_description, previous_status, previous_status_description, bio, previous_bio, owner_id, avatar_name, current_avatar_image_url, current_avatar_thumbnail_image_url, previous_current_avatar_image_url, previous_current_avatar_thumbnail_image_url';
+const BASE_COLUMNS =
+    'id, created_at, user_id, display_name, type, location, world_name, previous_location, time, group_name, status, status_description, previous_status, previous_status_description, bio, previous_bio, owner_id, avatar_name, current_avatar_image_url, current_avatar_thumbnail_image_url, previous_current_avatar_image_url, previous_current_avatar_thumbnail_image_url';
 
 const feed = {
     addGPSToDatabase(entry) {
@@ -313,13 +328,13 @@ const feed = {
         if (dateTo) {
             dateQuery += 'AND created_at <= @dateTo ';
         }
-        const { gps, status, bio, avatar, online, offline } = parseFeedFilters(filters);
+        const { gps, status, bio, avatar, online, offline } =
+            parseFeedFilters(filters);
         const aviPublic = search.includes('public');
         const aviPrivate = search.includes('private');
         const searchLike = `%${search}%`;
         const selects = [];
 
-        
         if (gps) {
             selects.push(
                 `SELECT * FROM (SELECT id, created_at, user_id, display_name, 'GPS' AS type, location, world_name, previous_location, time, group_name, NULL AS status, NULL AS status_description, NULL AS previous_status, NULL AS previous_status_description, NULL AS bio, NULL AS previous_bio, NULL AS owner_id, NULL AS avatar_name, NULL AS current_avatar_image_url, NULL AS current_avatar_thumbnail_image_url, NULL AS previous_current_avatar_image_url, NULL AS previous_current_avatar_thumbnail_image_url FROM ${dbVars.userPrefix}_feed_gps WHERE (display_name LIKE @searchLike OR world_name LIKE @searchLike OR group_name LIKE @searchLike) ${dateQuery} ${vipQuery} ORDER BY created_at DESC, id DESC LIMIT @perTable)`
@@ -439,10 +454,10 @@ const feed = {
         if (!Number.isFinite(maxEntries)) maxEntries = DEFAULT_FEED_ENTRY_LIMIT;
         if (maxEntries < -1) maxEntries = -1;
         const { vipQuery, vipArgs } = buildVipQuery(vipList);
-        const { gps, status, bio, avatar, online, offline } = parseFeedFilters(filters);
+        const { gps, status, bio, avatar, online, offline } =
+            parseFeedFilters(filters);
         const selects = [];
 
-        
         if (gps) {
             selects.push(
                 `SELECT * FROM (SELECT id, created_at, user_id, display_name, 'GPS' AS type, location, world_name, previous_location, time, group_name, NULL AS status, NULL AS status_description, NULL AS previous_status, NULL AS previous_status_description, NULL AS bio, NULL AS previous_bio, NULL AS owner_id, NULL AS avatar_name, NULL AS current_avatar_image_url, NULL AS current_avatar_thumbnail_image_url, NULL AS previous_current_avatar_image_url, NULL AS previous_current_avatar_thumbnail_image_url FROM ${dbVars.userPrefix}_feed_gps WHERE 1=1 ${vipQuery} ORDER BY id DESC LIMIT @perTable)`
@@ -562,7 +577,6 @@ const feed = {
         }
         const selects = [];
 
-        
         if (gps) {
             selects.push(
                 `SELECT * FROM (SELECT id, created_at, user_id, display_name, 'GPS' AS type, location, world_name, previous_location, time, group_name, NULL AS status, NULL AS status_description, NULL AS previous_status, NULL AS previous_status_description, NULL AS bio, NULL AS previous_bio, NULL AS owner_id, NULL AS avatar_name, NULL AS current_avatar_image_url, NULL AS current_avatar_thumbnail_image_url, NULL AS previous_current_avatar_image_url, NULL AS previous_current_avatar_thumbnail_image_url FROM ${dbVars.userPrefix}_feed_gps WHERE location LIKE @instanceLike ${vipQuery} ORDER BY created_at DESC, id DESC LIMIT @perTable)`
@@ -776,19 +790,20 @@ const feed = {
                     uniqueFriends: dbRow[2]
                 });
             },
-            \SELECT
+            `SELECT
                 DATE(created_at) AS date,
                 COUNT(*) AS visit_count,
                 COUNT(DISTINCT user_id) AS unique_friends
-            FROM \_feed_gps
+            FROM ${dbVars.userPrefix}_feed_gps
             WHERE SUBSTR(location, 1, INSTR(location, ':') - 1) = @worldId
                 AND created_at >= datetime('now', @daysOffset)
                 AND location LIKE 'wrld_%'
             GROUP BY DATE(created_at)
-            ORDER BY date ASC\,
+            ORDER BY date ASC`,
             {
                 '@worldId': worldId,
-                '@daysOffset': \-\ days            }
+                '@daysOffset': `-${days} days`
+            }
         );
         return results;
     },
@@ -800,7 +815,16 @@ const feed = {
      */
     async getAvatarUsageStats(days = 30, limit = 50) {
         if (!dbVars.userPrefix) {
-            return { topAvatars: [], selfVsOther: { selfOwned: 0, others: 0 }, totalChanges: 0, dailyChanges: [], topAuthors: [] };
+            return {
+                topAvatars: [],
+                selfVsOther: { selfOwned: 0, others: 0 },
+                totalChanges: 0,
+                dailyChanges: [],
+                topAuthors: [],
+                topUsers: [],
+                dailyByUser: [],
+                avatarUserMap: {}
+            };
         }
         const topAvatars = [];
         await sqliteService.execute(
@@ -813,20 +837,20 @@ const feed = {
                     lastUsed: dbRow[4]
                 });
             },
-            \SELECT
+            `SELECT
                 avatar_name,
                 owner_id,
                 COUNT(*) AS change_count,
                 COUNT(DISTINCT user_id) AS unique_users,
                 MAX(created_at) AS last_used
-            FROM \_feed_avatar
+            FROM ${dbVars.userPrefix}_feed_avatar
             WHERE created_at >= datetime('now', @daysOffset)
                 AND avatar_name IS NOT NULL AND avatar_name != ''
             GROUP BY avatar_name, owner_id
             ORDER BY change_count DESC
-            LIMIT @limit\,
+            LIMIT @limit`,
             {
-                '@daysOffset': \-\ days\,
+                '@daysOffset': `-${days} days`,
                 '@limit': limit
             }
         );
@@ -840,16 +864,17 @@ const feed = {
                     selfVsOther.others = dbRow[2];
                 }
             },
-            \SELECT
+            `SELECT
                 user_id,
                 owner_id,
                 COUNT(*) AS change_count
-            FROM \_feed_avatar
+            FROM ${dbVars.userPrefix}_feed_avatar
             WHERE created_at >= datetime('now', @daysOffset)
                 AND avatar_name IS NOT NULL AND avatar_name != ''
-            GROUP BY user_id, owner_id\,
+            GROUP BY user_id, owner_id`,
             {
-                '@daysOffset': \-\ days            }
+                '@daysOffset': `-${days} days`
+            }
         );
 
         let totalChanges = 0;
@@ -857,11 +882,12 @@ const feed = {
             (dbRow) => {
                 totalChanges = dbRow[0] || 0;
             },
-            \SELECT COUNT(*) FROM \_feed_avatar
+            `SELECT COUNT(*) FROM ${dbVars.userPrefix}_feed_avatar
             WHERE created_at >= datetime('now', @daysOffset)
-                AND avatar_name IS NOT NULL AND avatar_name != ''\,
+                AND avatar_name IS NOT NULL AND avatar_name != ''`,
             {
-                '@daysOffset': \-\ days            }
+                '@daysOffset': `-${days} days`
+            }
         );
 
         const dailyChanges = [];
@@ -872,16 +898,17 @@ const feed = {
                     count: dbRow[1]
                 });
             },
-            \SELECT
+            `SELECT
                 DATE(created_at) AS date,
                 COUNT(*) AS count
-            FROM \_feed_avatar
+            FROM ${dbVars.userPrefix}_feed_avatar
             WHERE created_at >= datetime('now', @daysOffset)
                 AND avatar_name IS NOT NULL AND avatar_name != ''
             GROUP BY DATE(created_at)
-            ORDER BY date ASC\,
+            ORDER BY date ASC`,
             {
-                '@daysOffset': \-\ days            }
+                '@daysOffset': `-${days} days`
+            }
         );
 
         const topAuthors = [];
@@ -893,21 +920,104 @@ const feed = {
                     changeCount: dbRow[2]
                 });
             },
-            \SELECT
+            `SELECT
                 owner_id,
                 COUNT(DISTINCT avatar_name) AS avatar_count,
                 COUNT(*) AS change_count
-            FROM \_feed_avatar
+            FROM ${dbVars.userPrefix}_feed_avatar
             WHERE created_at >= datetime('now', @daysOffset)
                 AND avatar_name IS NOT NULL AND avatar_name != ''
             GROUP BY owner_id
             ORDER BY change_count DESC
-            LIMIT 10\,
+            LIMIT 10`,
             {
-                '@daysOffset': \-\ days            }
+                '@daysOffset': `-${days} days`
+            }
         );
 
-        return { topAvatars, selfVsOther, totalChanges, dailyChanges, topAuthors };
+
+        const topUsers = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                topUsers.push({
+                    displayName: dbRow[0],
+                    changeCount: dbRow[1],
+                    uniqueAvatars: dbRow[2]
+                });
+            },
+            `SELECT
+                display_name,
+                COUNT(*) AS change_count,
+                COUNT(DISTINCT avatar_name) AS unique_avatars
+            FROM ${dbVars.userPrefix}_feed_avatar
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND avatar_name IS NOT NULL AND avatar_name != ''
+            GROUP BY user_id
+            ORDER BY change_count DESC
+            LIMIT 10`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        const dailyByUser = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                dailyByUser.push({
+                    displayName: dbRow[0],
+                    date: dbRow[1],
+                    count: dbRow[2]
+                });
+            },
+            `SELECT
+                display_name,
+                DATE(created_at) AS date,
+                COUNT(*) AS count
+            FROM ${dbVars.userPrefix}_feed_avatar
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND avatar_name IS NOT NULL AND avatar_name != ''
+            GROUP BY user_id, DATE(created_at)
+            ORDER BY date ASC`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        const avatarUserMap = {};
+        await sqliteService.execute(
+            (dbRow) => {
+                const avatarName = dbRow[0];
+                const displayName = dbRow[1];
+                const count = dbRow[2];
+                if (!avatarUserMap[avatarName]) {
+                    avatarUserMap[avatarName] = [];
+                }
+                avatarUserMap[avatarName].push({ displayName, count });
+            },
+            `SELECT
+                avatar_name,
+                display_name,
+                COUNT(*) AS change_count
+            FROM ${dbVars.userPrefix}_feed_avatar
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND avatar_name IS NOT NULL AND avatar_name != ''
+            GROUP BY avatar_name, user_id
+            ORDER BY avatar_name, change_count DESC`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        return {
+            topAvatars,
+            selfVsOther,
+            totalChanges,
+            dailyChanges,
+            topAuthors,
+            topUsers,
+            dailyByUser,
+            avatarUserMap
+        };
     },
 
     /**
@@ -927,19 +1037,310 @@ const feed = {
                     uniqueUsers: dbRow[2]
                 });
             },
-            \SELECT
+            `SELECT
                 DATE(created_at) AS date,
                 COUNT(*) AS count,
                 COUNT(DISTINCT user_id) AS unique_users
-            FROM \_feed_avatar
+            FROM ${dbVars.userPrefix}_feed_avatar
             WHERE created_at >= datetime('now', @daysOffset)
                 AND avatar_name IS NOT NULL AND avatar_name != ''
             GROUP BY DATE(created_at)
-            ORDER BY date ASC\,
+            ORDER BY date ASC`,
             {
-                '@daysOffset': \-\ days            }
+                '@daysOffset': `-${days} days`
+            }
         );
         return results;
+    },
+    /**
+     * @param {number} days - Number of days to look back
+     * @param {number} limit - Max number of avatars
+     * @returns {Promise<Object>} Avatar usage with per-friend details
+     */
+    async getAvatarUsageWithDetails(days = 30, limit = 30) {
+        if (!dbVars.userPrefix) {
+            return { topAvatars: [], avatarUserMap: {} };
+        }
+        const topAvatars = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                topAvatars.push({
+                    avatarName: dbRow[0],
+                    ownerId: dbRow[1],
+                    changeCount: dbRow[2],
+                    uniqueUsers: dbRow[3],
+                    lastUsed: dbRow[4]
+                });
+            },
+            `SELECT
+                avatar_name,
+                owner_id,
+                COUNT(*) AS change_count,
+                COUNT(DISTINCT user_id) AS unique_users,
+                MAX(created_at) AS last_used
+            FROM ${dbVars.userPrefix}_feed_avatar
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND avatar_name IS NOT NULL AND avatar_name != ''
+            GROUP BY avatar_name, owner_id
+            ORDER BY change_count DESC
+            LIMIT @limit`,
+            {
+                '@daysOffset': `-${days} days`,
+                '@limit': limit
+            }
+        );
+
+        const avatarUserMap = {};
+        await sqliteService.execute(
+            (dbRow) => {
+                const avatarName = dbRow[0];
+                const displayName = dbRow[1];
+                const count = dbRow[2];
+                if (!avatarUserMap[avatarName]) {
+                    avatarUserMap[avatarName] = [];
+                }
+                avatarUserMap[avatarName].push({ displayName, count });
+            },
+            `SELECT
+                avatar_name,
+                display_name,
+                COUNT(*) AS change_count
+            FROM ${dbVars.userPrefix}_feed_avatar
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND avatar_name IS NOT NULL AND avatar_name != ''
+            GROUP BY avatar_name, user_id
+            ORDER BY avatar_name, change_count DESC`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        return { topAvatars, avatarUserMap };
+    },
+
+    /**
+     * @param {number} days - Number of days to look back
+     * @returns {Promise<Object>} Friend activity summary
+     */
+    async getFriendActivitySummary(days = 30) {
+        if (!dbVars.userPrefix) {
+            return { totalVisits: 0, uniqueFriends: 0, uniqueWorlds: 0, topFriends: [] };
+        }
+        let totalVisits = 0;
+        let uniqueFriends = 0;
+        let uniqueWorlds = 0;
+        await sqliteService.execute(
+            (dbRow) => {
+                totalVisits = dbRow[0] || 0;
+                uniqueFriends = dbRow[1] || 0;
+                uniqueWorlds = dbRow[2] || 0;
+            },
+            `SELECT
+                COUNT(*) AS total_visits,
+                COUNT(DISTINCT user_id) AS unique_friends,
+                COUNT(DISTINCT SUBSTR(location, 1, INSTR(location, ':') - 1)) AS unique_worlds
+            FROM ${dbVars.userPrefix}_feed_gps
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND location LIKE 'wrld_%' AND INSTR(location, ':') > 0`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        const topFriends = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                topFriends.push({
+                    displayName: dbRow[0],
+                    visitCount: dbRow[1],
+                    uniqueWorlds: dbRow[2]
+                });
+            },
+            `SELECT
+                display_name,
+                COUNT(*) AS visit_count,
+                COUNT(DISTINCT SUBSTR(location, 1, INSTR(location, ':') - 1)) AS unique_worlds
+            FROM ${dbVars.userPrefix}_feed_gps
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND location LIKE 'wrld_%' AND INSTR(location, ':') > 0
+            GROUP BY user_id
+            ORDER BY visit_count DESC
+            LIMIT 10`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        return { totalVisits, uniqueFriends, uniqueWorlds, topFriends };
+    },
+
+    /**
+     * @param {number} days - Number of days to look back
+     * @returns {Promise<Object>} Status change summary
+     */
+    async getStatusChangeSummary(days = 30) {
+        if (!dbVars.userPrefix) {
+            return { totalChanges: 0, topStatuses: [], uniqueUsers: 0, topUsers: [], dailyByUser: [] };
+        }
+        let totalChanges = 0;
+        let uniqueUsers = 0;
+        await sqliteService.execute(
+            (dbRow) => {
+                totalChanges = dbRow[0] || 0;
+                uniqueUsers = dbRow[1] || 0;
+            },
+            `SELECT
+                COUNT(*) AS total_changes,
+                COUNT(DISTINCT user_id) AS unique_users
+            FROM ${dbVars.userPrefix}_feed_status
+            WHERE created_at >= datetime('now', @daysOffset)`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        const topStatuses = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                topStatuses.push({
+                    status: dbRow[0],
+                    statusDescription: dbRow[1],
+                    changeCount: dbRow[2]
+                });
+            },
+            `SELECT
+                status,
+                status_description,
+                COUNT(*) AS change_count
+            FROM ${dbVars.userPrefix}_feed_status
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND status IS NOT NULL AND status != ''
+            GROUP BY status, status_description
+            ORDER BY change_count DESC
+            LIMIT 10`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        const topUsers = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                topUsers.push({
+                    displayName: dbRow[0],
+                    changeCount: dbRow[1]
+                });
+            },
+            `SELECT
+                display_name,
+                COUNT(*) AS change_count
+            FROM ${dbVars.userPrefix}_feed_status
+            WHERE created_at >= datetime('now', @daysOffset)
+            GROUP BY user_id
+            ORDER BY change_count DESC
+            LIMIT 10`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        const dailyByUser = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                dailyByUser.push({
+                    displayName: dbRow[0],
+                    date: dbRow[1],
+                    count: dbRow[2]
+                });
+            },
+            `SELECT
+                display_name,
+                DATE(created_at) AS date,
+                COUNT(*) AS count
+            FROM ${dbVars.userPrefix}_feed_status
+            WHERE created_at >= datetime('now', @daysOffset)
+            GROUP BY user_id, DATE(created_at)
+            ORDER BY date ASC`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        return { totalChanges, topStatuses, uniqueUsers, topUsers, dailyByUser };
+    },
+
+    /**
+     * @param {number} days - Number of days to look back
+     * @returns {Promise<Object>} Online activity summary
+     */
+    async getOnlineActivitySummary(days = 30) {
+        if (!dbVars.userPrefix) {
+            return { onlineCount: 0, offlineCount: 0, topOnlineFriends: [], dailyByUser: [] };
+        }
+        let onlineCount = 0;
+        let offlineCount = 0;
+        await sqliteService.execute(
+            (dbRow) => {
+                if (dbRow[0] === 'online') onlineCount = dbRow[1] || 0;
+                if (dbRow[0] === 'offline') offlineCount = dbRow[1] || 0;
+            },
+            `SELECT
+                type,
+                COUNT(*) AS count
+            FROM ${dbVars.userPrefix}_feed_online_offline
+            WHERE created_at >= datetime('now', @daysOffset)
+            GROUP BY type`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        const topOnlineFriends = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                topOnlineFriends.push({
+                    displayName: dbRow[0],
+                    onlineCount: dbRow[1]
+                });
+            },
+            `SELECT
+                display_name,
+                COUNT(*) AS online_count
+            FROM ${dbVars.userPrefix}_feed_online_offline
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND type = 'online'
+            GROUP BY user_id
+            ORDER BY online_count DESC
+            LIMIT 10`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        const dailyByUser = [];
+        await sqliteService.execute(
+            (dbRow) => {
+                dailyByUser.push({
+                    displayName: dbRow[0],
+                    date: dbRow[1],
+                    count: dbRow[2]
+                });
+            },
+            `SELECT
+                display_name,
+                DATE(created_at) AS date,
+                COUNT(*) AS count
+            FROM ${dbVars.userPrefix}_feed_online_offline
+            WHERE created_at >= datetime('now', @daysOffset)
+                AND type = 'online'
+            GROUP BY user_id, DATE(created_at)
+            ORDER BY date ASC`,
+            {
+                '@daysOffset': `-${days} days`
+            }
+        );
+
+        return { onlineCount, offlineCount, topOnlineFriends, dailyByUser };
     }
 };
 

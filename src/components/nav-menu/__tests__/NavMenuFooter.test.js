@@ -67,6 +67,17 @@ const baseProps = {
 };
 
 describe('NavMenuFooter', () => {
+    it('emits update dialog action from help and support menu', async () => {
+        const wrapper = mount(NavMenuFooter, { props: baseProps });
+
+        const menuItem = wrapper.find('[data-testid="dd-item"]');
+        expect(menuItem.text()).toBe('nav_menu.check_updates');
+
+        await menuItem.trigger('click');
+
+        expect(wrapper.emitted('show-vrcx-update-dialog')).toHaveLength(1);
+    });
+
     it('renders version and emits toggle-theme click', async () => {
         const wrapper = mount(NavMenuFooter, { props: baseProps });
 

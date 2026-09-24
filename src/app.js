@@ -4,9 +4,11 @@ import { createApp } from 'vue';
 import {
     i18n,
     initComponents,
-    initPlugins,
+    initDayjs,
+    initInteropApi,
     initRouter,
     initSentry,
+    initUi,
     router
 } from './plugins';
 import { initPiniaPlugins, pinia } from './stores';
@@ -21,9 +23,19 @@ installRuntimeBridge();
 // Boot screen: wait for BOTH backend ready AND frontend components loaded
 const boot = document.getElementById('app-boot');
 let bootHidden = false;
-let frontendReady = false;
+let routeReady = false;
+let resourcesReady = document.readyState === 'complete';
 let backendReady = false;
 let startMinimized = false;
+let mainWindowShown = false;
+
+// The initial routes are small and required by every first-run path. Start their
+// chunks alongside backend/UI initialization instead of waiting until mount.
+Promise.all([
+    import('./views/Login/Login.vue'),
+    import('./views/OOBE/OOBE.vue'),
+    import('./views/Feed/Feed.vue')
+]).catch(() => {});
 
 // Resolve launch args early so hideBoot can check them.
 // By the time hideBoot is called (after initPlugins/initPiniaPlugins), this should be resolved.
@@ -38,42 +50,56 @@ function hideBoot() {
     if (bootHidden || !boot) return;
     bootHidden = true;
     boot.classList.add('boot-hidden');
-    // Only show the main window when not starting minimized (--startup flag or isStartAsMinimizedState)
-    if (!startMinimized) {
-        window.platform?.showMainWindow?.();
-    }
+    showMainWindow();
     // 等淡出过渡 (0.4s) 结束再销毁元素，释放持续运行的动画
     setTimeout(() => boot.remove(), 500);
 }
 
+function showMainWindow() {
+    if (mainWindowShown || startMinimized) return;
+    mainWindowShown = true;
+    window.platform?.showMainWindow?.();
+}
+
 function tryHideBoot() {
-    if (frontendReady && backendReady) {
+    console.warn('[boot-state]', {
+        routeReady,
+        resourcesReady,
+        backendReady,
+        readyState: document.readyState
+    });
+    if (routeReady && resourcesReady && backendReady) {
         hideBoot();
     }
 }
 
-setTimeout(hideBoot, 6000); // 兜底：初始化挂起时也必须显示窗口
+setTimeout(() => {
+    // Show the window behind the boot layer if initialization is slow; never
+    // reveal an unfinished app as a plain background.
+    if (backendReady) showMainWindow();
+}, 6000);
 
 // 禁用默认右键/上下文菜单（WebView2/Chromium 中 preventDefault 会抑制原生菜单，
 // 元素自己的 @contextmenu 处理仍可正常触发）
 window.addEventListener('contextmenu', (event) => event.preventDefault());
 
-await initPlugins();
-await initPiniaPlugins();
+await initInteropApi();
+
+const uiReady = initUi().then(() => {
+    initDayjs();
+});
+const piniaReady = initPiniaPlugins();
 
 // Also check the "Start Minimized" user preference from config storage.
-if (!startMinimized) {
-    try {
-        const minimizedSetting = await VRCXStorage.Get(
-            'VRCX_StartAsMinimizedState'
-        );
-        if (minimizedSetting === 'true') {
-            startMinimized = true;
-        }
-    } catch {
-        // ignore if storage not available
-    }
-}
+const startMinimizedPreference = startMinimized
+    ? Promise.resolve()
+    : VRCXStorage.Get('VRCX_StartAsMinimizedState')
+          .then((minimizedSetting) => {
+              if (minimizedSetting === 'true') {
+                  startMinimized = true;
+              }
+          })
+          .catch(() => {});
 
 // Apply --debug launch arg: enable debug logging.
 if (launchArgs?.debug) {
@@ -129,6 +155,20 @@ if (launchArgs?.center) {
     }
 }
 
+if (launchArgs?.reset_window) {
+    try {
+        await VRCXStorage.Set('VRCX_LocationX', '');
+        await VRCXStorage.Set('VRCX_LocationY', '');
+        await VRCXStorage.Set('VRCX_SizeWidth', '');
+        await VRCXStorage.Set('VRCX_SizeHeight', '');
+        await VRCXStorage.Set('VRCX_WindowState', 'normal');
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+await Promise.all([uiReady, piniaReady, startMinimizedPreference]);
+
 // #region | Hey look it's most of VRCX!
 
 const app = createApp(App);
@@ -145,13 +185,23 @@ router
     .isReady()
     .catch(() => {})
     .then(() => {
-        frontendReady = true;
+        routeReady = true;
         tryHideBoot();
     });
-window.addEventListener('load', () => {
-    frontendReady = true;
+// load 事件可能在上方的 await 期间已触发，不能依赖模块加载时捕获的旧值
+if (document.readyState === 'complete') {
+    resourcesReady = true;
     tryHideBoot();
-});
+} else {
+    window.addEventListener(
+        'load',
+        () => {
+            resourcesReady = true;
+            tryHideBoot();
+        },
+        { once: true }
+    );
+}
 
 // 后端就绪：等待数据库初始化完成后隐藏启动加载层
 backendReadyPromise.then(() => {

@@ -48,16 +48,6 @@
                         <span class="text-xs text-muted-foreground">{{ t('view.charts.avatar_usage.stats.avg_daily') }}</span>
                     </div>
                 </div>
-                <div class="mx-auto mt-4 max-w-[1100px] grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <div class="rounded-lg border p-4">
-                        <h3 class="mb-3 text-sm font-medium">{{ t('view.charts.avatar_usage.charts.change_frequency') }}</h3>
-                        <div ref="changeFrequencyChartRef" style="width: 100%; height: 280px" />
-                    </div>
-                    <div class="rounded-lg border p-4">
-                        <h3 class="mb-3 text-sm font-medium">{{ t('view.charts.avatar_usage.charts.self_vs_other') }}</h3>
-                        <div ref="selfVsOtherChartRef" style="width: 100%; height: 280px" />
-                    </div>
-                </div>
                 <div class="mx-auto mt-6 max-w-[1100px] rounded-lg border p-4">
                     <h3 class="mb-3 text-sm font-medium">{{ t('view.charts.avatar_usage.charts.top_avatars') }}</h3>
                     <div ref="topAvatarsChartRef" style="width: 100%; height: 320px" />
@@ -73,7 +63,7 @@
 <script setup>
     defineOptions({ name: 'ChartsAvatarUsage' });
 
-    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+    import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { Info, RefreshCcw, Star, TrendingUp } from 'lucide-vue-next';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
@@ -85,23 +75,21 @@
     import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
     import { database } from '@/services/database';
-    import { useAppearanceSettingsStore } from '@/stores';
+    import { useAppearanceSettingsStore, useUserStore } from '@/stores';
 
     const { t } = useI18n();
     const { isDarkMode } = storeToRefs(useAppearanceSettingsStore());
+    const userStore = useUserStore();
 
     const avatarUsageRef = ref(null);
     const isLoading = ref(true);
     const selectedDays = ref(30);
-    const stats = ref({ topAvatars: [], selfVsOther: { selfOwned: 0, others: 0 }, totalChanges: 0, dailyChanges: [], topAuthors: [] });
+    const stats = ref({ topAvatars: [], totalChanges: 0, dailyChanges: [], topAuthors: [] });
+    const avatarUserMap = ref({});
 
-    const changeFrequencyChartRef = ref(null);
-    const selfVsOtherChartRef = ref(null);
     const topAvatarsChartRef = ref(null);
     const changeTimelineChartRef = ref(null);
 
-    let changeFrequencyChart = null;
-    let selfVsOtherChart = null;
     let topAvatarsChart = null;
     let changeTimelineChart = null;
 
@@ -134,56 +122,30 @@
     async function loadData() {
         isLoading.value = true;
         try {
-            stats.value = await database.getAvatarUsageStats(selectedDays.value);
+            await database.ensureUserContext(userStore.currentUser?.id);
+            const data = await database.getAvatarUsageStats(selectedDays.value);
+            stats.value = data;
+            avatarUserMap.value = data.avatarUserMap || {};
         } catch (error) {
             console.error('Error loading avatar usage stats:', error);
-            stats.value = { topAvatars: [], selfVsOther: { selfOwned: 0, others: 0 }, totalChanges: 0, dailyChanges: [], topAuthors: [] };
+            stats.value = { topAvatars: [], totalChanges: 0, dailyChanges: [], topAuthors: [], topUsers: [], dailyByUser: [], avatarUserMap: {} };
+            avatarUserMap.value = {};
         } finally {
             isLoading.value = false;
+            await nextTick();
+            disposeCharts();
+            if (hasData.value) {
+                initAllCharts();
+            }
         }
     }
 
     function disposeCharts() {
-        [changeFrequencyChart, selfVsOtherChart, topAvatarsChart, changeTimelineChart].forEach((chart) => {
+        [topAvatarsChart, changeTimelineChart].forEach((chart) => {
             if (chart) chart.dispose();
         });
-        changeFrequencyChart = null;
-        selfVsOtherChart = null;
         topAvatarsChart = null;
         changeTimelineChart = null;
-    }
-
-    function initChangeFrequencyChart() {
-        if (!changeFrequencyChartRef.value || !stats.value.dailyChanges.length) return;
-        if (changeFrequencyChart) changeFrequencyChart.dispose();
-        changeFrequencyChart = echarts.init(changeFrequencyChartRef.value, getChartTheme());
-        changeFrequencyChart.setOption({
-            tooltip: { trigger: 'axis' },
-            xAxis: { type: 'category', data: stats.value.dailyChanges.map((d) => d.date), axisLabel: { color: getSubTextColor() } },
-            yAxis: { type: 'value', axisLabel: { color: getSubTextColor() } },
-            series: [{ type: 'bar', data: stats.value.dailyChanges.map((d) => d.count), itemStyle: { color: '#6366f1', borderRadius: [4, 4, 0, 0] }, barMaxWidth: 30 }],
-            grid: { left: 50, right: 20, top: 20, bottom: 40 }
-        });
-    }
-
-    function initSelfVsOtherChart() {
-        if (!selfVsOtherChartRef.value) return;
-        if (selfVsOtherChart) selfVsOtherChart.dispose();
-        selfVsOtherChart = echarts.init(selfVsOtherChartRef.value, getChartTheme());
-        const { selfOwned, others } = stats.value.selfVsOther;
-        selfVsOtherChart.setOption({
-            tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-            legend: { bottom: 10, textStyle: { color: getTextColor() } },
-            series: [{
-                type: 'pie', radius: ['40%', '70%'], avoidLabelOverlap: false,
-                itemStyle: { borderRadius: 8, borderColor: isDarkMode.value ? '#1f2937' : '#fff', borderWidth: 2 },
-                label: { show: true, formatter: '{b}\n{d}%', color: getTextColor() },
-                data: [
-                    { value: selfOwned, name: t('view.charts.avatar_usage.labels.self_owned') },
-                    { value: others, name: t('view.charts.avatar_usage.labels.others') }
-                ].filter((d) => d.value > 0)
-            }]
-        });
     }
 
     function initTopAvatarsChart() {
@@ -193,8 +155,23 @@
         const top10 = stats.value.topAvatars.slice(0, 10);
         const names = top10.map((a) => a.avatarName.length > 20 ? a.avatarName.slice(0, 20) + '...' : a.avatarName);
         const counts = top10.map((a) => a.changeCount);
+        const reversedTop10 = [...top10].reverse();
+        const avatarUserMapValue = avatarUserMap.value;
         topAvatarsChart.setOption({
-            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: (params) => {
+                    const item = params[0];
+                    const idx = item.dataIndex;
+                    const avatar = reversedTop10[idx];
+                    if (!avatar) return item.name;
+                    const users = avatarUserMapValue[avatar.avatarName] || [];
+                    const userLines = users.slice(0, 8).map((u) => `${u.displayName}:${u.count}次`).join('；');
+                    return `<strong>${avatar.avatarName}</strong><br/>${t('view.charts.avatar_usage.stats.total_changes')}: ${avatar.changeCount}<br/>${userLines}`;
+                }
+            },
             xAxis: { type: 'value', axisLabel: { color: getSubTextColor() } },
             yAxis: { type: 'category', data: names.reverse(), axisLabel: { color: getTextColor(), width: 150, overflow: 'truncate' } },
             series: [{ type: 'bar', data: counts.reverse(), itemStyle: { color: '#8b5cf6', borderRadius: [0, 4, 4, 0] }, barMaxWidth: 24 }],
@@ -207,6 +184,7 @@
         if (changeTimelineChart) changeTimelineChart.dispose();
         changeTimelineChart = echarts.init(changeTimelineChartRef.value, getChartTheme());
         changeTimelineChart.setOption({
+            backgroundColor: 'transparent',
             tooltip: { trigger: 'axis' },
             xAxis: { type: 'category', data: stats.value.dailyChanges.map((d) => d.date), axisLabel: { color: getSubTextColor() } },
             yAxis: { type: 'value', axisLabel: { color: getSubTextColor() } },
@@ -221,21 +199,16 @@
     }
 
     function initAllCharts() {
-        initChangeFrequencyChart();
-        initSelfVsOtherChart();
         initTopAvatarsChart();
         initChangeTimelineChart();
     }
 
     const containerResizeObserver = new ResizeObserver(() => {
-        changeFrequencyChart?.resize();
-        selfVsOtherChart?.resize();
         topAvatarsChart?.resize();
         changeTimelineChart?.resize();
     });
 
-    watch(isDarkMode, () => { disposeCharts(); if (hasData.value) initAllCharts(); });
-    watch(() => stats.value, () => { disposeCharts(); if (hasData.value) initAllCharts(); });
+    watch(isDarkMode, async () => { disposeCharts(); if (hasData.value) { await nextTick(); initAllCharts(); } });
 
     onMounted(() => {
         if (avatarUsageRef.value) containerResizeObserver.observe(avatarUsageRef.value);

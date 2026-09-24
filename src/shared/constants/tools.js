@@ -228,6 +228,136 @@ const toolDefinitions = [
         action: { type: 'dialog', dialogKey: 'export-avatars-list' }
     },
     {
+        key: 'export-feed',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-rss-line',
+        titleKey: 'view.feed.header',
+        descriptionKey: 'view.tools.user.export_feed_description',
+        navEligible: false,
+        action: { type: 'export', source: 'feed' }
+    },
+    {
+        key: 'export-friend-log',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-history-line',
+        titleKey: 'view.friend_log.header',
+        descriptionKey: 'view.tools.user.export_friend_log_description',
+        navEligible: false,
+        action: { type: 'export', source: 'friend-log' }
+    },
+    {
+        key: 'export-friend-list-data',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-contacts-line',
+        titleKey: 'view.friend_list.header',
+        descriptionKey: 'view.tools.user.export_friend_list_data_description',
+        navEligible: false,
+        action: { type: 'export', source: 'friend-list' }
+    },
+    {
+        key: 'export-game-log',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-file-list-3-line',
+        titleKey: 'view.game_log.header',
+        descriptionKey: 'view.tools.user.export_game_log_description',
+        navEligible: false,
+        action: { type: 'export', source: 'game-log' }
+    },
+    {
+        key: 'export-moderation',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-shield-user-line',
+        titleKey: 'view.moderation.header',
+        descriptionKey: 'view.tools.user.export_moderation_description',
+        navEligible: false,
+        action: { type: 'export', source: 'moderation-list' }
+    },
+    {
+        key: 'export-notifications',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-notification-2-line',
+        titleKey: 'view.notification.header',
+        descriptionKey: 'view.tools.user.export_notifications_description',
+        navEligible: false,
+        action: { type: 'export', source: 'notifications' }
+    },
+    {
+        key: 'export-my-avatars',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-user-star-line',
+        titleKey: 'view.my_avatars.header',
+        descriptionKey: 'view.tools.user.export_my_avatars_description',
+        navEligible: false,
+        action: { type: 'export', source: 'my-avatars' }
+    },
+    {
+        key: 'export-favorite-worlds',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-earth-line',
+        titleKey: 'view.favorites.worlds',
+        descriptionKey: 'view.tools.user.export_favorite_worlds_description',
+        navEligible: false,
+        action: { type: 'export', source: 'favorite-worlds' }
+    },
+    {
+        key: 'export-favorite-friends',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-user-heart-line',
+        titleKey: 'view.favorites.friends',
+        descriptionKey: 'view.tools.user.export_favorite_friends_description',
+        navEligible: false,
+        action: { type: 'export', source: 'favorite-friends' }
+    },
+    {
+        key: 'export-favorite-avatars',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-empathize-line',
+        titleKey: 'view.favorites.avatars',
+        descriptionKey: 'view.tools.user.export_favorite_avatars_description',
+        navEligible: false,
+        action: { type: 'export', source: 'favorite-avatars' }
+    },
+    {
+        key: 'world-export',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-file-download-line',
+        titleKey: 'dialog.world_export.header',
+        descriptionKey: 'view.tools.user.world_export_description',
+        navEligible: false,
+        action: { type: 'dialog', dialogKey: 'world-export' }
+    },
+    {
+        key: 'avatar-export',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-file-download-line',
+        titleKey: 'dialog.avatar_export.header',
+        descriptionKey: 'view.tools.user.avatar_export_description',
+        navEligible: false,
+        action: { type: 'dialog', dialogKey: 'avatar-export' }
+    },
+    {
+        key: 'friend-export',
+        category: 'user',
+        iconKey: 'download',
+        navIcon: 'ri-file-download-line',
+        titleKey: 'dialog.friend_export.header',
+        descriptionKey: 'view.tools.user.friend_export_description',
+        navEligible: false,
+        action: { type: 'dialog', dialogKey: 'friend-export' }
+    },
+    {
         key: 'edit-invite-message',
         category: 'other',
         iconKey: 'pencil',

@@ -14,7 +14,6 @@ const mocks = vi.hoisted(() => ({
     getString: vi.fn(() => Promise.resolve(null)),
     setString: vi.fn(() => Promise.resolve()),
     showVRCXUpdateDialog: vi.fn(),
-    showChangeLogDialog: vi.fn(),
     notifiedMenus: { value: [] },
     pendingVRCXUpdate: { value: false },
     pendingVRCXInstall: { value: false },
@@ -102,8 +101,7 @@ vi.mock('../../../stores', () => ({
         pendingVRCXUpdate: mocks.pendingVRCXUpdate,
         pendingVRCXInstall: mocks.pendingVRCXInstall,
         appVersion: mocks.appVersion,
-        showVRCXUpdateDialog: (...args) => mocks.showVRCXUpdateDialog(...args),
-        showChangeLogDialog: (...args) => mocks.showChangeLogDialog(...args)
+        showVRCXUpdateDialog: (...args) => mocks.showVRCXUpdateDialog(...args)
     }),
     useUiStore: () => ({
         notifiedMenus: mocks.notifiedMenus,

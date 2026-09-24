@@ -76,7 +76,7 @@
         "get_help": "请求帮助",
         "github": "GitHub 仓库",
         "discord": "加入 Discord",
-        "changelog": "更新日志",
+        "check_updates": "检查更新",
         "update_available": "有新版本可用",
         "update": "更新",
         "mark_all_read": "全部标为已读",
@@ -694,6 +694,21 @@
                     "exclude_friends_placeholder": "选择要排除的好友...",
                     "exclude_friends_help": "所选好友将不会显示在关系网中。"
                 },
+                "analysis": {
+                    "title": "网络分析",
+                    "stats": {
+                        "title": "图谱统计",
+                        "nodes": "节点",
+                        "edges": "边",
+                        "communities": "社群",
+                        "bridges": "桥梁节点",
+                        "isolates": "孤立节点"
+                    },
+                    "community": "社群",
+                    "community_list": "社群列表",
+                    "bridges_title": "桥梁节点",
+                    "bridges_empty": "暂无桥梁节点"
+                },
                 "context_menu": {
                     "view_details": "查看详情",
                     "hide_friend": "从关系网中隐藏",
@@ -826,29 +841,6 @@
                     "show_friends_only": "仅显示好友"
                 }
             },
-            "social_network": {
-                "header": "社交关系网络",
-                "build": "构建图谱",
-                "rebuild": "重新构建",
-                "build_tooltip": "基于共同好友数据构建社交关系网络图",
-                "building": "构建中...",
-                "building_tooltip": "图谱正在构建中，请稍候",
-                "empty_hint": "点击「构建图谱」生成社交关系网络可视化",
-                "stats": {
-                    "title": "图谱统计",
-                    "nodes": "节点",
-                    "edges": "边",
-                    "communities": "社群",
-                    "bridges": "桥梁节点",
-                    "isolates": "孤立节点"
-                },
-                "community": "社群",
-                "community_list": "社群列表",
-                "bridges_title": "桥梁节点",
-                "context_menu": {
-                    "view_details": "查看详情"
-                }
-            },
             "intimacy": {
                 "header": "关系亲密度",
                 "refresh": "刷新",
@@ -887,18 +879,6 @@
                 "visits": "访问次数",
                 "chart_label": "月度共处时间线"
             },
-            "group_recommendations": {
-                "header": "好友分组推荐",
-                "tips": {
-                    "description": "分析互动数据模式，推荐好友分组调整。发现具有相似活动模式的用户对，建议将其归入同一分组。"
-                },
-                "analyze": "开始分析",
-                "analyze_tooltip": "分析互动模式以发现分组推荐",
-                "empty_hint": "点击「开始分析」查看分组推荐",
-                "similarity": "相似度",
-                "reason_merge": "相似活动模式跨越多个分组：",
-                "reason_no_group": "互动相似度高但未加入任何分组"
-            },
             "avatar_usage": {
                 "header": "模型使用分析",
                 "tab_label": "模型使用",
@@ -911,19 +891,13 @@
                     "days_90": "最近90天"
                 },
                 "stats": {
-                    "total_changes": "次更换",
+                    "total_changes": "更换次数",
                     "top_avatar": "最常用",
                     "avg_daily": "日均"
                 },
                 "charts": {
-                    "change_frequency": "每日模型更换次数",
-                    "self_vs_other": "自制 vs 他人模型",
                     "top_avatars": "最常用模型",
                     "change_timeline": "更换频率趋势"
-                },
-                "labels": {
-                    "self_owned": "自制模型",
-                    "others": "他人模型"
                 }
             },
             "report_export": {
@@ -958,7 +932,29 @@
                 "no_data": "该时间段内暂无数据",
                 "total_avatar_changes": "模型更换总次数",
                 "self_owned": "自制模型",
-                "others": "他人模型"
+                "others": "他人模型",
+                "save": "保存报告",
+                "saved": "已保存到",
+                "generated": "报告已生成",
+                "section_friend_activity": "好友活跃",
+                "section_status_changes": "状态变化",
+                "section_online_activity": "在线活动",
+                "total_visits": "总访问次数",
+                "unique_friends": "活跃好友数",
+                "unique_worlds": "访问世界数",
+                "unique_users": "活跃用户数",
+                "total_status_changes": "状态变更次数",
+                "online_events": "上线事件",
+                "offline_events": "下线事件",
+                "table_friend": "好友",
+                "table_worlds": "世界数",
+                "table_status": "状态",
+                "table_description": "描述",
+                "table_online_count": "上线次数",
+                "top_users": "活跃用户排行",
+                "top_players": "活跃玩家排行",
+                "table_player": "玩家",
+                "table_unique_avatars": "使用模型数"
             }
         },
         "tools": {
@@ -971,7 +967,20 @@
             "user": {
                 "discord_names_description": "查找好友的 Discord 名称（如果他们有写上去的话）",
                 "export_friend_list_description": "从 VRChat 导出你的好友列表",
-                "export_own_avatars_description": "从 VRChat 中导出你创建的模型的 ID 列表"
+                "export_own_avatars_description": "从 VRChat 中导出你创建的模型的 ID 列表",
+                "export_feed_description": "导出动态数据（JSON/Excel）到本地文件",
+                "export_friend_log_description": "导出好友日志数据（JSON/Excel）到本地文件",
+                "export_friend_list_data_description": "导出好友列表数据（JSON/Excel）到本地文件",
+                "export_game_log_description": "导出游戏日志数据（JSON/Excel）到本地文件",
+                "export_moderation_description": "导出管制列表数据（JSON/Excel）到本地文件",
+                "export_notifications_description": "导出通知数据（JSON/Excel）到本地文件",
+                "export_my_avatars_description": "导出我的模型数据（JSON/Excel）到本地文件",
+                "export_favorite_worlds_description": "导出世界收藏数据（JSON/Excel）到本地文件",
+                "export_favorite_friends_description": "导出好友收藏数据（JSON/Excel）到本地文件",
+                "export_favorite_avatars_description": "导出模型收藏数据（JSON/Excel）到本地文件",
+                "world_export_description": "复制世界收藏夹的 CSV 文本",
+                "avatar_export_description": "复制模型收藏夹的 CSV 文本",
+                "friend_export_description": "复制收藏好友的 CSV 文本"
             },
             "export": {
                 "header": "导出",
@@ -1116,7 +1125,16 @@
                     "port_dialog_title": "MCP 服务器端口",
                     "port_dialog_description": "请输入 MCP 服务器的端口号（1024-65535）。",
                     "port_dialog_error": "请输入有效的端口号（1024-65535）。",
-                    "db_dialog_title": "选择 VRCX 数据库"
+                    "db_dialog_title": "选择 VRCX 数据库",
+                    "ai_tools": "AI 工具",
+                    "ai_tools_description": "已连接的 AI 助手可调用的工具。可在 Claude Desktop、Cursor 等 MCP 客户端中使用。",
+                    "tool_social_insights": "社交分析：活跃好友、在线时间分布、热门世界。",
+                    "tool_friend_schedule": "好友在线规律：常用时段、活跃星期。",
+                    "tool_search_friends": "好友搜索：按名称、状态、信任等级、位置。",
+                    "tool_world_analytics": "世界访问分析：热门世界、每日趋势、活跃访客。",
+                    "tool_user_profile": "用户档案：最新状态、头像、签名、备忘、近期活动。",
+                    "tool_set_note": "为用户设置本地备注（写操作）。",
+                    "tool_co_location": "共同位置：与某好友在同一世界出现过的人。"
                 }
             },
             "advanced_groups": {
@@ -1266,9 +1284,6 @@
                     "vrc_profile_themes": "显示个人资料主题",
                     "vrc_profile_backgrounds": "显示个人资料背景",
                     "vrc_profile_backgrounds_opacity": "背景不透明度",
-                    "use_advanced_material": "使用高级材质（Beta）",
-                    "use_advanced_material_description": "为对话框、弹出菜单与提示窗添加高斯模糊与边缘高光，并在主窗口底部加入环境光影。",
-                    "theme_color_adapting": "正在适配",
                     "accessible_status_indicators": "无障碍版状态指示器",
                     "accessible_status_indicators_description": "除了使用颜色之外，也使用形状来区分状态。",
                     "use_official_status_colors": "使用游戏内的状态颜色",
@@ -1441,10 +1456,10 @@
                     "smtp_password": "SMTP 密码",
                     "smtp_password_placeholder": "您的密码或应用密码",
                     "from_address": "发件人地址",
-                    "from_address_placeholder": "sender@example.com",
+                    "from_address_placeholder": "sender\\@example.com",
                     "from_name": "发件人名称",
                     "recipient_address": "收件人邮箱",
-                    "recipient_address_placeholder": "recipient@example.com",
+                    "recipient_address_placeholder": "recipient\\@example.com",
                     "recipient_name": "收件人名称",
                     "test": "测试邮件",
                     "send_test": "发送测试",
@@ -3128,19 +3143,21 @@
         },
         "vrcx_updater": {
             "header": "VRCX 更新",
+            "checking": "正在检查更新",
+            "checking_description": "正在获取最新版本信息，请稍候。",
+            "downloading": "正在下载更新",
+            "current_version": "当前版本",
+            "update_available": "发现新版本",
             "latest_version": "VRCX 已是最新版本",
             "ready_for_update": "现已准备好安装更新，重启 VRCX 以开始安装",
-            "branch_stable": "稳定版",
-            "branch_nightly": "测试版",
-            "nightly_title": "测试版构建",
-            "nightly_notice": "测试版构建一般用于新功能测试。如果你需要稳定性，请使用稳定版构建。",
-            "release": "版本",
+            "change_version": "更改版本",
             "download": "下载",
             "install": "安装",
             "cancel": "取消"
         },
         "change_log": {
             "header": "更新日志",
+            "loading": "正在从 GitHub Releases 获取更新日志……",
             "description": "考虑捐赠一下，以支持 VRCX 的未来发展",
             "close": "关闭",
             "donate": "捐赠支持",
@@ -3191,6 +3208,7 @@
         "data_export": {
             "description": "选择导出格式并保存到本地文件",
             "format": "导出格式",
+            "loading": "正在加载数据...",
             "record_count": "共 {count} 条记录",
             "no_data": "无数据可导出",
             "cancel": "取消",

@@ -76,7 +76,7 @@
         "get_help": "取得協助",
         "github": "在 GitHub 上查看 VRCX",
         "discord": "加入我們的 Discord",
-        "changelog": "最新更新",
+        "check_updates": "檢查更新",
         "update_available": "有可用更新",
         "update": "更新",
         "mark_all_read": "全部標記為已讀",
@@ -693,6 +693,21 @@
                     "exclude_friends_placeholder": "選擇要排除的好友",
                     "exclude_friends_help": "被選擇的好友將不會顯示在圖形中。"
                 },
+                "analysis": {
+                    "title": "網路分析",
+                    "stats": {
+                        "title": "圖譜統計",
+                        "nodes": "節點",
+                        "edges": "邊",
+                        "communities": "社群",
+                        "bridges": "橋梁節點",
+                        "isolates": "孤立節點"
+                    },
+                    "community": "社群",
+                    "community_list": "社群列表",
+                    "bridges_title": "橋梁節點",
+                    "bridges_empty": "沒有橋梁節點"
+                },
                 "context_menu": {
                     "view_details": "查看詳細資訊",
                     "hide_friend": "從圖表中隱藏",
@@ -825,29 +840,6 @@
                 "no_friend_data": "沒有好友造訪資料",
                 "friend_visits": "{count} 次造訪"
             },
-            "social_network": {
-                "header": "社交關係網路",
-                "build": "建構圖譜",
-                "rebuild": "重新建構",
-                "build_tooltip": "基於共同好友資料建構社交關係網路圖",
-                "building": "建構中...",
-                "building_tooltip": "圖譜正在建構中，請稍候",
-                "empty_hint": "點擊「建構圖譜」生成社交關係網路視覺化",
-                "stats": {
-                    "title": "圖譜統計",
-                    "nodes": "節點",
-                    "edges": "邊",
-                    "communities": "社群",
-                    "bridges": "橋梁節點",
-                    "isolates": "孤立節點"
-                },
-                "community": "社群",
-                "community_list": "社群列表",
-                "bridges_title": "橋梁節點",
-                "context_menu": {
-                    "view_details": "檢視詳情"
-                }
-            },
             "intimacy": {
                 "header": "關係親密",
                 "refresh": "重新整理",
@@ -886,18 +878,6 @@
                 "visits": "訪問次數",
                 "chart_label": "月度共處時間軸"
             },
-            "group_recommendations": {
-                "header": "好友分組推薦",
-                "tips": {
-                    "description": "分析互動資料模式，推薦好友分組調整。發現具有相似活動模式的使用者對，建議將其歸入同一分組。"
-                },
-                "analyze": "開始分析",
-                "analyze_tooltip": "分析互動模式以發現分組推薦",
-                "empty_hint": "點擊「開始分析」查看分組推薦",
-                "similarity": "相似度",
-                "reason_merge": "相似活動模式跨越多個分組：",
-                "reason_no_group": "互動相似度高但未加入任何分組"
-            },
             "avatar_usage": {
                 "header": "模型使用分析",
                 "tab_label": "模型使用",
@@ -915,14 +895,8 @@
                     "avg_daily": "日均"
                 },
                 "charts": {
-                    "change_frequency": "每日模型更換次數",
-                    "self_vs_other": "自製 vs 他人模型",
                     "top_avatars": "最常用模型",
                     "change_timeline": "更換頻率趨勢"
-                },
-                "labels": {
-                    "self_owned": "自製模型",
-                    "others": "他人模型"
                 }
             },
             "report_export": {
@@ -957,7 +931,29 @@
                 "no_data": "該時間段內暫無資料",
                 "total_avatar_changes": "模型更換總次數",
                 "self_owned": "自製模型",
-                "others": "他人模型"
+                "others": "他人模型",
+                "save": "儲存報告",
+                "saved": "已儲存到",
+                "generated": "報告已生成",
+                "section_friend_activity": "好友活躍",
+                "section_status_changes": "狀態變化",
+                "section_online_activity": "線上活動",
+                "total_visits": "總訪問次數",
+                "unique_friends": "活躍好友數",
+                "unique_worlds": "訪問世界數",
+                "unique_users": "活躍使用者數",
+                "total_status_changes": "狀態變更次數",
+                "online_events": "上線事件",
+                "offline_events": "下線事件",
+                "table_friend": "好友",
+                "table_worlds": "世界數",
+                "table_status": "狀態",
+                "table_description": "描述",
+                "table_online_count": "上線次數",
+                "top_users": "活躍使用者排行",
+                "top_players": "活躍玩家排行",
+                "table_player": "玩家",
+                "table_unique_avatars": "使用模型數"
             }
         },
         "tools": {
@@ -970,7 +966,20 @@
             "user": {
                 "discord_names_description": "尋找你 VRChat 好友的 Discord 使用者名稱",
                 "export_friend_list_description": "匯出你的 VRChat 好友列表",
-                "export_own_avatars_description": "匯出你的個人 VRChat 化身"
+                "export_own_avatars_description": "匯出你的個人 VRChat 化身",
+                "export_feed_description": "匯出動態資料（JSON/Excel）至本機檔案",
+                "export_friend_log_description": "匯出好友日誌資料（JSON/Excel）至本機檔案",
+                "export_friend_list_data_description": "匯出好友列表資料（JSON/Excel）至本機檔案",
+                "export_game_log_description": "匯出遊戲日誌資料（JSON/Excel）至本機檔案",
+                "export_moderation_description": "匯出管制列表資料（JSON/Excel）至本機檔案",
+                "export_notifications_description": "匯出通知資料（JSON/Excel）至本機檔案",
+                "export_my_avatars_description": "匯出我的模型資料（JSON/Excel）至本機檔案",
+                "export_favorite_worlds_description": "匯出世界收藏資料（JSON/Excel）至本機檔案",
+                "export_favorite_friends_description": "匯出好友收藏資料（JSON/Excel）至本機檔案",
+                "export_favorite_avatars_description": "匯出模型收藏資料（JSON/Excel）至本機檔案",
+                "world_export_description": "複製世界收藏夾的 CSV 文字",
+                "avatar_export_description": "複製模型收藏夾的 CSV 文字",
+                "friend_export_description": "複製收藏好友的 CSV 文字"
             },
             "export": {
                 "header": "匯出",
@@ -1115,7 +1124,16 @@
                     "port_dialog_title": "MCP 伺服器連接埠",
                     "port_dialog_description": "請輸入 MCP 伺服器的連接埠號碼（1024-65535）。",
                     "port_dialog_error": "請輸入有效的連接埠號碼（1024-65535）。",
-                    "db_dialog_title": "選擇 VRCX 資料庫"
+                    "db_dialog_title": "選擇 VRCX 資料庫",
+                    "ai_tools": "AI 工具",
+                    "ai_tools_description": "已連接的 AI 助理可呼叫的工具。可在 Claude Desktop、Cursor 等 MCP 用戶端中使用。",
+                    "tool_social_insights": "社交分析：活躍好友、線上時間分佈、熱門世界。",
+                    "tool_friend_schedule": "好友線上規律：常用時段、活躍星期。",
+                    "tool_search_friends": "好友搜尋：依名稱、狀態、信任等級、位置。",
+                    "tool_world_analytics": "世界造訪分析：熱門世界、每日趨勢、活躍訪客。",
+                    "tool_user_profile": "用戶檔案：最新狀態、頭像、簽名、備忘、近期活動。",
+                    "tool_set_note": "為用戶設定本機備註（寫入操作）。",
+                    "tool_co_location": "共同位置：與某好友在同一世界出現過的人。"
                 }
             },
             "advanced_groups": {
@@ -1271,9 +1289,6 @@
                     "vrc_profile_themes": "顯示個人資料主題",
                     "vrc_profile_backgrounds": "顯示個人資料背景",
                     "vrc_profile_backgrounds_opacity": "背景不透明度",
-                    "use_advanced_material": "使用進階材質（Beta）",
-                    "use_advanced_material_description": "為對話方塊、彈出選單與彈出式視窗加上磨砂玻璃模糊與邊緣高光，並在主視窗底部加入環境光影。",
-                    "theme_color_adapting": "正在適配",
                     "use_official_status_colors": "使用遊戲內的狀態顏色",
                     "use_official_status_colors_description": "符合遊戲內的狀態顏色。",
                     "toggle_pointer_on_hover": "懸停時強制顯示指標",
@@ -1440,10 +1455,10 @@
                     "smtp_password": "SMTP 密碼",
                     "smtp_password_placeholder": "您的密碼或應用程式密碼",
                     "from_address": "寄件者地址",
-                    "from_address_placeholder": "sender@example.com",
+                    "from_address_placeholder": "sender\\@example.com",
                     "from_name": "寄件者名稱",
                     "recipient_address": "收件者郵箱",
-                    "recipient_address_placeholder": "recipient@example.com",
+                    "recipient_address_placeholder": "recipient\\@example.com",
                     "recipient_name": "收件者名稱",
                     "test": "測試郵件",
                     "send_test": "發送測試",
@@ -1971,6 +1986,7 @@
         "data_export": {
             "description": "選擇匯出格式並儲存到本機檔案",
             "format": "匯出格式",
+            "loading": "正在載入資料...",
             "record_count": "共 {count} 筆紀錄",
             "no_data": "無資料可匯出",
             "cancel": "取消",
@@ -3139,19 +3155,21 @@
         },
         "vrcx_updater": {
             "header": "VRCX 更新器",
+            "checking": "正在檢查更新",
+            "checking_description": "正在取得最新版本資訊，請稍候。",
+            "downloading": "正在下載更新",
+            "current_version": "目前版本",
+            "update_available": "發現新版本",
             "latest_version": "VRCX 已是最新版本",
             "ready_for_update": "已準備好安裝更新，重新啟動 VRCX 來套用更新",
-            "branch_stable": "穩定版",
-            "branch_nightly": "測試版",
-            "nightly_title": "測試版本",
-            "nightly_notice": "測試版本僅供測試使用，若需穩定性請使用穩定版",
-            "release": "正式版",
+            "change_version": "變更版本",
             "download": "下載",
             "install": "安裝",
             "cancel": "取消"
         },
         "change_log": {
             "header": "更新日誌",
+            "loading": "正在從 GitHub Releases 取得更新日誌……",
             "description": "考慮捐款來支持未來 VRCX 的開發：",
             "close": "關閉",
             "donate": "贊助",

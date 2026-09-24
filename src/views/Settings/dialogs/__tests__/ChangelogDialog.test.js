@@ -7,7 +7,9 @@ import { ref } from 'vue';
 const changeLogDialog = ref({
     visible: true,
     buildName: 'VRCX 2025.1.0',
-    changeLog: '## New Features\n- Feature A\n- Feature B'
+    changeLog: '## New Features\n- Feature A\n- Feature B',
+    loading: false,
+    loaded: true
 });
 
 const openExternalLinkFn = vi.fn();
@@ -82,7 +84,9 @@ describe('ChangelogDialog.vue', () => {
         changeLogDialog.value = {
             visible: true,
             buildName: 'VRCX 2025.1.0',
-            changeLog: '## New Features\n- Feature A\n- Feature B'
+            changeLog: '## New Features\n- Feature A\n- Feature B',
+            loading: false,
+            loaded: true
         };
         vi.clearAllMocks();
     });
@@ -98,9 +102,16 @@ describe('ChangelogDialog.vue', () => {
             expect(wrapper.text()).toContain('VRCX 2025.1.0');
         });
 
-        test('renders description text', () => {
+        test('renders release body', async () => {
             const wrapper = mountComponent();
-            expect(wrapper.text()).toContain('dialog.change_log.description');
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            expect(wrapper.text()).toContain('Feature A');
+        });
+
+        test('renders loading state while fetching GitHub releases', () => {
+            changeLogDialog.value.loading = true;
+            const wrapper = mountComponent();
+            expect(wrapper.text()).toContain('dialog.change_log.loading');
         });
 
         test('renders GitHub button', () => {
@@ -144,18 +155,6 @@ describe('ChangelogDialog.vue', () => {
             await githubBtn.trigger('click');
             expect(openExternalLinkFn).toHaveBeenCalledWith(
                 'https://github.com/Yusurmount/VRCX-Pro/releases'
-            );
-        });
-
-        test('clicking Ko-fi link opens external link', async () => {
-            const wrapper = mountComponent();
-            const links = wrapper.findAll('a');
-            const kofiLink = links.find((l) => l.text().includes('Ko-fi'));
-            expect(kofiLink).toBeTruthy();
-
-            await kofiLink.trigger('click');
-            expect(openExternalLinkFn).toHaveBeenCalledWith(
-                'https://ko-fi.com/map1en_'
             );
         });
     });

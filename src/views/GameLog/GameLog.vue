@@ -118,26 +118,17 @@
                             style="flex: 0.4"
                             @keyup.enter="gameLogTableLookup"
                             @change="gameLogTableLookup" />
-                        <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showExportDialog = true">
-                            <Download class="h-4 w-4" />
-                        </Button>
                     </div>
                 </template>
             </DataTableLayout>
         </template>
-        <DataExportDialog
-            v-model:visible="showExportDialog"
-            :title="t('view.game_log.header')"
-            default-file-name="game-log"
-            :sheet-name="t('view.game_log.header')"
-            :get-data="getExportData" />
     </div>
 </template>
 
 <script setup>
     import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { computed, ref } from 'vue';
-    import { Logs, Star, Table2, Download } from 'lucide-vue-next';
+    import { Logs, Star, Table2 } from 'lucide-vue-next';
     import { Toggle } from '@/components/ui/toggle';
     import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
     import { storeToRefs } from 'pinia';
@@ -148,7 +139,6 @@
     import { DataTableLayout } from '../../components/ui/data-table';
     import { InputGroupField } from '../../components/ui/input-group';
     import { TooltipWrapper } from '../../components/ui/tooltip';
-    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
     import { createColumns } from './columns.jsx';
     import { database } from '../../services/database';
     import { removeFromArray } from '../../shared/utils';
@@ -160,12 +150,6 @@
     const appearanceSettingsStore = useAppearanceSettingsStore();
     const vrcxStore = useVrcxStore();
     const modalStore = useModalStore();
-
-    const showExportDialog = ref(false);
-
-    function getExportData() {
-        return gameLogTableData.value ?? [];
-    }
 
     /**
      *

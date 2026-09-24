@@ -227,10 +227,11 @@
     import { showWorldDialog } from '@/coordinators/worldCoordinator';
     import * as echarts from 'echarts';
     import { database } from '@/services/database';
-    import { useAppearanceSettingsStore } from '@/stores';
+    import { useAppearanceSettingsStore, useUserStore } from '@/stores';
 
     const { t } = useI18n();
     const { isDarkMode } = storeToRefs(useAppearanceSettingsStore());
+    const userStore = useUserStore();
 
     const hotWorldsRef = ref(null);
     const isLoading = ref(true);
@@ -297,6 +298,7 @@
     async function loadData() {
         isLoading.value = true;
         try {
+            await database.ensureUserContext(userStore.currentUser?.id);
             hotWorlds.value = await database.getHotWorlds(selectedDays.value);
         } catch (error) {
             console.error('Error loading hot worlds:', error);
@@ -311,6 +313,7 @@
         isSheetOpen.value = true;
         isLoadingDetail.value = true;
         try {
+            await database.ensureUserContext(userStore.currentUser?.id);
             const [friends, trend] = await Promise.all([
                 database.getHotWorldFriendDetail(world.worldId, selectedDays.value),
                 database.getWorldVisitTrend(world.worldId, selectedDays.value)

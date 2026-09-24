@@ -161,9 +161,6 @@
             <Button size="icon-sm" variant="ghost" :disabled="isLoading" @click="refreshAvatars">
                 <RefreshCw :class="{ 'animate-spin': isLoading }" />
             </Button>
-            <Button variant="outline" size="sm" class="ml-2 flex-none" @click="showExportDialog = true">
-                <Download class="h-4 w-4" />
-            </Button>
         </div>
 
         <!-- Table View -->
@@ -294,19 +291,12 @@
             :avatar-id="manageTagsAvatar?.id || ''"
             :initial-tags="manageTagsAvatar?.$tags || []"
             @save="onSaveTags" />
-        <DataExportDialog
-            v-model:visible="showExportDialog"
-            :title="t('view.my_avatars.header')"
-            default-file-name="my-avatars"
-            sheet-name="My Avatars"
-            :get-data="getExportData" />
     </div>
 </template>
 
 <script setup>
     import {
         Check,
-        Download,
         Eye,
         Image as ImageIcon,
         LayoutGrid,
@@ -357,7 +347,6 @@
     import { useVrcxVueTable } from '../../lib/table/useVrcxVueTable';
 
     import ImageCropDialog from '../../components/dialogs/ImageCropDialog.vue';
-    import DataExportDialog from '../../components/dialogs/DataExportDialog.vue';
     import ManageTagsDialog from './ManageTagsDialog.vue';
     import MyAvatarCard from './components/MyAvatarCard.vue';
     import configRepository from '../../services/config.js';
@@ -388,24 +377,6 @@
     const changeImageAvatarRef = ref(null);
     const manageTagsOpen = ref(false);
     const manageTagsAvatar = ref(null);
-    const showExportDialog = ref(false);
-
-    /**
-     *
-     */
-    function getExportData() {
-        return avatars.value.map((avatar) => ({
-            id: avatar.id,
-            name: avatar.name,
-            releaseStatus: avatar.releaseStatus,
-            platform: ['pc', 'android', 'ios']
-                .filter((p) => getPlatformInfo(avatar.unityPackages)[p]?.platform)
-                .join(', '),
-            created_at: avatar.created_at,
-            updated_at: avatar.updated_at
-        }));
-    }
-
     const allTags = computed(() => {
         const tagSet = new Set();
         for (const tags of avatarTagsMap.value.values()) {

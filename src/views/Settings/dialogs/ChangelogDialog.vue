@@ -5,8 +5,15 @@
                 <DialogTitle>{{ t('dialog.change_log.header') }}</DialogTitle>
             </DialogHeader>
             <div class="changelog-dialog">
-                <h2 v-text="changeLogDialog.buildName"></h2>
+                <h2 v-if="changeLogDialog.buildName" v-text="changeLogDialog.buildName"></h2>
+                <div
+                    v-if="changeLogDialog.loading"
+                    class="flex h-[62vh] flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
+                    <Loader2 class="size-5 animate-spin text-primary" />
+                    <span>{{ t('dialog.change_log.loading') }}</span>
+                </div>
                 <VueShowdown
+                    v-else
                     class="changelog-markdown mt-2"
                     :markdown="changeLogDialog.changeLog"
                     flavor="github"
@@ -15,6 +22,9 @@
                     style="height: 62vh; overflow-y: auto" />
             </div>
             <DialogFooter>
+                <Button variant="outline" @click="openExternalLink('https://github.com/Yusurmount/VRCX-Pro/releases')">
+                    {{ t('dialog.change_log.github') }}
+                </Button>
                 <Button @click="closeDialog">
                     {{ t('dialog.change_log.close') }}
                 </Button>
@@ -26,6 +36,7 @@
 <script setup>
     import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
     import { Button } from '@/components/ui/button';
+    import { Loader2 } from 'lucide-vue-next';
     import { defineAsyncComponent } from 'vue';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';

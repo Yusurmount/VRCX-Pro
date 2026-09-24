@@ -9,6 +9,11 @@ export const useEmailNotificationsSettingsStore = defineStore(
     () => {
         const { t } = useI18n();
 
+        // Guards against a late-resolving initEmailSettings() overwriting values the user
+        // has already changed (e.g. toggling the switch right after the settings page opens).
+        let initPromise = null;
+        let enabledTouched = false;
+
         const enabled = ref(false);
         const smtpHost = ref('');
         const smtpPort = ref(465);
@@ -21,43 +26,57 @@ export const useEmailNotificationsSettingsStore = defineStore(
         const recipientName = ref('');
 
         async function initEmailSettings() {
-            const [
-                enabledConfig,
-                smtpHostConfig,
-                smtpPortConfig,
-                smtpUseSslConfig,
-                smtpUsernameConfig,
-                smtpPasswordConfig,
-                smtpFromAddressConfig,
-                smtpFromNameConfig,
-                recipientAddressConfig,
-                recipientNameConfig
-            ] = await Promise.all([
-                configRepository.getBool('VRCX_emailNotificationsEnabled', false),
-                configRepository.getString('VRCX_smtpHost', ''),
-                configRepository.getString('VRCX_smtpPort', '465'),
-                configRepository.getBool('VRCX_smtpUseSsl', true),
-                configRepository.getString('VRCX_smtpUsername', ''),
-                configRepository.getString('VRCX_smtpPassword', ''),
-                configRepository.getString('VRCX_smtpFromAddress', ''),
-                configRepository.getString('VRCX_smtpFromName', 'VRCX-Pro'),
-                configRepository.getString('VRCX_emailRecipientAddress', ''),
-                configRepository.getString('VRCX_emailRecipientName', '')
-            ]);
+            if (initPromise) {
+                return initPromise;
+            }
+            initPromise = (async () => {
+                const [
+                    enabledConfig,
+                    smtpHostConfig,
+                    smtpPortConfig,
+                    smtpUseSslConfig,
+                    smtpUsernameConfig,
+                    smtpPasswordConfig,
+                    smtpFromAddressConfig,
+                    smtpFromNameConfig,
+                    recipientAddressConfig,
+                    recipientNameConfig
+                ] = await Promise.all([
+                    configRepository.getBool('VRCX_emailNotificationsEnabled', false),
+                    configRepository.getString('VRCX_smtpHost', ''),
+                    configRepository.getString('VRCX_smtpPort', '465'),
+                    configRepository.getBool('VRCX_smtpUseSsl', true),
+                    configRepository.getString('VRCX_smtpUsername', ''),
+                    configRepository.getString('VRCX_smtpPassword', ''),
+                    configRepository.getString('VRCX_smtpFromAddress', ''),
+                    configRepository.getString('VRCX_smtpFromName', 'VRCX-Pro'),
+                    configRepository.getString('VRCX_emailRecipientAddress', ''),
+                    configRepository.getString('VRCX_emailRecipientName', '')
+                ]);
 
-            enabled.value = enabledConfig;
-            smtpHost.value = smtpHostConfig;
-            smtpPort.value = parseInt(smtpPortConfig, 10) || 465;
-            smtpUseSsl.value = smtpUseSslConfig;
-            smtpUsername.value = smtpUsernameConfig;
-            smtpPassword.value = smtpPasswordConfig;
-            smtpFromAddress.value = smtpFromAddressConfig;
-            smtpFromName.value = smtpFromNameConfig;
-            recipientAddress.value = recipientAddressConfig;
-            recipientName.value = recipientNameConfig;
+                // Do not clobber a toggle the user made while the settings were still loading.
+                if (!enabledTouched) {
+                    enabled.value = enabledConfig;
+                }
+                smtpHost.value = smtpHostConfig;
+                smtpPort.value = parseInt(smtpPortConfig, 10) || 465;
+                smtpUseSsl.value = smtpUseSslConfig;
+                smtpUsername.value = smtpUsernameConfig;
+                smtpPassword.value = smtpPasswordConfig;
+                smtpFromAddress.value = smtpFromAddressConfig;
+                smtpFromName.value = smtpFromNameConfig;
+                recipientAddress.value = recipientAddressConfig;
+                recipientName.value = recipientNameConfig;
+            })();
+            // Allow a retry if loading failed.
+            initPromise.catch(() => {
+                initPromise = null;
+            });
+            return initPromise;
         }
 
         async function setEnabled(value) {
+            enabledTouched = true;
             enabled.value = value;
             await configRepository.setBool('VRCX_emailNotificationsEnabled', value);
         }

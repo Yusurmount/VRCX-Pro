@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { reactive, toRefs } from 'vue';
+import { reactive, ref, toRefs } from 'vue';
 
 const initialDialogState = () => ({
     groupCalendar: false,
@@ -10,11 +10,20 @@ const initialDialogState = () => ({
     editInviteMessages: false,
     autoChangeStatus: false,
     databaseManagement: false,
-    infoCompletion: false
+    infoCompletion: false,
+    dataExport: false,
+    worldExport: false,
+    avatarExport: false,
+    friendExport: false
 });
 
 export const useToolsStore = defineStore('Tools', () => {
     const dialogs = reactive(initialDialogState());
+    const activeExportSource = ref(null);
+
+    function setActiveExportSource(source) {
+        activeExportSource.value = source;
+    }
 
     function setDialogVisible(dialogKey, value) {
         if (!(dialogKey in dialogs)) {
@@ -42,6 +51,8 @@ export const useToolsStore = defineStore('Tools', () => {
 
     return {
         ...toRefs(dialogs),
+        activeExportSource,
+        setActiveExportSource,
         setDialogVisible,
         openDialog,
         closeDialog,

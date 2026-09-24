@@ -183,6 +183,27 @@
                     {{ mcpServerStatus ? t('view.settings.integrations.mcp_server.status_running') : t('view.settings.integrations.mcp_server.status_stopped') }}
                 </span>
             </SettingsItem>
+
+            <SettingsItem
+                v-if="mcpServerEnabled"
+                :label="t('view.settings.integrations.mcp_server.ai_tools')"
+                :description="t('view.settings.integrations.mcp_server.ai_tools_description')">
+                <Badge variant="secondary">{{ mcpNewToolCount }}</Badge>
+            </SettingsItem>
+
+            <div
+                v-if="mcpServerEnabled"
+                class="flex flex-col gap-1.5 rounded-md border border-border bg-muted/30 px-3.5 py-3">
+                <div
+                    v-for="tool in mcpNewTools"
+                    :key="tool.id"
+                    class="flex flex-col gap-0.5">
+                    <code class="text-xs font-medium text-foreground">{{ tool.id }}</code>
+                    <span class="text-xs leading-tight text-muted-foreground">
+                        {{ t(tool.i18nKey) }}
+                    </span>
+                </div>
+            </div>
         </SettingsGroup>
 
         <TranslationApiDialog v-model:isTranslationApiDialogVisible="isTranslationApiDialogVisible" />
@@ -194,6 +215,7 @@
 <script setup>
     import { ref } from 'vue';
     import { Languages } from 'lucide-vue-next';
+    import { Badge } from '@/components/ui/badge';
     import { Button } from '@/components/ui/button';
     import { Switch } from '@/components/ui/switch';
     import { storeToRefs } from 'pinia';
@@ -249,6 +271,17 @@
         mcpServerPort,
         mcpServerStatus
     } = storeToRefs(advancedSettingsStore);
+
+    const mcpNewTools = [
+        { id: 'vrcx_social_insights', i18nKey: 'view.settings.integrations.mcp_server.tool_social_insights' },
+        { id: 'vrcx_get_friend_schedule', i18nKey: 'view.settings.integrations.mcp_server.tool_friend_schedule' },
+        { id: 'vrcx_search_friends', i18nKey: 'view.settings.integrations.mcp_server.tool_search_friends' },
+        { id: 'vrcx_get_world_analytics', i18nKey: 'view.settings.integrations.mcp_server.tool_world_analytics' },
+        { id: 'vrcx_get_user_profile', i18nKey: 'view.settings.integrations.mcp_server.tool_user_profile' },
+        { id: 'vrcx_set_note', i18nKey: 'view.settings.integrations.mcp_server.tool_set_note' },
+        { id: 'vrcx_get_co_location', i18nKey: 'view.settings.integrations.mcp_server.tool_co_location' }
+    ];
+    const mcpNewToolCount = mcpNewTools.length;
 
     const { setAvatarRemoteDatabase, setMcpServerEnabled, setMcpServerPort } = advancedSettingsStore;
 

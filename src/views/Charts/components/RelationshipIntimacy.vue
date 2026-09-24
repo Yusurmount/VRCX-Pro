@@ -61,61 +61,57 @@
                             <h3 class="text-sm font-medium">{{ t('view.charts.intimacy.top_friends') }}</h3>
                         </div>
                         <div class="divide-y">
-                            <div
-                                v-for="(friend, idx) in topFriends"
-                                :key="friend.userId"
-                                class="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 cursor-pointer"
-                                @click="selectedFriend = selectedFriend === friend.userId ? null : friend.userId">
-                                <span class="w-6 text-right text-xs text-muted-foreground tabular-nums">{{ idx + 1 }}</span>
-                                <div class="relative inline-block size-9 flex-none">
-                                    <img
-                                        class="size-full rounded-full object-cover"
-                                        :src="userImage(getUser(friend.userId), true)"
-                                        loading="lazy" />
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <span class="block truncate text-sm font-medium">{{ friend.displayName }}</span>
-                                    <div class="mt-1 flex items-center gap-2">
-                                        <div class="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-                                            <div
-                                                class="h-full rounded-full bg-primary transition-all"
-                                                :style="{ width: friend.score + '%' }" />
+                            <template v-for="(friend, idx) in topFriends" :key="friend.userId">
+                                <div
+                                    class="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 cursor-pointer"
+                                    :class="selectedFriend === friend.userId ? 'bg-muted/70' : ''"
+                                    @click="selectedFriend = selectedFriend === friend.userId ? null : friend.userId">
+                                    <span class="w-6 text-right text-xs text-muted-foreground tabular-nums">{{ idx + 1 }}</span>
+                                    <div class="relative inline-block size-9 flex-none">
+                                        <img
+                                            class="size-full rounded-full object-cover"
+                                            :src="userImage(getUser(friend.userId), true)"
+                                            loading="lazy" />
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="block truncate text-sm font-medium">{{ friend.displayName }}</span>
+                                        <div class="mt-1 flex items-center gap-2">
+                                            <div class="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+                                                <div
+                                                    class="h-full rounded-full bg-primary transition-all"
+                                                    :style="{ width: friend.score + '%' }" />
+                                            </div>
+                                            <span class="w-8 text-right text-xs tabular-nums text-muted-foreground">{{ friend.score }}</span>
                                         </div>
-                                        <span class="w-8 text-right text-xs tabular-nums text-muted-foreground">{{ friend.score }}</span>
+                                    </div>
+                                    <ChevronDown
+                                        :class="[
+                                            'size-4 shrink-0 text-muted-foreground transition-transform',
+                                            selectedFriend === friend.userId ? 'rotate-180' : ''
+                                        ]" />
+                                </div>
+
+                                <div
+                                    v-if="selectedFriend === friend.userId"
+                                    class="border-t bg-muted/30 px-4 py-4">
+                                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                        <div v-for="dim in dimensionList" :key="dim.key" class="flex flex-col gap-1.5">
+                                            <span class="text-xs text-muted-foreground">{{ dim.label }}</span>
+                                            <div class="h-2 rounded-full bg-muted overflow-hidden">
+                                                <div
+                                                    class="h-full rounded-full transition-all"
+                                                    :style="{
+                                                        width: getScoreForFriend(friend.userId).dimensions[dim.key] + '%',
+                                                        backgroundColor: dim.color
+                                                    }" />
+                                            </div>
+                                            <span class="text-xs tabular-nums text-right">
+                                                {{ getScoreForFriend(friend.userId).dimensions[dim.key] }}%
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                                <ChevronDown
-                                    :class="[
-                                        'size-4 shrink-0 text-muted-foreground transition-transform',
-                                        selectedFriend === friend.userId ? 'rotate-180' : ''
-                                    ]" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        v-if="selectedFriend && getScoreForFriend(selectedFriend)"
-                        class="rounded-lg border bg-card p-4">
-                        <h3 class="mb-3 text-sm font-medium">
-                            {{ t('view.charts.intimacy.detail_title') }}
-                            &mdash;
-                            {{ getScoreForFriend(selectedFriend).displayName }}
-                        </h3>
-                        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                            <div v-for="dim in dimensionList" :key="dim.key" class="flex flex-col gap-1.5">
-                                <span class="text-xs text-muted-foreground">{{ dim.label }}</span>
-                                <div class="h-2 rounded-full bg-muted overflow-hidden">
-                                    <div
-                                        class="h-full rounded-full transition-all"
-                                        :style="{
-                                            width: getScoreForFriend(selectedFriend).dimensions[dim.key] + '%',
-                                            backgroundColor: dim.color
-                                        }" />
-                                </div>
-                                <span class="text-xs tabular-nums text-right">
-                                    {{ getScoreForFriend(selectedFriend).dimensions[dim.key] }}%
-                                </span>
-                            </div>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -125,8 +121,7 @@
 </template>
 
 <script setup>
-    import { ref, computed, onMounted } from 'vue';
-    import { storeToRefs } from 'pinia';
+    import { ref, watch } from 'vue';
     import { useI18n } from 'vue-i18n';
     import { RefreshCcw, Info, ChevronDown } from 'lucide-vue-next';
 
@@ -168,7 +163,11 @@
         { key: 'consistency', label: t('view.charts.intimacy.dimension.consistency'), color: '#9a60b4' }
     ];
 
-    onMounted(() => {
-        loadScores();
-    });
+    watch(
+        () => userStore.currentUser?.id,
+        (userId) => {
+            if (userId) loadScores();
+        },
+        { immediate: true }
+    );
 </script>

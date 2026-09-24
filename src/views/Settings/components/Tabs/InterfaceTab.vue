@@ -79,15 +79,6 @@
                     </NumberField>
                 </SettingsItem>
             </template>
-
-            <SettingsItem
-                :label="t('view.settings.appearance.appearance.use_advanced_material')"
-                :description="t('view.settings.appearance.appearance.use_advanced_material_description')">
-                <Switch
-                    :model-value="useAdvancedMaterial"
-                    :ariaLabel="t('view.settings.appearance.appearance.use_advanced_material')"
-                    @update:modelValue="setUseAdvancedMaterial" />
-            </SettingsItem>
         </SettingsGroup>
 
         <SettingsGroup :title="t('view.settings.appearance.display.header')">
@@ -430,7 +421,6 @@
         tablePageSizes,
         isDataTableStriped,
         accessibleStatusIndicators,
-        useAdvancedMaterial,
         showNewDashboardButton
     } = storeToRefs(appearanceSettingsStore);
 
@@ -457,7 +447,6 @@
         setTablePageSizes,
         toggleStripedDataTable,
         toggleAccessibleStatusIndicators,
-        setUseAdvancedMaterial,
         setShowNewDashboardButton
     } = appearanceSettingsStore;
 

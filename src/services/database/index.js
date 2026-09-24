@@ -27,6 +27,14 @@ const dbVars = {
     searchTableSize: 5000
 };
 
+function computeUserPrefix(userId) {
+    let prefix = userId.replaceAll('-', '').replaceAll('_', '');
+    if (prefix.match(/^\d/)) {
+        prefix = '_' + prefix;
+    }
+    return prefix;
+}
+
 const database = {
     ...feed,
     ...activityV2,
@@ -58,13 +66,21 @@ const database = {
         dbVars.searchTableSize = Number.isFinite(limit) ? limit : 5000;
     },
 
+    async ensureUserContext(userId) {
+        if (!userId) return false;
+        if (
+            dbVars.userId === userId &&
+            dbVars.userPrefix === computeUserPrefix(userId)
+        ) {
+            return true;
+        }
+        await this.initUserTables(userId);
+        return true;
+    },
+
     async initUserTables(userId) {
         dbVars.userId = userId;
-        dbVars.userPrefix = userId.replaceAll('-', '').replaceAll('_', '');
-        // Fix escape, add underscore if prefix starts with a number
-        if (dbVars.userPrefix.match(/^\d/)) {
-            dbVars.userPrefix = '_' + dbVars.userPrefix;
-        }
+        dbVars.userPrefix = computeUserPrefix(userId);
         await sqliteService.executeNonQuery(
             `CREATE TABLE IF NOT EXISTS ${dbVars.userPrefix}_feed_gps (id INTEGER PRIMARY KEY, created_at TEXT, user_id TEXT, display_name TEXT, location TEXT, world_name TEXT, previous_location TEXT, time INTEGER, group_name TEXT)`
         );

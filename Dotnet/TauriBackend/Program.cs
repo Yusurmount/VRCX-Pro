@@ -205,7 +205,7 @@ internal static class Program
         "currentculture" => "en-US",
         "getzoom" => 1d,
         "setzoom" or "setuseragent" or "desktopnotification" or "flashwindow" or "focuswindow" => true,
-        "sendemail" => await EmailNotification.SendEmail(args.ElementAtOrDefault(0)),
+        "sendemail" => EmailNotification.SendEmail(args.ElementAtOrDefault(0)).GetAwaiter().GetResult(),
         "setvr" or "executevroverlayfunction" => true,
         "getclipboard" => string.Empty,
         "machineencrypt" => Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(args.FirstOrDefault().ToString())),
