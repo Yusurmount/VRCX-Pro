@@ -18,6 +18,19 @@
             <VRCXUpdateDialog></VRCXUpdateDialog>
         </div>
         <div id="x-dialog-portal" class="x-dialog-portal"></div>
+        <div
+            v-if="isInternalTestWatermark"
+            aria-hidden="true"
+            class="pointer-events-none fixed inset-0 z-[9999] select-none overflow-hidden">
+            <div class="absolute -inset-1/4 grid grid-cols-3 gap-x-24 gap-y-36 rotate-[-18deg]">
+                <span
+                    v-for="watermarkIndex in 12"
+                    :key="watermarkIndex"
+                    class="justify-self-start whitespace-nowrap text-base font-semibold uppercase tracking-[0.22em] text-black/10 dark:text-white/10">
+                    Internal Test {{ internalTestVersion }}
+                </span>
+            </div>
+        </div>
     </TooltipProvider>
 </template>
 
@@ -46,6 +59,9 @@
     import '@/styles/globals.css';
 
     console.log(`isLinux: ${LINUX}`);
+
+    const internalTestVersion = VERSION;
+    const isInternalTestWatermark = VERSION_CHANNEL === 'It';
 
     const isMacOS = computed(() => navigator.platform.includes('Mac'));
 

@@ -83,6 +83,9 @@ build-scripts/build-install-package.cmd    # NSIS 安装包
 build-scripts/build-portable-package.cmd   # 便携版
 ```
 
+构建频道由根目录 `version_channel` 控制：`Release` 保持原版本，`Beta`
+追加 `-beta`，`It` 追加 `-it` 并启用界面水印。
+
 ### 前端校验
 
 ```bash

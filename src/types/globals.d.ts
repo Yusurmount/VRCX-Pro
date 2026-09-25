@@ -3,6 +3,7 @@
 
 declare global {
     const VERSION: string;
+    const VERSION_CHANNEL: string;
     const NIGHTLY: boolean;
 
     const WINDOWS: boolean;

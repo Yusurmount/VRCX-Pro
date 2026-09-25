@@ -30,6 +30,7 @@ export default defineConfig([
                 WINDOWS: 'readonly',
                 LINUX: 'readonly',
                 VERSION: 'readonly',
+                VERSION_CHANNEL: 'readonly',
                 NIGHTLY: 'readonly',
                 webApiService: 'readonly',
                 process: 'readonly',
@@ -41,6 +42,8 @@ export default defineConfig([
         files: [
             '**/webpack.*.js',
             '**/jest.config.js',
+            'build-scripts/*.js',
+            'build-scripts/*.cjs',
             'src/localization/*.js',
             'src/shared/utils/localizationHelperCLI.js'
         ],
