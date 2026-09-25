@@ -1033,23 +1033,37 @@ export const useFriendStore = defineStore('Friend', () => {
      */
     async function getFriendLog(currentUser) {
         let friend;
-        state.friendNumber = await configRepository.getInt(
-            `VRCX_friendNumber_${currentUser.id}`,
-            0
-        );
-        const maxFriendLogNumber = await database.getMaxFriendLogNumber();
+        let refreshError;
+        const refreshPromise = refreshFriends().catch((err) => {
+            refreshError = err;
+        });
+        const [friendNumber, maxFriendLogNumber, friendLogCurrentArray] =
+            await Promise.all([
+                configRepository.getInt(
+                    `VRCX_friendNumber_${currentUser.id}`,
+                    0
+                ),
+                database.getMaxFriendLogNumber(),
+                database.getFriendLogCurrent(),
+                refreshPromise
+            ]);
+        state.friendNumber = friendNumber;
         if (state.friendNumber < maxFriendLogNumber) {
             state.friendNumber = maxFriendLogNumber;
         }
 
-        const friendLogCurrentArray = await database.getFriendLogCurrent();
         for (friend of friendLogCurrentArray) {
             friendLog.set(friend.userId, friend);
         }
         refreshFriendsStatus(currentUser);
 
-        await refreshFriends();
         watchState.isFriendsLoaded = true;
+        if (refreshError) {
+            console.warn(
+                'Failed to refresh friends; using the local friend list',
+                refreshError
+            );
+        }
 
         // check for friend/name/rank change AFTER isFriendsLoaded is set
         for (friend of friendLogCurrentArray) {

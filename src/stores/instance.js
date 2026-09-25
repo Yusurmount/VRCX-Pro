@@ -1353,11 +1353,11 @@ export const useInstanceStore = defineStore('Instance', () => {
                         }
                     });
                 }
-                isBlocked = ref.$moderations.isBlocked;
-                isMuted = ref.$moderations.isMuted;
+                isBlocked = ref.$moderations?.isBlocked ?? false;
+                isMuted = ref.$moderations?.isMuted ?? false;
                 isAvatarInteractionDisabled =
-                    ref.$moderations.isAvatarInteractionDisabled;
-                isChatBoxMuted = ref.$moderations.isChatBoxMuted;
+                    ref.$moderations?.isAvatarInteractionDisabled ?? false;
+                isChatBoxMuted = ref.$moderations?.isChatBoxMuted ?? false;
                 ageVerified = ref.ageVerificationStatus === '18+';
             }
             users.push({
@@ -1382,13 +1382,36 @@ export const useInstanceStore = defineStore('Instance', () => {
 
         const playersInInstance = locationStore.lastLocation.playerList;
         if (playersInInstance.size > 0) {
+            let currentPlayer = playersInInstance.get(userStore.currentUser.id);
+            if (typeof currentPlayer === 'undefined') {
+                currentPlayer = Array.from(playersInInstance.values()).find(
+                    (player) =>
+                        player.displayName === userStore.currentUser.displayName
+                );
+            }
             let ref = userStore.cachedUsers.get(userStore.currentUser.id);
-            if (typeof ref !== 'undefined' && playersInInstance.has(ref.id)) {
-                pushUser(ref);
+            if (typeof currentPlayer !== 'undefined') {
+                const joinTime = currentPlayer.joinTime || Date.now();
+                ref = ref ?? {
+                    ...userStore.currentUser,
+                    id: userStore.currentUser.id,
+                    displayName:
+                        currentPlayer.displayName ||
+                        userStore.currentUser.displayName
+                };
+                pushUser({
+                    ...ref,
+                    $location_at: joinTime,
+                    $online_for: joinTime
+                });
             }
             for (const player of playersInInstance.values()) {
                 // if friend isn't in instance add them
-                if (player.displayName === userStore.currentUser.displayName) {
+                if (
+                    player === currentPlayer ||
+                    player.userId === userStore.currentUser.id ||
+                    player.displayName === userStore.currentUser.displayName
+                ) {
                     continue;
                 }
                 const addUser = !users.some(function (user) {

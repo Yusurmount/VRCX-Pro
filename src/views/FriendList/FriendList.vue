@@ -370,33 +370,62 @@
      * @param {object} ctx
      * @returns {object | null}
      */
+    function getFriendListRow(ctx) {
+        if (ctx?.ref) {
+            return ctx.ref;
+        }
+        const id = ctx?.id;
+        const displayName = ctx?.name || id;
+        if (!id && !displayName) {
+            return null;
+        }
+        return {
+            id,
+            displayName,
+            status: ctx?.state || 'offline',
+            statusDescription: '',
+            note: '',
+            bio: '',
+            $trustLevel: '',
+            $languages: [],
+            bioLinks: []
+        };
+    }
+
+    /**
+     *
+     * @param {object} ctx
+     * @returns {object | null}
+     */
     function getFriendSearchEntry(ctx) {
-        if (!ctx?.ref?.id) {
+        const row = getFriendListRow(ctx);
+        if (!row?.id && !row?.displayName) {
             return null;
         }
         const signature = [
             ctx.memo ?? '',
-            ctx.ref.displayName ?? '',
-            ctx.ref.note ?? '',
-            ctx.ref.bio ?? '',
-            ctx.ref.statusDescription ?? '',
-            ctx.ref.$trustLevel ?? ''
+            row.displayName ?? '',
+            row.note ?? '',
+            row.bio ?? '',
+            row.statusDescription ?? '',
+            row.$trustLevel ?? ''
         ].join('\u0000');
-        const cached = friendSearchCache.get(ctx.id);
+        const cacheKey = row.id ?? row.displayName;
+        const cached = friendSearchCache.get(cacheKey);
         if (cached?.signature === signature) {
             return cached;
         }
         const entry = {
             signature,
-            bio: ctx.ref.bio ?? '',
-            displayName: ctx.ref.displayName ?? '',
+            bio: row.bio ?? '',
+            displayName: row.displayName ?? '',
             memo: ctx.memo ?? '',
-            normalizedDisplayName: removeConfusables(ctx.ref.displayName ?? ''),
-            note: ctx.ref.note ?? '',
-            rank: String(ctx.ref.$trustLevel ?? '').toUpperCase(),
-            status: ctx.ref.statusDescription ?? ''
+            normalizedDisplayName: removeConfusables(row.displayName ?? ''),
+            note: row.note ?? '',
+            rank: String(row.$trustLevel ?? '').toUpperCase(),
+            status: row.statusDescription ?? ''
         };
-        friendSearchCache.set(ctx.id, entry);
+        friendSearchCache.set(cacheKey, entry);
         return entry;
     }
 
@@ -419,7 +448,8 @@
             upperQuery = query.toUpperCase();
         }
         for (const ctx of friends.value.values()) {
-            if (!ctx.ref) continue;
+            const row = getFriendListRow(ctx);
+            if (!row) continue;
             if (friendsListSearchFilterVIP.value && !allFavoriteFriendIds.value.has(ctx.id)) continue;
             if (query) {
                 let match = false;
@@ -447,7 +477,7 @@
                 }
                 if (!match) continue;
             }
-            results.push(ctx.ref);
+            results.push(row);
         }
         friendsListDisplayData.value = results;
         table.setPageIndex(0);

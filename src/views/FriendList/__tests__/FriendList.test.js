@@ -70,7 +70,8 @@ vi.mock('../../../stores', () => ({
         friends: mocks.friends,
         allFavoriteFriendIds: mocks.allFavoriteFriendIds,
         getAllUserStats: mocks.getAllUserStats,
-        getAllUserMutualCount: mocks.getAllUserMutualCount
+        getAllUserMutualCount: mocks.getAllUserMutualCount,
+        getAllUserMutualOptedOut: vi.fn().mockResolvedValue(undefined)
     }),
     useModalStore: () => ({
         confirm: (...args) => mocks.modalConfirm(...args),
@@ -88,6 +89,10 @@ vi.mock('../../../stores', () => ({
     }),
     useVrcxStore: () => ({
         maxTableSize: 100
+    }),
+    useChartsStore: () => ({
+        mutualGraphStatus: { isFetching: false },
+        fetchMutualGraph: vi.fn().mockResolvedValue(undefined)
     })
 }));
 
@@ -359,6 +364,32 @@ describe('FriendList.vue', () => {
         expect(
             wrapper.vm.friendsListDisplayData.map((item) => item.id)
         ).toEqual(['usr_1']);
+    });
+
+    test('shows local friend data when the API user ref is unavailable', async () => {
+        mocks.friends.value = new Map([
+            [
+                'usr_local',
+                {
+                    id: 'usr_local',
+                    name: 'Cached Friend',
+                    state: 'online',
+                    memo: 'cached-note'
+                }
+            ]
+        ]);
+        mocks.friendsListSearch.value = 'cached';
+
+        const wrapper = mount(FriendList);
+        await flushAsync();
+
+        expect(wrapper.vm.friendsListDisplayData).toEqual([
+            expect.objectContaining({
+                id: 'usr_local',
+                displayName: 'Cached Friend',
+                status: 'online'
+            })
+        ]);
     });
 
     test('refreshFriendStats retries immediately after a failed stats request', async () => {
