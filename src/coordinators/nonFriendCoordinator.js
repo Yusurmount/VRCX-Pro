@@ -45,16 +45,27 @@ export async function refreshTrackedNonFriendsFlow() {
                 }
 
                 // Record bio change
-                const currentBio = ref.bio || '';
-                const lastBio = await database.getLastBioChangeForUser(userId);
-                if (!lastBio || lastBio.bio !== currentBio) {
-                    database.addBioToDatabase({
-                        created_at: new Date().toISOString(),
-                        userId,
-                        displayName,
-                        bio: currentBio,
-                        previousBio: lastBio ? lastBio.bio : ''
+                let rawBio = null;
+                try {
+                    const profileResult = await userRequest.getPublicProfile({
+                        userId
                     });
+                    rawBio = profileResult.json.bio;
+                } catch {
+                    // ignore
+                }
+                if (typeof rawBio === 'string') {
+                    const lastBio =
+                        await database.getLastBioChangeForUser(userId);
+                    if (!lastBio || lastBio.bio !== rawBio) {
+                        database.addBioToDatabase({
+                            created_at: new Date().toISOString(),
+                            userId,
+                            displayName,
+                            bio: rawBio,
+                            previousBio: lastBio ? lastBio.bio : ''
+                        });
+                    }
                 }
 
                 // Record status change

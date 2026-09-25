@@ -145,6 +145,38 @@ const tableFixes = {
         }
     },
 
+    async fixBrokenBioChanges() {
+        var tables = [];
+        await sqliteService.execute((dbRow) => {
+            tables.push(dbRow[0]);
+        }, `SELECT name FROM sqlite_schema WHERE type='table' AND name LIKE '%_feed_bio'`);
+        for (const tableName of tables) {
+            await sqliteService.executeNonQuery(
+                `WITH suspicious AS (
+                    SELECT id, user_id, julianday(created_at) AS created_day
+                    FROM "${tableName}"
+                    WHERE bio = '' AND COALESCE(previous_bio, '') <> ''
+                ),
+                burst AS (
+                    SELECT candidate.id
+                    FROM suspicious candidate
+                    WHERE (
+                        SELECT COUNT(*)
+                        FROM suspicious nearby
+                        WHERE ABS(nearby.created_day - candidate.created_day) <= 30.0 / 86400.0
+                    ) >= 10
+                    AND (
+                        SELECT COUNT(DISTINCT nearby.user_id)
+                        FROM suspicious nearby
+                        WHERE ABS(nearby.created_day - candidate.created_day) <= 30.0 / 86400.0
+                    ) >= 5
+                )
+                DELETE FROM "${tableName}"
+                WHERE id IN (SELECT id FROM burst)`
+            );
+        }
+    },
+
     async getBrokenGameLogDisplayNames() {
         var badEntries = [];
         await sqliteService.execute((dbRow) => {

@@ -12,6 +12,7 @@ const tableAlter = {
         await this.fixBrokenGroupChange(); // fix spam group left & name change
         await this.fixCancelFriendRequestTypo(); // fix CancelFriendRequst typo
         await this.fixBrokenGameLogDisplayNames(); // fix gameLog display names "DisplayName (userId)"
+        await this.fixBrokenBioChanges(); // remove batched empty bio changes caused by missing API fields
         await this.updateTableForGroupNames();
         await this.addFriendLogFriendNumber();
         await this.updateTableForAvatarHistory();

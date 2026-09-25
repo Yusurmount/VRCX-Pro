@@ -10,6 +10,10 @@ import {
     getWhatsNewRelease,
     normalizeReleaseVersion
 } from '../shared/constants/whatsNewReleases';
+import {
+    compareVersionNumbers,
+    normalizeVersion
+} from '../shared/utils/version';
 
 import configRepository from '../services/config';
 
@@ -288,22 +292,25 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         const latestVersionName = VRCXUpdateDialog.value.release;
         if (latestVersionName) {
             latestAppVersion.value = latestVersionName;
-            // Strip "VRCX-Pro " or "VRCX-Pro Nightly " prefix for comparison
-            const currentVersionStripped = currentVersion.value
-                .replace(/^VRCX-Pro(?:\s+Nightly)?\s+/, '')
-                .replace(/^v/, '')
-                .trim();
-            const latestVersionStripped = latestVersionName
-                .replace(/^v/, '')
-                .trim();
-            if (latestVersionStripped !== currentVersionStripped) {
-                pendingVRCXUpdate.value = true;
-            }
+            const comparison = compareVersionNumbers(
+                currentVersion.value,
+                latestVersionName
+            );
+            pendingVRCXUpdate.value =
+                comparison === null
+                    ? normalizeVersion(currentVersion.value) !==
+                      normalizeVersion(latestVersionName)
+                    : comparison < 0;
         }
     }
     async function showVRCXUpdateDialog() {
         VRCXUpdateDialog.value.visible = true;
-        await loadBranchVersions();
+        changeLogDialog.value.loading = true;
+        try {
+            await loadBranchVersions();
+        } finally {
+            changeLogDialog.value.loading = false;
+        }
         return true;
     }
 

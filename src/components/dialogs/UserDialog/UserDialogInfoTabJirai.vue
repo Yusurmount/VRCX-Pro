@@ -181,10 +181,10 @@
                     v-else
                     class="text-xs truncate font-[inherit]"
                     style="white-space: pre-wrap; margin: 0 0.5em 0 0; max-height: 210px; overflow-y: auto"
-                    >{{ bioCache.translated || userDialog.ref.bio || '-' }}</pre>
+                    >{{ bioCache.translated || getCurrentBio() || '-' }}</pre>
                 <div style="float: right">
                     <Button
-                        v-if="translationApi && userDialog.ref.bio"
+                        v-if="translationApi && getCurrentBio()"
                         class="w-3 h-6 text-xs mr-0.5"
                         size="icon-sm"
                         variant="ghost"
@@ -559,6 +559,14 @@
     const bioDiffEnabled = ref(true);
     const bioDiffHtml = ref('');
 
+    function getCurrentBio() {
+        const profile = userDialog.value.publicProfileRef;
+        if (profile?.id === userDialog.value.id && typeof profile.bio === 'string') {
+            return profile.bio;
+        }
+        return userDialog.value.ref.bio || '';
+    }
+
     async function loadBioDiff() {
         const dialogUserId = userDialog.value.id;
         if (!dialogUserId) {
@@ -592,7 +600,7 @@
             }
         }
 
-        bioDiffHtml.value = formatDifference(baseBio, latestRecord.bio || '');
+        bioDiffHtml.value = formatDifference(baseBio, getCurrentBio());
     }
 
     function toggleBioDiff() {
@@ -620,6 +628,15 @@
         }
     );
 
+    watch(
+        () => userDialog.value.publicProfileRef?.bio,
+        () => {
+            if (userDialog.value.visible && bioDiffEnabled.value) {
+                loadBioDiff();
+            }
+        }
+    );
+
     /**
      *
      */
@@ -643,7 +660,7 @@
         if (translateLoading.value) {
             return;
         }
-        const bio = userDialog.value.ref.bio;
+        const bio = getCurrentBio();
         if (!bio) {
             return;
         }

@@ -140,20 +140,32 @@ export async function runSilentInfoFetch() {
         if (userJson) {
             const userId = userJson.id;
             const displayName = userJson.displayName || target.displayName;
+            let currentBio = null;
+
+            try {
+                const profileResult = await userRequest.getPublicProfile({
+                    userId
+                });
+                currentBio = profileResult.json.bio;
+            } catch {
+                // ignore
+            }
 
             // 1. Bio 对比
             try {
-                const currentBio = userJson.bio || '';
-                const lastBio = await database.getLastBioChangeForUser(userId);
-                if (!lastBio || lastBio.bio !== currentBio) {
-                    database.addBioToDatabase({
-                        created_at: new Date().toJSON(),
-                        userId,
-                        displayName,
-                        bio: currentBio,
-                        previousBio: lastBio ? lastBio.bio : ''
-                    });
-                    infoFetchState.bioUpdated++;
+                if (typeof currentBio === 'string') {
+                    const lastBio =
+                        await database.getLastBioChangeForUser(userId);
+                    if (!lastBio || lastBio.bio !== currentBio) {
+                        database.addBioToDatabase({
+                            created_at: new Date().toJSON(),
+                            userId,
+                            displayName,
+                            bio: currentBio,
+                            previousBio: lastBio ? lastBio.bio : ''
+                        });
+                        infoFetchState.bioUpdated++;
+                    }
                 }
             } catch {
                 // ignore

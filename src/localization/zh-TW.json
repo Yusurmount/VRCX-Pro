@@ -3160,6 +3160,7 @@
             "downloading": "正在下載更新",
             "current_version": "目前版本",
             "update_available": "發現新版本",
+            "unpublished_version": "目前版本未公開，請確保使用的是 Release 已發佈的版本",
             "latest_version": "VRCX 已是最新版本",
             "ready_for_update": "已準備好安裝更新，重新啟動 VRCX 來套用更新",
             "change_version": "變更版本",

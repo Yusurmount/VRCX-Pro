@@ -14,6 +14,13 @@ const mocks = vi.hoisted(() => {
                 release: 'VRCX-Pro 3.3.0',
                 releases: []
             }),
+            changeLogDialog: ref({
+                visible: false,
+                buildName: 'VRCX-Pro 3.4.0',
+                changeLog: '## Improvements\n- Inline release notes',
+                loading: false,
+                loaded: true
+            }),
             pendingVRCXInstall: ref(''),
             updateInProgress: ref(false),
             updateProgress: ref(0)
@@ -21,7 +28,6 @@ const mocks = vi.hoisted(() => {
         actions: {
             installVRCXUpdate: vi.fn(),
             restartVRCX: vi.fn(),
-            showChangeLogDialog: vi.fn(),
             updateProgressText: vi.fn(() => '42%'),
             cancelUpdate: vi.fn(),
             openExternalLink: vi.fn()
@@ -48,6 +54,13 @@ vi.mock('vue-i18n', () => ({
 
 vi.mock('@/shared/utils', () => ({
     openExternalLink: mocks.actions.openExternalLink
+}));
+
+vi.mock('vue-showdown', () => ({
+    VueShowdown: {
+        props: ['markdown', 'flavor', 'options'],
+        template: '<div data-testid="inline-markdown">{{ markdown }}</div>'
+    }
 }));
 
 import VRCXUpdateDialog from '../VRCXUpdateDialog.vue';
@@ -94,6 +107,13 @@ describe('VRCXUpdateDialog.vue', () => {
             release: 'VRCX-Pro 3.3.0',
             releases: []
         };
+        mocks.state.changeLogDialog.value = {
+            visible: false,
+            buildName: 'VRCX-Pro 3.4.0',
+            changeLog: '## Improvements\n- Inline release notes',
+            loading: false,
+            loaded: true
+        };
         mocks.state.pendingVRCXInstall.value = '';
         mocks.state.updateInProgress.value = false;
         mocks.state.updateProgress.value = 0;
@@ -119,9 +139,10 @@ describe('VRCXUpdateDialog.vue', () => {
         );
     });
 
-    test('replaces version selection with a change-log entry point', async () => {
+    test('renders GitHub release notes inline without opening another dialog', async () => {
         const wrapper = mountComponent();
-        const changeLogCard = wrapper.find('[data-testid="change-log-card"]');
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        const changeLog = wrapper.find('[data-testid="inline-change-log"]');
 
         expect(wrapper.text()).not.toContain(
             'dialog.vrcx_updater.branch_stable'
@@ -132,11 +153,47 @@ describe('VRCXUpdateDialog.vue', () => {
         expect(wrapper.text()).not.toContain(
             'dialog.vrcx_updater.update_channel'
         );
-        expect(changeLogCard.exists()).toBe(true);
+        expect(changeLog.exists()).toBe(true);
+        expect(changeLog.text()).toContain('dialog.change_log.header');
+        expect(changeLog.text()).toContain('VRCX-Pro 3.4.0');
+        expect(changeLog.text()).toContain('Inline release notes');
+        expect(wrapper.find('[data-testid="change-log-card"]').exists()).toBe(
+            false
+        );
+        expect(mocks.state.VRCXUpdateDialog.value.visible).toBe(true);
+    });
 
-        await changeLogCard.trigger('click');
-        expect(mocks.actions.showChangeLogDialog).toHaveBeenCalledOnce();
-        expect(mocks.state.VRCXUpdateDialog.value.visible).toBe(false);
+    test('hides release notes and warns when the current version is higher', async () => {
+        mocks.state.appVersion.value = 'VRCX-Pro 3.4.0';
+        mocks.state.VRCXUpdateDialog.value.release = 'v3.3.0';
+        mocks.state.VRCXUpdateDialog.value.updatePending = true;
+        mocks.state.pendingVRCXInstall.value = 'VRCX-Pro 3.3.0';
+        const wrapper = mountComponent();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(wrapper.text()).toContain(
+            'dialog.vrcx_updater.unpublished_version'
+        );
+        expect(wrapper.find('[data-testid="inline-change-log"]').exists()).toBe(
+            false
+        );
+        expect(wrapper.text()).not.toContain(
+            'dialog.vrcx_updater.update_available'
+        );
+        expect(
+            wrapper
+                .findAll('[data-testid="action-button"]')
+                .some((button) =>
+                    button.text().includes('dialog.vrcx_updater.download')
+                )
+        ).toBe(false);
+        expect(
+            wrapper
+                .findAll('[data-testid="action-button"]')
+                .some((button) =>
+                    button.text().includes('dialog.vrcx_updater.install')
+                )
+        ).toBe(false);
     });
 
     test('shows a download action when a newer release is selected', async () => {

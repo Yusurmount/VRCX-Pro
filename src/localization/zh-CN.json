@@ -3148,6 +3148,7 @@
             "downloading": "正在下载更新",
             "current_version": "当前版本",
             "update_available": "发现新版本",
+            "unpublished_version": "当前版本未公开，请确保使用的是Release已发布的版本",
             "latest_version": "VRCX 已是最新版本",
             "ready_for_update": "现已准备好安装更新，重启 VRCX 以开始安装",
             "change_version": "更改版本",

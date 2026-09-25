@@ -26,29 +26,41 @@
                         aria-label="Update progress" />
                 </section>
 
-                <template v-if="!updateInProgress">
-                    <button
-                        type="button"
-                        data-testid="change-log-card"
-                        class="mt-4 flex w-full items-center justify-between rounded-xl border border-border/70 bg-card/70 p-4 text-left shadow-xs transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
-                        @click="openChangeLog">
-                        <span class="flex min-w-0 items-center gap-3">
-                            <span
-                                class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                                <FileText class="size-4" />
-                            </span>
-                            <span class="min-w-0">
-                                <span class="block truncate text-sm font-medium text-foreground">
-                                    {{ t('dialog.change_log.header') }}
-                                </span>
-                                <span class="mt-0.5 block truncate text-xs text-muted-foreground">
-                                    {{ VRCXUpdateDialog.release || appVersion }}
-                                </span>
+                <section
+                    v-if="
+                        !updateInProgress &&
+                        !isCurrentVersionHigherThanRelease &&
+                        (changeLogDialog.loading || changeLogDialog.loaded)
+                    "
+                    data-testid="inline-change-log"
+                    class="mt-4 overflow-hidden rounded-2xl border border-border/70 bg-card/70 shadow-xs">
+                    <div
+                        class="flex items-center justify-between gap-3 border-b border-border/70 bg-muted/40 px-4 py-3">
+                        <span class="flex min-w-0 items-center gap-2">
+                            <FileText class="size-4 shrink-0 text-muted-foreground" />
+                            <span class="truncate text-sm font-medium text-foreground">
+                                {{ t('dialog.change_log.header') }}
                             </span>
                         </span>
-                        <ChevronRight class="size-4 shrink-0 text-muted-foreground" />
-                    </button>
-                </template>
+                        <span class="max-w-[45%] truncate text-xs text-muted-foreground">
+                            {{ changeLogDialog.buildName || VRCXUpdateDialog.release || appVersion }}
+                        </span>
+                    </div>
+                    <div
+                        v-if="changeLogDialog.loading"
+                        class="flex min-h-32 items-center justify-center gap-2 px-4 py-6 text-sm text-muted-foreground">
+                        <Loader2 class="size-4 animate-spin text-primary" />
+                        <span>{{ t('dialog.change_log.loading') }}</span>
+                    </div>
+                    <div v-else class="max-h-64 overflow-y-auto px-4 py-3">
+                        <VueShowdown
+                            class="changelog-markdown"
+                            :markdown="changeLogDialog.changeLog"
+                            flavor="github"
+                            :options="showdownOptions"
+                            @click="handleLinkClick" />
+                    </div>
+                </section>
             </div>
 
             <DialogFooter
@@ -82,15 +94,15 @@
 </template>
 
 <script setup>
-    import { computed } from 'vue';
+    import { computed, defineAsyncComponent } from 'vue';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
     import {
-        ChevronRight,
         CircleCheck,
         CloudDownload,
         ExternalLink,
         FileText,
+        Info,
         Loader2,
         PackageCheck,
         X
@@ -100,32 +112,46 @@
     import { Button } from '@/components/ui/button';
     import { Progress } from '@/components/ui/progress';
     import { openExternalLink } from '@/shared/utils';
+    import { compareVersionNumbers, normalizeVersion } from '@/shared/utils/version';
     import { useVRCXUpdaterStore } from '../../stores';
 
     const VRCXUpdaterStore = useVRCXUpdaterStore();
+    const VueShowdown = defineAsyncComponent(() => import('vue-showdown').then((module) => module.VueShowdown));
 
     const {
         appVersion,
+        changeLogDialog,
         checkingForVRCXUpdate,
         VRCXUpdateDialog,
         pendingVRCXInstall,
         updateInProgress,
         updateProgress
     } = storeToRefs(VRCXUpdaterStore);
-    const { installVRCXUpdate, restartVRCX, showChangeLogDialog, updateProgressText, cancelUpdate } = VRCXUpdaterStore;
+    const { installVRCXUpdate, restartVRCX, updateProgressText, cancelUpdate } = VRCXUpdaterStore;
 
     const { t } = useI18n();
 
-    const normalizeVersion = (value) =>
-        String(value || '')
-            .replace(' (Linux)', '')
-            .replace(/^VRCX-Pro(?:\s+Nightly)?\s+/, '')
-            .replace(/^v/, '')
-            .trim();
+    const showdownOptions = {
+        emoji: true,
+        openLinksInNewWindow: false,
+        simplifiedAutoLink: true,
+        excludeTrailingPunctuationFromURLs: true,
+        literalMidWordUnderscores: true,
+        tables: true,
+        tablesHeaderId: false,
+        ghCodeBlocks: true,
+        tasklists: true
+    };
 
-    const isUpToDate = computed(
-        () => normalizeVersion(VRCXUpdateDialog.value.release) === normalizeVersion(appVersion.value)
-    );
+    const versionComparison = computed(() => compareVersionNumbers(appVersion.value, VRCXUpdateDialog.value.release));
+    const isCurrentVersionHigherThanRelease = computed(() => versionComparison.value > 0);
+
+    const isUpToDate = computed(() => {
+        if (versionComparison.value !== null) {
+            return versionComparison.value === 0;
+        }
+        return normalizeVersion(VRCXUpdateDialog.value.release) === normalizeVersion(appVersion.value);
+    });
 
     const updateStatus = computed(() => {
         if (updateInProgress.value) {
@@ -147,6 +173,17 @@
                 borderColor: 'border-primary/20',
                 title: t('dialog.vrcx_updater.checking'),
                 description: t('dialog.vrcx_updater.checking_description')
+            };
+        }
+
+        if (isCurrentVersionHigherThanRelease.value) {
+            return {
+                icon: Info,
+                iconClass: 'text-amber-600 dark:text-amber-400',
+                tone: 'bg-amber-500/10',
+                borderColor: 'border-amber-500/20',
+                title: `${t('dialog.vrcx_updater.current_version')} · ${appVersion.value}`,
+                description: t('dialog.vrcx_updater.unpublished_version')
             };
         }
 
@@ -183,14 +220,24 @@
     });
 
     const showDownload = computed(
-        () => !isUpToDate.value && VRCXUpdateDialog.value.release !== pendingVRCXInstall.value
+        () =>
+            !isUpToDate.value &&
+            !isCurrentVersionHigherThanRelease.value &&
+            VRCXUpdateDialog.value.release !== pendingVRCXInstall.value
     );
-    const showInstall = computed(() => !updateInProgress.value && Boolean(pendingVRCXInstall.value));
-
-    const openChangeLog = async () => {
-        VRCXUpdateDialog.value.visible = false;
-        await showChangeLogDialog();
-    };
+    const showInstall = computed(
+        () => !updateInProgress.value && !isCurrentVersionHigherThanRelease.value && Boolean(pendingVRCXInstall.value)
+    );
 
     const openReleases = () => openExternalLink('https://github.com/Yusurmount/VRCX-Pro/releases');
+
+    const handleLinkClick = (event) => {
+        const target = event.target.closest('a');
+        if (!target?.href) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        openExternalLink(target.href);
+    };
 </script>

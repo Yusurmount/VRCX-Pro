@@ -3272,6 +3272,7 @@
             "downloading": "Downloading update",
             "current_version": "Current version",
             "update_available": "A new version is available.",
+            "unpublished_version": "This version is not publicly available. Make sure you are using a published Release version.",
             "latest_version": "VRCX is up to date.",
             "ready_for_update": "Ready for install, restart VRCX to apply.",
             "change_version": "Change Version",
