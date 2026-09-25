@@ -515,16 +515,15 @@
 
     // ---- Icon Transition hooks (JS mode) ----
     function onIconEnter(el, done) {
-        // Run icon rotation/scale animation and stroke draw simultaneously
+        // Match the content's upward transition and run the stroke draw simultaneously
         gsap.fromTo(
             el,
-            { opacity: 0, scale: 0.85, rotation: -10 },
+            { opacity: 0, y: 24 },
             {
                 opacity: 1,
-                scale: 1,
-                rotation: 0,
+                y: 0,
                 duration: 0.4,
-                ease: 'back.out(1.4)'
+                ease: 'power3.out'
             }
         );
         // Start stroke draw at the same time (delayed slightly for overlap)
@@ -536,8 +535,7 @@
     function onIconLeave(el, done) {
         gsap.to(el, {
             opacity: 0,
-            scale: 1.08,
-            rotation: 10,
+            y: -24,
             duration: 0.25,
             ease: 'power2.in',
             onComplete: done
