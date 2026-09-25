@@ -139,7 +139,7 @@
                 <div class="relative mt-2 flex min-h-0 flex-1 flex-col px-4">
                     <div
                         ref="chartDomRef"
-                        class="w-full min-h-[300px] flex-1 rounded-lg border bg-card"
+                        class="w-full min-h-[300px] flex-1 rounded-lg border bg-transparent"
                         role="img"
                         :aria-label="t('view.charts.timeline_comparison.chart_label')">
                     </div>
