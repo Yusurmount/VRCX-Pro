@@ -22,14 +22,17 @@ const mocks = vi.hoisted(() => {
                 loaded: true
             }),
             pendingVRCXInstall: ref(''),
+            downloadRoute: ref('official'),
             updateInProgress: ref(false),
-            updateProgress: ref(0)
+            updateProgress: ref(0),
+            updateError: ref('')
         },
         actions: {
-            installVRCXUpdate: vi.fn(),
+            downloadSelectedVRCXUpdate: vi.fn(),
             restartVRCX: vi.fn(),
             updateProgressText: vi.fn(() => '42%'),
             cancelUpdate: vi.fn(),
+            setUpdateRoute: vi.fn(),
             openExternalLink: vi.fn()
         }
     };
@@ -91,6 +94,21 @@ function mountComponent() {
                     props: ['modelValue'],
                     template:
                         '<div data-testid="progress" :data-value="modelValue" />'
+                },
+                Select: {
+                    props: ['modelValue', 'disabled'],
+                    template: '<div data-testid="route-select"><slot /></div>'
+                },
+                SelectTrigger: {
+                    template: '<div data-testid="route-trigger"><slot /></div>'
+                },
+                SelectValue: { template: '<span />' },
+                SelectContent: {
+                    template: '<div data-testid="route-options"><slot /></div>'
+                },
+                SelectItem: {
+                    props: ['value'],
+                    template: '<div data-testid="route-option"><slot /></div>'
                 }
             }
         }
@@ -115,8 +133,10 @@ describe('VRCXUpdateDialog.vue', () => {
             loaded: true
         };
         mocks.state.pendingVRCXInstall.value = '';
+        mocks.state.downloadRoute.value = 'official';
         mocks.state.updateInProgress.value = false;
         mocks.state.updateProgress.value = 0;
+        mocks.state.updateError.value = '';
         vi.clearAllMocks();
     });
 
@@ -211,7 +231,12 @@ describe('VRCXUpdateDialog.vue', () => {
         expect(downloadButton).toBeTruthy();
 
         await downloadButton.trigger('click');
-        expect(mocks.actions.installVRCXUpdate).toHaveBeenCalledOnce();
+        expect(mocks.actions.downloadSelectedVRCXUpdate).toHaveBeenCalledOnce();
+        expect(wrapper.find('[data-testid="route-select"]').exists()).toBe(
+            true
+        );
+        expect(wrapper.text()).toContain('dialog.vrcx_updater.route_official');
+        expect(wrapper.text()).toContain('dialog.vrcx_updater.route_mirror');
     });
 
     test('shows the ready state with an install action', async () => {
@@ -249,5 +274,29 @@ describe('VRCXUpdateDialog.vue', () => {
 
         await buttons[0].trigger('click');
         expect(mocks.actions.cancelUpdate).toHaveBeenCalledOnce();
+    });
+
+    test('shows the download error inline with a retry action', async () => {
+        mocks.state.updateError.value =
+            'message.vrcx_updater.download_failed: Network error';
+        mocks.state.VRCXUpdateDialog.value.release = 'VRCX-Pro 3.4.0';
+        const wrapper = mountComponent();
+        const buttons = wrapper.findAll('[data-testid="action-button"]');
+
+        expect(wrapper.find('[data-testid="update-error"]').exists()).toBe(
+            true
+        );
+        expect(wrapper.text()).toContain('dialog.vrcx_updater.error_title');
+        expect(wrapper.text()).toContain('Network error');
+        expect(
+            buttons.some((button) =>
+                button.text().includes('dialog.vrcx_updater.download')
+            )
+        ).toBe(true);
+        expect(
+            buttons.some((button) =>
+                button.text().includes('dialog.vrcx_updater.install')
+            )
+        ).toBe(false);
     });
 });

@@ -3278,7 +3278,11 @@
             "change_version": "Change Version",
             "download": "Download",
             "install": "Install",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "error_title": "Update failed",
+            "route": "GitHub route",
+            "route_official": "Official",
+            "route_mirror": "Mirror (gh-proxy.org)"
         },
         "change_log": {
             "header": "Change Log",
@@ -3610,7 +3614,14 @@
         "vrcx_updater": {
             "failed": "Failed to check for update, {message}",
             "failed_install": "Failed to install update",
-            "checking_hash": "Checking hash..."
+            "checking_hash": "Checking hash...",
+            "download_failed": "Failed to download the update: {message}",
+            "download_start_failed": "Could not start the update download.",
+            "no_compatible_asset": "No compatible update file was found for this system.",
+            "invalid_releases": "GitHub returned an invalid Releases response.",
+            "install_failed": "Failed to start the installer: {message}",
+            "install_start_failed": "The installer could not be started.",
+            "cancel_failed": "Failed to cancel the download: {message}"
         },
         "api_handler": {
             "avatar_private_or_deleted": "Avatar is private or deleted"

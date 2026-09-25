@@ -27,7 +27,8 @@ vi.mock('vue-sonner', () => ({
 
 vi.mock('vue-i18n', () => ({
     useI18n: () => ({
-        t: (key) => key,
+        t: (key, params) =>
+            params ? `${key} ${Object.values(params).join(' ')}` : key,
         locale: require('vue').ref('en')
     })
 }));
@@ -67,6 +68,7 @@ describe('useVRCXUpdaterStore.setAutoUpdateVRCX', () => {
         useVRCXUpdaterStore();
         await flushPromises();
         vi.clearAllMocks();
+        globalThis.window.platform.quitApplication = vi.fn();
     });
 
     test('sets autoUpdateVRCX to Off, clears pending flag, and persists config', async () => {
@@ -146,5 +148,149 @@ describe('useVRCXUpdaterStore.setAutoUpdateVRCX', () => {
 
         expect(store.latestAppVersion).toBe('v2026.2.0');
         expect(store.pendingVRCXUpdate).toBe(false);
+    });
+
+    test('only enables install after the backend confirms a complete download', async () => {
+        const store = useVRCXUpdaterStore();
+        const release = {
+            name: 'VRCX-Pro 2026.2.0',
+            tag_name: 'v2026.2.0',
+            assets: [
+                {
+                    state: 'uploaded',
+                    name: 'VRCX-Pro.exe',
+                    content_type: 'application/x-msdownload',
+                    browser_download_url:
+                        'https://github.com/Yusurmount/VRCX-Pro/releases/download/v2026.2.0/VRCX-Pro.exe',
+                    digest: 'sha256:abcdef',
+                    size: 1234
+                }
+            ]
+        };
+        store.VRCXUpdateDialog.releases = [release];
+        store.VRCXUpdateDialog.release = release.tag_name;
+        globalThis.AppApi.DownloadUpdate = vi.fn().mockResolvedValue(true);
+        globalThis.AppApi.GetUpdateStatus = vi
+            .fn()
+            .mockResolvedValueOnce({
+                state: 'downloading',
+                progress: 42,
+                error: ''
+            })
+            .mockResolvedValueOnce({
+                state: 'complete',
+                progress: 100,
+                error: ''
+            });
+
+        const download = store.downloadSelectedVRCXUpdate();
+        await flushPromises();
+
+        expect(store.updateInProgress).toBe(true);
+        expect(store.pendingVRCXInstall).toBe('');
+        expect(store.VRCXUpdateDialog.updatePending).toBe(false);
+
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        await download;
+
+        expect(store.updateInProgress).toBe(false);
+        expect(store.pendingVRCXInstall).toBe(release.tag_name);
+        expect(store.VRCXUpdateDialog.updatePending).toBe(true);
+    });
+
+    test('reports backend download errors and keeps install hidden', async () => {
+        const store = useVRCXUpdaterStore();
+        const release = {
+            name: 'VRCX-Pro 2026.2.0',
+            tag_name: 'v2026.2.0',
+            assets: [
+                {
+                    state: 'uploaded',
+                    name: 'VRCX-Pro.exe',
+                    content_type: 'application/x-msdownload',
+                    browser_download_url:
+                        'https://github.com/Yusurmount/VRCX-Pro/releases/download/v2026.2.0/VRCX-Pro.exe',
+                    digest: 'sha256:abcdef',
+                    size: 1234
+                }
+            ]
+        };
+        store.VRCXUpdateDialog.releases = [release];
+        store.VRCXUpdateDialog.release = release.tag_name;
+        globalThis.AppApi.DownloadUpdate = vi.fn().mockResolvedValue(true);
+        globalThis.AppApi.GetUpdateStatus = vi.fn().mockResolvedValue({
+            state: 'error',
+            progress: 0,
+            error: 'HTTP 403'
+        });
+
+        await store.downloadSelectedVRCXUpdate();
+
+        expect(store.updateError).toContain('HTTP 403');
+        expect(store.pendingVRCXInstall).toBe('');
+        expect(store.VRCXUpdateDialog.updatePending).toBe(false);
+        expect(store.updateInProgress).toBe(false);
+        expect(mocks.toast.error).toHaveBeenCalledOnce();
+    });
+
+    test('routes release downloads through the selected GitHub mirror', async () => {
+        const store = useVRCXUpdaterStore();
+        const release = {
+            name: 'VRCX-Pro 2026.2.0',
+            tag_name: 'v2026.2.0',
+            assets: [
+                {
+                    state: 'uploaded',
+                    name: 'VRCX-Pro.exe',
+                    content_type: 'application/x-msdownload',
+                    browser_download_url:
+                        'https://github.com/Yusurmount/VRCX-Pro/releases/download/v2026.2.0/VRCX-Pro.exe',
+                    digest: 'sha256:abcdef',
+                    size: 1234
+                }
+            ]
+        };
+        store.VRCXUpdateDialog.releases = [release];
+        store.VRCXUpdateDialog.release = release.tag_name;
+        globalThis.AppApi.DownloadUpdate = vi.fn().mockResolvedValue(true);
+        globalThis.AppApi.GetUpdateStatus = vi.fn().mockResolvedValue({
+            state: 'complete',
+            progress: 100,
+            error: ''
+        });
+
+        await store.downloadSelectedVRCXUpdate();
+        expect(globalThis.AppApi.DownloadUpdate).toHaveBeenCalledWith(
+            release.assets[0].browser_download_url,
+            'abcdef',
+            1234
+        );
+
+        await store.setUpdateRoute('mirror');
+        await store.downloadSelectedVRCXUpdate();
+        expect(globalThis.AppApi.DownloadUpdate).toHaveBeenLastCalledWith(
+            `https://gh-proxy.org/${release.assets[0].browser_download_url}`,
+            'abcdef',
+            1234
+        );
+        expect(mocks.configRepository.setString).toHaveBeenCalledWith(
+            'VRCX_updateRoute',
+            'mirror'
+        );
+    });
+
+    test('does not quit when the installer cannot be started', async () => {
+        const store = useVRCXUpdaterStore();
+        globalThis.AppApi.RestartApplication = vi.fn().mockResolvedValue(false);
+
+        await store.restartVRCX(true);
+
+        expect(
+            globalThis.window.platform.quitApplication
+        ).not.toHaveBeenCalled();
+        expect(store.updateError).toContain(
+            'message.vrcx_updater.install_start_failed'
+        );
+        expect(mocks.toast.error).toHaveBeenCalledOnce();
     });
 });

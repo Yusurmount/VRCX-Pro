@@ -3154,7 +3154,11 @@
             "change_version": "更改版本",
             "download": "下载",
             "install": "安装",
-            "cancel": "取消"
+            "cancel": "取消",
+            "error_title": "更新失败",
+            "route": "GitHub 线路",
+            "route_official": "官方线路",
+            "route_mirror": "镜像线路（gh-proxy.org）"
         },
         "change_log": {
             "header": "更新日志",
@@ -3604,7 +3608,14 @@
         "vrcx_updater": {
             "failed": "无法检查更新，{message}",
             "failed_install": "无法安装更新",
-            "checking_hash": "正在校验文件..."
+            "checking_hash": "正在校验文件...",
+            "download_failed": "下载更新失败：{message}",
+            "download_start_failed": "无法开始下载更新。",
+            "no_compatible_asset": "未找到适用于当前系统的更新文件。",
+            "invalid_releases": "GitHub 返回了无效的 Releases 响应。",
+            "install_failed": "启动安装程序失败：{message}",
+            "install_start_failed": "无法启动安装程序。",
+            "cancel_failed": "取消下载失败：{message}"
         },
         "api_handler": {
             "avatar_private_or_deleted": "这个模型是私人的，或其已被删除"

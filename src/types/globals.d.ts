@@ -178,7 +178,7 @@ declare global {
             text?: string,
             image?: string
         ): Promise<void>;
-        RestartApplication(isUpgrade: boolean): Promise<void>;
+        RestartApplication(isUpgrade: boolean): Promise<boolean>;
         CheckForUpdateExe(): Promise<boolean>;
         ExecuteVrOverlayFunction(key: string, json: string): Promise<void>;
         FocusWindow(): Promise<void>;
@@ -344,7 +344,18 @@ declare global {
             fileUrl: string,
             hashString: string,
             downloadSize: number
-        ): Promise<void>;
+        ): Promise<boolean>;
+        GetUpdateStatus(): Promise<{
+            state:
+                | 'idle'
+                | 'downloading'
+                | 'complete'
+                | 'error'
+                | 'canceled'
+                | 'installing';
+            progress: number;
+            error: string;
+        }>;
         CancelUpdate(): Promise<void>;
         CheckUpdateProgress(): Promise<number>;
 

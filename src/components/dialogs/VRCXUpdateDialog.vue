@@ -7,7 +7,9 @@
                 </DialogTitle>
             </DialogHeader>
             <div class="px-6 pb-6">
-                <section class="mt-5 rounded-2xl border border-border/70 bg-muted/40 px-5 py-6 text-center shadow-xs">
+                <section
+                    :data-testid="updateError ? 'update-error' : null"
+                    class="mt-5 rounded-2xl border border-border/70 bg-muted/40 px-5 py-6 text-center shadow-xs">
                     <div
                         class="mx-auto flex size-12 items-center justify-center rounded-full border"
                         :class="[updateStatus.tone, updateStatus.borderColor]">
@@ -75,18 +77,40 @@
                         <ExternalLink class="size-4" />
                         {{ t('dialog.vrcx_updater.change_version') }}
                     </Button>
-                    <Button
-                        v-if="showDownload"
-                        :variant="showInstall ? 'outline' : 'default'"
-                        :disabled="checkingForVRCXUpdate"
-                        @click="installVRCXUpdate">
-                        <CloudDownload class="size-4" />
-                        {{ t('dialog.vrcx_updater.download') }}
-                    </Button>
-                    <Button v-if="showInstall" @click="restartVRCX(true)">
-                        <PackageCheck class="size-4" />
-                        {{ t('dialog.vrcx_updater.install') }}
-                    </Button>
+                    <div class="flex items-center gap-2 sm:justify-end">
+                        <Select
+                            v-if="showDownload"
+                            :model-value="downloadRoute"
+                            :disabled="checkingForVRCXUpdate"
+                            @update:model-value="setUpdateRoute">
+                            <SelectTrigger
+                                data-testid="update-route"
+                                :aria-label="t('dialog.vrcx_updater.route')"
+                                size="sm"
+                                class="min-w-40">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="official">
+                                    {{ t('dialog.vrcx_updater.route_official') }}
+                                </SelectItem>
+                                <SelectItem value="mirror">
+                                    {{ t('dialog.vrcx_updater.route_mirror') }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Button
+                            v-if="showDownload"
+                            :disabled="checkingForVRCXUpdate"
+                            @click="downloadSelectedVRCXUpdate">
+                            <CloudDownload class="size-4" />
+                            {{ t('dialog.vrcx_updater.download') }}
+                        </Button>
+                        <Button v-if="showInstall" @click="restartVRCX(true)">
+                            <PackageCheck class="size-4" />
+                            {{ t('dialog.vrcx_updater.install') }}
+                        </Button>
+                    </div>
                 </template>
             </DialogFooter>
         </DialogContent>
@@ -99,6 +123,7 @@
     import { useI18n } from 'vue-i18n';
     import {
         CircleCheck,
+        CircleAlert,
         CloudDownload,
         ExternalLink,
         FileText,
@@ -111,6 +136,7 @@
     import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
     import { Button } from '@/components/ui/button';
     import { Progress } from '@/components/ui/progress';
+    import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { openExternalLink } from '@/shared/utils';
     import { compareVersionNumbers, normalizeVersion } from '@/shared/utils/version';
     import { useVRCXUpdaterStore } from '../../stores';
@@ -123,11 +149,14 @@
         changeLogDialog,
         checkingForVRCXUpdate,
         VRCXUpdateDialog,
+        downloadRoute,
         pendingVRCXInstall,
         updateInProgress,
-        updateProgress
+        updateProgress,
+        updateError
     } = storeToRefs(VRCXUpdaterStore);
-    const { installVRCXUpdate, restartVRCX, updateProgressText, cancelUpdate } = VRCXUpdaterStore;
+    const { downloadSelectedVRCXUpdate, restartVRCX, updateProgressText, cancelUpdate, setUpdateRoute } =
+        VRCXUpdaterStore;
 
     const { t } = useI18n();
 
@@ -176,6 +205,17 @@
             };
         }
 
+        if (updateError.value) {
+            return {
+                icon: CircleAlert,
+                iconClass: 'text-destructive',
+                tone: 'bg-destructive/10',
+                borderColor: 'border-destructive/20',
+                title: t('dialog.vrcx_updater.error_title'),
+                description: updateError.value
+            };
+        }
+
         if (isCurrentVersionHigherThanRelease.value) {
             return {
                 icon: Info,
@@ -187,7 +227,7 @@
             };
         }
 
-        if (VRCXUpdateDialog.value.updatePending) {
+        if (VRCXUpdateDialog.value.updatePending && pendingVRCXInstall.value === VRCXUpdateDialog.value.release) {
             return {
                 icon: PackageCheck,
                 iconClass: 'text-primary',
@@ -226,7 +266,10 @@
             VRCXUpdateDialog.value.release !== pendingVRCXInstall.value
     );
     const showInstall = computed(
-        () => !updateInProgress.value && !isCurrentVersionHigherThanRelease.value && Boolean(pendingVRCXInstall.value)
+        () =>
+            !updateInProgress.value &&
+            !isCurrentVersionHigherThanRelease.value &&
+            pendingVRCXInstall.value === VRCXUpdateDialog.value.release
     );
 
     const openReleases = () => openExternalLink('https://github.com/Yusurmount/VRCX-Pro/releases');

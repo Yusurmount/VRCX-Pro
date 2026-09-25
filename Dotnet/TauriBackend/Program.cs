@@ -18,6 +18,8 @@ internal static class Program
     private static object? UpdatingLock;
     private static CancellationTokenSource? UpdateCts;
     private static volatile int UpdateProgress;
+    private static volatile string UpdateState = "idle";
+    private static volatile string UpdateError = string.Empty;
 
     // Version is injected at build time from the repository's `Version` file
     // (`-p:Version`), so it stays in sync with the source of truth.
@@ -213,6 +215,7 @@ internal static class Program
         "setstartup" => SetStartup(args),
         "downloadupdate" => StartUpdateDownload(args),
         "checkupdateprogress" => CheckUpdateProgress(),
+        "getupdatestatus" => GetUpdateStatus(),
         "cancelupdate" => CancelUpdate(),
         "restartapplication" => RestartApplication(),
         "readconfigfile" => ReadConfigFileSafe(),
@@ -281,36 +284,53 @@ internal static class Program
     {
         var url = args.ElementAtOrDefault(0).GetString();
         var hash = args.ElementAtOrDefault(1).GetString();
+        var sizeElement = args.ElementAtOrDefault(2);
+        var expectedSize = sizeElement.ValueKind == JsonValueKind.Number
+            ? sizeElement.GetInt64()
+            : 0;
         if (string.IsNullOrWhiteSpace(url)) return false;
 
-        lock (UpdatingLock!) { UpdateCts = new CancellationTokenSource(); UpdateProgress = 0; }
+        lock (UpdatingLock!)
+        {
+            if (UpdateCts is not null) return false;
+            StagedUpdaterPath = null;
+            UpdateCts = new CancellationTokenSource();
+            UpdateProgress = 0;
+            UpdateState = "downloading";
+            UpdateError = string.Empty;
+        }
         var cts = UpdateCts!;
         _ = Task.Run(async () =>
         {
             var progress = 0;
+            string? targetPath = null;
             try
             {
                 Directory.CreateDirectory(UpdateDirectory);
-                using var client = new HttpClient();
+                using var client = new HttpClient
+                {
+                    Timeout = TimeSpan.FromMinutes(15)
+                };
                 using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token);
                 response.EnsureSuccessStatusCode();
-                var total = response.Content.Headers.ContentLength ?? 0;
+                var total = response.Content.Headers.ContentLength ?? expectedSize;
                 var fileName = Path.GetFileName(new Uri(url).AbsolutePath);
                 if (string.IsNullOrWhiteSpace(fileName)) fileName = "update.exe";
                 var target = Path.Combine(UpdateDirectory, fileName);
+                targetPath = target;
+                long totalBytesRead = 0;
                 await using var source = await response.Content.ReadAsStreamAsync(cts.Token);
                 await using (var destination = File.Create(target))
                 {
                     var buffer = new byte[81920];
-                    long read = 0;
                     int bytes;
                     while ((bytes = await source.ReadAsync(buffer, cts.Token)) > 0)
                     {
                         await destination.WriteAsync(buffer.AsMemory(0, bytes), cts.Token);
-                        read += bytes;
-                        if (total > 0 && read < total)
+                        totalBytesRead += bytes;
+                        if (total > 0 && totalBytesRead < total)
                         {
-                            var percent = (int)(read * 100 / total);
+                            var percent = (int)(totalBytesRead * 100 / total);
                             if (percent != progress) { progress = percent; UpdateProgress = progress; }
                         }
                         else
@@ -319,6 +339,16 @@ internal static class Program
                         }
                     }
                 }
+                if (total > 0 && totalBytesRead != total)
+                {
+                    throw new InvalidDataException(
+                        $"Incomplete update download: received {totalBytesRead} of {total} bytes");
+                }
+                if (expectedSize > 0 && totalBytesRead != expectedSize)
+                {
+                    throw new InvalidDataException(
+                        $"Unexpected update size: received {totalBytesRead} of {expectedSize} bytes");
+                }
                 if (!string.IsNullOrWhiteSpace(hash))
                 {
                     var actual = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(await File.ReadAllBytesAsync(target, cts.Token))).ToLowerInvariant();
@@ -326,25 +356,55 @@ internal static class Program
                 }
                 StagedUpdaterPath = target;
                 UpdateProgress = 100;
+                UpdateState = "complete";
             }
-            catch (Exception)
+            catch (OperationCanceledException)
             {
-                try { if (StagedUpdaterPath is string staged && File.Exists(staged)) File.Delete(staged); StagedUpdaterPath = null; } catch { }
                 UpdateProgress = 0;
+                UpdateState = "canceled";
+                UpdateError = "Update download canceled.";
+            }
+            catch (Exception error)
+            {
+                UpdateProgress = 0;
+                UpdateState = "error";
+                UpdateError = error.Message;
             }
             finally
             {
+                try
+                {
+                    if (UpdateState is "error" or "canceled" &&
+                        targetPath is string target && File.Exists(target))
+                    {
+                        File.Delete(target);
+                    }
+                    if (UpdateState is "error" or "canceled") StagedUpdaterPath = null;
+                }
+                catch { }
                 if (ReferenceEquals(UpdateCts, cts)) { UpdateCts?.Dispose(); UpdateCts = null; }
             }
-        }, cts.Token);
+        });
         return true;
     }
 
     private static int CheckUpdateProgress() => UpdateProgress;
 
+    private static object GetUpdateStatus() => new
+    {
+        state = UpdateState,
+        progress = UpdateProgress,
+        error = UpdateError
+    };
+
     private static bool CancelUpdate()
     {
-        lock (UpdatingLock!) { UpdateCts?.Cancel(); }
+        lock (UpdatingLock!)
+        {
+            UpdateCts?.Cancel();
+            UpdateState = "canceled";
+            UpdateError = "Update download canceled.";
+        }
         UpdateProgress = 0;
         return true;
     }
@@ -455,9 +515,20 @@ internal static class Program
     private static object? RestartApplication()
     {
         if (!OperatingSystem.IsWindows()) return null;
-        lock (UpdatingLock!) if (StagedUpdaterPath is string staged && File.Exists(staged))
-            return System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { UseShellExecute = true, FileName = staged }) != null;
-        return false;
+        lock (UpdatingLock!)
+        {
+            if (UpdateState != "complete") return false;
+            if (StagedUpdaterPath is not string staged || !File.Exists(staged)) return false;
+            var process = System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo
+                {
+                    UseShellExecute = true,
+                    FileName = staged
+                });
+            if (process is null) return false;
+            UpdateState = "installing";
+            return true;
+        }
     }
 
     private static string Decode(string value)

@@ -3166,7 +3166,11 @@
             "change_version": "變更版本",
             "download": "下載",
             "install": "安裝",
-            "cancel": "取消"
+            "cancel": "取消",
+            "error_title": "更新失敗",
+            "route": "GitHub 線路",
+            "route_official": "官方線路",
+            "route_mirror": "鏡像線路（gh-proxy.org）"
         },
         "change_log": {
             "header": "更新日誌",
@@ -3603,7 +3607,14 @@
         "vrcx_updater": {
             "failed": "檢查更新失敗，{message}",
             "failed_install": "安裝更新失敗",
-            "checking_hash": "檢查 hash..."
+            "checking_hash": "檢查 hash...",
+            "download_failed": "下載更新失敗：{message}",
+            "download_start_failed": "無法開始下載更新。",
+            "no_compatible_asset": "找不到適用於目前系統的更新檔案。",
+            "invalid_releases": "GitHub 回傳了無效的 Releases 回應。",
+            "install_failed": "啟動安裝程式失敗：{message}",
+            "install_start_failed": "無法啟動安裝程式。",
+            "cancel_failed": "取消下載失敗：{message}"
         },
         "api_handler": {
             "avatar_private_or_deleted": "角色為私人或已刪除"
