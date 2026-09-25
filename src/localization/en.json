@@ -264,7 +264,7 @@
             "register": "Register",
             "forgotPassword": "Forgot Password?",
             "loggingIn": {
-                "title": "Logging in\u2026",
+                "title": "Logging in…",
                 "description": "Please wait while your account is being signed in."
             },
             "updater": "Updater",
@@ -4066,21 +4066,21 @@
                     "title": "Explore New Features",
                     "subtitle": "A few useful features you might not notice",
                     "items": {
-                        "quick_search": {
-                            "title": "Quick Search",
-                            "description": "Press Ctrl+K (⌘K) to find users, worlds, groups, and avatars."
+                        "chart_analysis": {
+                            "title": "Chart Analysis",
+                            "description": "Explore trends, avatar usage, and relationship insights at a glance."
                         },
-                        "local_favorite_groups": {
-                            "title": "Local Favorites",
-                            "description": "Create unlimited custom friend groups beyond VRChat's limits."
+                        "mcp_support": {
+                            "title": "MCP Support",
+                            "description": "Expanded AI tools and resources for richer access to local VRCX data."
                         },
-                        "auto_status": {
-                            "title": "Auto Status",
-                            "description": "Auto-switch status based on friend presence, filtered by group."
+                        "framework_optimization": {
+                            "title": "Framework Optimization",
+                            "description": "Improved startup and update flows for faster loading and more reliable performance."
                         },
-                        "right_click_menus": {
-                            "title": "Context Menus",
-                            "description": "Right-click on friends, tables, and headers for quick actions."
+                        "more_enhancements": {
+                            "title": "More Enhancements",
+                            "description": "Refined notifications, report export, localization, and everyday usability."
                         }
                     }
                 }

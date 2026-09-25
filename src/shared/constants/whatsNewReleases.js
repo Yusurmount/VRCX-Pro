@@ -2,20 +2,20 @@ const whatsNewReleases = Object.freeze({
     '2026.05.03': {
         items: [
             {
-                key: 'quick_search',
-                icon: 'search'
+                key: 'chart_analysis',
+                icon: 'chart-no-axes-combined'
             },
             {
-                key: 'local_favorite_groups',
-                icon: 'folder-heart'
+                key: 'mcp_support',
+                icon: 'plug-zap'
             },
             {
-                key: 'auto_status',
-                icon: 'refresh-cw'
+                key: 'framework_optimization',
+                icon: 'gauge'
             },
             {
-                key: 'right_click_menus',
-                icon: 'mouse-pointer-click'
+                key: 'more_enhancements',
+                icon: 'sparkles'
             }
         ]
     }

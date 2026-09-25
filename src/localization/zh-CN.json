@@ -4060,21 +4060,21 @@
                     "title": "探索新功能",
                     "subtitle": "一些你可能不会注意到的实用功能",
                     "items": {
-                        "quick_search": {
-                            "title": "快速搜索",
-                            "description": "按 Ctrl+K（⌘K）可快速查找各种东西（包括你的好友、收藏的世界、加入的群组和模型）。"
+                        "chart_analysis": {
+                            "title": "图表分析",
+                            "description": "新增趋势、模型使用与关系分析，让数据变化一目了然。"
                         },
-                        "local_favorite_groups": {
-                            "title": "本地收藏夹/好友分组",
-                            "description": "创建不限数量的本地好友分组，突破 VRChat 的限制。"
+                        "mcp_support": {
+                            "title": "MCP 支持",
+                            "description": "扩展 AI 工具与 Resource，让 AI 助手更灵活查询本地 VRCX 数据。"
                         },
-                        "auto_status": {
-                            "title": "自动状态",
-                            "description": "根据好友在场情况自动切换状态，并可按分组过滤。"
+                        "framework_optimization": {
+                            "title": "框架优化",
+                            "description": "优化启动流程与更新体验，提升加载速度和运行稳定性。"
                         },
-                        "right_click_menus": {
-                            "title": "右键菜单",
-                            "description": "在好友、表格头以及标题上右键可以执行快速操作。"
+                        "more_enhancements": {
+                            "title": "更多增强",
+                            "description": "完善通知、报告导出和多语言等内容，带来更完整体验。"
                         }
                     }
                 }

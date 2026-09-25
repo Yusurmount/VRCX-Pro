@@ -4059,21 +4059,21 @@
                     "title": "探索新功能",
                     "subtitle": "一些你可能沒有注意到的有用功能",
                     "items": {
-                        "quick_search": {
-                            "title": "快速搜尋",
-                            "description": "按 Ctrl+K (⌘K)，尋找用戶、世界、群組和角色。"
+                        "chart_analysis": {
+                            "title": "圖表分析",
+                            "description": "新增趨勢、模型使用與關係分析，讓資料變化一目了然。"
                         },
-                        "local_favorite_groups": {
-                            "title": "本地收藏",
-                            "description": "建立不限數量的自訂好友群組，突破 VRChat 的限制。"
+                        "mcp_support": {
+                            "title": "MCP 支援",
+                            "description": "擴充 AI 工具與 Resource，讓 AI 助理更靈活查詢本機 VRCX 資料。"
                         },
-                        "auto_status": {
-                            "title": "自動狀態",
-                            "description": "根據好友上線狀態自動切換狀態，並可依群組篩選。"
+                        "framework_optimization": {
+                            "title": "框架最佳化",
+                            "description": "最佳化啟動與更新流程，提升載入速度與執行穩定性。"
                         },
-                        "right_click_menus": {
-                            "title": "操作菜單",
-                            "description": "在好友、表格與標題上按右鍵可進行快速操作。"
+                        "more_enhancements": {
+                            "title": "更多增強",
+                            "description": "完善通知、報告匯出、多語言與日常使用體驗。"
                         }
                     }
                 }

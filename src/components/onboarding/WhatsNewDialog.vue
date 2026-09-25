@@ -66,7 +66,7 @@
 
 <script setup>
     import { markRaw } from 'vue';
-    import { Search, FolderHeart, RefreshCw, MousePointerClick } from 'lucide-vue-next';
+    import { ChartNoAxesCombined, Gauge, PlugZap, Sparkles } from 'lucide-vue-next';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
 
@@ -81,21 +81,21 @@
     const { closeWhatsNewDialog, openChangeLogDialogOnly } = vrcxUpdaterStore;
 
     const iconMap = {
-        search: markRaw(Search),
-        'folder-heart': markRaw(FolderHeart),
-        'refresh-cw': markRaw(RefreshCw),
-        'mouse-pointer-click': markRaw(MousePointerClick)
+        'chart-no-axes-combined': markRaw(ChartNoAxesCombined),
+        'plug-zap': markRaw(PlugZap),
+        gauge: markRaw(Gauge),
+        sparkles: markRaw(Sparkles)
     };
 
     const hueMap = {
-        search: '142',
-        'folder-heart': '340',
-        'refresh-cw': '200',
-        'mouse-pointer-click': '45'
+        'chart-no-axes-combined': '280',
+        'plug-zap': '45',
+        gauge: '200',
+        sparkles: '142'
     };
 
     function resolveIcon(iconName) {
-        return iconMap[iconName] ?? Search;
+        return iconMap[iconName] ?? ChartNoAxesCombined;
     }
 
     function resolveHue(iconName) {
