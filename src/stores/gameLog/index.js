@@ -173,17 +173,13 @@ export const useGameLogStore = defineStore('GameLog', () => {
      *
      */
     async function init() {
-        gameLogTable.value.filter = JSON.parse(
-            await configRepository.getString('VRCX_gameLogTableFilters', '[]')
-        );
-        gameLogTable.value.vip = await configRepository.getBool(
-            'VRCX_gameLogTableVIPFilter',
-            false
-        );
-        const savedViewMode = await configRepository.getString(
-            'VRCX_gameLogViewMode',
-            'table'
-        );
+        const [filters, vip, savedViewMode] = await Promise.all([
+            configRepository.getString('VRCX_gameLogTableFilters', '[]'),
+            configRepository.getBool('VRCX_gameLogTableVIPFilter', false),
+            configRepository.getString('VRCX_gameLogViewMode', 'table')
+        ]);
+        gameLogTable.value.filter = JSON.parse(filters);
+        gameLogTable.value.vip = vip;
         if (savedViewMode === 'sessions' || savedViewMode === 'table') {
             sessionsViewMode.value = savedViewMode;
         }
@@ -378,14 +374,16 @@ export const useGameLogStore = defineStore('GameLog', () => {
      *
      */
     async function gameLogTableLookup() {
-        await configRepository.setString(
-            'VRCX_gameLogTableFilters',
-            JSON.stringify(gameLogTable.value.filter)
-        );
-        await configRepository.setBool(
-            'VRCX_gameLogTableVIPFilter',
-            gameLogTable.value.vip
-        );
+        const persistSettings = Promise.all([
+            configRepository.setString(
+                'VRCX_gameLogTableFilters',
+                JSON.stringify(gameLogTable.value.filter)
+            ),
+            configRepository.setBool(
+                'VRCX_gameLogTableVIPFilter',
+                gameLogTable.value.vip
+            )
+        ]);
         gameLogTable.value.loading = true;
         try {
             let vipList = [];
@@ -394,19 +392,18 @@ export const useGameLogStore = defineStore('GameLog', () => {
             }
             const search = gameLogTable.value.search.trim();
             let rows = [];
-            if (search) {
-                rows = await database.searchGameLogDatabase(
-                    search,
-                    gameLogTable.value.filter,
-                    vipList,
-                    vrcxStore.searchLimit
-                );
-            } else {
-                rows = await database.lookupGameLogDatabase(
-                    gameLogTable.value.filter,
-                    vipList
-                );
-            }
+            const rowsPromise = search
+                ? database.searchGameLogDatabase(
+                      search,
+                      gameLogTable.value.filter,
+                      vipList,
+                      vrcxStore.searchLimit
+                  )
+                : database.lookupGameLogDatabase(
+                      gameLogTable.value.filter,
+                      vipList
+                  );
+            [, rows] = await Promise.all([persistSettings, rowsPromise]);
 
             for (const row of rows) {
                 row.isFriend = gameLogIsFriend(row);

@@ -1211,8 +1211,11 @@ export const useNotificationStore = defineStore('Notification', () => {
      */
     async function initNotifications() {
         notificationInitStatus.value = false;
-        let tableData = await database.getNotificationsV2();
-        let notifications = await database.getNotifications();
+        const [tableDataV2, notifications] = await Promise.all([
+            database.getNotificationsV2(),
+            database.getNotifications()
+        ]);
+        let tableData = tableDataV2;
         tableData = tableData.concat(
             notifications.filter((n) => !tableData.some((t) => t.id === n.id))
         );

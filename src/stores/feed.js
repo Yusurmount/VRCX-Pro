@@ -45,13 +45,12 @@ export const useFeedStore = defineStore('Feed', () => {
     );
 
     async function init() {
-        feedTable.value.filter = JSON.parse(
-            await configRepository.getString('VRCX_feedTableFilters', '[]')
-        );
-        feedTable.value.vip = await configRepository.getBool(
-            'VRCX_feedTableVIPFilter',
-            false
-        );
+        const [filters, vip] = await Promise.all([
+            configRepository.getString('VRCX_feedTableFilters', '[]'),
+            configRepository.getBool('VRCX_feedTableVIPFilter', false)
+        ]);
+        feedTable.value.filter = JSON.parse(filters);
+        feedTable.value.vip = vip;
     }
 
     init();
@@ -129,14 +128,16 @@ export const useFeedStore = defineStore('Feed', () => {
     }
 
     async function feedTableLookup() {
-        await configRepository.setString(
-            'VRCX_feedTableFilters',
-            JSON.stringify(feedTable.value.filter)
-        );
-        await configRepository.setBool(
-            'VRCX_feedTableVIPFilter',
-            feedTable.value.vip
-        );
+        const persistSettings = Promise.all([
+            configRepository.setString(
+                'VRCX_feedTableFilters',
+                JSON.stringify(feedTable.value.filter)
+            ),
+            configRepository.setBool(
+                'VRCX_feedTableVIPFilter',
+                feedTable.value.vip
+            )
+        ]);
         feedTable.value.loading = true;
         try {
             let vipList = [];
@@ -145,9 +146,9 @@ export const useFeedStore = defineStore('Feed', () => {
             }
             const search = feedTable.value.search.trim();
             const { dateFrom, dateTo } = feedTable.value;
-            const rows =
+            const rowsPromise =
                 search || dateFrom || dateTo
-                    ? await database.searchFeedDatabase(
+                    ? database.searchFeedDatabase(
                           search,
                           feedTable.value.filter,
                           vipList,
@@ -155,10 +156,14 @@ export const useFeedStore = defineStore('Feed', () => {
                           dateFrom,
                           dateTo
                       )
-                    : await database.lookupFeedDatabase(
+                    : database.lookupFeedDatabase(
                           feedTable.value.filter,
                           vipList
                       );
+            const [, rows] = await Promise.all([
+                persistSettings,
+                rowsPromise
+            ]);
             feedTableData.value = [];
             feedTableData.value = [...feedTableData.value, ...rows];
         } finally {

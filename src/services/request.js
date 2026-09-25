@@ -93,6 +93,7 @@ export function request(endpoint, options) {
     const advancedSettingsStore = useAdvancedSettingsStore();
     if (
         !watchState.isLoggedIn &&
+        !watchState.isAuthenticated &&
         endpoint.startsWith('/auth') &&
         endpoint !== 'config'
     ) {
@@ -132,6 +133,7 @@ export function request(endpoint, options) {
         .then((response) => {
             if (
                 !watchState.isLoggedIn &&
+                !watchState.isAuthenticated &&
                 endpoint.startsWith('/auth') &&
                 endpoint !== 'config'
             ) {

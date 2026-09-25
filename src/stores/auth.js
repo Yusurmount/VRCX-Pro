@@ -1132,8 +1132,10 @@ export const useAuthStore = defineStore('Auth', () => {
     async function loginComplete() {
         await database.initUserTables(userStore.currentUser.id);
         advancedSettingsStore.runAvatarAutoCleanup(userStore.currentUser.id);
-        await trackedNonFriendsStore.loadTrackedNonFriends();
-        await manualRelationsStore.loadManualRelations();
+        await Promise.all([
+            trackedNonFriendsStore.loadTrackedNonFriends(),
+            manualRelationsStore.loadManualRelations()
+        ]);
         watchState.isLoggedIn = true;
         AppApi.CheckGameRunning(); // restore state from hot-reload
 

@@ -29,6 +29,7 @@ export async function runLogoutFlow() {
     }
 
     userStore.setUserDialogVisible(false);
+    watchState.isAuthenticated = false;
     watchState.isLoggedIn = false;
     watchState.isFriendsLoaded = false;
     watchState.isFavoritesLoaded = false;
@@ -52,5 +53,6 @@ export function runLoginSuccessFlow(json) {
 
     updateLoopStore.setNextCurrentUserRefresh(420); // 7mins
     applyCurrentUser(json);
+    watchState.isAuthenticated = true;
     initWebsocket();
 }

@@ -60,7 +60,10 @@ export const wsState = reactive({
  *
  */
 export function initWebsocket() {
-    if (!watchState.isFriendsLoaded || webSocket !== null) {
+    if (
+        (!watchState.isLoggedIn && !watchState.isAuthenticated) ||
+        webSocket !== null
+    ) {
         return;
     }
 
