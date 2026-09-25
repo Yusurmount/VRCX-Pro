@@ -263,6 +263,10 @@
             "login": "登录",
             "register": "注册",
             "forgotPassword": "忘记密码？",
+            "loggingIn": {
+                "title": "正在登录…",
+                "description": "请稍候，正在登录您的账户。"
+            },
             "updater": "检查更新",
             "proxy_settings": "代理设置",
             "settings": "设置",

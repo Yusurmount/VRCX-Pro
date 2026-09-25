@@ -263,6 +263,10 @@
             "login": "Login",
             "register": "Register",
             "forgotPassword": "Forgot Password?",
+            "loggingIn": {
+                "title": "Logging in\u2026",
+                "description": "Please wait while your account is being signed in."
+            },
             "updater": "Updater",
             "proxy_settings": "Proxy Settings",
             "settings": "Settings",
