@@ -1255,9 +1255,6 @@ export const useInstanceStore = defineStore('Instance', () => {
      *
      */
     function getCurrentInstanceUserList() {
-        if (!watchState.isFriendsLoaded) {
-            return;
-        }
         if (state.updatePlayerListTimer) {
             state.updatePlayerListPending = true;
         } else {

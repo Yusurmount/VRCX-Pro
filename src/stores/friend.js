@@ -991,23 +991,40 @@ export const useFriendStore = defineStore('Friend', () => {
     async function initFriendLog(currentUser) {
         refreshFriendsStatus(currentUser);
         const sqlValues = [];
-        const friends = await refreshFriends();
-        runInSortedFriendsBatch(() => {
-            for (const friend of friends) {
-                const ref = applyUser(friend);
-                const row = {
-                    userId: ref.id,
-                    displayName: ref.displayName,
-                    trustLevel: ref.$trustLevel,
-                    friendNumber: 0
-                };
-                friendLog.set(friend.id, row);
-                sqlValues.unshift(row);
-            }
-        });
-        database.setFriendLogCurrentArray(sqlValues);
-        await configRepository.setBool(`friendLogInit_${currentUser.id}`, true);
+        let refreshError;
+        let friends;
+        try {
+            friends = await refreshFriends();
+        } catch (err) {
+            refreshError = err;
+        }
+        if (!refreshError) {
+            runInSortedFriendsBatch(() => {
+                for (const friend of friends) {
+                    const ref = applyUser(friend);
+                    const row = {
+                        userId: ref.id,
+                        displayName: ref.displayName,
+                        trustLevel: ref.$trustLevel,
+                        friendNumber: 0
+                    };
+                    friendLog.set(friend.id, row);
+                    sqlValues.unshift(row);
+                }
+            });
+            database.setFriendLogCurrentArray(sqlValues);
+            await configRepository.setBool(
+                `friendLogInit_${currentUser.id}`,
+                true
+            );
+        }
         watchState.isFriendsLoaded = true;
+        if (refreshError) {
+            console.warn(
+                'Failed to initialize friends; using cached friend data',
+                refreshError
+            );
+        }
     }
 
     /**
@@ -1034,6 +1051,7 @@ export const useFriendStore = defineStore('Friend', () => {
     async function getFriendLog(currentUser) {
         let friend;
         let refreshError;
+        refreshFriendsStatus(currentUser);
         const refreshPromise = refreshFriends().catch((err) => {
             refreshError = err;
         });
@@ -1055,7 +1073,6 @@ export const useFriendStore = defineStore('Friend', () => {
         for (friend of friendLogCurrentArray) {
             friendLog.set(friend.userId, friend);
         }
-        refreshFriendsStatus(currentUser);
 
         watchState.isFriendsLoaded = true;
         if (refreshError) {
