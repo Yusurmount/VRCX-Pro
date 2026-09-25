@@ -134,7 +134,6 @@ declare global {
     const LogWatcher: {
         Get(): Promise<Array<[string, string, string, ...any[]]>>;
         SetDateTill(date: string): Promise<void>;
-        GetLogLines(): Array<any>;
         Reset(): Promise<void>;
     };
 

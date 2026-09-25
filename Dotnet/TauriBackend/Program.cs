@@ -8,6 +8,7 @@ internal sealed record RpcRequest(long Id, string ClassName, string MethodName, 
 
 internal static class Program
 {
+    private static readonly LogWatcher LogWatcher = new();
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly Dictionary<string, string> Storage = new(StringComparer.OrdinalIgnoreCase);
     private static readonly object StorageLock = new();
@@ -56,6 +57,7 @@ internal static class Program
         LoadStorage();
         Sqlite.Init(DatabaseFile);
         WebApi.Instance.Init();
+        LogWatcher.Init(GetVrChatAppDataFolder());
 
         using var reader = new StreamReader(Console.OpenStandardInput());
         await using var writer = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
@@ -87,7 +89,7 @@ internal static class Program
         if (request.ClassName.Equals("SQLite", StringComparison.OrdinalIgnoreCase)) return await SqliteMethod(request.MethodName, args);
         if (request.ClassName.Equals("AppApi", StringComparison.OrdinalIgnoreCase)) return AppApiMethod(request.MethodName, args);
         if (request.ClassName.Equals("WebApi", StringComparison.OrdinalIgnoreCase)) return await WebApiMethod(request.MethodName, args);
-        if (request.ClassName.Equals("LogWatcher", StringComparison.OrdinalIgnoreCase)) return request.MethodName.Equals("Get", StringComparison.OrdinalIgnoreCase) ? Array.Empty<object>() : true;
+        if (request.ClassName.Equals("LogWatcher", StringComparison.OrdinalIgnoreCase)) return LogWatcherMethod(request.MethodName, args);
         if (request.ClassName.Equals("Discord", StringComparison.OrdinalIgnoreCase) || request.ClassName.Equals("AssetBundleManager", StringComparison.OrdinalIgnoreCase)) return true;
         return null;
     }
@@ -207,6 +209,9 @@ internal static class Program
         "currentculture" => "en-US",
         "getzoom" => 1d,
         "setzoom" or "setuseragent" or "desktopnotification" or "flashwindow" or "focuswindow" => true,
+        "checkgamerunning" => IsGameRunning(),
+        "isgamerunning" => IsGameRunning(),
+        "issteamvrrunning" => IsSteamVRRunning(),
         "sendemail" => EmailNotification.SendEmail(args.ElementAtOrDefault(0)).GetAwaiter().GetResult(),
         "setvr" or "executevroverlayfunction" => true,
         "getclipboard" => string.Empty,
@@ -236,6 +241,32 @@ internal static class Program
         "savefileselectordialog" => SaveFileSelectorDialog(args),
         _ => null
     };
+
+    private static object? LogWatcherMethod(string method, JsonElement[] args) => method.ToLowerInvariant() switch
+    {
+        "get" => LogWatcher.Get(),
+        "setdatetill" => SetLogWatcherDateTill(args),
+        "reset" => ResetLogWatcher(),
+        _ => true
+    };
+
+    private static bool IsGameRunning() => LogWatcher.IsProcessRunning("VRChat");
+
+    private static bool IsSteamVRRunning() => LogWatcher.IsProcessRunning("vrserver");
+
+    private static bool SetLogWatcherDateTill(JsonElement[] args)
+    {
+        if (args.Length == 0 || args[0].ValueKind != JsonValueKind.String)
+            return false;
+        LogWatcher.SetDateTill(args[0].GetString() ?? string.Empty);
+        return true;
+    }
+
+    private static bool ResetLogWatcher()
+    {
+        LogWatcher.Reset();
+        return true;
+    }
 
     private static async Task<object?> WebApiMethod(string method, JsonElement[] args)
     {

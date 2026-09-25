@@ -123,22 +123,22 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
                     state.nextAutoStateChange = 3;
                     updateAutoStateChange();
                 }
-                if (LINUX && --state.nextGetLogCheck <= 0) {
-                    state.nextGetLogCheck = 0.5;
-                    const logLines = await LogWatcher.GetLogLines();
-                    if (logLines) {
-                        logLines.forEach((logLine) => {
-                            addGameLogEvent(logLine);
-                        });
-                    }
-                }
-                if (LINUX && --state.nextGameRunningCheck <= 0) {
+                if (--state.nextGameRunningCheck <= 0) {
                     state.nextGameRunningCheck = 1;
                     await runUpdateIsGameRunningFlow(
                         await AppApi.IsGameRunning(),
                         await AppApi.IsSteamVRRunning()
                     );
                     vrStore.vrInit(); // TODO: make this event based
+                }
+                if (--state.nextGetLogCheck <= 0) {
+                    state.nextGetLogCheck = 0.5;
+                    const rawLogs = await LogWatcher.Get();
+                    if (rawLogs) {
+                        rawLogs.forEach((rawLog) => {
+                            addGameLogEvent(JSON.stringify(rawLog));
+                        });
+                    }
                 }
                 if (--state.nextDatabaseOptimize <= 0) {
                     state.nextDatabaseOptimize = 86400; // 1 day
