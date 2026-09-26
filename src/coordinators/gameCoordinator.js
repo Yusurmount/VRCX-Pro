@@ -13,6 +13,7 @@ import { useGameStore } from '../stores/game';
 import { useInstanceStore } from '../stores/instance';
 import { useLaunchStore } from '../stores/launch';
 import { useLocationStore } from '../stores/location';
+import { tryLoadPlayerList } from './gameLogCoordinator';
 import { runLastLocationResetFlow } from './locationCoordinator';
 import { useModalStore } from '../stores/modal';
 import { useNotificationStore } from '../stores/notification';
@@ -72,6 +73,10 @@ export async function runGameRunningChangedFlow(isGameRunning) {
     vrStore.updateVRLastLocation();
     workerTimers.setTimeout(() => runCheckVRChatDebugLoggingFlow(), 60000);
     updateLoopStore.setNextDiscordUpdate(0);
+
+    if (isGameRunning) {
+        await tryLoadPlayerList();
+    }
 }
 
 /**

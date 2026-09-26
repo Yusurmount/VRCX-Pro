@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
     gameLogStore: {
         clearNowPlaying: vi.fn()
     },
+    tryLoadPlayerList: vi.fn().mockResolvedValue(undefined),
     vrStore: {
         updateVRLastLocation: vi.fn(),
         updateOpenVR: vi.fn()
@@ -75,6 +76,10 @@ vi.mock('../../stores/avatar', () => ({
 
 vi.mock('../avatarCoordinator', () => ({
     addAvatarWearTime: (...args) => mocks.addAvatarWearTime(...args)
+}));
+
+vi.mock('../gameLogCoordinator', () => ({
+    tryLoadPlayerList: (...args) => mocks.tryLoadPlayerList(...args)
 }));
 
 vi.mock('../../stores/gameLog', () => ({
@@ -176,5 +181,13 @@ describe('runGameRunningChangedFlow', () => {
             'VRCX_lastGameOfflineAt',
             expect.any(String)
         );
+        expect(mocks.tryLoadPlayerList).not.toHaveBeenCalled();
+    });
+
+    test('rebuilds the player list when game running becomes true', async () => {
+        await runGameRunningChangedFlow(true);
+
+        expect(mocks.userStore.markCurrentUserGameStarted).toHaveBeenCalled();
+        expect(mocks.tryLoadPlayerList).toHaveBeenCalledTimes(1);
     });
 });

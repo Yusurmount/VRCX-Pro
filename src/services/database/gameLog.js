@@ -132,7 +132,10 @@ const gameLog = {
             return 0;
         };
         gamelogDatabase.sort(compareByCreatedAt);
-        if (gamelogDatabase.length > dbVars.maxTableSize) {
+        if (
+            dbVars.maxTableSize > -1 &&
+            gamelogDatabase.length > dbVars.maxTableSize
+        ) {
             gamelogDatabase.splice(
                 0,
                 gamelogDatabase.length - dbVars.maxTableSize

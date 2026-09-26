@@ -65,7 +65,7 @@ export async function tryLoadPlayerList() {
     if (data.length === 0) {
         return;
     }
-    let length = 0;
+    let length = -1;
     for (i = data.length - 1; i > -1; i--) {
         ctx = data[i];
         if (ctx.type === 'Location') {
@@ -80,7 +80,7 @@ export async function tryLoadPlayerList() {
             break;
         }
     }
-    if (length > 0) {
+    if (length >= 0) {
         for (i = length + 1; i < data.length; i++) {
             ctx = data[i];
             if (ctx.type === 'OnPlayerJoined') {

@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-    execute: vi.fn()
+    execute: vi.fn(),
+    dbVars: {
+        maxTableSize: 500,
+        userPrefix: ''
+    }
 }));
 
 vi.mock('../../sqlite.js', () => ({
@@ -11,10 +15,7 @@ vi.mock('../../sqlite.js', () => ({
     }
 }));
 vi.mock('../index.js', () => ({
-    dbVars: {
-        maxTableSize: 500,
-        userPrefix: ''
-    }
+    dbVars: mocks.dbVars
 }));
 
 import { gameLog } from '../gameLog.js';
@@ -49,5 +50,48 @@ describe('gameLog.getMyTopWorlds', () => {
             '@daysOffset': '-30 days',
             '@excludeWorldId': 'wrld_home'
         });
+    });
+});
+
+describe('gameLog.getGamelogDatabase', () => {
+    beforeEach(() => {
+        mocks.execute.mockReset();
+        mocks.dbVars.maxTableSize = 500;
+    });
+
+    test('keeps all rows when the configured table size is unlimited', async () => {
+        mocks.dbVars.maxTableSize = -1;
+        mocks.execute.mockImplementation(async (callback, sql) => {
+            if (sql.includes('FROM gamelog_location')) {
+                callback([
+                    1,
+                    '2026-09-26T04:42:42.000Z',
+                    'wrld_example:123~region(jp)',
+                    'wrld_example',
+                    'Example World',
+                    10,
+                    ''
+                ]);
+            }
+            if (sql.includes('FROM gamelog_join_leave')) {
+                callback([
+                    2,
+                    '2026-09-26T04:42:54.000Z',
+                    'OnPlayerJoined',
+                    'Example Player',
+                    'wrld_example:123~region(jp)',
+                    'usr_example',
+                    12
+                ]);
+            }
+        });
+
+        const result = await gameLog.getGamelogDatabase();
+
+        expect(result).toHaveLength(2);
+        expect(result.map((row) => row.type)).toEqual([
+            'Location',
+            'OnPlayerJoined'
+        ]);
     });
 });

@@ -1,6 +1,9 @@
 using Microsoft.Data.Sqlite;
+using Microsoft.Win32;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace VRCX.TauriBackend;
 
@@ -212,6 +215,10 @@ internal static class Program
         "checkgamerunning" => IsGameRunning(),
         "isgamerunning" => IsGameRunning(),
         "issteamvrrunning" => IsSteamVRRunning(),
+        "startgame" => StartGame(args.ElementAtOrDefault(0).GetString() ?? string.Empty),
+        "startgamefrompath" => StartGameFromPath(
+            args.ElementAtOrDefault(0).GetString() ?? string.Empty,
+            args.ElementAtOrDefault(1).GetString() ?? string.Empty),
         "sendemail" => EmailNotification.SendEmail(args.ElementAtOrDefault(0)).GetAwaiter().GetResult(),
         "setvr" or "executevroverlayfunction" => true,
         "getclipboard" => string.Empty,
@@ -253,6 +260,63 @@ internal static class Program
     private static bool IsGameRunning() => LogWatcher.IsProcessRunning("VRChat");
 
     private static bool IsSteamVRRunning() => LogWatcher.IsProcessRunning("vrserver");
+
+    private static bool StartGame(string arguments)
+    {
+        try
+        {
+            using var key = Registry.ClassesRoot.OpenSubKey(@"steam\shell\open\command");
+            var match = Regex.Match(key?.GetValue(string.Empty) as string ?? string.Empty, "^\"(.+?)\\\\steam.exe\"");
+            if (match.Success)
+            {
+                var path = match.Groups[1].Value;
+                Process.Start(new ProcessStartInfo
+                {
+                    WorkingDirectory = path,
+                    FileName = Path.Combine(path, "steam.exe"),
+                    UseShellExecute = false,
+                    Arguments = $"-applaunch 438100 {arguments}"
+                })?.Dispose();
+                return true;
+            }
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            using var key = Registry.ClassesRoot.OpenSubKey(@"VRChat\shell\open\command");
+            var match = Regex.Match(
+                key?.GetValue(string.Empty) as string ?? string.Empty,
+                "(?!\")(.+?\\\\VRChat.*)(!?\\\\launch.exe\")");
+            if (match.Success)
+                return StartGameFromPath(match.Groups[1].Value, arguments);
+        }
+        catch
+        {
+        }
+
+        return false;
+    }
+
+    private static bool StartGameFromPath(string path, string arguments)
+    {
+        if (!path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            path = Path.Join(path, "launch.exe");
+
+        if (!path.EndsWith("launch.exe", StringComparison.OrdinalIgnoreCase) || !File.Exists(path))
+            return false;
+
+        Process.Start(new ProcessStartInfo
+        {
+            WorkingDirectory = Path.GetDirectoryName(path),
+            FileName = path,
+            UseShellExecute = false,
+            Arguments = arguments
+        })?.Dispose();
+        return true;
+    }
 
     private static bool SetLogWatcherDateTill(JsonElement[] args)
     {

@@ -65,6 +65,7 @@ export const useInstanceStore = defineStore('Instance', () => {
         updatePlayerListTimer: null,
         updatePlayerListPending: false
     });
+    let currentInstanceRequestId = 0;
 
     let cachedInstances = new Map();
 
@@ -393,6 +394,7 @@ export const useInstanceStore = defineStore('Instance', () => {
      *
      */
     function updateCurrentInstanceWorld() {
+        const requestId = ++currentInstanceRequestId;
         let L;
         let instanceId = locationStore.lastLocation.location;
         if (locationStore.lastLocation.location === 'traveling') {
@@ -432,6 +434,7 @@ export const useInstanceStore = defineStore('Instance', () => {
                     worldId: L.worldId
                 })
                 .then((args) => {
+                    if (requestId !== currentInstanceRequestId) return;
                     currentInstanceWorld.value.ref = args.ref;
                     const { isPC, isQuest, isIos } = getAvailablePlatforms(
                         args.ref.unityPackages
@@ -447,6 +450,7 @@ export const useInstanceStore = defineStore('Instance', () => {
                         args.ref?.tags.includes('feature_focus_view_disabled');
                     checkVRChatCache(args.ref)
                         .then((cacheInfo) => {
+                            if (requestId !== currentInstanceRequestId) return;
                             if (cacheInfo.Item1 > 0) {
                                 currentInstanceWorld.value.inCache = true;
                                 currentInstanceWorld.value.cacheSize = `${(
@@ -472,6 +476,7 @@ export const useInstanceStore = defineStore('Instance', () => {
                     worldId: currentInstanceLocation.value.worldId
                 })
                 .then((args) => {
+                    if (requestId !== currentInstanceRequestId) return;
                     currentInstanceWorld.value.ref = args.ref;
                     const { isPC, isQuest, isIos } = getAvailablePlatforms(
                         args.ref.unityPackages
@@ -480,6 +485,7 @@ export const useInstanceStore = defineStore('Instance', () => {
                     currentInstanceWorld.value.isQuest = isQuest;
                     currentInstanceWorld.value.isIos = isIos;
                     checkVRChatCache(args.ref).then((cacheInfo) => {
+                        if (requestId !== currentInstanceRequestId) return;
                         if (cacheInfo.Item1 > 0) {
                             currentInstanceWorld.value.inCache = true;
                             currentInstanceWorld.value.cacheSize = `${(
@@ -502,6 +508,7 @@ export const useInstanceStore = defineStore('Instance', () => {
                             instanceId: L.instanceId
                         })
                         .then((args) => {
+                            if (requestId !== currentInstanceRequestId) return;
                             currentInstanceWorld.value.instance = args.ref;
                         })
                         .catch((error) => {
@@ -1387,13 +1394,19 @@ export const useInstanceStore = defineStore('Instance', () => {
                 );
             }
             let ref = userStore.cachedUsers.get(userStore.currentUser.id);
-            if (typeof currentPlayer !== 'undefined') {
-                const joinTime = currentPlayer.joinTime || Date.now();
+            const hasCurrentLocation =
+                Boolean(locationStore.lastLocation.location) &&
+                locationStore.lastLocation.date > 0;
+            if (typeof currentPlayer !== 'undefined' || hasCurrentLocation) {
+                const joinTime =
+                    currentPlayer?.joinTime ||
+                    locationStore.lastLocation.date ||
+                    Date.now();
                 ref = ref ?? {
                     ...userStore.currentUser,
                     id: userStore.currentUser.id,
                     displayName:
-                        currentPlayer.displayName ||
+                        currentPlayer?.displayName ||
                         userStore.currentUser.displayName
                 };
                 pushUser({
