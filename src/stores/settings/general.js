@@ -172,17 +172,37 @@ export const useGeneralSettingsStore = defineStore('GeneralSettings', () => {
         recentActionCooldownEnabled.value = recentActionCooldownEnabledConfig;
         recentActionCooldownMinutes.value = recentActionCooldownMinutesConfig;
         autoDeclineFriendRequests.value = autoDeclineFriendRequestsConfig;
+
+        await AppApi.SetStartup(isStartAtWindowsStartup.value);
     }
 
     initGeneralSettings();
 
-    function setIsStartAtWindowsStartup() {
-        isStartAtWindowsStartup.value = !isStartAtWindowsStartup.value;
-        configRepository.setBool(
-            'VRCX_StartAtWindowsStartup',
-            isStartAtWindowsStartup.value
-        );
-        AppApi.SetStartup(isStartAtWindowsStartup.value);
+    async function setIsStartAtWindowsStartup() {
+        const previousValue = isStartAtWindowsStartup.value;
+        const nextValue = !previousValue;
+        isStartAtWindowsStartup.value = nextValue;
+
+        try {
+            await configRepository.setBool(
+                'VRCX_StartAtWindowsStartup',
+                nextValue
+            );
+            const updated = await AppApi.SetStartup(nextValue);
+            if (!updated) {
+                throw new Error('Windows startup registration failed');
+            }
+        } catch (error) {
+            isStartAtWindowsStartup.value = previousValue;
+            await configRepository.setBool(
+                'VRCX_StartAtWindowsStartup',
+                previousValue
+            );
+            console.error(
+                'Failed to update Windows startup setting:',
+                error
+            );
+        }
     }
     function setIsStartAsMinimizedState() {
         isStartAsMinimizedState.value = !isStartAsMinimizedState.value;

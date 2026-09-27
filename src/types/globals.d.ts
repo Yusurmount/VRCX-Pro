@@ -185,7 +185,7 @@ declare global {
         ChangeTheme(value: number): Promise<void>;
         DoFunny(): Promise<void>;
         GetClipboard(): Promise<string>;
-        SetStartup(enabled: boolean): Promise<void>;
+        SetStartup(enabled: boolean): Promise<boolean>;
         CopyImageToClipboard(path: string): Promise<void>;
         FlashWindow(): Promise<void>;
         SetUserAgent(): Promise<void>;
