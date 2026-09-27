@@ -114,7 +114,9 @@ vi.mock('../columns.jsx', () => ({
 
 vi.mock('../../../shared/utils', () => ({
     commaNumber: (value) => String(value ?? ''),
-    formatDateFilter: (value) => String(value ?? '')
+    formatDateFilter: (value) => String(value ?? ''),
+    createRateLimiter: () => vi.fn(),
+    executeWithBackoff: (operation) => operation()
 }));
 
 vi.mock('@/components/ui/data-table', () => ({
@@ -174,6 +176,7 @@ describe('PlayerList.vue', () => {
             new Map([['usr_blocked', 'Blocked User']])
         );
         mocks.lastLocation = ref({
+            location: 'wrld_old:1',
             playerList: new Set(),
             friendList: new Set(),
             date: null
@@ -226,6 +229,23 @@ describe('PlayerList.vue', () => {
         expect(mocks.getCurrentInstanceUserList).toHaveBeenCalledTimes(1);
         expect(mocks.tableSetOptions).toHaveBeenCalledTimes(1);
         expect(mocks.photonColumnToggleVisibility).toHaveBeenCalledWith(false);
+    });
+
+    test('refreshes the instance user list when the room changes', async () => {
+        mount(PlayerList, {
+            global: {
+                stubs: {
+                    TooltipWrapper: { template: '<div><slot /></div>' },
+                    LocationWorld: { template: '<div />' }
+                }
+            }
+        });
+        expect(mocks.getCurrentInstanceUserList).toHaveBeenCalledTimes(1);
+
+        mocks.lastLocation.value.location = 'wrld_new:2';
+        await nextTick();
+
+        expect(mocks.getCurrentInstanceUserList).toHaveBeenCalledTimes(2);
     });
 
     test('row click opens user dialog when id exists, otherwise lookups user', async () => {

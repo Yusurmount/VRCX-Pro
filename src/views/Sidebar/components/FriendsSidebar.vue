@@ -55,7 +55,7 @@
                                                     >{{ currentUser.displayName }}</span
                                                 >
                                                 <Location
-                                                    v-if="isGameRunning && !gameLogDisabled"
+                                                    v-if="!gameLogDisabled && lastLocation.location"
                                                     class="extra block truncate text-xs"
                                                     :location="lastLocation.location"
                                                     :traveling="lastLocationDestination"

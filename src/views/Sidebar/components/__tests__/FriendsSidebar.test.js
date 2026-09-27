@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { nextTick } from 'vue';
+import { nextTick, ref } from 'vue';
 
 const mocks = vi.hoisted(() => ({
     friendStore: {
@@ -115,6 +115,10 @@ vi.mock('../../../../stores', () => ({
     useAdvancedSettingsStore: () => mocks.advancedStore,
     useFavoriteStore: () => mocks.favoriteStore,
     useGameStore: () => mocks.gameStore,
+    useAutoFollowStore: () => ({
+        isActive: false,
+        stopFollow: vi.fn()
+    }),
     useLaunchStore: () => mocks.launchStore,
     useLocationStore: () => mocks.locationStore,
     useInstanceStore: () => mocks.instanceStore,
@@ -195,11 +199,19 @@ vi.mock('../../../../components/BackToTop.vue', () => ({
     default: { template: '<div data-testid="back-to-top" />' }
 }));
 
+vi.mock('../../../../components/IconFrame.vue', () => ({
+    default: { template: '<span />' }
+}));
+
 vi.mock('../../../../components/Location.vue', () => ({
     default: {
         props: ['location', 'traveling', 'link'],
         template: '<span data-testid="location">{{ location }}</span>'
     }
+}));
+
+vi.mock('../../../../components/dialogs/UserDialog/EditProfileDialog.vue', () => ({
+    default: { template: '<div />' }
 }));
 
 vi.mock('../FriendItem.vue', () => ({
@@ -242,6 +254,12 @@ function makeFriend(id, location = 'wrld_online:1') {
 
 describe('FriendsSidebar.vue', () => {
     beforeEach(() => {
+        mocks.gameStore.isGameRunning = ref(true);
+        mocks.advancedStore.gameLogDisabled = ref(false);
+        mocks.locationStore.lastLocation = ref({
+            location: 'wrld_home:123',
+            friendList: new Map()
+        });
         mocks.friendStore.allFavoriteOnlineFriends.value = [];
         mocks.friendStore.allFavoriteFriendIds.value = new Set();
         mocks.friendStore.onlineFriends.value = [];
@@ -276,6 +294,20 @@ describe('FriendsSidebar.vue', () => {
         expect(wrapper.text()).toContain('side_panel.online');
         expect(wrapper.findAll('[data-testid="friend-item"]').length).toBe(1);
         expect(wrapper.text()).toContain('usr_online');
+    });
+
+    test('renders the game log room under the current user when process detection is stale', async () => {
+        mocks.gameStore.isGameRunning.value = false;
+        mocks.locationStore.lastLocation.value = {
+            location: 'wrld_new:456',
+            friendList: new Map()
+        };
+
+        const wrapper = mount(FriendsSidebar);
+        await flushPromises();
+        await nextTick();
+
+        expect(wrapper.get('[data-testid="location"]').text()).toBe('wrld_new:456');
     });
 
     test('clicking online header collapses online rows and persists state', async () => {

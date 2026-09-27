@@ -136,8 +136,9 @@ export async function tryLoadPlayerList() {
  * appropriate stores based on type.
  * @param {object} gameLog
  * @param {string} location
+ * @param {boolean} [isLive]
  */
-export function addGameLogEntry(gameLog, location) {
+export function addGameLogEntry(gameLog, location, isLive = false) {
     const gameLogStore = useGameLogStore();
     const locationStore = useLocationStore();
     const instanceStore = useInstanceStore();
@@ -168,7 +169,7 @@ export function addGameLogEntry(gameLog, location) {
     }
     switch (gameLog.type) {
         case 'location-destination':
-            if (gameStore.isGameRunning) {
+            if (gameStore.isGameRunning || isLive) {
                 gameLogStore.addGameLog({
                     created_at: gameLog.dt,
                     type: 'LocationDestination',
@@ -196,7 +197,7 @@ export function addGameLogEntry(gameLog, location) {
                 gameLog.dt
             );
             const worldName = replaceBioSymbols(gameLog.worldName);
-            if (gameStore.isGameRunning) {
+            if (gameStore.isGameRunning || isLive) {
                 runLastLocationResetFlow(gameLog.dt);
                 gameLogStore.clearNowPlaying();
                 locationStore.setLastLocation({
@@ -210,6 +211,7 @@ export function addGameLogEntry(gameLog, location) {
                 runUpdateCurrentUserLocationFlow();
                 vrStore.updateVRLastLocation();
                 instanceStore.updateCurrentInstanceWorld();
+                instanceStore.getCurrentInstanceUserList();
                 userStore.applyUserDialogLocation();
                 instanceStore.applyWorldDialogInstances();
                 instanceStore.applyGroupDialogInstances();
@@ -517,7 +519,7 @@ export function addGameLogEvent(json) {
     ) {
         console.log('gameLog:', gameLog);
     }
-    addGameLogEntry(gameLog, locationStore.lastLocation.location);
+    addGameLogEntry(gameLog, locationStore.lastLocation.location, true);
 }
 
 /**

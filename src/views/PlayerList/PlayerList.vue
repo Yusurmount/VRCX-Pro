@@ -460,6 +460,13 @@
     );
 
     watch(
+        () => lastLocation.value.location,
+        () => {
+            getCurrentInstanceUserList();
+        }
+    );
+
+    watch(
         () => filterDialogOpen.value,
         (value) => {
             if (value) {
