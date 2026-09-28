@@ -35,7 +35,11 @@
                     v-else
                     class="w-full h-full object-cover cursor-pointer"
                     :src="userIconSrc"
-                    @click.stop="showFullscreenImageDialog(userDialog.publicProfileRef?.iconUrl || userIconSrc)"
+                    @click.stop="
+                        showFullscreenImageDialog(
+                            convertFileUrlToImageUrl(userDialog.publicProfileRef?.iconUrl, 2048) || userIconSrc
+                        )
+                    "
                     @error="userIconError = true"
                     loading="lazy" />
                 <IconFrame :icon-frame="userDialog.ref.iconFrame" class="z-2" />
@@ -446,6 +450,7 @@
     import { Panel } from '@/components/ui/panel';
     import MediaImage from '../../MediaImage.vue';
     import {
+        convertFileUrlToImageUrl,
         copyToClipboard,
         formatDateFilter,
         isPresenceOnline,
