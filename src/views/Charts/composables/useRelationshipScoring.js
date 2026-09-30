@@ -1,13 +1,18 @@
 import { ref, computed } from 'vue';
 import { useUserStore } from '../../../stores';
 import { database } from '../../../services/database';
+import configRepository from '../../../services/config';
 
-const WEIGHTS = {
-    onlineOverlap: 0.4,
-    coWorldFrequency: 0.3,
-    recency: 0.2,
-    consistency: 0.1
+const DEFAULT_WEIGHTS = {
+    onlineOverlap: 40,
+    coWorldFrequency: 30,
+    recency: 20,
+    consistency: 10
 };
+
+const WEIGHTS_CONFIG_KEY = 'intimacyWeights';
+const EXCLUDED_CONFIG_KEY = 'intimacyExcludedFriends';
+const EXCLUDE_MODE_CONFIG_KEY = 'intimacyExcludeMode';
 
 const RECENCY_DECAY_DAYS = 90;
 
@@ -38,10 +43,69 @@ export function useRelationshipScoring() {
     const rawMetrics = ref([]);
     const isLoading = ref(false);
 
-    const friendScores = computed(() => {
-        if (!rawMetrics.value.length) return new Map();
+    const weights = ref({ ...DEFAULT_WEIGHTS });
+    const excludedUserIds = ref([]);
+    // 'full': excluded friends leave the scoring set entirely;
+    // 'hidden': they still affect normalization but never render.
+    const excludeMode = ref('full');
 
-        const scoredMetrics = rawMetrics.value.filter((m) => m.userId);
+    let preferencesPromise = null;
+    function loadPreferences() {
+        if (!preferencesPromise) {
+            preferencesPromise = (async () => {
+                try {
+                    const [savedWeights, savedExcluded, savedMode] =
+                        await Promise.all([
+                            configRepository.getObject(
+                                WEIGHTS_CONFIG_KEY,
+                                null
+                            ),
+                            configRepository.getArray(EXCLUDED_CONFIG_KEY, []),
+                            configRepository.getString(
+                                EXCLUDE_MODE_CONFIG_KEY,
+                                'full'
+                            )
+                        ]);
+                    if (savedWeights && typeof savedWeights === 'object') {
+                        weights.value = {
+                            ...DEFAULT_WEIGHTS,
+                            ...savedWeights
+                        };
+                    }
+                    if (Array.isArray(savedExcluded)) {
+                        excludedUserIds.value = savedExcluded.filter(
+                            (id) => typeof id === 'string'
+                        );
+                    }
+                    excludeMode.value =
+                        savedMode === 'hidden' ? 'hidden' : 'full';
+                } catch (err) {
+                    console.error(
+                        '[useRelationshipScoring] Failed to load preferences',
+                        err
+                    );
+                }
+            })();
+        }
+        return preferencesPromise;
+    }
+    loadPreferences();
+
+    const scoringMetrics = computed(() => {
+        const excluded = new Set(excludedUserIds.value);
+        return rawMetrics.value.filter((m) => {
+            if (!m.userId) return false;
+            if (excludeMode.value === 'full' && excluded.has(m.userId)) {
+                return false;
+            }
+            return true;
+        });
+    });
+
+    const friendScores = computed(() => {
+        if (!scoringMetrics.value.length) return new Map();
+
+        const scoredMetrics = scoringMetrics.value;
         const overlapRef = logPercentileReference(
             scoredMetrics.map((m) => Math.log1p(m.totalTime))
         );
@@ -51,6 +115,9 @@ export function useRelationshipScoring() {
         const consistencyRef = logPercentileReference(
             scoredMetrics.map((m) => Math.log1p(m.distinctDays))
         );
+        const w = weights.value;
+        const weightSum =
+            w.onlineOverlap + w.coWorldFrequency + w.recency + w.consistency;
 
         const scores = new Map();
 
@@ -60,20 +127,24 @@ export function useRelationshipScoring() {
             const recency = recencyScore(metric.lastSeen);
             const consistency = logNormalize(metric.distinctDays, consistencyRef);
 
+            const dimensions = {
+                onlineOverlap: Math.round(onlineOverlap * 100),
+                coWorldFrequency: Math.round(coWorldFrequency * 100),
+                recency: Math.round(recency * 100),
+                consistency: Math.round(consistency * 100)
+            };
             const totalScore =
-                WEIGHTS.onlineOverlap * onlineOverlap +
-                WEIGHTS.coWorldFrequency * coWorldFrequency +
-                WEIGHTS.recency * recency +
-                WEIGHTS.consistency * consistency;
+                weightSum > 0
+                    ? (w.onlineOverlap * dimensions.onlineOverlap +
+                          w.coWorldFrequency * dimensions.coWorldFrequency +
+                          w.recency * dimensions.recency +
+                          w.consistency * dimensions.consistency) /
+                      weightSum
+                    : 0;
 
             scores.set(metric.userId, {
-                score: Math.round(totalScore * 100),
-                dimensions: {
-                    onlineOverlap: Math.round(onlineOverlap * 100),
-                    coWorldFrequency: Math.round(coWorldFrequency * 100),
-                    recency: Math.round(recency * 100),
-                    consistency: Math.round(consistency * 100)
-                },
+                score: Math.round(totalScore),
+                dimensions,
                 raw: {
                     totalTime: metric.totalTime,
                     joinCount: metric.joinCount,
@@ -89,7 +160,9 @@ export function useRelationshipScoring() {
     });
 
     const topFriends = computed(() => {
+        const excluded = new Set(excludedUserIds.value);
         return Array.from(friendScores.value.entries())
+            .filter(([userId]) => !excluded.has(userId))
             .sort((a, b) => b[1].score - a[1].score)
             .slice(0, 20)
             .map(([userId, data]) => ({
@@ -102,8 +175,10 @@ export function useRelationshipScoring() {
     });
 
     const scoreDistribution = computed(() => {
+        const excluded = new Set(excludedUserIds.value);
         const buckets = Array.from({ length: 10 }, () => 0);
-        for (const [, data] of friendScores.value) {
+        for (const [userId, data] of friendScores.value) {
+            if (excluded.has(userId)) continue;
             const bucket = Math.min(9, Math.floor(data.score / 10));
             buckets[bucket]++;
         }
@@ -115,9 +190,22 @@ export function useRelationshipScoring() {
         }));
     });
 
+    const excludedFriends = computed(() => {
+        return excludedUserIds.value.map((userId) => {
+            const metric = rawMetrics.value.find(
+                (m) => m.userId === userId
+            );
+            return {
+                userId,
+                displayName: metric?.displayName || userId
+            };
+        });
+    });
+
     async function loadScores() {
         isLoading.value = true;
         try {
+            await loadPreferences();
             const contextReady = await database.ensureUserContext(
                 userStore.currentUser?.id
             );
@@ -138,12 +226,49 @@ export function useRelationshipScoring() {
         return friendScores.value.get(userId) || null;
     }
 
+    function setWeight(key, value) {
+        weights.value[key] = value;
+        configRepository.setObject(WEIGHTS_CONFIG_KEY, { ...weights.value });
+    }
+
+    function resetWeights() {
+        weights.value = { ...DEFAULT_WEIGHTS };
+        configRepository.setObject(WEIGHTS_CONFIG_KEY, { ...weights.value });
+    }
+
+    function excludeFriend(userId) {
+        if (excludedUserIds.value.includes(userId)) return;
+        excludedUserIds.value = [...excludedUserIds.value, userId];
+        configRepository.setArray(EXCLUDED_CONFIG_KEY, excludedUserIds.value);
+    }
+
+    function includeFriend(userId) {
+        excludedUserIds.value = excludedUserIds.value.filter(
+            (id) => id !== userId
+        );
+        configRepository.setArray(EXCLUDED_CONFIG_KEY, excludedUserIds.value);
+    }
+
+    function setExcludeMode(mode) {
+        excludeMode.value = mode;
+        configRepository.setString(EXCLUDE_MODE_CONFIG_KEY, mode);
+    }
+
     return {
         friendScores,
         isLoading,
         loadScores,
         getScoreForFriend,
         topFriends,
-        scoreDistribution
+        scoreDistribution,
+        weights,
+        excludedUserIds,
+        excludeMode,
+        excludedFriends,
+        setWeight,
+        resetWeights,
+        excludeFriend,
+        includeFriend,
+        setExcludeMode
     };
 }

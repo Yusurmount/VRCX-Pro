@@ -858,6 +858,20 @@
                     "co_world_frequency": "Co-World Frequency",
                     "recency": "Recency",
                     "consistency": "Consistency"
+                },
+                "weights": {
+                    "title": "Score Weights",
+                    "reset": "Reset"
+                },
+                "excluded": {
+                    "title": "Excluded Friends",
+                    "mode_full": "Exclude Fully",
+                    "mode_hidden": "Hide from List",
+                    "mode_full_hint": "Excluded friends are removed from scoring and display.",
+                    "mode_hidden_hint": "Excluded friends still affect normalization but are hidden from the list.",
+                    "exclude_action": "Exclude this friend",
+                    "include_action": "Restore",
+                    "empty": "No excluded friends"
                 }
             },
             "timeline_comparison": {
