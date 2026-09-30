@@ -71,7 +71,7 @@ MCP 服务器为 AI 助手提供了以下能力：
 - "XX 通常什么时候在线？"（vrcx_get_friend_schedule）
 - "哪些好友最近在 Japan 世界？"（vrcx_search_friends）
 - "帮我给 XX 备注一下：喜欢动捕"（vrcx_set_note）
-- "谁和我在同一个世界出现过？"（vrcx_get_co_location）"
+- "谁和我在同一个世界出现过？"（vrcx_get_co_location）
 
 ---
 

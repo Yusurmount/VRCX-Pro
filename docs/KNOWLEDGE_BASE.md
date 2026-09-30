@@ -56,6 +56,8 @@ VRCX-Pro 是 [VRCX](https://github.com/vrcx-team/VRCX) 的社区增强分支，�
 - WebSocket 实时通知、垃圾好友请求自动拒绝
 - 画廊打印收藏、群组管理与日历导出
 - 批量解除审核、实例操作队列提示
+- 图表趋势、关系分析与 HTML 报告导出
+- 自定义通知规则、文字转语音与邮件通知
 - 内置 MCP Server，支持 AI 助手集成
 
 ---
@@ -164,6 +166,9 @@ VRCX-Pro/
 ├── build-scripts/                   # 构建脚本
 ├── scripts/                         # 开发工具脚本
 └── docs/                            # 项目文档
+    ├── KNOWLEDGE_BASE.md            # 架构与开发参考
+    ├── LAUNCH_ARGS.md               # 启动参数参考
+    └── MCP.md                       # MCP Server 参考
 ```
 
 ---
@@ -216,7 +221,7 @@ Entity Cache (LRU) 维护本地实体缓存：
 
 ### 6.1 启动流程
 
-入口文件 [app.js](src/app.js) 的启动顺序：
+入口文件 [app.js](../src/app.js) 的启动顺序：
 
 1. **installRuntimeBridge()** — 安装 `window.platform` 对象
 2. **解析 Launch Args** — 读取命令行参数（`--startup`, `--debug`, `--proxy-server` 等）
@@ -399,7 +404,7 @@ vue-i18n + 静态 JSON 文件，支持语言：
 
 ### 7.1 IPC 机制
 
-[InteropApi](src/ipc/interopApi.js) 是核心 IPC 桥接，使用 JavaScript Proxy 动态代理：
+[InteropApi](../src/ipc/interopApi.js) 是核心 IPC 桥接，使用 JavaScript Proxy 动态代理：
 
 ```javascript
 // 前端调用
@@ -413,7 +418,7 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
     → .NET Sidecar (stdin/stdout JSON-RPC)
 ```
 
-全局绑定通过 [plugins/interopApi.js](src/plugins/interopApi.js) 初始化：
+全局绑定通过 [plugins/interopApi.js](../src/plugins/interopApi.js) 初始化：
 - `window.WebApi` — HTTP 请求代理
 - `window.SQLite` — SQLite 操作代理
 - `window.VRCXStorage` — KV 存储代理
@@ -424,7 +429,7 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
 
 ### 7.2 Platform Runtime
 
-[platform/runtime.js](src/platform/runtime.js) 提供 `window.platform` 对象，封装 Tauri 原生命令：
+[platform/runtime.js](../src/platform/runtime.js) 提供 `window.platform` 对象，封装 Tauri 原生命令：
 
 | 方法 | 功能 |
 |------|------|
@@ -445,7 +450,7 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
 
 ### 7.3 Boot 流程
 
-[platform/bootReady.js](src/platform/bootReady.js) 管理启动就绪信号：
+[platform/bootReady.js](../src/platform/bootReady.js) 管理启动就绪信号：
 
 ```
 backendReadyPromise (数据库初始化完成) ─┐
@@ -461,7 +466,7 @@ router.isReady() + window.load ─────────┘
 
 ### 8.1 Rust 层职责
 
-[src-tauri/src/lib.rs](src-tauri/src/lib.rs) 是 Tauri 应用的核心：
+[src-tauri/src/lib.rs](../src-tauri/src/lib.rs) 是 Tauri 应用的核心：
 
 **Tauri 命令：**
 - `dotnet_call` — 调用 .NET Sidecar（核心桥接）
@@ -495,7 +500,7 @@ router.isReady() + window.load ─────────┘
 
 ### 8.2 .NET Sidecar
 
-[Dotnet/TauriBackend/](Dotnet/TauriBackend/) 是 .NET 9 控制台程序，通过 stdin/stdout JSON-RPC 通信。
+[Dotnet/TauriBackend/](../Dotnet/TauriBackend/) 是 .NET 9 控制台程序，通过 stdin/stdout JSON-RPC 通信。
 
 **Program.cs** 入口分发：
 
@@ -518,11 +523,11 @@ router.isReady() + window.load ─────────┘
 
 ### 8.3 MCP Server
 
-[src-tauri/src/mcp.rs](src-tauri/src/mcp.rs) 实现了本地 MCP (Model Context Protocol) 服务器。
+[src-tauri/src/mcp.rs](../src-tauri/src/mcp.rs) 实现了本地 MCP (Model Context Protocol) 服务器。
 
 **技术选型：** axum + rusqlite + tokio，直接读取 SQLite，不依赖 .NET Sidecar。
 
-**15 个 MCP 工具：**
+**21 个 MCP 工具：**
 
 | 工具 | 功能 |
 |------|------|
@@ -540,10 +545,17 @@ router.isReady() + window.load ─────────┘
 | `vrcx_get_notes` | 用户笔记 |
 | `vrcx_get_friend_log_history` | 好友变更记录 |
 | `vrcx_list_tables` | 数据库表列表 |
+| `vrcx_social_insights` | 社交分析洞察 |
+| `vrcx_get_friend_schedule` | 好友在线规律 |
+| `vrcx_search_friends` | 好友搜索 |
+| `vrcx_get_world_analytics` | 世界访问分析 |
+| `vrcx_get_user_profile` | 用户综合画像 |
+| `vrcx_set_note` | 本地用户备注写入 |
+| `vrcx_get_co_location` | 共同位置发现 |
 
 **安全设计：**
 - 仅监听 `127.0.0.1`（不暴露网络）
-- 只读访问（仅 SELECT）
+- 读取定向；仅 `vrcx_set_note` 支持本地备注写入
 - 默认关闭，需用户手动启用
 - WAL 模式支持并发读取
 
@@ -768,10 +780,9 @@ tauri build (Rust 编译 + WebView 打包 + NSIS 安装程序)
 
 ### 版本管理
 
-- 版本号维护在两个位置：
-  - `package.json` → `version` 字段（npm 版本）
-  - `src-tauri/tauri.conf.json` → `version` 字段（Tauri 版本）
-- `build-scripts/sync-version.js` 负责同步
+- 根目录 `Version` 保存规范版本号，`version_channel` 选择 `Release`、`Beta` 或 `It` 后缀
+- `build-scripts/sync-version.js` 将频道化版本同步到 `src-tauri/tauri.conf.json` 与 `src-tauri/Cargo.toml`
+- `package.json` 的 `version` 不是发布版本来源，文档和构建校验应以根目录 `Version` 为准
 
 ---
 

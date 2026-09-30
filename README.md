@@ -33,6 +33,8 @@ VRCX-Pro 在完全保留上游 [VRCX](https://github.com/vrcx-team/VRCX) 基础�
 - OOBE 首次启动向导，新手友好
 - 系统托盘、Windows 开机自启动
 - 独立数据库管理对话框（导出 / 导入 / 重置）
+- 图表趋势、关系分析与 HTML 报告导出
+- 自定义通知规则、文字转语音与邮件通知
 - **MCP Server**：内置 AI 助手数据接口，支持 Claude Desktop、Cursor、Windsurf 等客户端直接查询本地 VRCX 数据
 
 > 详细功能说明请参阅 [项目知识库](docs/KNOWLEDGE_BASE.md)。
@@ -110,7 +112,7 @@ VRCX-Pro 内置了 [Model Context Protocol (MCP)](https://modelcontextprotocol.i
 
 **支持的 AI 客户端**：Claude Desktop、Cursor、Windsurf 等支持 MCP Streamable HTTP 的客户端。
 
-**提供的工具**：好友查询、活动追踪、收藏管理、游戏日志、通知查询、备忘录访问、数据库探索等。
+**提供的工具**：21 项工具覆盖好友与活动查询、收藏、游戏日志、通知、数据库探索、社交分析、世界分析、用户画像、共同位置及本地备注写入；另提供 2 项 Resource。
 
 > 完整配置与工具列表请参阅 [MCP 文档](docs/MCP.md)。
 
@@ -118,6 +120,10 @@ VRCX-Pro 内置了 [Model Context Protocol (MCP)](https://modelcontextprotocol.i
 
 | 版本 | 主要变更 |
 |------|---------|
+| **3.4.2** | 修复房间更新、启动注册与个人资料更新等稳定性问题 |
+| **3.4.1** | 优化更新检测与下载反馈、登录体验和离线可用性 |
+| **3.4.0** | 数据导出、分析报告、MCP 工具扩展与启动体验完善 |
+| **3.3.0** | 群组与装扮功能、UI 调试预览、邮件通知 |
 | **3.2.0** | 内置 MCP Server，AI 助手集成 |
 | **3.1.3** | 独立数据库管理对话框、UI 组件库展厅、调试工具重构 |
 | **3.1.2** | 修复桌面通知 |
@@ -126,7 +132,7 @@ VRCX-Pro 内置了 [Model Context Protocol (MCP)](https://modelcontextprotocol.i
 | **3.0.0** | Tauri 2 全量迁移、系统托盘、API 限流降速 |
 | **2.3.0** | 画廊打印收藏、自动拒绝垃圾好友、批量解除审核 |
 
-> 各版本详细更新日志请参阅 `x.x.x_CHANGELOG.md` 文件。
+> 各版本详细更新日志请参阅 [GitHub Releases](https://github.com/Yusurmount/VRCX-Pro/releases)；本地存在时也可查看仓库根目录的 `*_CHANGELOG.md`。
 
 ## 风险提示
 
