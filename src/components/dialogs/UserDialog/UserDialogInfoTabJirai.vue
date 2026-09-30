@@ -196,10 +196,19 @@
                         v-if="currentUser.id !== userDialog.id"
                         class="w-3 h-6 text-xs mr-0.5"
                         size="icon-sm"
+                        variant="ghost"
+                        :aria-label="t('dialog.user.info.bio_history_open')"
+                        @click="isBioHistoryDialogVisible = true">
+                        <History class="h-3 w-3" />
+                    </Button>
+                    <Button
+                        v-if="currentUser.id !== userDialog.id"
+                        class="w-3 h-6 text-xs mr-0.5"
+                        size="icon-sm"
                         :variant="bioDiffEnabled ? 'secondary' : 'ghost'"
                         :aria-label="t('dialog.user.info.bio_diff_toggle')"
                         @click="toggleBioDiff">
-                        <History class="h-3 w-3" />
+                        <Diff class="h-3 w-3" />
                     </Button>
                     <Button
                         class="w-3 h-6 text-xs"
@@ -479,10 +488,14 @@
         </div>
     </div>
     <EditNoteAndMemoDialog v-model:visible="isEditNoteAndMemoDialogVisible" />
+    <BioHistoryDialog
+        v-model:visible="isBioHistoryDialogVisible"
+        :user-id="userDialog.id"
+        :current-bio="getCurrentBio()" />
 </template>
 
 <script setup>
-    import { Copy, History, Image, Info, Languages, MoreHorizontal, Pencil, Trash2, User } from 'lucide-vue-next';
+    import { Copy, Diff, History, Image, Info, Languages, MoreHorizontal, Pencil, Trash2, User } from 'lucide-vue-next';
     import {
         DropdownMenu,
         DropdownMenuContent,
@@ -527,6 +540,7 @@
     import { showGroupDialog } from '../../../coordinators/groupCoordinator';
 
     import EditNoteAndMemoDialog from './EditNoteAndMemoDialog.vue';
+    import BioHistoryDialog from './BioHistoryDialog.vue';
     import { database } from '../../../services/database';
     import { formatDifference } from '../../../views/Feed/columns.jsx';
 
@@ -553,6 +567,7 @@
     });
 
     const isEditNoteAndMemoDialogVisible = ref(false);
+    const isBioHistoryDialogVisible = ref(false);
     const vrchatCredit = ref(null);
     const translateLoading = ref(false);
 
