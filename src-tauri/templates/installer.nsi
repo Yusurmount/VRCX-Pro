@@ -660,21 +660,21 @@ Section Install
   ${If} $IsUpgrade = 1
   ${AndIf} $UpdateMode <> 1
   ${AndIf} ${FileExists} "$INSTDIR\uninstall.exe"
-    DetailPrint "Uninstalling previous version..."
+    DetailPrint "正在卸载旧版本..."
     ExecWait '"$INSTDIR\uninstall.exe" /S _?=$INSTDIR' $1
     Delete "$INSTDIR\uninstall.exe"
   ${EndIf}
 
   ; Install the Visual C++ Redistributable when not updating, matching the upstream VRCX installer.
   ${If} $UpdateMode <> 1
-    DetailPrint "Installing Visual C++ Redistributable..."
+    DetailPrint "正在安装 Visual C++ 运行库..."
     Delete "$TEMP\vcredist_x64.exe"
     NSISdl::download "https://aka.ms/vs/17/release/vc_redist.x64.exe" "$TEMP\vcredist_x64.exe"
     Pop $0
     ${If} $0 == "success"
       ExecWait "$TEMP\vcredist_x64.exe /install /quiet /norestart" $1
     ${Else}
-      DetailPrint "Failed to download vc_redist.x64.exe"
+      DetailPrint "下载 vc_redist.x64.exe 失败"
     ${EndIf}
     Delete "$TEMP\vcredist_x64.exe"
   ${EndIf}
@@ -698,7 +698,7 @@ Section Install
   ; Create file associations
   {{#each file_associations as |association| ~}}
     {{#each association.ext as |ext| ~}}
-       !insertmacro APP_ASSOCIATE "{{ext}}" "{{or association.name ext}}" "{{association-description association.description ext}}" "$INSTDIR\${MAINBINARYNAME}.exe,0" "Open with ${PRODUCTNAME}" "$INSTDIR\${MAINBINARYNAME}.exe $\"%1$\""
+       !insertmacro APP_ASSOCIATE "{{ext}}" "{{or association.name ext}}" "{{association-description association.description ext}}" "$INSTDIR\${MAINBINARYNAME}.exe,0" "使用 ${PRODUCTNAME} 打开" "$INSTDIR\${MAINBINARYNAME}.exe $\"%1$\""
     {{/each}}
   {{/each}}
 

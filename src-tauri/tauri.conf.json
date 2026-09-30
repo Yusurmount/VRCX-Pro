@@ -40,6 +40,9 @@
         "template": "templates/installer.nsi",
         "compression": "bzip2",
         "installMode": "perMachine",
+        "languages": [
+          "SimpChinese"
+        ],
         "installerIcon": "../images/VRCX.ico",
         "uninstallerIcon": "../images/VRCX.ico"
       }
