@@ -863,6 +863,9 @@
                     "title": "Score Weights",
                     "reset": "Reset"
                 },
+                "settings": {
+                    "title": "Scoring Settings"
+                },
                 "excluded": {
                     "title": "Excluded Friends",
                     "mode_full": "Exclude Fully",

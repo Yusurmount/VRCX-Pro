@@ -864,6 +864,9 @@
                     "title": "评分权重",
                     "reset": "重置"
                 },
+                "settings": {
+                    "title": "评分设置"
+                },
                 "excluded": {
                     "title": "排除好友",
                     "mode_full": "完全排除",

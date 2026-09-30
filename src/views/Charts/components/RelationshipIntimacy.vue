@@ -17,16 +17,121 @@
                         </HoverCardContent>
                     </HoverCard>
                 </div>
-                <TooltipWrapper :content="t('view.charts.intimacy.refresh')" side="top">
-                    <Button
-                        class="rounded-full"
-                        size="icon"
-                        variant="ghost"
-                        :disabled="isLoading"
-                        @click="loadScores">
-                        <RefreshCcw :class="['size-4', isLoading ? 'animate-spin' : '']" />
-                    </Button>
-                </TooltipWrapper>
+                <div class="flex items-center gap-2">
+                    <Sheet>
+                        <SheetTrigger as-child>
+                            <div>
+                                <TooltipWrapper
+                                    :content="t('view.charts.intimacy.settings.title')"
+                                    side="top">
+                                    <Button class="rounded-full" size="icon" variant="ghost">
+                                        <SlidersHorizontal />
+                                    </Button>
+                                </TooltipWrapper>
+                            </div>
+                        </SheetTrigger>
+                        <SheetContent side="right" class="w-90">
+                            <SheetHeader>
+                                <SheetTitle>{{ t('view.charts.intimacy.settings.title') }}</SheetTitle>
+                            </SheetHeader>
+
+                            <FieldGroup class="mt-4 gap-4 p-4">
+                                <div class="flex items-center justify-between gap-2">
+                                    <FieldLabel>{{ t('view.charts.intimacy.weights.title') }}</FieldLabel>
+                                    <Button variant="ghost" size="sm" @click="resetWeights">
+                                        <RotateCcw class="mr-1 size-3.5" />
+                                        {{ t('view.charts.intimacy.weights.reset') }}
+                                    </Button>
+                                </div>
+                                <Field v-for="dim in dimensionList" :key="dim.key">
+                                    <FieldLabel>{{ dim.label }}</FieldLabel>
+                                    <FieldContent>
+                                        <div class="flex items-center gap-3">
+                                            <Slider
+                                                class="flex-1"
+                                                :model-value="[weights[dim.key]]"
+                                                :min="0"
+                                                :max="100"
+                                                :step="5"
+                                                :aria-label="dim.label"
+                                                @update:modelValue="(v) => setWeight(dim.key, v[0])" />
+                                            <span
+                                                class="min-w-12 text-right text-sm text-muted-foreground tabular-nums">
+                                                {{ weights[dim.key] }}
+                                            </span>
+                                        </div>
+                                    </FieldContent>
+                                </Field>
+                            </FieldGroup>
+
+                            <FieldGroup class="gap-4 p-4">
+                                <Field>
+                                    <FieldLabel>{{ t('view.charts.intimacy.excluded.title') }}</FieldLabel>
+                                    <FieldContent>
+                                        <ToggleGroup
+                                            variant="outline"
+                                            type="single"
+                                            :model-value="excludeMode"
+                                            @update:modelValue="(v) => v && setExcludeMode(v)">
+                                            <ToggleGroupItem value="full">
+                                                {{ t('view.charts.intimacy.excluded.mode_full') }}
+                                            </ToggleGroupItem>
+                                            <ToggleGroupItem value="hidden">
+                                                {{ t('view.charts.intimacy.excluded.mode_hidden') }}
+                                            </ToggleGroupItem>
+                                        </ToggleGroup>
+                                        <p class="mt-1 text-xs text-muted-foreground">
+                                            {{
+                                                excludeMode === 'full'
+                                                    ? t('view.charts.intimacy.excluded.mode_full_hint')
+                                                    : t('view.charts.intimacy.excluded.mode_hidden_hint')
+                                            }}
+                                        </p>
+                                    </FieldContent>
+                                </Field>
+                                <div v-if="excludedFriends.length" class="flex flex-col gap-1">
+                                    <div
+                                        v-for="excluded in excludedFriends"
+                                        :key="excluded.userId"
+                                        class="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50">
+                                        <div class="relative inline-block size-7 flex-none">
+                                            <img
+                                                class="size-full rounded-full object-cover"
+                                                :src="userImage(getUser(excluded.userId), true)"
+                                                loading="lazy" />
+                                        </div>
+                                        <span class="min-w-0 flex-1 truncate text-sm">
+                                            {{ excluded.displayName }}
+                                        </span>
+                                        <TooltipWrapper
+                                            :content="t('view.charts.intimacy.excluded.include_action')"
+                                            side="top">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                @click="includeFriend(excluded.userId)">
+                                                <Undo2 class="size-4" />
+                                            </Button>
+                                        </TooltipWrapper>
+                                    </div>
+                                </div>
+                                <p v-else class="text-xs text-muted-foreground">
+                                    {{ t('view.charts.intimacy.excluded.empty') }}
+                                </p>
+                            </FieldGroup>
+                        </SheetContent>
+                    </Sheet>
+                    <TooltipWrapper :content="t('view.charts.intimacy.refresh')" side="top">
+                        <Button
+                            class="rounded-full"
+                            size="icon"
+                            variant="ghost"
+                            :disabled="isLoading"
+                            @click="loadScores">
+                            <RefreshCcw :class="['size-4', isLoading ? 'animate-spin' : '']" />
+                        </Button>
+                    </TooltipWrapper>
+                </div>
             </div>
 
             <div v-if="isLoading" class="mt-[100px] flex items-center justify-center">
@@ -34,95 +139,6 @@
             </div>
 
             <div v-else class="mt-4 flex flex-col gap-6 px-4 pb-6">
-                <div class="rounded-lg border bg-card p-4">
-                    <div class="flex flex-wrap items-center justify-between gap-2">
-                        <h3 class="text-sm font-medium">
-                            {{ t('view.charts.intimacy.weights.title') }}
-                        </h3>
-                        <Button variant="ghost" size="sm" @click="resetWeights">
-                            <RotateCcw class="mr-1 size-3.5" />
-                            {{ t('view.charts.intimacy.weights.reset') }}
-                        </Button>
-                    </div>
-                    <div class="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-                        <div
-                            v-for="dim in dimensionList"
-                            :key="dim.key"
-                            class="flex items-center gap-3">
-                            <span class="w-20 shrink-0 text-xs text-muted-foreground">
-                                {{ dim.label }}
-                            </span>
-                            <Slider
-                                class="flex-1"
-                                :model-value="[weights[dim.key]]"
-                                :min="0"
-                                :max="100"
-                                :step="5"
-                                :aria-label="dim.label"
-                                @update:modelValue="(v) => setWeight(dim.key, v[0])" />
-                            <span class="w-8 text-right text-xs tabular-nums">
-                                {{ weights[dim.key] }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 border-t pt-3">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                            <h3 class="text-sm font-medium">
-                                {{ t('view.charts.intimacy.excluded.title') }}
-                            </h3>
-                            <ToggleGroup
-                                variant="outline"
-                                type="single"
-                                :model-value="excludeMode"
-                                @update:modelValue="(v) => v && setExcludeMode(v)">
-                                <ToggleGroupItem value="full">
-                                    {{ t('view.charts.intimacy.excluded.mode_full') }}
-                                </ToggleGroupItem>
-                                <ToggleGroupItem value="hidden">
-                                    {{ t('view.charts.intimacy.excluded.mode_hidden') }}
-                                </ToggleGroupItem>
-                            </ToggleGroup>
-                        </div>
-                        <p class="mt-1 text-xs text-muted-foreground">
-                            {{
-                                excludeMode === 'full'
-                                    ? t('view.charts.intimacy.excluded.mode_full_hint')
-                                    : t('view.charts.intimacy.excluded.mode_hidden_hint')
-                            }}
-                        </p>
-                        <div v-if="excludedFriends.length" class="mt-2 flex flex-col gap-1">
-                            <div
-                                v-for="excluded in excludedFriends"
-                                :key="excluded.userId"
-                                class="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50">
-                                <div class="relative inline-block size-7 flex-none">
-                                    <img
-                                        class="size-full rounded-full object-cover"
-                                        :src="userImage(getUser(excluded.userId), true)"
-                                        loading="lazy" />
-                                </div>
-                                <span class="min-w-0 flex-1 truncate text-sm">
-                                    {{ excluded.displayName }}
-                                </span>
-                                <TooltipWrapper
-                                    :content="t('view.charts.intimacy.excluded.include_action')"
-                                    side="top">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        @click="includeFriend(excluded.userId)">
-                                        <Undo2 class="size-4" />
-                                    </Button>
-                                </TooltipWrapper>
-                            </div>
-                        </div>
-                        <p v-else class="mt-2 text-xs text-muted-foreground">
-                            {{ t('view.charts.intimacy.excluded.empty') }}
-                        </p>
-                    </div>
-                </div>
-
                 <template v-if="topFriends.length">
                     <div class="rounded-lg border bg-card p-4">
                         <h3 class="mb-3 text-sm font-medium">{{ t('view.charts.intimacy.distribution') }}</h3>
@@ -223,7 +239,15 @@
 <script setup>
     import { ref, watch } from 'vue';
     import { useI18n } from 'vue-i18n';
-    import { RefreshCcw, Info, ChevronDown, RotateCcw, EyeOff, Undo2 } from 'lucide-vue-next';
+    import {
+        RefreshCcw,
+        Info,
+        ChevronDown,
+        RotateCcw,
+        EyeOff,
+        Undo2,
+        SlidersHorizontal
+    } from 'lucide-vue-next';
 
     import BackToTop from '@/components/BackToTop.vue';
     import DataTableEmpty from '@/components/ui/data-table/DataTableEmpty.vue';
@@ -237,6 +261,19 @@
         ToggleGroup,
         ToggleGroupItem
     } from '@/components/ui/toggle-group';
+    import {
+        Sheet,
+        SheetContent,
+        SheetHeader,
+        SheetTitle,
+        SheetTrigger
+    } from '@/components/ui/sheet';
+    import {
+        Field,
+        FieldContent,
+        FieldGroup,
+        FieldLabel
+    } from '@/components/ui/field';
 
     import { useUserStore } from '../../../stores';
     import { useUserDisplay } from '../../../composables/useUserDisplay';
