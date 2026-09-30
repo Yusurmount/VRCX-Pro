@@ -672,8 +672,8 @@
     }
 
     /**
-     * Data recovery (optional): import a backup database file, same as
-     * "Settings > Advanced > Import Database".
+     * Data recovery (optional): restore a backup database file, same as
+     * "Settings > Advanced > Restore Database".
      */
     async function handleRecoverImport() {
         if (recovering.value) return;
