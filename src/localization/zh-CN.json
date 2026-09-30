@@ -859,6 +859,20 @@
                     "co_world_frequency": "同世界频次",
                     "recency": "最近度",
                     "consistency": "参与一致性"
+                },
+                "weights": {
+                    "title": "评分权重",
+                    "reset": "重置"
+                },
+                "excluded": {
+                    "title": "排除好友",
+                    "mode_full": "完全排除",
+                    "mode_hidden": "仅隐藏显示",
+                    "mode_full_hint": "排除后不参与计算与显示。",
+                    "mode_hidden_hint": "仍参与归一化计算，但不在排行与分布中显示。",
+                    "exclude_action": "排除此好友",
+                    "include_action": "恢复",
+                    "empty": "未排除任何好友"
                 }
             },
             "timeline_comparison": {
