@@ -19,6 +19,18 @@ commits: 493abb7e..2bfe43b8
 不再把其余好友的分数压扁到接近 0，排行与维度条恢复区分度。时间线对比不在本
 次范围内，未改动。
 
+交付后同一功能面追加了三项后续需求（均已完成并合并进 master）：
+1. **权重可调节**（`e181dca0`）：四维权重改为 0–100 可调，按权重和归一化合成，
+   存 `configRepository`（键 `intimacyWeights`）；全零权重时得 0。
+2. **好友排除**（`e181dca0`）：两种语义可切换——完全排除（移出归一化计算集）/
+   仅隐藏显示（仍参与计算，仅从排行与分布隐藏）；名单与模式持久化
+   （`intimacyExcludedFriends` / `intimacyExcludeMode`），行内排除按钮 +
+   名单管理可恢复。
+3. **侧边抽屉入口**（`1570defb`）：权重与排除 UI 移入右侧 Sheet 抽屉（仿
+   `MutualFriends` 设置抽屉），页头新增滑杆图标入口；i18n 三语补齐
+   （`settings.title` 等）。配套测试扩至 11 个用例（权重重算、双排除语义、
+   分布隐藏、跨实例持久化），全部通过。
+
 **Verification** — `npx vitest run src/views/Charts/composables/__tests__/` → PASS
 （48 tests / 5 files，含新增 5 个用例：空数据、单好友=100、全零=0、离群不压扁
 （实现前按预期失败）、90 天衰减）。改动文件 `npx eslint` / `npx oxlint` → 0 问题。
@@ -84,8 +96,8 @@ critical。
 ## [S3] Out of Scope
 
 - 时间线对比（`useTimelineComparison.js` / `TimelineComparison.vue`）任何改动。
-- 权重可配置、时间窗重构、SQL/数据层改动。
-- `RelationshipIntimacy.vue` 的模板与样式、i18n 文案。
+- 时间窗重构、SQL/数据层改动。（权重可配置原列此处，已作为后续需求交付，
+  见 Report；`RelationshipIntimacy.vue` 模板与 i18n 同理，随抽屉改造扩展。）
 - `feed.js` 中无关的 `topFriends`（访问次数排行）。
 
 ## Tasks
