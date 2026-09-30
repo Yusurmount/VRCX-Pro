@@ -11,9 +11,18 @@ const WEIGHTS = {
 
 const RECENCY_DECAY_DAYS = 90;
 
-function normalizeValue(value, max) {
-    if (!max || max === 0) return 0;
-    return Math.min(1, value / max);
+// log1p + nearest-rank p90 keeps a single whale friend from flattening
+// everyone else the way max-normalization did.
+function logPercentileReference(values) {
+    if (!values.length) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const index = Math.ceil(0.9 * sorted.length) - 1;
+    return sorted[Math.max(0, index)];
+}
+
+function logNormalize(value, reference) {
+    if (reference <= 0) return 0;
+    return Math.min(1, Math.log1p(value) / reference);
 }
 
 function recencyScore(lastSeenTimestamp) {
@@ -32,19 +41,24 @@ export function useRelationshipScoring() {
     const friendScores = computed(() => {
         if (!rawMetrics.value.length) return new Map();
 
-        const maxTime = Math.max(...rawMetrics.value.map((m) => m.totalTime), 1);
-        const maxJoins = Math.max(...rawMetrics.value.map((m) => m.joinCount), 1);
-        const maxDays = Math.max(...rawMetrics.value.map((m) => m.distinctDays), 1);
+        const scoredMetrics = rawMetrics.value.filter((m) => m.userId);
+        const overlapRef = logPercentileReference(
+            scoredMetrics.map((m) => Math.log1p(m.totalTime))
+        );
+        const frequencyRef = logPercentileReference(
+            scoredMetrics.map((m) => Math.log1p(m.joinCount))
+        );
+        const consistencyRef = logPercentileReference(
+            scoredMetrics.map((m) => Math.log1p(m.distinctDays))
+        );
 
         const scores = new Map();
 
-        for (const metric of rawMetrics.value) {
-            if (!metric.userId) continue;
-
-            const onlineOverlap = normalizeValue(metric.totalTime, maxTime);
-            const coWorldFrequency = normalizeValue(metric.joinCount, maxJoins);
+        for (const metric of scoredMetrics) {
+            const onlineOverlap = logNormalize(metric.totalTime, overlapRef);
+            const coWorldFrequency = logNormalize(metric.joinCount, frequencyRef);
             const recency = recencyScore(metric.lastSeen);
-            const consistency = normalizeValue(metric.distinctDays, maxDays);
+            const consistency = logNormalize(metric.distinctDays, consistencyRef);
 
             const totalScore =
                 WEIGHTS.onlineOverlap * onlineOverlap +
