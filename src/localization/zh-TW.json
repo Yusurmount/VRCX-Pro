@@ -2155,6 +2155,7 @@
                 "instance_minimum_avatar_performance": "最低化身效能等級",
                 "economy_creator": "創作者經濟成員",
                 "bio_diff_toggle": "切換簡介比對",
+                "bio_history_open": "檢視簡介歷史",
                 "instance_closed": "房間已關閉",
                 "instance_announcement_tooltip": "傳送房間公告"
             },
@@ -2281,6 +2282,15 @@
                     "ask_me": "詢問我",
                     "busy": "請勿打擾"
                 }
+            },
+            "bio_history": {
+                "header": "簡介歷史",
+                "old_version": "舊版本",
+                "new_version": "新版本",
+                "current": "目前",
+                "no_history": "暫無簡介歷史記錄",
+                "no_changes": "兩個版本內容相同",
+                "close": "關閉"
             },
             "note_memo": {
                 "header": "編輯備註與備忘",

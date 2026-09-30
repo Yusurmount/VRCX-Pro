@@ -2141,6 +2141,7 @@
                 "show_mutual_friends": "是否允许查看共同好友",
                 "show_discord_connections": "是否允许查看绑定的 Discord 账号信息",
                 "bio_diff_toggle": "切换简介对比",
+                "bio_history_open": "查看简介历史",
                 "instance_closed_at": "关闭时间",
                 "instance_minimum_avatar_performance": "最低角色性能等级",
                 "economy_creator": "创作者经济成员",
@@ -2257,6 +2258,15 @@
                 "preparing_data": "正在准备活动数据...",
                 "preparing_data_hint": "首次加载时可能需要一些时间。",
                 "data_ready": "已准备好活动数据"
+            },
+            "bio_history": {
+                "header": "简介历史",
+                "old_version": "旧版本",
+                "new_version": "新版本",
+                "current": "当前",
+                "no_history": "暂无简介历史记录",
+                "no_changes": "两个版本内容相同",
+                "close": "关闭"
             },
             "note_memo": {
                 "header": "编辑线上备注和本地备注",

@@ -2149,6 +2149,7 @@
                 "instance_minimum_avatar_performance": "Minimum Avatar Performance",
                 "economy_creator": "Economy Creator",
                 "bio_diff_toggle": "Toggle bio diff",
+                "bio_history_open": "Show bio history",
                 "instance_closed": "Instance Closed",
                 "instance_announcement_tooltip": "Send Instance Announcement"
             },
@@ -2263,6 +2264,15 @@
                 "preparing_data": "Preparing activity data...",
                 "preparing_data_hint": "This may take a moment on first load.",
                 "data_ready": "Activity data is ready"
+            },
+            "bio_history": {
+                "header": "Bio History",
+                "old_version": "Older version",
+                "new_version": "Newer version",
+                "current": "Current",
+                "no_history": "No bio history recorded yet",
+                "no_changes": "The two versions are identical",
+                "close": "Close"
             },
             "note_memo": {
                 "header": "Edit Note And Memo",
