@@ -246,6 +246,7 @@ internal static class Program
         "openfolderselectordialog" => OpenFolderSelectorDialog(args),
         "openfileselectordialog" => OpenFileSelectorDialog(args),
         "savefileselectordialog" => SaveFileSelectorDialog(args),
+        "openlink" => OpenExternalLink(args.FirstOrDefault().ValueKind == JsonValueKind.String ? args[0].GetString() ?? string.Empty : string.Empty),
         _ => null
     };
 
@@ -552,6 +553,23 @@ internal static class Program
     private static string GetVrChatCacheFolder()
     {
         return Path.Combine(GetVrChatAppDataFolder(), "CacheW");
+    }
+
+    private static bool OpenExternalLink(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return false;
+        try
+        {
+            var uri = new Uri(url);
+            if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps) return false;
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = uri.AbsoluteUri,
+                UseShellExecute = true
+            });
+            return true;
+        }
+        catch { return false; }
     }
 
     private static bool OpenExplorerFolder(string path)
