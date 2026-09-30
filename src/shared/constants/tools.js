@@ -165,7 +165,7 @@ const toolDefinitions = [
         titleKey: 'view.settings.advanced.advanced.db_manage.button',
         descriptionKey: 'view.settings.advanced.advanced.db_manage.description',
         navEligible: true,
-        action: { type: 'dialog', dialogKey: 'databaseManagement' }
+        action: { type: 'route', routeName: 'database-management' }
     },
     {
         key: 'info-completion',

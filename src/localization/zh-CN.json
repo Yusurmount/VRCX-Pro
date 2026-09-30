@@ -1060,6 +1060,26 @@
                 "header": "其它",
                 "edit_invite_message": "编辑邀请消息",
                 "edit_invite_message_description": "编辑邀请或申请加入时使用的消息"
+            },
+            "database_page": {
+                "overview_header": "数据库概览",
+                "path": "数据库路径",
+                "size": "文件大小",
+                "journal_mode": "日志模式",
+                "table_count": "数据表数量",
+                "tables_header": "数据表",
+                "row_count": "行数",
+                "select_hint": "从左侧选择一张表，预览其结构与数据。",
+                "schema_header": "表结构",
+                "preview_header": "数据预览（前 {count} 行）",
+                "empty_preview": "该表没有数据。",
+                "load_error": "加载数据失败：{error}",
+                "operations_header": "操作",
+                "optimize": "优化数据库",
+                "optimize_description": "执行 VACUUM 与优化，回收未使用的空间。",
+                "optimizing": "正在优化...",
+                "optimize_success": "数据库优化完成。",
+                "optimize_error": "优化失败：{error}"
             }
         },
         "profile": {

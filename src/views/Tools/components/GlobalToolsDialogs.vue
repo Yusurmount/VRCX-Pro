@@ -21,7 +21,6 @@
         :isAutoChangeStatusDialogVisible="autoChangeStatus"
         @close="closeDialog('autoChangeStatus')" />
     <ProfileCompletionDialog :visible="infoCompletion" @close="closeDialog('infoCompletion')" />
-    <DatabaseManagementDialog :visible="databaseManagement" @close="closeDialog('databaseManagement')" />
 </template>
 
 <script setup>
@@ -35,7 +34,6 @@
     import DataExportDialog from '../../../components/dialogs/DataExportDialog.vue';
 
     import AutoChangeStatusDialog from '../dialogs/AutoChangeStatusDialog.vue';
-    import DatabaseManagementDialog from '../dialogs/DatabaseManagementDialog.vue';
     import ProfileCompletionDialog from '../dialogs/ProfileCompletionDialog.vue';
     import RegistryBackupDialog from '../dialogs/RegistryBackupDialog.vue';
 
@@ -57,7 +55,6 @@
         autoChangeStatus,
         avatarExport,
         dataExport,
-        databaseManagement,
         friendExport,
         infoCompletion,
         editInviteMessages,

@@ -1,45 +1,4 @@
 <template>
-    <!-- Operation Selection Dialog -->
-    <Dialog
-        :open="visible"
-        @update:open="
-            (open) => {
-                if (!open) close();
-            }
-        ">
-        <DialogContent class="x-dialog sm:max-w-sm">
-            <DialogHeader>
-                <DialogTitle>{{ t('view.settings.advanced.advanced.db_manage.title') }}</DialogTitle>
-            </DialogHeader>
-            <div class="flex flex-col gap-2 py-2">
-                <Button
-                    variant="outline"
-                    class="justify-start"
-                    :disabled="exportInProgress"
-                    @click="handleDbManagementSelect('export')">
-                    <Download class="h-4 w-4 mr-2" />
-                    {{ t('view.settings.advanced.advanced.db_export.button') }}
-                </Button>
-                <Button
-                    variant="outline"
-                    class="justify-start"
-                    :disabled="importInProgress"
-                    @click="handleDbManagementSelect('import')">
-                    <Upload class="h-4 w-4 mr-2" />
-                    {{ t('view.settings.advanced.advanced.db_import.button') }}
-                </Button>
-                <Button
-                    variant="destructive"
-                    class="justify-start"
-                    :disabled="resetInProgress"
-                    @click="handleDbManagementSelect('reset')">
-                    <Trash2 class="h-4 w-4 mr-2" />
-                    {{ t('view.settings.advanced.advanced.db_reset.button') }}
-                </Button>
-            </div>
-        </DialogContent>
-    </Dialog>
-
     <!-- Export Progress Dialog -->
     <Dialog
         :open="isExportDialogVisible"
@@ -619,7 +578,7 @@
 
 <script setup>
     import { Trash2, TriangleAlert, Download, Upload } from 'lucide-vue-next';
-    import { computed, reactive, ref, shallowRef } from 'vue';
+    import { computed, reactive, ref, shallowRef, watch } from 'vue';
     import { toast } from 'vue-sonner';
     import { Button } from '@/components/ui/button';
     import { Input } from '@/components/ui/input';
@@ -632,6 +591,8 @@
     import { useI18n } from 'vue-i18n';
 
     import { useFeedStore, useUserStore, useVRCXUpdaterStore } from '@/stores';
+    import sqliteService from '@/services/sqlite';
+    import { database } from '@/services/database';
     import { exportDatabaseData, readImportFile, executeImport } from '@/services/database/exportImport';
     import {
         getLocalWorldFavorites,
@@ -640,7 +601,9 @@
     } from '@/coordinators/favoriteCoordinator';
 
     const props = defineProps({
-        visible: { type: Boolean, default: false }
+        visible: { type: Boolean, default: false },
+        // 'export' | 'import' | 'reset' — which flow to start when visible turns true
+        operation: { type: String, default: '' }
     });
 
     const emit = defineEmits(['close']);
@@ -653,21 +616,27 @@
         emit('close');
     }
 
-    // Operation Selection
-    function handleDbManagementSelect(operation) {
-        close();
-        switch (operation) {
-            case 'export':
-                confirmExport();
-                break;
-            case 'import':
-                confirmImport();
-                break;
-            case 'reset':
-                isResetDialogVisible.value = true;
-                break;
+    watch(
+        () => props.visible,
+        (open) => {
+            if (!open) return;
+            switch (props.operation) {
+                case 'export':
+                    confirmExport();
+                    break;
+                case 'import':
+                    confirmImport();
+                    break;
+                case 'reset':
+                    isResetDialogVisible.value = true;
+                    break;
+                default:
+                    close();
+            }
         }
-    }
+    );
+
+    // Operation flows are started from the parent page via the `operation` prop.
 
     // ── Export ──
 
@@ -924,4 +893,16 @@
             toast.error(t('view.settings.advanced.advanced.db_reset.error', { error: resetError.value }));
         }
     }
+
+    // Notify the parent (the database page) once every flow dialog is closed.
+    watch(
+        [isExportDialogVisible, isImportDialogVisible, isResetDialogVisible],
+        ([exportOpen, importOpen, resetOpen], [prevExportOpen, prevImportOpen, prevResetOpen]) => {
+            const wasOpen = prevExportOpen || prevImportOpen || prevResetOpen;
+            const isOpen = exportOpen || importOpen || resetOpen;
+            if (wasOpen && !isOpen) {
+                close();
+            }
+        }
+    );
 </script>

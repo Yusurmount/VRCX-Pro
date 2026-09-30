@@ -1059,6 +1059,26 @@
                 "header": "其他",
                 "edit_invite_message": "編輯邀請訊息",
                 "edit_invite_message_description": "編輯邀請與回覆邀請的訊息"
+            },
+            "database_page": {
+                "overview_header": "資料庫概覽",
+                "path": "資料庫路徑",
+                "size": "檔案大小",
+                "journal_mode": "日誌模式",
+                "table_count": "資料表數量",
+                "tables_header": "資料表",
+                "row_count": "列數",
+                "select_hint": "從左側選擇一張表，預覽其結構與資料。",
+                "schema_header": "資料表結構",
+                "preview_header": "資料預覽（前 {count} 列）",
+                "empty_preview": "該表沒有資料。",
+                "load_error": "載入資料失敗：{error}",
+                "operations_header": "操作",
+                "optimize": "最佳化資料庫",
+                "optimize_description": "執行 VACUUM 與最佳化，回收未使用的空間。",
+                "optimizing": "正在最佳化...",
+                "optimize_success": "資料庫最佳化完成。",
+                "optimize_error": "最佳化失敗：{error}"
             }
         },
         "profile": {

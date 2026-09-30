@@ -1059,6 +1059,26 @@
                 "header": "Other",
                 "edit_invite_message": "Edit Invite Messages",
                 "edit_invite_message_description": "Edit invite and invite response messages"
+            },
+            "database_page": {
+                "overview_header": "Database Overview",
+                "path": "Database Path",
+                "size": "File Size",
+                "journal_mode": "Journal Mode",
+                "table_count": "Tables",
+                "tables_header": "Tables",
+                "row_count": "Rows",
+                "select_hint": "Select a table on the left to preview its schema and data.",
+                "schema_header": "Schema",
+                "preview_header": "Data Preview (first {count} rows)",
+                "empty_preview": "This table has no rows.",
+                "load_error": "Failed to load: {error}",
+                "operations_header": "Operations",
+                "optimize": "Optimize Database",
+                "optimize_description": "Run VACUUM and optimize to reclaim unused space.",
+                "optimizing": "Optimizing...",
+                "optimize_success": "Database optimized.",
+                "optimize_error": "Optimize failed: {error}"
             }
         },
         "profile": {

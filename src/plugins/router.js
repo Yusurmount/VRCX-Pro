@@ -158,6 +158,12 @@ const routes = [
                 meta: { navKeys: ['tool-screenshot-metadata', 'tools'] }
             },
             {
+                path: 'tools/database',
+                name: 'database-management',
+                component: () => import('./../views/Tools/DatabaseManagement.vue'),
+                meta: { navKeys: ['tool-database-management', 'tools'] }
+            },
+            {
                 path: 'settings',
                 name: 'settings',
                 component: () => import('./../views/Settings/Settings.vue'),
