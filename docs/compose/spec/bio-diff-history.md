@@ -3,7 +3,7 @@ feature: bio-diff-history
 status: delivered
 updated: 2026-09-30
 branch: feat/bio-diff-history
-commits: # staged but not committed — project AGENTS.md forbids committing unless explicitly requested
+commits: 493abb7e..f8126cce
 ---
 
 # Bio Diff History（简介历史多版本行级对比）
