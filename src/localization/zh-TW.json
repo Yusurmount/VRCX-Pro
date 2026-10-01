@@ -279,6 +279,10 @@
             "language_detect": {
                 "title": "偵測到語言",
                 "description": "你的系統語言似乎是 {language}。是否切換到該語言？"
+            },
+            "loggingIn": {
+                "title": "正在登入…",
+                "description": "請稍候，正在登入您的帳戶。"
             }
         },
         "feed": {

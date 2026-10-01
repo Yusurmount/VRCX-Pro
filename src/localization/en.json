@@ -279,6 +279,10 @@
             "language_detect": {
                 "title": "Language Detected",
                 "description": "Your system language appears to be {language}. Would you like to switch to it?"
+            },
+            "loggingIn": {
+                "title": "Logging in…",
+                "description": "Please wait while your account is being signed in."
             }
         },
         "feed": {

@@ -279,6 +279,10 @@
                 "title": "检测到语言",
                 "description": "您的系统语言似乎是 {language}。是否切换到该语言？"
             },
+            "loggingIn": {
+                "title": "正在登录…",
+                "description": "请稍候，正在登录您的账户。"
+            },
             "loginSelected": "已选择的登录方式"
         },
         "feed": {
