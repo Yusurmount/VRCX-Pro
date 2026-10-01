@@ -103,11 +103,6 @@ const i18n = createI18n({
 
 const stubs = {
     LoginSettingsDialog: { template: '<div class="login-settings-stub" />' },
-    AlertDialog: { template: '<div><slot /></div>', props: ['open'] },
-    AlertDialogContent: { template: '<div v-bind="$attrs"><slot /></div>' },
-    AlertDialogDescription: { template: '<p><slot /></p>' },
-    AlertDialogHeader: { template: '<div><slot /></div>' },
-    AlertDialogTitle: { template: '<h2><slot /></h2>' },
     TooltipWrapper: {
         template: '<span><slot /></span>',
         props: ['side', 'content']
@@ -150,8 +145,7 @@ const stubs = {
     },
     ArrowBigDownDash: { template: '<span />' },
     Languages: { template: '<span />' },
-    Trash2: { template: '<span />' },
-    Spinner: { template: '<span class="spinner-stub" />' }
+    Trash2: { template: '<span />' }
 };
 
 /**
@@ -220,23 +214,6 @@ describe('Login.vue', () => {
             const wrapper = mountLogin();
             const checkbox = wrapper.find('input[type="checkbox"]');
             expect(checkbox.exists()).toBe(true);
-        });
-
-        test('does not show the login progress dialog before login starts', () => {
-            const wrapper = mountLogin();
-            expect(wrapper.find('[data-test-id="login-progress-dialog"]').exists()).toBe(false);
-        });
-    });
-
-    describe('login progress dialog', () => {
-        test('shows login progress while authentication is in progress', () => {
-            const wrapper = mountLogin({ loginForm: { loading: true } });
-            const dialog = wrapper.find('[data-test-id="login-progress-dialog"]');
-
-            expect(dialog.exists()).toBe(true);
-            expect(dialog.text()).toContain(en.view.login.loggingIn.title);
-            expect(dialog.text()).toContain(en.view.login.loggingIn.description);
-            expect(dialog.find('.spinner-stub').exists()).toBe(true);
         });
     });
 

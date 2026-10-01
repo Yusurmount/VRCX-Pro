@@ -182,32 +182,11 @@
                 </div>
             </div>
         </div>
-        <AlertDialog v-if="loginForm.loading" :open="true">
-            <AlertDialogContent
-                data-test-id="login-progress-dialog"
-                @interact-outside.prevent
-                @escape-key-down.prevent
-                @pointer-down-outside.prevent
-                @close-auto-focus.prevent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>{{ t('view.login.loggingIn.title') }}</AlertDialogTitle>
-                    <AlertDialogDescription>{{ t('view.login.loggingIn.description') }}</AlertDialogDescription>
-                </AlertDialogHeader>
-                <Spinner />
-            </AlertDialogContent>
-        </AlertDialog>
     </div>
 </template>
 
 <script setup>
     import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-    import {
-        AlertDialog,
-        AlertDialogContent,
-        AlertDialogDescription,
-        AlertDialogHeader,
-        AlertDialogTitle
-    } from '@/components/ui/alert-dialog';
     import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
     import {
         DropdownMenu,
@@ -224,7 +203,6 @@
     import { Button } from '@/components/ui/button';
     import { Checkbox } from '@/components/ui/checkbox';
     import { InputGroupField } from '@/components/ui/input-group';
-    import { Spinner } from '@/components/ui/spinner';
     import { storeToRefs } from 'pinia';
     import { toTypedSchema } from '@vee-validate/zod';
     import { useI18n } from 'vue-i18n';

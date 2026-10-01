@@ -263,10 +263,6 @@
             "login": "登入",
             "register": "註冊",
             "forgotPassword": "忘記密碼？",
-            "loggingIn": {
-                "title": "正在登入…",
-                "description": "請稍候，正在登入您的帳戶。"
-            },
             "updater": "更新器",
             "loginSelected": "登入 {count} 個已選取的帳號",
             "proxy_settings": "代理設定",
