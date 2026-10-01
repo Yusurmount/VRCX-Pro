@@ -889,6 +889,7 @@
                     "mode_hidden_hint": "仍参与归一化计算，但不在排行与分布中显示。",
                     "exclude_action": "排除此好友",
                     "include_action": "恢复",
+                    "restore_all": "恢复全部",
                     "empty": "未排除任何好友"
                 }
             },

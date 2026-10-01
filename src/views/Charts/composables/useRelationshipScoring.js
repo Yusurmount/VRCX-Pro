@@ -308,6 +308,11 @@ export function useRelationshipScoring() {
         configRepository.setArray(EXCLUDED_CONFIG_KEY, excludedUserIds.value);
     }
 
+    function includeAllFriends() {
+        excludedUserIds.value = [];
+        configRepository.setArray(EXCLUDED_CONFIG_KEY, []);
+    }
+
     function setExcludeMode(mode) {
         excludeMode.value = mode;
         configRepository.setString(EXCLUDE_MODE_CONFIG_KEY, mode);
@@ -336,6 +341,7 @@ export function useRelationshipScoring() {
         resetWeights,
         excludeFriend,
         includeFriend,
+        includeAllFriends,
         setExcludeMode,
         setScoreMode
     };

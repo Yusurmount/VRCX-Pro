@@ -297,6 +297,27 @@ describe('useRelationshipScoring exclusions', () => {
         );
         expect(after).toBe(before - 1);
     });
+
+    it('restores every excluded friend at once', async () => {
+        const scoring = await loadWith(outlierFixture());
+        scoring.excludeFriend('whale');
+        scoring.excludeFriend('normal-0');
+        expect(scoring.excludedUserIds.value).toHaveLength(2);
+
+        scoring.includeAllFriends();
+
+        expect(scoring.excludedUserIds.value).toEqual([]);
+        expect(scoring.excludedFriends.value).toEqual([]);
+        expect(scoring.topFriends.value.some((f) => f.userId === 'whale')).toBe(
+            true
+        );
+        expect(
+            mocks.configStore.get('array:intimacyExcludedFriends')
+        ).toEqual([]);
+
+        const second = await loadWith(outlierFixture());
+        expect(second.excludedUserIds.value).toEqual([]);
+    });
 });
 
 describe('useRelationshipScoring score mode', () => {

@@ -888,6 +888,7 @@
                     "mode_hidden_hint": "Excluded friends still affect normalization but are hidden from the list.",
                     "exclude_action": "Exclude this friend",
                     "include_action": "Restore",
+                    "restore_all": "Restore All",
                     "empty": "No excluded friends"
                 }
             },

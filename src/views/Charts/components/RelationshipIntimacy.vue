@@ -128,7 +128,17 @@
 
                                 <FieldGroup class="gap-4 p-4">
                                     <Field>
-                                        <FieldLabel>{{ t('view.charts.intimacy.excluded.title') }}</FieldLabel>
+                                        <div class="flex items-center justify-between gap-2">
+                                            <FieldLabel>{{ t('view.charts.intimacy.excluded.title') }}</FieldLabel>
+                                            <Button
+                                                v-if="excludedFriends.length"
+                                                variant="ghost"
+                                                size="sm"
+                                                @click="includeAllFriends">
+                                                <Undo2 class="mr-1 size-3.5" />
+                                                {{ t('view.charts.intimacy.excluded.restore_all') }}
+                                            </Button>
+                                        </div>
                                         <FieldContent>
                                             <ToggleGroup
                                                 variant="outline"
@@ -362,6 +372,7 @@
         resetWeights,
         excludeFriend,
         includeFriend,
+        includeAllFriends,
         setExcludeMode,
         setScoreMode
     } = useRelationshipScoring();
