@@ -22,6 +22,7 @@ vi.mock('pinia', () => ({
 
 import LoginLoadingDialog from '../LoginLoadingDialog.vue';
 import en from '../../../localization/en.json';
+import { watchState } from '../../../services/watchState';
 
 const i18n = createI18n({
     locale: 'en',
@@ -63,6 +64,8 @@ describe('LoginLoadingDialog.vue', () => {
         mocks.modal.alertOpen = false;
         mocks.modal.promptOpen = false;
         mocks.modal.otpOpen = false;
+        watchState.isAuthenticated = false;
+        watchState.isLoggedIn = false;
     });
 
     test('stays hidden while no login is in progress', () => {
@@ -90,6 +93,26 @@ describe('LoginLoadingDialog.vue', () => {
     ])('hides while the %s dialog owns the screen', (_name, key) => {
         mocks.auth.loginForm.value.loading = true;
         mocks.modal[key] = true;
+
+        const wrapper = mountDialog();
+        expect(
+            wrapper.find('[data-test-id="login-loading-dialog"]').exists()
+        ).toBe(false);
+    });
+
+    test('stays visible between authentication and the app being ready', () => {
+        watchState.isAuthenticated = true;
+        const wrapper = mountDialog();
+
+        expect(
+            wrapper.find('[data-test-id="login-loading-dialog"]').exists()
+        ).toBe(true);
+    });
+
+    test('hides once the user is logged in', () => {
+        mocks.auth.loginForm.value.loading = true;
+        watchState.isAuthenticated = true;
+        watchState.isLoggedIn = true;
 
         const wrapper = mountDialog();
         expect(

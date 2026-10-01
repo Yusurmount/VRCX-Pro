@@ -31,14 +31,23 @@
     import { useI18n } from 'vue-i18n';
 
     import { useAuthStore, useModalStore } from '../../stores';
+    import { watchState } from '../../services/watchState';
 
     const { t } = useI18n();
     const { loginForm } = storeToRefs(useAuthStore());
     const modalStore = useModalStore();
 
+    // Covers the whole attempt: auth requests (loading) plus the gap until the
+    // app is actually ready (authenticated but not yet logged in), so the
+    // dialog doesn't vanish while the login screen is still waiting.
     // Hide while primary password / 2FA / confirm prompts own the screen,
     // otherwise the two dialogs would stack on top of each other.
     const isOpen = computed(
-        () => loginForm.value.loading && !modalStore.alertOpen && !modalStore.promptOpen && !modalStore.otpOpen
+        () =>
+            !watchState.isLoggedIn &&
+            (loginForm.value.loading || watchState.isAuthenticated) &&
+            !modalStore.alertOpen &&
+            !modalStore.promptOpen &&
+            !modalStore.otpOpen
     );
 </script>
