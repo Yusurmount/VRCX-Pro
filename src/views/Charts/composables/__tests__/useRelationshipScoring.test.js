@@ -280,6 +280,98 @@ describe('useRelationshipScoring exclusions', () => {
     });
 });
 
+describe('useRelationshipScoring score mode', () => {
+    const HOURS = 60 * 60 * 1000;
+
+    function friendFixture() {
+        return metric({
+            userId: 'a',
+            displayName: 'A',
+            totalTime: 100 * HOURS,
+            joinCount: 20,
+            distinctDays: 30,
+            lastSeen: new Date().toISOString()
+        });
+    }
+
+    function whaleFixture() {
+        return metric({
+            userId: 'whale',
+            displayName: 'Whale',
+            totalTime: 1e12,
+            joinCount: 1e6,
+            distinctDays: 1e6,
+            lastSeen: new Date().toISOString()
+        });
+    }
+
+    it('defaults to percent on a 0-100 scale', async () => {
+        const scoring = await loadWith([friendFixture()]);
+        expect(scoring.scoreMode.value).toBe('percent');
+        expect(scoring.scoreMax.value).toBe(100);
+        expect(scoring.friendScores.value.get('a').score).toBe(100);
+        expect(scoring.scoreDistribution.value[0].range).toBe('0-10');
+        expect(scoring.scoreDistribution.value[9].range).toBe('90-100');
+    });
+
+    it('scores absolute mode on a 0-1000 scale', async () => {
+        const scoring = await loadWith([friendFixture(), whaleFixture()]);
+        scoring.setScoreMode('absolute');
+
+        expect(scoring.scoreMode.value).toBe('absolute');
+        expect(scoring.scoreMax.value).toBe(1000);
+
+        const entry = scoring.friendScores.value.get('a');
+        expect(entry.score).toBeGreaterThan(0);
+        expect(entry.score).toBeLessThanOrEqual(1000);
+        for (const value of Object.values(entry.dimensions)) {
+            expect(value).toBeGreaterThanOrEqual(0);
+            expect(value).toBeLessThanOrEqual(1000);
+        }
+        expect(scoring.scoreDistribution.value[0].range).toBe('0-100');
+        expect(scoring.scoreDistribution.value[9].range).toBe('900-1000');
+    });
+
+    it('keeps absolute scores stable when the cohort changes', async () => {
+        const friend = friendFixture();
+
+        const alone = await loadWith([friend]);
+        alone.setScoreMode('absolute');
+        const aloneScore = alone.friendScores.value.get('a').score;
+
+        const withWhale = await loadWith([friend, whaleFixture()]);
+        withWhale.setScoreMode('absolute');
+        expect(withWhale.friendScores.value.get('a').score).toBe(aloneScore);
+    });
+
+    it('still moves percent scores with the cohort', async () => {
+        const friend = friendFixture();
+
+        const alone = await loadWith([friend]);
+        const aloneScore = alone.friendScores.value.get('a').score;
+
+        const withWhale = await loadWith([friend, whaleFixture()]);
+        expect(withWhale.friendScores.value.get('a').score).toBeLessThan(
+            aloneScore
+        );
+    });
+
+    it('rejects unknown score modes', async () => {
+        const scoring = await loadWith([friendFixture()]);
+        scoring.setScoreMode('bogus');
+        expect(scoring.scoreMode.value).toBe('percent');
+    });
+
+    it('restores the score mode on a new instance', async () => {
+        const first = await loadWith([friendFixture()]);
+        first.setScoreMode('absolute');
+
+        const second = await loadWith([friendFixture()]);
+        expect(second.scoreMode.value).toBe('absolute');
+        expect(second.scoreMax.value).toBe(1000);
+    });
+});
+
 describe('useRelationshipScoring preference persistence', () => {
     it('restores weights, exclusions, and mode on a new instance', async () => {
         const metrics = [

@@ -36,6 +36,30 @@
                             </SheetHeader>
 
                             <FieldGroup class="mt-4 gap-4 p-4">
+                                <Field>
+                                    <FieldLabel>{{ t('view.charts.intimacy.score_mode.title') }}</FieldLabel>
+                                    <FieldContent>
+                                        <Tabs
+                                            :model-value="scoreMode"
+                                            @update:model-value="setScoreMode">
+                                            <TabsList class="grid w-full grid-cols-2">
+                                                <TabsTrigger value="percent">
+                                                    {{ t('view.charts.intimacy.score_mode.percent') }}
+                                                </TabsTrigger>
+                                                <TabsTrigger value="absolute">
+                                                    {{ t('view.charts.intimacy.score_mode.absolute') }}
+                                                </TabsTrigger>
+                                            </TabsList>
+                                        </Tabs>
+                                        <p class="mt-1 text-xs text-muted-foreground">
+                                            {{
+                                                scoreMode === 'absolute'
+                                                    ? t('view.charts.intimacy.score_mode.absolute_hint')
+                                                    : t('view.charts.intimacy.score_mode.percent_hint')
+                                            }}
+                                        </p>
+                                    </FieldContent>
+                                </Field>
                                 <div class="flex items-center justify-between gap-2">
                                     <FieldLabel>{{ t('view.charts.intimacy.weights.title') }}</FieldLabel>
                                     <Button variant="ghost" size="sm" @click="resetWeights">
@@ -150,7 +174,7 @@
                                 <div
                                     class="w-full rounded-t bg-primary/70 transition-all"
                                     :style="{ height: bucket.percent + '%', minHeight: bucket.count > 0 ? '4px' : '0' }" />
-                                <span class="text-[10px] text-muted-foreground">{{ bucket.range }}</span>
+                                <span class="text-[10px] whitespace-nowrap text-muted-foreground">{{ bucket.range }}</span>
                             </div>
                         </div>
                     </div>
@@ -178,9 +202,9 @@
                                             <div class="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
                                                 <div
                                                     class="h-full rounded-full bg-primary transition-all"
-                                                    :style="{ width: friend.score + '%' }" />
+                                                    :style="{ width: toPercent(friend.score) + '%' }" />
                                             </div>
-                                            <span class="w-8 text-right text-xs tabular-nums text-muted-foreground">{{ friend.score }}</span>
+                                            <span class="min-w-9 text-right text-xs tabular-nums text-muted-foreground">{{ friend.score }}</span>
                                         </div>
                                     </div>
                                     <TooltipWrapper
@@ -211,12 +235,12 @@
                                                 <div
                                                     class="h-full rounded-full transition-all"
                                                     :style="{
-                                                        width: getScoreForFriend(friend.userId).dimensions[dim.key] + '%',
+                                                        width: toPercent(getScoreForFriend(friend.userId).dimensions[dim.key]) + '%',
                                                         backgroundColor: dim.color
                                                     }" />
                                             </div>
                                             <span class="text-xs tabular-nums text-right">
-                                                {{ getScoreForFriend(friend.userId).dimensions[dim.key] }}%
+                                                {{ getScoreForFriend(friend.userId).dimensions[dim.key] }}{{ scoreMode === 'percent' ? '%' : '' }}
                                             </span>
                                         </div>
                                     </div>
@@ -257,6 +281,7 @@
     import Button from '@/components/ui/button/Button.vue';
     import TooltipWrapper from '@/components/ui/tooltip/TooltipWrapper.vue';
     import { Slider } from '@/components/ui/slider';
+    import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
     import {
         ToggleGroup,
         ToggleGroupItem
@@ -289,6 +314,8 @@
         getScoreForFriend,
         topFriends,
         scoreDistribution,
+        scoreMax,
+        scoreMode,
         weights,
         excludeMode,
         excludedFriends,
@@ -296,7 +323,8 @@
         resetWeights,
         excludeFriend,
         includeFriend,
-        setExcludeMode
+        setExcludeMode,
+        setScoreMode
     } = useRelationshipScoring();
 
     const containerRef = ref(null);
@@ -304,6 +332,10 @@
 
     function getUser(userId) {
         return userStore.cachedUsers.get(userId) || { displayName: '' };
+    }
+
+    function toPercent(value) {
+        return Math.min(100, Math.round((value / scoreMax.value) * 100));
     }
 
     const dimensionList = [

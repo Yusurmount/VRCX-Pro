@@ -13,8 +13,22 @@ const DEFAULT_WEIGHTS = {
 const WEIGHTS_CONFIG_KEY = 'intimacyWeights';
 const EXCLUDED_CONFIG_KEY = 'intimacyExcludedFriends';
 const EXCLUDE_MODE_CONFIG_KEY = 'intimacyExcludeMode';
+const SCORE_MODE_CONFIG_KEY = 'intimacyScoreMode';
 
 const RECENCY_DECAY_DAYS = 90;
+const MS_PER_HOUR = 60 * 60 * 1000;
+
+// 'percent' divides each dimension by the cohort's p90 reference; 'absolute'
+// saturates against these fixed anchors instead, so a score never moves when
+// unrelated friends appear or grow. Anchors are in each dimension's own unit
+// (totalTime is milliseconds, so overlap is converted to hours first — log1p
+// on raw milliseconds barely moves below the anchor).
+const SCORE_SCALES = { percent: 100, absolute: 1000 };
+const ABSOLUTE_ANCHORS = {
+    onlineOverlap: 1000,
+    coWorldFrequency: 500,
+    consistency: 365
+};
 
 // log1p + nearest-rank p90 keeps a single whale friend from flattening
 // everyone else the way max-normalization did.
@@ -48,13 +62,14 @@ export function useRelationshipScoring() {
     // 'full': excluded friends leave the scoring set entirely;
     // 'hidden': they still affect normalization but never render.
     const excludeMode = ref('full');
+    const scoreMode = ref('percent');
 
     let preferencesPromise = null;
     function loadPreferences() {
         if (!preferencesPromise) {
             preferencesPromise = (async () => {
                 try {
-                    const [savedWeights, savedExcluded, savedMode] =
+                    const [savedWeights, savedExcluded, savedMode, savedScoreMode] =
                         await Promise.all([
                             configRepository.getObject(
                                 WEIGHTS_CONFIG_KEY,
@@ -64,6 +79,10 @@ export function useRelationshipScoring() {
                             configRepository.getString(
                                 EXCLUDE_MODE_CONFIG_KEY,
                                 'full'
+                            ),
+                            configRepository.getString(
+                                SCORE_MODE_CONFIG_KEY,
+                                'percent'
                             )
                         ]);
                     if (savedWeights && typeof savedWeights === 'object') {
@@ -79,6 +98,8 @@ export function useRelationshipScoring() {
                     }
                     excludeMode.value =
                         savedMode === 'hidden' ? 'hidden' : 'full';
+                    scoreMode.value =
+                        savedScoreMode === 'absolute' ? 'absolute' : 'percent';
                 } catch (err) {
                     console.error(
                         '[useRelationshipScoring] Failed to load preferences',
@@ -106,15 +127,24 @@ export function useRelationshipScoring() {
         if (!scoringMetrics.value.length) return new Map();
 
         const scoredMetrics = scoringMetrics.value;
-        const overlapRef = logPercentileReference(
-            scoredMetrics.map((m) => Math.log1p(m.totalTime))
-        );
-        const frequencyRef = logPercentileReference(
-            scoredMetrics.map((m) => Math.log1p(m.joinCount))
-        );
-        const consistencyRef = logPercentileReference(
-            scoredMetrics.map((m) => Math.log1p(m.distinctDays))
-        );
+        const absolute = scoreMode.value === 'absolute';
+        const scale = SCORE_SCALES[scoreMode.value];
+
+        const overlapRef = absolute
+            ? Math.log1p(ABSOLUTE_ANCHORS.onlineOverlap)
+            : logPercentileReference(
+                  scoredMetrics.map((m) => Math.log1p(m.totalTime))
+              );
+        const frequencyRef = absolute
+            ? Math.log1p(ABSOLUTE_ANCHORS.coWorldFrequency)
+            : logPercentileReference(
+                  scoredMetrics.map((m) => Math.log1p(m.joinCount))
+              );
+        const consistencyRef = absolute
+            ? Math.log1p(ABSOLUTE_ANCHORS.consistency)
+            : logPercentileReference(
+                  scoredMetrics.map((m) => Math.log1p(m.distinctDays))
+              );
         const w = weights.value;
         const weightSum =
             w.onlineOverlap + w.coWorldFrequency + w.recency + w.consistency;
@@ -122,16 +152,19 @@ export function useRelationshipScoring() {
         const scores = new Map();
 
         for (const metric of scoredMetrics) {
-            const onlineOverlap = logNormalize(metric.totalTime, overlapRef);
+            const overlapValue = absolute
+                ? metric.totalTime / MS_PER_HOUR
+                : metric.totalTime;
+            const onlineOverlap = logNormalize(overlapValue, overlapRef);
             const coWorldFrequency = logNormalize(metric.joinCount, frequencyRef);
             const recency = recencyScore(metric.lastSeen);
             const consistency = logNormalize(metric.distinctDays, consistencyRef);
 
             const dimensions = {
-                onlineOverlap: Math.round(onlineOverlap * 100),
-                coWorldFrequency: Math.round(coWorldFrequency * 100),
-                recency: Math.round(recency * 100),
-                consistency: Math.round(consistency * 100)
+                onlineOverlap: Math.round(onlineOverlap * scale),
+                coWorldFrequency: Math.round(coWorldFrequency * scale),
+                recency: Math.round(recency * scale),
+                consistency: Math.round(consistency * scale)
             };
             const totalScore =
                 weightSum > 0
@@ -176,19 +209,22 @@ export function useRelationshipScoring() {
 
     const scoreDistribution = computed(() => {
         const excluded = new Set(excludedUserIds.value);
+        const step = SCORE_SCALES[scoreMode.value] / 10;
         const buckets = Array.from({ length: 10 }, () => 0);
         for (const [userId, data] of friendScores.value) {
             if (excluded.has(userId)) continue;
-            const bucket = Math.min(9, Math.floor(data.score / 10));
+            const bucket = Math.min(9, Math.floor(data.score / step));
             buckets[bucket]++;
         }
         const maxCount = Math.max(...buckets, 1);
         return buckets.map((count, i) => ({
-            range: `${i * 10}-${(i + 1) * 10}`,
+            range: `${i * step}-${(i + 1) * step}`,
             count,
             percent: Math.round((count / maxCount) * 100)
         }));
     });
+
+    const scoreMax = computed(() => SCORE_SCALES[scoreMode.value]);
 
     const excludedFriends = computed(() => {
         return excludedUserIds.value.map((userId) => {
@@ -254,6 +290,12 @@ export function useRelationshipScoring() {
         configRepository.setString(EXCLUDE_MODE_CONFIG_KEY, mode);
     }
 
+    function setScoreMode(mode) {
+        if (mode !== 'absolute' && mode !== 'percent') return;
+        scoreMode.value = mode;
+        configRepository.setString(SCORE_MODE_CONFIG_KEY, mode);
+    }
+
     return {
         friendScores,
         isLoading,
@@ -261,6 +303,8 @@ export function useRelationshipScoring() {
         getScoreForFriend,
         topFriends,
         scoreDistribution,
+        scoreMax,
+        scoreMode,
         weights,
         excludedUserIds,
         excludeMode,
@@ -269,6 +313,7 @@ export function useRelationshipScoring() {
         resetWeights,
         excludeFriend,
         includeFriend,
-        setExcludeMode
+        setExcludeMode,
+        setScoreMode
     };
 }
