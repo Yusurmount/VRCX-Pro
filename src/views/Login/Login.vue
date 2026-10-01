@@ -1,5 +1,21 @@
 <template>
     <div class="x-login-container">
+        <div
+            v-if="showLoggingInOverlay"
+            data-test-id="login-progress-overlay"
+            class="absolute inset-0 z-[9999] flex items-center justify-center bg-black/65">
+            <div class="flex items-center gap-3 rounded-lg border bg-background px-6 py-5 shadow-lg">
+                <Spinner class="size-5 shrink-0" />
+                <div class="min-w-0">
+                    <div class="text-sm font-medium text-foreground">
+                        {{ t('view.login.loggingIn.title') }}
+                    </div>
+                    <div class="text-xs text-muted-foreground">
+                        {{ t('view.login.loggingIn.description') }}
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="m-1.5" style="position: absolute; top: 0; left: 0">
             <LoginSettingsDialog />
             <TooltipWrapper v-if="!noUpdater" side="top" :content="t('view.login.updater')">
@@ -194,7 +210,7 @@
         DropdownMenuContent,
         DropdownMenuTrigger
     } from '@/components/ui/dropdown-menu';
-    import { onBeforeMount, onBeforeUnmount, ref, watch } from 'vue';
+    import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
     import { ArrowBigDownDash, Languages, Trash2, TriangleAlert, User } from 'lucide-vue-next';
@@ -203,6 +219,7 @@
     import { Button } from '@/components/ui/button';
     import { Checkbox } from '@/components/ui/checkbox';
     import { InputGroupField } from '@/components/ui/input-group';
+    import { Spinner } from '@/components/ui/spinner';
     import { storeToRefs } from 'pinia';
     import { toTypedSchema } from '@vee-validate/zod';
     import { useI18n } from 'vue-i18n';
@@ -237,6 +254,17 @@
     const { appLanguage } = storeToRefs(appearanceSettingsStore);
     const { changeAppLanguage } = appearanceSettingsStore;
     const modalStore = useModalStore();
+
+    // 登录全程遮罩：认证请求期间 + 认证成功但应用尚未就绪的空窗；
+    // 主密码 / 2FA / 确认框占屏时让位，避免两个弹层叠在一起。
+    const showLoggingInOverlay = computed(
+        () =>
+            !watchState.isLoggedIn &&
+            (loginForm.value.loading || watchState.isAuthenticated) &&
+            !modalStore.alertOpen &&
+            !modalStore.promptOpen &&
+            !modalStore.otpOpen
+    );
 
     const vrcStatusStore = useVrcStatusStore();
 

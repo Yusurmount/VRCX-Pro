@@ -63,6 +63,7 @@ vi.mock('../../../services/config', () => ({
 vi.mock('../../../services/jsonStorage', () => ({ default: vi.fn() }));
 vi.mock('../../../services/watchState', () => ({
     watchState: {
+        isAuthenticated: false,
         isLoggedIn: false,
         isFriendsLoaded: false,
         isFavoritesLoaded: false
@@ -90,6 +91,7 @@ vi.mock('@vee-validate/zod', () => ({ toTypedSchema: vi.fn((s) => s) }));
 
 import Login from '../Login.vue';
 import en from '../../../localization/en.json';
+import { watchState } from '../../../services/watchState';
 
 const i18n = createI18n({
     locale: 'en',
@@ -145,14 +147,15 @@ const stubs = {
     },
     ArrowBigDownDash: { template: '<span />' },
     Languages: { template: '<span />' },
-    Trash2: { template: '<span />' }
+    Trash2: { template: '<span />' },
+    Spinner: { template: '<span class="spinner-stub" />' }
 };
 
 /**
  *
  * @param storeOverrides
  */
-function mountLogin(storeOverrides = {}) {
+function mountLogin(storeOverrides = {}, modalOverrides = {}) {
     const pinia = createTestingPinia({
         stubActions: false,
         initialState: {
@@ -167,6 +170,12 @@ function mountLogin(storeOverrides = {}) {
                     lastUserLoggedIn: ''
                 },
                 ...storeOverrides
+            },
+            Modal: {
+                alertOpen: false,
+                promptOpen: false,
+                otpOpen: false,
+                ...modalOverrides
             }
         }
     });
@@ -237,6 +246,64 @@ describe('Login.vue', () => {
         test('renders LoginSettingsDialog stub', () => {
             const wrapper = mountLogin();
             expect(wrapper.find('.login-settings-stub').exists()).toBe(true);
+        });
+    });
+
+    describe('logging in overlay', () => {
+        beforeEach(() => {
+            watchState.isAuthenticated = false;
+            watchState.isLoggedIn = false;
+        });
+
+        test('is hidden before any login starts', () => {
+            const wrapper = mountLogin();
+            expect(
+                wrapper.find('[data-test-id="login-progress-overlay"]').exists()
+            ).toBe(false);
+        });
+
+        test('shows title, description and spinner while logging in', () => {
+            const wrapper = mountLogin({ loginForm: { loading: true } });
+            const overlay = wrapper.find(
+                '[data-test-id="login-progress-overlay"]'
+            );
+
+            expect(overlay.exists()).toBe(true);
+            expect(overlay.text()).toContain(en.view.login.loggingIn.title);
+            expect(overlay.text()).toContain(
+                en.view.login.loggingIn.description
+            );
+            expect(overlay.find('.spinner-stub').exists()).toBe(true);
+        });
+
+        test('stays visible until the app is ready after authentication', () => {
+            watchState.isAuthenticated = true;
+            const wrapper = mountLogin({ loginForm: { loading: false } });
+
+            expect(
+                wrapper.find('[data-test-id="login-progress-overlay"]').exists()
+            ).toBe(true);
+        });
+
+        test('hides once logged in', () => {
+            watchState.isAuthenticated = true;
+            watchState.isLoggedIn = true;
+            const wrapper = mountLogin({ loginForm: { loading: true } });
+
+            expect(
+                wrapper.find('[data-test-id="login-progress-overlay"]').exists()
+            ).toBe(false);
+        });
+
+        test('yields while a 2FA dialog is open', () => {
+            const wrapper = mountLogin(
+                { loginForm: { loading: true } },
+                { otpOpen: true }
+            );
+
+            expect(
+                wrapper.find('[data-test-id="login-progress-overlay"]').exists()
+            ).toBe(false);
         });
     });
 });

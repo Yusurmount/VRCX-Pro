@@ -14,7 +14,6 @@
             <PromptDialogModal></PromptDialogModal>
             <OtpDialogModal></OtpDialogModal>
             <DatabaseUpgradeDialog></DatabaseUpgradeDialog>
-            <LoginLoadingDialog></LoginLoadingDialog>
 
             <VRCXUpdateDialog></VRCXUpdateDialog>
         </div>
@@ -51,7 +50,6 @@
 
     import AlertDialogModal from './components/ui/alert-dialog/AlertDialogModal.vue';
     import DatabaseUpgradeDialog from './components/dialogs/DatabaseUpgradeDialog.vue';
-    import LoginLoadingDialog from './components/dialogs/LoginLoadingDialog.vue';
     import MacOSTitleBar from './components/MacOSTitleBar.vue';
     import OpenExternalLinkDialog from './components/dialogs/OpenExternalLinkDialog.vue';
     import OtpDialogModal from './components/ui/dialog/OtpDialogModal.vue';
