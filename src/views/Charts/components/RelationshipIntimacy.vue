@@ -67,17 +67,21 @@
                                             <HoverCardTrigger as-child>
                                                 <Info class="text-xs opacity-70" />
                                             </HoverCardTrigger>
-                                            <HoverCardContent side="bottom" align="start" class="w-80">
+                                            <HoverCardContent
+                                                side="bottom"
+                                                align="start"
+                                                :collision-padding="8"
+                                                class="w-64">
                                                 <div class="flex flex-col gap-2 text-xs">
                                                     <p class="text-muted-foreground">
                                                         {{ t('view.charts.intimacy.weights.explain.summary') }}
                                                     </p>
-                                                    <ul class="flex flex-col gap-1.5">
+                                                    <ul class="flex flex-col gap-2">
                                                         <li
                                                             v-for="dim in dimensionList"
                                                             :key="dim.key"
-                                                            class="flex gap-2">
-                                                            <span class="flex shrink-0 items-center gap-1.5 font-medium">
+                                                            class="flex flex-col gap-0.5">
+                                                            <span class="flex items-center gap-1.5 font-medium">
                                                                 <span
                                                                     class="size-2 rounded-full"
                                                                     :style="{ backgroundColor: dim.color }" />
@@ -86,8 +90,8 @@
                                                                     {{ weights[dim.key] }}
                                                                 </span>
                                                             </span>
-                                                            <span class="min-w-0 text-muted-foreground">
-                                                                {{ t(`view.charts.intimacy.weights.explain.${dim.key}`) }}
+                                                            <span class="text-muted-foreground">
+                                                                {{ t(`view.charts.intimacy.weights.explain.${dim.explainKey}`) }}
                                                             </span>
                                                         </li>
                                                     </ul>
@@ -397,10 +401,30 @@
     }
 
     const dimensionList = [
-        { key: 'onlineOverlap', label: t('view.charts.intimacy.dimension.online_overlap'), color: '#5470c6' },
-        { key: 'coWorldFrequency', label: t('view.charts.intimacy.dimension.co_world_frequency'), color: '#91cc75' },
-        { key: 'recency', label: t('view.charts.intimacy.dimension.recency'), color: '#fac858' },
-        { key: 'consistency', label: t('view.charts.intimacy.dimension.consistency'), color: '#9a60b4' }
+        {
+            key: 'onlineOverlap',
+            explainKey: 'online_overlap',
+            label: t('view.charts.intimacy.dimension.online_overlap'),
+            color: '#5470c6'
+        },
+        {
+            key: 'coWorldFrequency',
+            explainKey: 'co_world_frequency',
+            label: t('view.charts.intimacy.dimension.co_world_frequency'),
+            color: '#91cc75'
+        },
+        {
+            key: 'recency',
+            explainKey: 'recency',
+            label: t('view.charts.intimacy.dimension.recency'),
+            color: '#fac858'
+        },
+        {
+            key: 'consistency',
+            explainKey: 'consistency',
+            label: t('view.charts.intimacy.dimension.consistency'),
+            color: '#9a60b4'
+        }
     ];
 
     watch(
