@@ -61,7 +61,40 @@
                                     </FieldContent>
                                 </Field>
                                 <div class="flex items-center justify-between gap-2">
-                                    <FieldLabel>{{ t('view.charts.intimacy.weights.title') }}</FieldLabel>
+                                    <div class="flex items-center gap-1">
+                                        <FieldLabel>{{ t('view.charts.intimacy.weights.title') }}</FieldLabel>
+                                        <HoverCard>
+                                            <HoverCardTrigger as-child>
+                                                <Info class="text-xs opacity-70" />
+                                            </HoverCardTrigger>
+                                            <HoverCardContent side="bottom" align="start" class="w-80">
+                                                <div class="flex flex-col gap-2 text-xs">
+                                                    <p class="text-muted-foreground">
+                                                        {{ t('view.charts.intimacy.weights.explain.summary') }}
+                                                    </p>
+                                                    <ul class="flex flex-col gap-1.5">
+                                                        <li
+                                                            v-for="dim in dimensionList"
+                                                            :key="dim.key"
+                                                            class="flex gap-2">
+                                                            <span class="flex shrink-0 items-center gap-1.5 font-medium">
+                                                                <span
+                                                                    class="size-2 rounded-full"
+                                                                    :style="{ backgroundColor: dim.color }" />
+                                                                {{ dim.label }}
+                                                                <span class="tabular-nums text-muted-foreground">
+                                                                    {{ weights[dim.key] }}
+                                                                </span>
+                                                            </span>
+                                                            <span class="min-w-0 text-muted-foreground">
+                                                                {{ t(`view.charts.intimacy.weights.explain.${dim.key}`) }}
+                                                            </span>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </HoverCardContent>
+                                        </HoverCard>
+                                    </div>
                                     <Button variant="ghost" size="sm" @click="resetWeights">
                                         <RotateCcw class="mr-1 size-3.5" />
                                         {{ t('view.charts.intimacy.weights.reset') }}

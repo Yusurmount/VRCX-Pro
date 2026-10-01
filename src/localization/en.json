@@ -861,7 +861,14 @@
                 },
                 "weights": {
                     "title": "Score Weights",
-                    "reset": "Reset"
+                    "reset": "Reset",
+                    "explain": {
+                        "summary": "Each dimension is normalized first, then averaged by weight into the final score. Weights are relative shares and need not add up to 100; Reset restores the 40 / 30 / 20 / 10 defaults.",
+                        "online_overlap": "Cumulative time both of you were online together — how much time you actually share.",
+                        "co_world_frequency": "How often you both joined the same world — how often you run into each other.",
+                        "recency": "Time since your last interaction, decaying exponentially over 90 days — closer is higher.",
+                        "consistency": "Number of distinct days you appeared together — whether contact stays steady."
+                    }
                 },
                 "settings": {
                     "title": "Scoring Settings"
