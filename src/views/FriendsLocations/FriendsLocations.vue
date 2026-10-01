@@ -141,7 +141,8 @@
                 </template>
             </div>
             <div v-else class="friend-view__empty">
-                <DataTableEmpty type="nomatch" />
+                <Loader2 v-if="friendListLoading" class="friend-view__loading-icon" :size="22" />
+                <DataTableEmpty v-else type="nomatch" />
             </div>
         </div>
         <div v-else class="friend-view__initial-loading">
@@ -172,6 +173,7 @@
 
     import FriendLocationCard from './components/FriendsLocationsCard.vue';
     import configRepository from '../../services/config.js';
+    import { watchState } from '../../services/watchState.js';
 
     const { t } = useI18n();
 
@@ -191,6 +193,12 @@
 
     const favoriteStore = useFavoriteStore();
     const { favoriteFriendGroups, groupedByGroupKeyFavoriteFriends, localFriendFavorites } = storeToRefs(favoriteStore);
+
+    // 好友数据或本地收藏分组尚未就绪时，空结果应显示加载中而非“无匹配”
+    const friendListLoading = computed(
+        () =>
+            !watchState.isFriendsLoaded || friendStore.isRefreshFriendsLoading || favoriteStore.isLocalFavoritesLoading
+    );
 
     const locationStore = useLocationStore();
     const { lastLocation } = storeToRefs(locationStore);

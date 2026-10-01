@@ -153,7 +153,8 @@
                 </TableBody>
             </Table>
             <div v-else class="flex h-full items-center justify-center text-[13px] text-muted-foreground">
-                {{ t('dashboard.widget.no_data') }}
+                <Spinner v-if="feedStore.feedTable.loading" />
+                <template v-else>{{ t('dashboard.widget.no_data') }}</template>
             </div>
         </div>
     </div>
@@ -180,6 +181,7 @@
     import Location from '@/components/Location.vue';
     import UserContextMenu from '@/components/UserContextMenu.vue';
     import { TooltipWrapper } from '@/components/ui/tooltip';
+    import { Spinner } from '@/components/ui/spinner';
     import WidgetHeader from './WidgetHeader.vue';
     import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table';
 

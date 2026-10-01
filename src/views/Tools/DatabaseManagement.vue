@@ -71,7 +71,10 @@
                             </span>
                         </button>
                         <div v-if="!tables.length" class="px-3 py-2 text-sm text-muted-foreground">
-                            {{ t('view.tools.database_page.select_hint') }}
+                            <div v-if="loading" class="flex justify-center py-4">
+                                <Spinner class="h-5 w-5" />
+                            </div>
+                            <template v-else>{{ t('view.tools.database_page.select_hint') }}</template>
                         </div>
                     </div>
                 </div>
@@ -308,26 +311,30 @@
             if (row[0]) tableSchemas.set(row[0], row[1] || '');
         }, `SELECT name, sql FROM sqlite_master WHERE type='table'`);
 
-        const next = [];
-        for (const name of names) {
-            let count = 0;
-            await sqliteService.execute(
-                (row) => {
-                    count = Number(row[0]);
-                },
-                `SELECT COUNT(*) FROM ${quoteIdent(name)}`
-            );
-            next.push({ name, rowCount: count });
+        // 所有行数合并为一条 UNION ALL 查询，避免逐表串行往返
+        const counts = new Map();
+        if (names.length) {
+            const unionSql = names
+                .map(
+                    (name) =>
+                        `SELECT '${String(name).replace(/'/g, "''")}' AS tbl, COUNT(*) AS cnt FROM ${quoteIdent(name)}`
+                )
+                .join(' UNION ALL ');
+            await sqliteService.execute((row) => {
+                counts.set(row[0], Number(row[1]));
+            }, unionSql);
         }
-        tables.value = next;
+        tables.value = names.map((name) => ({
+            name,
+            rowCount: counts.get(name) ?? 0
+        }));
     }
 
     async function refreshAll() {
         if (loading.value) return;
         loading.value = true;
         try {
-            await loadOverview();
-            await loadTables();
+            await Promise.all([loadOverview(), loadTables()]);
         } catch (e) {
             toast.error(t('view.tools.database_page.load_error', { error: e?.message || String(e) }));
         } finally {

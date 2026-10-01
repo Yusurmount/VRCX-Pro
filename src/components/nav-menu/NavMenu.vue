@@ -444,8 +444,10 @@
     );
 
     onMounted(async () => {
-        await initThemeColor();
-        await dashboardStore.loadDashboards();
+        // 主题色与 dashboard/导航配置无依赖，并行执行；
+        // dashboard 与导航配置已在 App 启动时预取，这里通常只做等待收敛
+        initThemeColor();
+        await dashboardStore.ensureLoaded();
         await loadNavMenuConfig();
     });
 </script>

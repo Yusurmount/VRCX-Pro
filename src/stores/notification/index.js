@@ -1211,19 +1211,28 @@ export const useNotificationStore = defineStore('Notification', () => {
      */
     async function initNotifications() {
         notificationInitStatus.value = false;
-        const [tableDataV2, notifications] = await Promise.all([
-            database.getNotificationsV2(),
-            database.getNotifications()
-        ]);
-        let tableData = tableDataV2;
-        tableData = tableData.concat(
-            notifications.filter((n) => !tableData.some((t) => t.id === n.id))
-        );
-        tableData.sort(
-            (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)
-        );
-        tableData.splice(dbVars.maxTableSize);
-        notificationTable.value.data = tableData;
+        // 读库窗口期先置 loading，避免空数据显示成“无数据”
+        isNotificationsLoading.value = true;
+        try {
+            const [tableDataV2, notifications] = await Promise.all([
+                database.getNotificationsV2(),
+                database.getNotifications()
+            ]);
+            let tableData = tableDataV2;
+            tableData = tableData.concat(
+                notifications.filter((n) => !tableData.some((t) => t.id === n.id))
+            );
+            tableData.sort(
+                (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)
+            );
+            tableData.splice(dbVars.maxTableSize);
+            notificationTable.value.data = tableData;
+        } catch (err) {
+            // 读库失败时复位 loading，避免永久转圈
+            console.error(err);
+            isNotificationsLoading.value = false;
+            return;
+        }
         refreshNotifications();
     }
 

@@ -91,28 +91,39 @@ export const useDashboardStore = defineStore('dashboard', () => {
             )
     );
 
-    async function loadDashboards() {
-        try {
-            const stored = await configRepository.getString(
-                DASHBOARD_STORAGE_KEY,
-                null
-            );
-            if (!stored) {
-                dashboards.value = [];
-                loaded.value = true;
-                return;
-            }
+    let inFlightLoad = null;
 
-            const parsed = JSON.parse(stored);
-            const source = Array.isArray(parsed?.dashboards)
-                ? parsed.dashboards
-                : [];
-            dashboards.value = source.map(sanitizeDashboard).filter(Boolean);
-        } catch {
-            dashboards.value = [];
-        } finally {
-            loaded.value = true;
+    function loadDashboards() {
+        if (!inFlightLoad) {
+            inFlightLoad = (async () => {
+                try {
+                    const stored = await configRepository.getString(
+                        DASHBOARD_STORAGE_KEY,
+                        null
+                    );
+                    if (!stored) {
+                        dashboards.value = [];
+                        loaded.value = true;
+                        return;
+                    }
+
+                    const parsed = JSON.parse(stored);
+                    const source = Array.isArray(parsed?.dashboards)
+                        ? parsed.dashboards
+                        : [];
+                    dashboards.value = source
+                        .map(sanitizeDashboard)
+                        .filter(Boolean);
+                } catch {
+                    dashboards.value = [];
+                } finally {
+                    loaded.value = true;
+                }
+            })().finally(() => {
+                inFlightLoad = null;
+            });
         }
+        return inFlightLoad;
     }
 
     async function saveDashboards() {
@@ -124,8 +135,9 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
     function ensureLoaded() {
         if (!loaded.value) {
-            loadDashboards();
+            return loadDashboards();
         }
+        return Promise.resolve();
     }
 
     function getDashboard(id, panel = null) {

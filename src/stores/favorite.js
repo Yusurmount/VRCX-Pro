@@ -56,6 +56,13 @@ export const useFavoriteStore = defineStore('Favorite', () => {
 
     const isFavoriteLoading = ref(false);
 
+    // 本地收藏（world/avatar/friend）从 SQLite 初始加载的进行中计数；
+    // 视图用它区分“加载中”与“真的没有数据”
+    const localFavoritesLoadingCount = ref(0);
+    const isLocalFavoritesLoading = computed(
+        () => localFavoritesLoadingCount.value > 0
+    );
+
     const friendImportDialogInput = ref('');
 
     const worldImportDialogInput = ref('');
@@ -232,6 +239,7 @@ export const useFavoriteStore = defineStore('Favorite', () => {
             favoriteAvatarGroups.value = [];
             isFavoriteLoading.value = false;
             isFavoriteGroupLoading.value = false;
+            localFavoritesLoadingCount.value = 0;
             state.favoriteObjects.clear();
             state.favoriteFriends_ = [];
             state.favoriteWorlds_ = [];
@@ -740,6 +748,16 @@ export const useFavoriteStore = defineStore('Favorite', () => {
         isFavoriteLoading.value = value;
     }
 
+    function beginLocalFavoritesLoading() {
+        localFavoritesLoadingCount.value++;
+    }
+
+    function endLocalFavoritesLoading() {
+        if (localFavoritesLoadingCount.value > 0) {
+            localFavoritesLoadingCount.value--;
+        }
+    }
+
     /**
      * @param {object} value
      */
@@ -769,6 +787,9 @@ export const useFavoriteStore = defineStore('Favorite', () => {
         favoriteWorldGroups,
         favoriteAvatarGroups,
         isFavoriteLoading,
+        isLocalFavoritesLoading,
+        beginLocalFavoritesLoading,
+        endLocalFavoritesLoading,
         friendImportDialogInput,
         worldImportDialogInput,
         avatarImportDialogInput,

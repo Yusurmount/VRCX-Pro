@@ -202,7 +202,8 @@
                                     </div>
                                 </template>
                                 <div v-else class="text-center text-xs py-3">
-                                    <DataTableEmpty type="nodata" />
+                                    <Spinner v-if="favoritesLoading" class="mx-auto" />
+                                    <DataTableEmpty v-else type="nodata" />
                                 </div>
                                 <TooltipWrapper
                                     v-if="!isCreatingLocalGroup"
@@ -355,7 +356,8 @@
                                         </div>
                                     </template>
                                     <div v-else class="flex items-center justify-center text-[13px] h-full">
-                                        <DataTableEmpty type="nodata" />
+                                        <Spinner v-if="favoritesLoading" class="mx-auto" />
+                                        <DataTableEmpty v-else type="nodata" />
                                     </div>
                                 </div>
                             </template>
@@ -387,7 +389,8 @@
                                         </div>
                                     </template>
                                     <div v-else class="flex items-center justify-center text-[13px] h-full">
-                                        <DataTableEmpty type="nodata" />
+                                        <Spinner v-if="favoritesLoading" class="mx-auto" />
+                                        <DataTableEmpty v-else type="nodata" />
                                     </div>
                                 </ScrollArea>
                             </template>
@@ -404,7 +407,8 @@
                                         </div>
                                     </template>
                                     <div v-else class="flex items-center justify-center text-[13px] h-full">
-                                        <DataTableEmpty type="nodata" />
+                                        <Spinner v-if="favoritesLoading" class="mx-auto" />
+                                        <DataTableEmpty v-else type="nodata" />
                                     </div>
                                 </div>
                             </template>
@@ -503,6 +507,7 @@
         localAvatarFavorites,
         selectedFavoriteAvatars,
         isFavoriteLoading,
+        isLocalFavoritesLoading,
         localAvatarFavoriteGroups,
         avatarImportDialogInput
     } = storeToRefs(favoriteStore);
@@ -512,6 +517,9 @@
     import { promptClearAvatarHistory, showAvatarDialog, applyAvatar } from '../../coordinators/avatarCoordinator';
     const { isLocalUserVrcPlusSupporter } = storeToRefs(useUserStore());
     const { t } = useI18n();
+
+    // 远端或本地收藏初始加载未完成时，空态显示加载中而非“无数据”
+    const favoritesLoading = computed(() => isFavoriteLoading.value || isLocalFavoritesLoading.value);
 
     const {
         cardScale: avatarCardScale,

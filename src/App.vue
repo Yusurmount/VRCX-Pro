@@ -55,6 +55,8 @@
     import OtpDialogModal from './components/ui/dialog/OtpDialogModal.vue';
     import PromptDialogModal from './components/ui/dialog/PromptDialogModal.vue';
     import VRCXUpdateDialog from './components/dialogs/VRCXUpdateDialog.vue';
+    import { prefetchStoredNavConfig } from './components/nav-menu/navConfigUtils';
+    import configRepository from './services/config';
 
     import '@/styles/globals.css';
 
@@ -72,6 +74,11 @@
     initNoty();
 
     const store = createGlobalStores();
+
+    // 在登录数据洪峰前的静默窗口内提前排队侧边栏相关的配置读取，
+    // 让 NavMenu 挂载时可直接拿到结果（见 navConfigUtils / dashboard.ensureLoaded）
+    store.dashboard.ensureLoaded();
+    prefetchStoredNavConfig(configRepository);
 
     if (typeof window !== 'undefined') {
         window.$pinia = store;

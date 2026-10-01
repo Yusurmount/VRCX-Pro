@@ -270,3 +270,55 @@ describe('notification store - test notification', () => {
         });
     });
 });
+
+describe('notification store - initial database load', () => {
+    let notificationStore;
+
+    beforeEach(() => {
+        setActivePinia(createPinia());
+        vi.clearAllMocks();
+        notificationStore = useNotificationStore();
+    });
+
+    it('keeps loading=true while the initial database read is pending', async () => {
+        let resolveV2;
+        let resolveLegacy;
+        database.getNotificationsV2 = vi.fn(
+            () =>
+                new Promise((resolve) => {
+                    resolveV2 = resolve;
+                })
+        );
+        database.getNotifications = vi.fn(
+            () =>
+                new Promise((resolve) => {
+                    resolveLegacy = resolve;
+                })
+        );
+
+        const pending = notificationStore.initNotifications();
+        // 读库窗口期必须处于 loading，否则空数据会被渲染成“无数据”
+        expect(notificationStore.isNotificationsLoading).toBe(true);
+
+        resolveV2([]);
+        resolveLegacy([]);
+        await pending;
+
+        await vi.waitFor(() => {
+            expect(notificationStore.isNotificationsLoading).toBe(false);
+        });
+    });
+
+    it('resets loading when the initial database read fails', async () => {
+        database.getNotificationsV2 = vi.fn(() =>
+            Promise.reject(new Error('db locked'))
+        );
+        database.getNotifications = vi.fn(() => Promise.resolve([]));
+
+        const pending = notificationStore.initNotifications();
+        expect(notificationStore.isNotificationsLoading).toBe(true);
+
+        await pending;
+        expect(notificationStore.isNotificationsLoading).toBe(false);
+    });
+});

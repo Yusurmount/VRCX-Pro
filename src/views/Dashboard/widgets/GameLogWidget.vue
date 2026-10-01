@@ -135,14 +135,15 @@
                 </TableBody>
             </Table>
             <div v-else class="flex h-full items-center justify-center text-[13px] text-muted-foreground">
-                {{ t('dashboard.widget.no_data') }}
+                <Spinner v-if="isLoading" />
+                <template v-else>{{ t('dashboard.widget.no_data') }}</template>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-    import { computed, onMounted, shallowRef, watch } from 'vue';
+    import { computed, onMounted, ref, shallowRef, watch } from 'vue';
     import { useI18n } from 'vue-i18n';
     import { LogIn, LogOut, MapPin, Settings, Play, Waypoints } from 'lucide-vue-next';
 
@@ -162,6 +163,7 @@
     } from '@/components/ui/dropdown-menu';
     import Location from '@/components/Location.vue';
     import { TooltipWrapper } from '@/components/ui/tooltip';
+    import { Spinner } from '@/components/ui/spinner';
     import WidgetHeader from './WidgetHeader.vue';
     import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table';
 
@@ -191,6 +193,7 @@
     const gameLogStore = useGameLogStore();
 
     const widgetData = shallowRef([]);
+    const isLoading = ref(false);
     const maxEntries = 200;
 
     const activeFilters = computed(() => {
@@ -237,6 +240,7 @@
     });
 
     async function loadInitialData() {
+        isLoading.value = true;
         try {
             const rows = await database.lookupGameLogDatabase([], []);
             for (const row of rows) {
@@ -246,6 +250,8 @@
             widgetData.value = rows;
         } catch {
             widgetData.value = [];
+        } finally {
+            isLoading.value = false;
         }
     }
 
@@ -270,6 +276,7 @@
                 loadInitialData();
             } else {
                 widgetData.value = [];
+                isLoading.value = false;
             }
         },
         { flush: 'sync' }

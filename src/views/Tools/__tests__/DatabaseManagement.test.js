@@ -31,7 +31,10 @@ const { push, vacuum, optimize, execute } = vi.hoisted(() => {
         } else if (sql.includes('sqlite_master')) {
             rows = [['feed_post'], ['user_location']];
         } else if (sql.includes('COUNT(*)')) {
-            rows = [[3]];
+            rows = [
+                ['feed_post', 3],
+                ['user_location', 7]
+            ];
         } else if (sql.includes('table_info')) {
             rows = [
                 [0, 'id', 'INTEGER', 0, null, 1],
@@ -109,6 +112,11 @@ describe('DatabaseManagement.vue', () => {
         expect(wrapper.text()).toContain('wal');
         expect(wrapper.text()).toContain('feed_post');
         expect(wrapper.text()).toContain('user_location');
+        // 行数统计必须合并为单条查询（避免逐表串行往返）
+        const countQueries = execute.mock.calls.filter(([, sql]) =>
+            sql.includes('COUNT(*)')
+        );
+        expect(countQueries).toHaveLength(1);
     });
 
     test('selecting a table renders schema and row preview', async () => {

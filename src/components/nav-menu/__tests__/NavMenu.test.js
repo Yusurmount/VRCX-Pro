@@ -141,6 +141,7 @@ vi.mock('../../../stores', () => ({
         dashboards: mocks.dashboards,
         dashboardNavKeys: mocks.dashboardNavKeys,
         loadDashboards: (...args) => mocks.loadDashboards(...args),
+        ensureLoaded: (...args) => mocks.loadDashboards(...args),
         getDashboardNavDefinitions: (...args) =>
             mocks.getDashboardNavDefinitions(...args),
         createDashboard: (...args) => mocks.createDashboard(...args),
@@ -148,6 +149,12 @@ vi.mock('../../../stores', () => ({
     }),
     useModalStore: () => ({
         confirm: vi.fn(() => Promise.resolve({ ok: false }))
+    })
+}));
+
+vi.mock('../../../stores/settings/notifications', () => ({
+    useNotificationsSettingsStore: () => ({
+        notificationLayout: 'sidebar'
     })
 }));
 

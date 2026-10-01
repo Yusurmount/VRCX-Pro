@@ -672,6 +672,15 @@ export function removeLocalWorldFavorite(worldId, group) {
  */
 export async function getLocalWorldFavorites() {
     const favoriteStore = useFavoriteStore();
+    favoriteStore.beginLocalFavoritesLoading();
+    try {
+        await loadLocalWorldFavorites(favoriteStore);
+    } finally {
+        favoriteStore.endLocalFavoritesLoading();
+    }
+}
+
+async function loadLocalWorldFavorites(favoriteStore) {
     const worldStore = useWorldStore();
 
     const localGroups = new Set();
@@ -946,6 +955,15 @@ export function deleteLocalAvatarFavoriteGroup(group) {
  */
 export async function getLocalAvatarFavorites() {
     const favoriteStore = useFavoriteStore();
+    favoriteStore.beginLocalFavoritesLoading();
+    try {
+        await loadLocalAvatarFavorites(favoriteStore);
+    } finally {
+        favoriteStore.endLocalFavoritesLoading();
+    }
+}
+
+async function loadLocalAvatarFavorites(favoriteStore) {
     const avatarStore = useAvatarStore();
 
     const localGroups = new Set();
@@ -1214,6 +1232,15 @@ export function deleteLocalFriendFavoriteGroup(group) {
  */
 export async function getLocalFriendFavorites() {
     const favoriteStore = useFavoriteStore();
+    favoriteStore.beginLocalFavoritesLoading();
+    try {
+        await loadLocalFriendFavorites(favoriteStore);
+    } finally {
+        favoriteStore.endLocalFavoritesLoading();
+    }
+}
+
+async function loadLocalFriendFavorites(favoriteStore) {
     const friendStore = useFriendStore();
 
     const localFavorites = Object.create(null);

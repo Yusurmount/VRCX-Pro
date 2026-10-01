@@ -5,6 +5,31 @@ import { collectLayoutKeys } from './navLayoutHelpers';
 
 export const NAV_CONFIG_KEY = 'VRCX_customNavMenuLayoutList';
 
+// 启动早期（App 挂载前的静默窗口内）预取侧边栏自定义配置，
+// 使 loadStoredNavConfig 不必在登录后的数据洪峰里排队。
+let prefetchedNavConfigPromise = null;
+
+export function prefetchStoredNavConfig(
+    repository,
+    configKey = NAV_CONFIG_KEY
+) {
+    if (!prefetchedNavConfigPromise) {
+        prefetchedNavConfigPromise = repository
+            .getString(configKey)
+            .catch(() => null);
+    }
+    return prefetchedNavConfigPromise;
+}
+
+function takePrefetchedNavConfig(configKey) {
+    if (configKey !== NAV_CONFIG_KEY || !prefetchedNavConfigPromise) {
+        return null;
+    }
+    const pending = prefetchedNavConfigPromise;
+    prefetchedNavConfigPromise = null;
+    return pending;
+}
+
 export function generateNavFolderId() {
     if (
         typeof crypto !== 'undefined' &&
@@ -54,7 +79,10 @@ export async function loadStoredNavConfig(
     let layout = fallbackLayout;
     let hiddenKeys = [];
 
-    const storedValue = await repository.getString(configKey);
+    const pendingPrefetch = takePrefetchedNavConfig(configKey);
+    const storedValue = pendingPrefetch
+        ? await pendingPrefetch
+        : await repository.getString(configKey);
     if (!storedValue) {
         return { layout, hiddenKeys };
     }

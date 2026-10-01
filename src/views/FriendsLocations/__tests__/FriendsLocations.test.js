@@ -339,11 +339,15 @@ describe('FriendsLocations.vue', () => {
     });
 
     test('renders empty state when no rows match', async () => {
+        // 空态仅在好友数据就绪后显示（就绪前应显示加载中）
+        const { watchState } = await import('../../../services/watchState');
+        watchState.isFriendsLoaded = true;
         const wrapper = mount(FriendsLocations);
         await flushSettings();
 
         expect(wrapper.get('[data-testid="empty-state"]').text()).toBe(
             'nomatch'
         );
+        watchState.isFriendsLoaded = false;
     });
 });
