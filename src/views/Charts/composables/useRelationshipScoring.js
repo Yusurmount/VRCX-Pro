@@ -210,7 +210,6 @@ export function useRelationshipScoring() {
         return Array.from(friendScores.value.entries())
             .filter(([userId]) => !excluded.has(userId))
             .sort((a, b) => b[1].score - a[1].score)
-            .slice(0, 20)
             .map(([userId, data]) => ({
                 userId,
                 displayName: data.displayName,

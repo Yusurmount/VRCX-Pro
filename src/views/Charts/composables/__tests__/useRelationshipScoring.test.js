@@ -161,6 +161,25 @@ describe('useRelationshipScoring', () => {
         expect(entry.dimensions.recency).toBeGreaterThanOrEqual(36);
         expect(entry.dimensions.recency).toBeLessThanOrEqual(38);
     });
+
+    it('returns every non-excluded friend instead of capping the list', async () => {
+        const now = new Date().toISOString();
+        const metrics = Array.from({ length: 25 }, (_, i) =>
+            metric({
+                userId: `friend-${i}`,
+                displayName: `Friend ${i}`,
+                totalTime: (i + 1) * 1000,
+                lastSeen: now
+            })
+        );
+        const scoring = await loadWith(metrics);
+
+        const scores = scoring.topFriends.value.map((friend) => friend.score);
+        expect(scores).toHaveLength(25);
+        for (let i = 1; i < scores.length; i++) {
+            expect(scores[i]).toBeLessThanOrEqual(scores[i - 1]);
+        }
+    });
 });
 
 describe('useRelationshipScoring weights', () => {
