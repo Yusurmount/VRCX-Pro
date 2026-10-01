@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { readText } from '@tauri-apps/plugin-clipboard-manager';
 import { relaunch } from '@tauri-apps/plugin-process';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const call = (command, args) => invoke(command, args).catch(() => null);
 const sidecarCall = (ready, className, methodName, args) =>
@@ -13,6 +14,20 @@ const sidecarCall = (ready, className, methodName, args) =>
             args
         }).then((response) => response?.result ?? response)
     );
+
+// Logical inner size: physical pixels divided by the OS scale factor.
+// Never use devicePixelRatio here — it moves with page zoom and would feed back.
+async function logicalInnerSize() {
+    const current = getCurrentWindow();
+    const [size, scaleFactor] = await Promise.all([
+        current.innerSize(),
+        current.scaleFactor()
+    ]);
+    return {
+        width: size.width / scaleFactor,
+        height: size.height / scaleFactor
+    };
+}
 
 export function installRuntimeBridge() {
     if (window.platform) return;
@@ -55,6 +70,31 @@ export function installRuntimeBridge() {
         quitApplication: () => call('quit_application'),
         showMainWindow: () => call('show_main_window'),
         resizeWindow: (width, height) => call('resize_window', { width, height }),
+        setWindowZoom: (zoom) => call('set_window_zoom', { zoom }),
+        getWindowInnerSize: () => logicalInnerSize().catch(() => null),
+        onWindowInnerResize: (handler) => {
+            let disposed = false;
+            let unlisten = null;
+            getCurrentWindow()
+                .onResized(async () => {
+                    if (disposed) return;
+                    try {
+                        const size = await logicalInnerSize();
+                        if (!disposed) handler(size);
+                    } catch {
+                        // ignore transient resize read failures
+                    }
+                })
+                .then((fn) => {
+                    if (disposed) fn();
+                    else unlisten = fn;
+                })
+                .catch(() => {});
+            return () => {
+                disposed = true;
+                unlisten?.();
+            };
+        },
         centerWindow: () => call('center_window'),
         setCloseToTray: (enabled) => call('set_close_to_tray', { enabled }),
         getOverlayWindow: () => call('get_overlay_window'),

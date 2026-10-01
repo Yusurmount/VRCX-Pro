@@ -16,7 +16,7 @@
         "title": "VRCX-Pro",
         "width": 1280,
         "height": 800,
-        "minWidth": 960,
+        "minWidth": 800,
         "minHeight": 600,
         "resizable": true,
         "decorations": true,

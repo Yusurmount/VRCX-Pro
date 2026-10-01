@@ -76,6 +76,14 @@ declare global {
             ) => () => void;
             onBrowserFocus: (Function: (event: any) => void) => () => void;
             restartApp: () => Promise<void>;
+            setWindowZoom: (zoom: number) => Promise<boolean | null>;
+            getWindowInnerSize: () => Promise<{
+                width: number;
+                height: number;
+            } | null>;
+            onWindowInnerResize: (
+                handler: (size: { width: number; height: number }) => void
+            ) => () => void;
             getOverlayWindow: () => Promise<boolean>;
             updateVr: (
                 active: bool,
