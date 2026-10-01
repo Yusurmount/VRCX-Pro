@@ -1078,6 +1078,7 @@
             "database_page": {
                 "overview_header": "資料庫概覽",
                 "path": "資料庫路徑",
+                "version": "資料庫版本",
                 "size": "檔案大小",
                 "journal_mode": "日誌模式",
                 "table_count": "資料表數量",

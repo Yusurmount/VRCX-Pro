@@ -1078,6 +1078,7 @@
             "database_page": {
                 "overview_header": "Database Overview",
                 "path": "Database Path",
+                "version": "Database Version",
                 "size": "File Size",
                 "journal_mode": "Journal Mode",
                 "table_count": "Tables",

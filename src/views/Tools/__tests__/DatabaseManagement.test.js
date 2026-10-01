@@ -79,6 +79,10 @@ vi.mock('@/services/database', () => ({
     database: { vacuum, optimize }
 }));
 
+vi.mock('@/services/config.js', () => ({
+    default: { getInt: vi.fn().mockResolvedValue(18) }
+}));
+
 vi.mock('../dialogs/DatabaseManagementDialog.vue', () => ({
     default: {
         name: 'DatabaseManagementDialog',
@@ -110,6 +114,8 @@ describe('DatabaseManagement.vue', () => {
         );
         expect(wrapper.text()).toContain('40 KB');
         expect(wrapper.text()).toContain('wal');
+        expect(wrapper.text()).toContain('view.tools.database_page.version');
+        expect(wrapper.text()).toContain('18');
         expect(wrapper.text()).toContain('feed_post');
         expect(wrapper.text()).toContain('user_location');
         // 行数统计必须合并为单条查询（避免逐表串行往返）

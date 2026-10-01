@@ -21,14 +21,20 @@
                     </Button>
                 </div>
 
-                <div class="grid grid-cols-3 gap-3 text-sm">
-                    <div class="rounded-md border p-3 col-span-3">
+                <div class="grid grid-cols-4 gap-3 text-sm">
+                    <div class="rounded-md border p-3 col-span-4">
                         <div class="text-muted-foreground">
                             {{ t('view.tools.database_page.path') }}
                         </div>
                         <div class="font-mono text-xs mt-1 break-all">
                             {{ dbInfo.path || '-' }}
                         </div>
+                    </div>
+                    <div class="rounded-md border p-3">
+                        <div class="text-muted-foreground">
+                            {{ t('view.tools.database_page.version') }}
+                        </div>
+                        <div class="font-medium mt-1">{{ dbInfo.version || '-' }}</div>
                     </div>
                     <div class="rounded-md border p-3">
                         <div class="text-muted-foreground">
@@ -225,6 +231,7 @@
     import { Spinner } from '@/components/ui/spinner';
     import sqliteService from '@/services/sqlite';
     import { database } from '@/services/database';
+    import configRepository from '@/services/config.js';
 
     import DatabaseManagementDialog from './dialogs/DatabaseManagementDialog.vue';
 
@@ -233,7 +240,7 @@
     const router = useRouter();
     const { t } = useI18n();
 
-    const dbInfo = reactive({ path: '', sizeBytes: 0, journalMode: '' });
+    const dbInfo = reactive({ path: '', sizeBytes: 0, journalMode: '', version: 0 });
     const tables = shallowRef([]);
     const tableSchemas = new Map();
     const selectedTable = ref('');
@@ -297,6 +304,8 @@
         await sqliteService.execute((row) => {
             dbInfo.journalMode = String(row[0] ?? '');
         }, 'PRAGMA journal_mode');
+
+        dbInfo.version = await configRepository.getInt('VRCX_databaseVersion', 0);
     }
 
     async function loadTables() {
