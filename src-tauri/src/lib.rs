@@ -284,6 +284,14 @@ fn resize_window(app: tauri::AppHandle, width: f64, height: f64) -> Result<bool,
 }
 
 #[tauri::command]
+fn set_window_zoom(app: tauri::AppHandle, zoom: f64) -> Result<bool, String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.set_zoom(zoom).map_err(|error| error.to_string())?;
+    }
+    Ok(true)
+}
+
+#[tauri::command]
 fn center_window(app: tauri::AppHandle) -> Result<bool, String> {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.center();
@@ -377,6 +385,7 @@ pub fn run() {
             set_close_to_tray,
             show_main_window,
             resize_window,
+            set_window_zoom,
             center_window,
             open_devtools,
             get_launch_args,

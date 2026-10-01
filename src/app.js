@@ -17,6 +17,7 @@ import { queryClient } from './queries';
 import App from './App.vue';
 import { installRuntimeBridge } from './platform/runtime.js';
 import { backendReadyPromise } from './platform/bootReady.js';
+import { initWindowZoom } from './services/windowZoom.js';
 
 installRuntimeBridge();
 
@@ -84,6 +85,9 @@ setTimeout(() => {
 window.addEventListener('contextmenu', (event) => event.preventDefault());
 
 await initInteropApi();
+
+// Apply the stored/baseline zoom for the current window size; never blocks boot.
+initWindowZoom();
 
 const uiReady = initUi().then(() => {
     initDayjs();

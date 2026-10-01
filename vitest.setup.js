@@ -40,6 +40,9 @@ globalThis.window.platform = {
     onWindowSizeChanged: () => () => {},
     onWindowStateChange: () => () => {},
     onBrowserFocus: () => () => {},
+    setWindowZoom: () => Promise.resolve(true),
+    getWindowInnerSize: () => Promise.resolve({ width: 1280, height: 800 }),
+    onWindowInnerResize: () => () => {},
     ipcRenderer: { on: () => undefined }
 };
 
