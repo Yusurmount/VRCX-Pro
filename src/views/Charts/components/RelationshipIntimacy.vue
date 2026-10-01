@@ -35,151 +35,153 @@
                                 <SheetTitle>{{ t('view.charts.intimacy.settings.title') }}</SheetTitle>
                             </SheetHeader>
 
-                            <FieldGroup class="mt-4 gap-4 p-4">
-                                <Field>
-                                    <FieldLabel>{{ t('view.charts.intimacy.score_mode.title') }}</FieldLabel>
-                                    <FieldContent>
-                                        <Tabs
-                                            :model-value="scoreMode"
-                                            @update:model-value="setScoreMode">
-                                            <TabsList class="grid w-full grid-cols-2">
-                                                <TabsTrigger value="percent">
-                                                    {{ t('view.charts.intimacy.score_mode.percent') }}
-                                                </TabsTrigger>
-                                                <TabsTrigger value="absolute">
-                                                    {{ t('view.charts.intimacy.score_mode.absolute') }}
-                                                </TabsTrigger>
-                                            </TabsList>
-                                        </Tabs>
-                                        <p class="mt-1 text-xs text-muted-foreground">
-                                            {{
-                                                scoreMode === 'absolute'
-                                                    ? t('view.charts.intimacy.score_mode.absolute_hint')
-                                                    : t('view.charts.intimacy.score_mode.percent_hint')
-                                            }}
-                                        </p>
-                                    </FieldContent>
-                                </Field>
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="flex items-center gap-1">
-                                        <FieldLabel>{{ t('view.charts.intimacy.weights.title') }}</FieldLabel>
-                                        <HoverCard>
-                                            <HoverCardTrigger as-child>
-                                                <Info class="text-xs opacity-70" />
-                                            </HoverCardTrigger>
-                                            <HoverCardContent
-                                                side="bottom"
-                                                align="start"
-                                                :collision-padding="8"
-                                                class="w-64">
-                                                <div class="flex flex-col gap-2 text-xs">
-                                                    <p class="text-muted-foreground">
-                                                        {{ t('view.charts.intimacy.weights.explain.summary') }}
-                                                    </p>
-                                                    <ul class="flex flex-col gap-2">
-                                                        <li
-                                                            v-for="dim in dimensionList"
-                                                            :key="dim.key"
-                                                            class="flex flex-col gap-0.5">
-                                                            <span class="flex items-center gap-1.5 font-medium">
-                                                                <span
-                                                                    class="size-2 rounded-full"
-                                                                    :style="{ backgroundColor: dim.color }" />
-                                                                {{ dim.label }}
-                                                                <span class="tabular-nums text-muted-foreground">
-                                                                    {{ weights[dim.key] }}
+                            <div class="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+                                <FieldGroup class="gap-4 p-4">
+                                    <Field>
+                                        <FieldLabel>{{ t('view.charts.intimacy.score_mode.title') }}</FieldLabel>
+                                        <FieldContent>
+                                            <Tabs
+                                                :model-value="scoreMode"
+                                                @update:model-value="setScoreMode">
+                                                <TabsList class="grid w-full grid-cols-2">
+                                                    <TabsTrigger value="percent">
+                                                        {{ t('view.charts.intimacy.score_mode.percent') }}
+                                                    </TabsTrigger>
+                                                    <TabsTrigger value="absolute">
+                                                        {{ t('view.charts.intimacy.score_mode.absolute') }}
+                                                    </TabsTrigger>
+                                                </TabsList>
+                                            </Tabs>
+                                            <p class="mt-1 text-xs text-muted-foreground">
+                                                {{
+                                                    scoreMode === 'absolute'
+                                                        ? t('view.charts.intimacy.score_mode.absolute_hint')
+                                                        : t('view.charts.intimacy.score_mode.percent_hint')
+                                                }}
+                                            </p>
+                                        </FieldContent>
+                                    </Field>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-1">
+                                            <FieldLabel>{{ t('view.charts.intimacy.weights.title') }}</FieldLabel>
+                                            <HoverCard>
+                                                <HoverCardTrigger as-child>
+                                                    <Info class="text-xs opacity-70" />
+                                                </HoverCardTrigger>
+                                                <HoverCardContent
+                                                    side="bottom"
+                                                    align="start"
+                                                    :collision-padding="8"
+                                                    class="w-64">
+                                                    <div class="flex flex-col gap-2 text-xs">
+                                                        <p class="text-muted-foreground">
+                                                            {{ t('view.charts.intimacy.weights.explain.summary') }}
+                                                        </p>
+                                                        <ul class="flex flex-col gap-2">
+                                                            <li
+                                                                v-for="dim in dimensionList"
+                                                                :key="dim.key"
+                                                                class="flex flex-col gap-0.5">
+                                                                <span class="flex items-center gap-1.5 font-medium">
+                                                                    <span
+                                                                        class="size-2 rounded-full"
+                                                                        :style="{ backgroundColor: dim.color }" />
+                                                                    {{ dim.label }}
+                                                                    <span class="tabular-nums text-muted-foreground">
+                                                                        {{ weights[dim.key] }}
+                                                                    </span>
                                                                 </span>
-                                                            </span>
-                                                            <span class="text-muted-foreground">
-                                                                {{ t(`view.charts.intimacy.weights.explain.${dim.explainKey}`) }}
-                                                            </span>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </HoverCardContent>
-                                        </HoverCard>
-                                    </div>
-                                    <Button variant="ghost" size="sm" @click="resetWeights">
-                                        <RotateCcw class="mr-1 size-3.5" />
-                                        {{ t('view.charts.intimacy.weights.reset') }}
-                                    </Button>
-                                </div>
-                                <Field v-for="dim in dimensionList" :key="dim.key">
-                                    <FieldLabel>{{ dim.label }}</FieldLabel>
-                                    <FieldContent>
-                                        <div class="flex items-center gap-3">
-                                            <Slider
-                                                class="flex-1"
-                                                :model-value="[weights[dim.key]]"
-                                                :min="0"
-                                                :max="100"
-                                                :step="5"
-                                                :aria-label="dim.label"
-                                                @update:modelValue="(v) => setWeight(dim.key, v[0])" />
-                                            <span
-                                                class="min-w-12 text-right text-sm text-muted-foreground tabular-nums">
-                                                {{ weights[dim.key] }}
-                                            </span>
+                                                                <span class="text-muted-foreground">
+                                                                    {{ t(`view.charts.intimacy.weights.explain.${dim.explainKey}`) }}
+                                                                </span>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </HoverCardContent>
+                                            </HoverCard>
                                         </div>
-                                    </FieldContent>
-                                </Field>
-                            </FieldGroup>
+                                        <Button variant="ghost" size="sm" @click="resetWeights">
+                                            <RotateCcw class="mr-1 size-3.5" />
+                                            {{ t('view.charts.intimacy.weights.reset') }}
+                                        </Button>
+                                    </div>
+                                    <Field v-for="dim in dimensionList" :key="dim.key">
+                                        <FieldLabel>{{ dim.label }}</FieldLabel>
+                                        <FieldContent>
+                                            <div class="flex items-center gap-3">
+                                                <Slider
+                                                    class="flex-1"
+                                                    :model-value="[weights[dim.key]]"
+                                                    :min="0"
+                                                    :max="100"
+                                                    :step="5"
+                                                    :aria-label="dim.label"
+                                                    @update:modelValue="(v) => setWeight(dim.key, v[0])" />
+                                                <span
+                                                    class="min-w-12 text-right text-sm text-muted-foreground tabular-nums">
+                                                    {{ weights[dim.key] }}
+                                                </span>
+                                            </div>
+                                        </FieldContent>
+                                    </Field>
+                                </FieldGroup>
 
-                            <FieldGroup class="gap-4 p-4">
-                                <Field>
-                                    <FieldLabel>{{ t('view.charts.intimacy.excluded.title') }}</FieldLabel>
-                                    <FieldContent>
-                                        <ToggleGroup
-                                            variant="outline"
-                                            type="single"
-                                            :model-value="excludeMode"
-                                            @update:modelValue="(v) => v && setExcludeMode(v)">
-                                            <ToggleGroupItem value="full">
-                                                {{ t('view.charts.intimacy.excluded.mode_full') }}
-                                            </ToggleGroupItem>
-                                            <ToggleGroupItem value="hidden">
-                                                {{ t('view.charts.intimacy.excluded.mode_hidden') }}
-                                            </ToggleGroupItem>
-                                        </ToggleGroup>
-                                        <p class="mt-1 text-xs text-muted-foreground">
-                                            {{
-                                                excludeMode === 'full'
-                                                    ? t('view.charts.intimacy.excluded.mode_full_hint')
-                                                    : t('view.charts.intimacy.excluded.mode_hidden_hint')
-                                            }}
-                                        </p>
-                                    </FieldContent>
-                                </Field>
-                                <div v-if="excludedFriends.length" class="flex flex-col gap-1">
-                                    <div
-                                        v-for="excluded in excludedFriends"
-                                        :key="excluded.userId"
-                                        class="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50">
-                                        <div class="relative inline-block size-7 flex-none">
-                                            <img
-                                                class="size-full rounded-full object-cover"
-                                                :src="userImage(getUser(excluded.userId), true)"
-                                                loading="lazy" />
+                                <FieldGroup class="gap-4 p-4">
+                                    <Field>
+                                        <FieldLabel>{{ t('view.charts.intimacy.excluded.title') }}</FieldLabel>
+                                        <FieldContent>
+                                            <ToggleGroup
+                                                variant="outline"
+                                                type="single"
+                                                :model-value="excludeMode"
+                                                @update:modelValue="(v) => v && setExcludeMode(v)">
+                                                <ToggleGroupItem value="full">
+                                                    {{ t('view.charts.intimacy.excluded.mode_full') }}
+                                                </ToggleGroupItem>
+                                                <ToggleGroupItem value="hidden">
+                                                    {{ t('view.charts.intimacy.excluded.mode_hidden') }}
+                                                </ToggleGroupItem>
+                                            </ToggleGroup>
+                                            <p class="mt-1 text-xs text-muted-foreground">
+                                                {{
+                                                    excludeMode === 'full'
+                                                        ? t('view.charts.intimacy.excluded.mode_full_hint')
+                                                        : t('view.charts.intimacy.excluded.mode_hidden_hint')
+                                                }}
+                                            </p>
+                                        </FieldContent>
+                                    </Field>
+                                    <div v-if="excludedFriends.length" class="flex flex-col gap-1">
+                                        <div
+                                            v-for="excluded in excludedFriends"
+                                            :key="excluded.userId"
+                                            class="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50">
+                                            <div class="relative inline-block size-7 flex-none">
+                                                <img
+                                                    class="size-full rounded-full object-cover"
+                                                    :src="userImage(getUser(excluded.userId), true)"
+                                                    loading="lazy" />
+                                            </div>
+                                            <span class="min-w-0 flex-1 truncate text-sm">
+                                                {{ excluded.displayName }}
+                                            </span>
+                                            <TooltipWrapper
+                                                :content="t('view.charts.intimacy.excluded.include_action')"
+                                                side="top">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    @click="includeFriend(excluded.userId)">
+                                                    <Undo2 class="size-4" />
+                                                </Button>
+                                            </TooltipWrapper>
                                         </div>
-                                        <span class="min-w-0 flex-1 truncate text-sm">
-                                            {{ excluded.displayName }}
-                                        </span>
-                                        <TooltipWrapper
-                                            :content="t('view.charts.intimacy.excluded.include_action')"
-                                            side="top">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                @click="includeFriend(excluded.userId)">
-                                                <Undo2 class="size-4" />
-                                            </Button>
-                                        </TooltipWrapper>
                                     </div>
-                                </div>
-                                <p v-else class="text-xs text-muted-foreground">
-                                    {{ t('view.charts.intimacy.excluded.empty') }}
-                                </p>
-                            </FieldGroup>
+                                    <p v-else class="text-xs text-muted-foreground">
+                                        {{ t('view.charts.intimacy.excluded.empty') }}
+                                    </p>
+                                </FieldGroup>
+                            </div>
                         </SheetContent>
                     </Sheet>
                     <TooltipWrapper :content="t('view.charts.intimacy.refresh')" side="top">
