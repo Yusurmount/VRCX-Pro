@@ -1,21 +1,22 @@
 <template>
     <div class="x-login-container">
-        <div
-            v-if="showLoggingInOverlay"
-            data-test-id="login-progress-overlay"
-            class="absolute inset-0 z-[9999] flex items-center justify-center bg-black/65">
-            <div class="flex items-center gap-3 rounded-lg border bg-background px-6 py-5 shadow-lg">
-                <Spinner class="size-5 shrink-0" />
-                <div class="min-w-0">
-                    <div class="text-sm font-medium text-foreground">
-                        {{ t('view.login.loggingIn.title') }}
-                    </div>
-                    <div class="text-xs text-muted-foreground">
-                        {{ t('view.login.loggingIn.description') }}
-                    </div>
-                </div>
-            </div>
-        </div>
+        <AlertDialog :open="showLoggingInOverlay">
+            <AlertDialogContent
+                data-test-id="login-progress-overlay"
+                class="sm:max-w-[460px]"
+                @interact-outside.prevent
+                @escape-key-down.prevent
+                @pointer-down-outside.prevent
+                @close-auto-focus.prevent>
+                <AlertDialogHeader class="min-w-0">
+                    <AlertDialogTitle>{{ t('view.login.loggingIn.title') }}</AlertDialogTitle>
+                    <AlertDialogDescription class="flex items-center gap-2 w-full min-w-0 whitespace-normal">
+                        <Spinner class="h-4 w-4 shrink-0" />
+                        <span>{{ t('view.login.loggingIn.description') }}</span>
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+            </AlertDialogContent>
+        </AlertDialog>
         <div class="m-1.5" style="position: absolute; top: 0; left: 0">
             <LoginSettingsDialog />
             <TooltipWrapper v-if="!noUpdater" side="top" :content="t('view.login.updater')">
@@ -203,6 +204,13 @@
 
 <script setup>
     import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+    import {
+        AlertDialog,
+        AlertDialogContent,
+        AlertDialogDescription,
+        AlertDialogHeader,
+        AlertDialogTitle
+    } from '@/components/ui/alert-dialog';
     import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
     import {
         DropdownMenu,

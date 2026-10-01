@@ -104,6 +104,14 @@ const i18n = createI18n({
 });
 
 const stubs = {
+    AlertDialog: {
+        props: ['open'],
+        template: '<div v-if="open"><slot /></div>'
+    },
+    AlertDialogContent: { template: '<div><slot /></div>' },
+    AlertDialogHeader: { template: '<div><slot /></div>' },
+    AlertDialogTitle: { template: '<h2><slot /></h2>' },
+    AlertDialogDescription: { template: '<p><slot /></p>' },
     LoginSettingsDialog: { template: '<div class="login-settings-stub" />' },
     TooltipWrapper: {
         template: '<span><slot /></span>',
