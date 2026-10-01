@@ -204,7 +204,7 @@
                                                     class="h-full rounded-full bg-primary transition-all"
                                                     :style="{ width: toPercent(friend.score) + '%' }" />
                                             </div>
-                                            <span class="min-w-9 text-right text-xs tabular-nums text-muted-foreground">{{ friend.score }}</span>
+                                            <span class="min-w-9 text-right text-xs tabular-nums text-muted-foreground">{{ formatScore(friend.score) }}</span>
                                         </div>
                                     </div>
                                     <TooltipWrapper
@@ -235,12 +235,12 @@
                                                 <div
                                                     class="h-full rounded-full transition-all"
                                                     :style="{
-                                                        width: toPercent(getScoreForFriend(friend.userId).dimensions[dim.key]) + '%',
+                                                        width: dimensionPercent(friend.userId, dim.key) + '%',
                                                         backgroundColor: dim.color
                                                     }" />
                                             </div>
                                             <span class="text-xs tabular-nums text-right">
-                                                {{ getScoreForFriend(friend.userId).dimensions[dim.key] }}{{ scoreMode === 'percent' ? '%' : '' }}
+                                                {{ formatDimension(getScoreForFriend(friend.userId).dimensions[dim.key]) }}
                                             </span>
                                         </div>
                                     </div>
@@ -335,7 +335,32 @@
     }
 
     function toPercent(value) {
-        return Math.min(100, Math.round((value / scoreMax.value) * 100));
+        return Math.min(100, Math.round((value / (scoreMax.value || 1)) * 100));
+    }
+
+    function dimensionPercent(userId, dimKey) {
+        const entry = getScoreForFriend(userId);
+        if (!entry) return 0;
+        const dims = entry.dimensions;
+        if (scoreMode.value !== 'absolute') {
+            return Math.min(100, Math.round((dims[dimKey] / (scoreMax.value || 1)) * 100));
+        }
+        const max = Math.max(
+            dims.onlineOverlap,
+            dims.coWorldFrequency,
+            dims.recency,
+            dims.consistency
+        );
+        if (max <= 0) return 0;
+        return Math.min(100, Math.round((dims[dimKey] / max) * 100));
+    }
+
+    function formatScore(value) {
+        return scoreMode.value === 'absolute' ? value.toFixed(1) : String(value);
+    }
+
+    function formatDimension(value) {
+        return scoreMode.value === 'absolute' ? value.toFixed(1) : `${value}%`;
     }
 
     const dimensionList = [

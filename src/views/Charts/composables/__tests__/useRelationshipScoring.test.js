@@ -314,22 +314,34 @@ describe('useRelationshipScoring score mode', () => {
         expect(scoring.scoreDistribution.value[9].range).toBe('90-100');
     });
 
-    it('scores absolute mode on a 0-1000 scale', async () => {
+    it('scores absolute mode uncapped and to one decimal', async () => {
         const scoring = await loadWith([friendFixture(), whaleFixture()]);
         scoring.setScoreMode('absolute');
 
         expect(scoring.scoreMode.value).toBe('absolute');
-        expect(scoring.scoreMax.value).toBe(1000);
 
-        const entry = scoring.friendScores.value.get('a');
-        expect(entry.score).toBeGreaterThan(0);
-        expect(entry.score).toBeLessThanOrEqual(1000);
-        for (const value of Object.values(entry.dimensions)) {
-            expect(value).toBeGreaterThanOrEqual(0);
-            expect(value).toBeLessThanOrEqual(1000);
+        const friend = scoring.friendScores.value.get('a');
+        const whale = scoring.friendScores.value.get('whale');
+
+        // The whale sits far past the anchors, so nothing clamps to the scale.
+        expect(whale.dimensions.onlineOverlap).toBeGreaterThan(1000);
+        expect(whale.score).toBeGreaterThan(1000);
+
+        for (const entry of [friend, whale]) {
+            expect(entry.score).toBe(Math.round(entry.score * 10) / 10);
+            for (const value of Object.values(entry.dimensions)) {
+                expect(value).toBe(Math.round(value * 10) / 10);
+            }
         }
-        expect(scoring.scoreDistribution.value[0].range).toBe('0-100');
-        expect(scoring.scoreDistribution.value[9].range).toBe('900-1000');
+
+        // The best score is the full mark behind every progress bar.
+        expect(scoring.scoreMax.value).toBe(scoring.topFriends.value[0].score);
+        expect(scoring.scoreMax.value).toBe(whale.score);
+
+        const step = Math.ceil(scoring.scoreMax.value / 10);
+        const distribution = scoring.scoreDistribution.value;
+        expect(distribution[0].range).toBe(`0-${step}`);
+        expect(distribution[9].range).toBe(`${9 * step}-${10 * step}`);
     });
 
     it('keeps absolute scores stable when the cohort changes', async () => {
@@ -368,7 +380,9 @@ describe('useRelationshipScoring score mode', () => {
 
         const second = await loadWith([friendFixture()]);
         expect(second.scoreMode.value).toBe('absolute');
-        expect(second.scoreMax.value).toBe(1000);
+        expect(second.scoreMax.value).toBe(
+            second.friendScores.value.get('a').score
+        );
     });
 });
 

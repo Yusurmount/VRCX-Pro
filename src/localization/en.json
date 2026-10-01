@@ -871,7 +871,7 @@
                     "percent": "Percent",
                     "absolute": "Absolute",
                     "percent_hint": "Each dimension is normalized against the cohort p90 to 0-100; the 0-100 total shows relative standing among friends.",
-                    "absolute_hint": "Each dimension saturates against a fixed anchor (1000 h / 500 joins / 365 days) to 0-1000; the 0-1000 total depends only on that friend's own data."
+                    "absolute_hint": "Each dimension is the log ratio against a fixed anchor (1000 h / 500 joins / 365 days) with no ceiling; totals keep one decimal and every bar fills against the current maximum."
                 },
                 "excluded": {
                     "title": "Excluded Friends",
