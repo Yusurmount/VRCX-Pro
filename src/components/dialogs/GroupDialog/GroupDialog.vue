@@ -12,7 +12,7 @@
             <div class="rounded-xl bg-muted/80 overflow-hidden flex flex-col">
                 <!-- Banner with icon -->
                 <div class="relative aspect-17/6">
-                    <img
+                    <MediaImage
                         v-if="!groupDialog.loading && !bannerError && groupDialog.ref.bannerUrl"
                         class="absolute inset-0 block h-full w-full cursor-pointer object-cover"
                         :src="groupDialog.ref.bannerUrl"
@@ -30,7 +30,7 @@
                         <Image
                             v-if="groupDialog.loading || imageError"
                             class="w-full! h-full! object-cover text-muted-foreground bg-accent" />
-                        <img
+                        <MediaImage
                             v-else
                             class="w-full h-full object-cover cursor-pointer"
                             :src="groupDialog.ref.iconUrl"
@@ -435,7 +435,7 @@
                                     <template #content>
                                         <span v-text="link" />
                                     </template>
-                                    <img
+                                    <MediaImage
                                         :src="getFaviconUrl(link)"
                                         style="width: 16px; height: 16px; vertical-align: middle; cursor: pointer"
                                         @click.stop="openExternalLink(link)"
@@ -630,6 +630,7 @@
 
     import DialogJsonTab from '../DialogJsonTab.vue';
     import DialogRefreshButton from '../DialogRefreshButton.vue';
+    import MediaImage from '../../MediaImage.vue';
     import GroupDialogInfoTab from './GroupDialogInfoTab.vue';
     import { useGroupDialogCommands } from './useGroupDialogCommands';
     import GroupDialogMembersTab from './GroupDialogMembersTab.vue';

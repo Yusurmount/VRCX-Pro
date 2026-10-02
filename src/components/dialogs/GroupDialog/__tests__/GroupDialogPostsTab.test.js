@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createTestingPinia } from '@pinia/testing';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 
 // ─── Mocks ───────────────────────────────────────────────────────────
 
@@ -207,8 +207,10 @@ describe('GroupDialogPostsTab.vue', () => {
             expect(preElements.some((pre) => pre.text() === '-')).toBe(true);
         });
 
-        test('renders post image when imageUrl exists', () => {
+        test('renders post image when imageUrl exists', async () => {
             const wrapper = mountComponent();
+            // MediaImage 经会话缓存异步解析，等待回退到原始地址后再断言
+            await flushPromises();
             const images = wrapper.findAll('img');
             expect(
                 images.some(

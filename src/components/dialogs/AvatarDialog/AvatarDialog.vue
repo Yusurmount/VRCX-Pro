@@ -9,7 +9,7 @@
         <div class="flex-1 min-h-0 flex flex-col">
             <div class="flex flex-shrink-0">
                 <div style="flex: none; width: 160px; height: 120px">
-                    <img
+                    <MediaImage
                         v-if="!imageError"
                         :src="avatarDialog.ref.thumbnailImageUrl"
                         class="cursor-pointer"
@@ -376,7 +376,7 @@
                                     <CarouselContent class="h-50">
                                         <CarouselItem v-for="imageUrl in avatarDialog.galleryImages" :key="imageUrl">
                                             <div class="relative h-50 w-full">
-                                                <img
+                                                <MediaImage
                                                     :src="imageUrl"
                                                     style="width: 100%; height: 100%; object-fit: contain"
                                                     @click="showFullscreenImageDialog(imageUrl)"
@@ -407,7 +407,7 @@
                                 :key="listing.id"
                                 class="box-border flex items-center p-1.5 text-[13px] w-full cursor-default">
                                 <div class="relative inline-block flex-none size-9 mr-2.5">
-                                    <img
+                                    <MediaImage
                                         class="size-full rounded-full object-cover"
                                         :src="getImageUrlFromImageId(listing.imageId)"
                                         @click="showFullscreenImageDialog(getImageUrlFromImageId(listing.imageId))"
@@ -651,6 +651,7 @@
 
     import DialogJsonTab from '../DialogJsonTab.vue';
     import DialogRefreshButton from '../DialogRefreshButton.vue';
+    import MediaImage from '../../MediaImage.vue';
     import ImageCropDialog from '../ImageCropDialog.vue';
     import { showUserDialog } from '../../../coordinators/userCoordinator';
 

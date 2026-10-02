@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createTestingPinia } from '@pinia/testing';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 
 // ─── Mocks (must be before any imports that use them) ────────────────
 
@@ -171,8 +171,10 @@ describe('UserDialogAvatarsTab.vue', () => {
             expect(wrapper.text()).toContain('Gamma');
         });
 
-        test('renders avatar thumbnails', () => {
+        test('renders avatar thumbnails', async () => {
             const wrapper = mountComponent();
+            // AvatarImage 经会话缓存异步解析，等待出图后再断言
+            await flushPromises();
             const images = wrapper.findAll('img');
             expect(images).toHaveLength(3);
             expect(images[0].attributes('src')).toBe('https://img/1.png');

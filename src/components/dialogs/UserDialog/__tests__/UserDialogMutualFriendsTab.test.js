@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createTestingPinia } from '@pinia/testing';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 
 // ─── Mocks ───────────────────────────────────────────────────────────
 
@@ -180,8 +180,10 @@ describe('UserDialogMutualFriendsTab.vue', () => {
             expect(wrapper.text()).toContain('Bob');
         });
 
-        test('renders friend avatar images', () => {
+        test('renders friend avatar images', async () => {
             const wrapper = mountComponent();
+            // AvatarImage 经会话缓存异步解析，等待出图后再断言
+            await flushPromises();
             const images = wrapper.findAll('img');
             expect(images).toHaveLength(3);
         });

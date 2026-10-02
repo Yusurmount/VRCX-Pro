@@ -10,6 +10,7 @@ import { useLocationStore } from '../stores/location';
 import { useUserStore } from '../stores/user';
 import { useWorldStore } from '../stores/world';
 import { failedGetRequests } from '../services/request';
+import { clearMediaCache } from '../services/mediaCache';
 
 /**
  * Clears caches across multiple stores while preserving data that is
@@ -28,6 +29,7 @@ export function clearVRCXCache() {
 
     console.log('Clearing VRCX cache...');
     failedGetRequests.clear();
+    clearMediaCache();
     userStore.cachedUsers.forEach((ref, id) => {
         if (
             !friendStore.friends.has(id) &&

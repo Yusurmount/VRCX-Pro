@@ -9,7 +9,7 @@
         <div class="flex-1 min-h-0 flex flex-col">
             <div class="flex-shrink-0" style="display: flex">
                 <div style="flex: none; width: 160px; height: 120px">
-                    <img
+                    <MediaImage
                         v-if="!worldDialog.loading && !imageError"
                         :src="worldDialog.ref.thumbnailImageUrl"
                         class="cursor-pointer"
@@ -451,6 +451,7 @@
     import DialogJsonTab from '../DialogJsonTab.vue';
     import DialogRefreshButton from '../DialogRefreshButton.vue';
     import ImageCropDialog from '../ImageCropDialog.vue';
+    import MediaImage from '../../MediaImage.vue';
     import WorldDialogInfoTab from './WorldDialogInfoTab.vue';
     import WorldDialogInstancesTab from './WorldDialogInstancesTab.vue';
     import { showUserDialog } from '../../../coordinators/userCoordinator';

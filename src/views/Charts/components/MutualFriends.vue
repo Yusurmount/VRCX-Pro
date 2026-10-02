@@ -38,7 +38,7 @@
                                     <div
                                         class="relative inline-block flex-none size-9 mr-2.5"
                                         :class="userStatusClass(item.user)">
-                                        <img
+                                        <MediaImage
                                             class="size-full rounded-full object-cover"
                                             :src="userImage(item.user, true)"
                                             loading="lazy" />
@@ -233,7 +233,7 @@
                                                         <div
                                                             class="relative inline-block flex-none size-9 mr-2.5"
                                                             :class="userStatusClass(item.user)">
-                                                            <img
+                                                            <MediaImage
                                                                 class="size-full rounded-full object-cover"
                                                                 :src="userImage(item.user, true)"
                                                                 loading="lazy" />
@@ -452,6 +452,7 @@
     import { Spinner } from '@/components/ui/spinner';
     import { VirtualCombobox } from '@/components/ui/virtual-combobox';
     import TooltipWrapper from '@/components/ui/tooltip/TooltipWrapper.vue';
+    import MediaImage from '../../../components/MediaImage.vue';
     import { createNodeBorderProgram } from '@sigma/node-border';
     import { storeToRefs } from 'pinia';
     import { toast } from 'vue-sonner';

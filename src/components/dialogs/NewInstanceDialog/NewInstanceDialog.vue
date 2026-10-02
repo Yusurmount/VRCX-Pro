@@ -194,7 +194,7 @@
                                     <template #item="{ item, selected }">
                                         <div class="flex w-full items-center p-1.5 text-[13px]">
                                             <div class="relative inline-block flex-none size-9 mr-2.5">
-                                                <img
+                                                <MediaImage
                                                     class="size-full rounded-full object-cover"
                                                     :src="item.iconUrl"
                                                     loading="lazy" />
@@ -410,7 +410,7 @@
                                                 <div
                                                     class="relative inline-block flex-none size-9 mr-2.5"
                                                     :class="userStatusClass(item.user)">
-                                                    <img
+                                                    <MediaImage
                                                         class="size-full rounded-full object-cover"
                                                         :src="userImage(item.user, true)"
                                                         loading="lazy" />
@@ -448,7 +448,7 @@
                                     <template #item="{ item, selected }">
                                         <div class="flex w-full items-center p-1.5 text-[13px]">
                                             <div class="relative inline-block flex-none size-9 mr-2.5">
-                                                <img
+                                                <MediaImage
                                                     class="size-full rounded-full object-cover"
                                                     :src="item.iconUrl"
                                                     loading="lazy" />
@@ -574,6 +574,7 @@
     import { Field, FieldContent, FieldGroup, FieldLabel } from '@/components/ui/field';
     import { computed, ref, toRef } from 'vue';
     import { Button } from '@/components/ui/button';
+    import MediaImage from '../../MediaImage.vue';
     import { Check as CheckIcon } from 'lucide-vue-next';
     import { Checkbox } from '@/components/ui/checkbox';
     import { InputGroupField } from '@/components/ui/input-group';

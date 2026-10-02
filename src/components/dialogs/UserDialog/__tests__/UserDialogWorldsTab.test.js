@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createTestingPinia } from '@pinia/testing';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 
 // ─── Mocks ───────────────────────────────────────────────────────────
 
@@ -189,8 +189,10 @@ describe('UserDialogWorldsTab.vue', () => {
             expect(wrapper.text()).toContain('Cozy Cottage');
         });
 
-        test('renders world thumbnail images', () => {
+        test('renders world thumbnail images', async () => {
             const wrapper = mountComponent();
+            // AvatarImage 经会话缓存异步解析，等待出图后再断言
+            await flushPromises();
             const images = wrapper.findAll('img');
             expect(images).toHaveLength(3);
             expect(images[0].attributes('src')).toBe('https://img/world1.png');

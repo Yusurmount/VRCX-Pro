@@ -91,7 +91,7 @@
                     </div>
 
                     <div class="h-full w-full flex items-center justify-center" @wheel="onWheel">
-                        <img
+                        <MediaImage
                             @pointerdown="onPointerDown"
                             @pointermove="onPointerMove"
                             @pointerup="onPointerUp"
@@ -99,6 +99,7 @@
                             @click.stop
                             v-if="imageUrl"
                             :src="imageUrl"
+                            :loading="'eager'"
                             class="max-h-full max-w-full x-viewer-img"
                             :style="transformStyle"
                             draggable="false" />
@@ -118,6 +119,7 @@
     import { Dialog } from '@/components/ui/dialog';
     import { acquireModalPortalLayer } from '@/lib/modalPortalLayers';
     import { cn } from '@/lib/utils';
+    import MediaImage from './MediaImage.vue';
     import { storeToRefs } from 'pinia';
     import { toast } from 'vue-sonner';
     import { useI18n } from 'vue-i18n';

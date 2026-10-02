@@ -42,7 +42,7 @@
                         :key="image.id"
                         class="p-0 overflow-hidden transition-shadow hover:shadow-md">
                         <div class="cursor-pointer" @click="showFullscreenImageDialog(image.imageUrl)">
-                            <img
+                            <MediaImage
                                 :src="image.imageUrl"
                                 :class="['max-w-full', 'max-h-full']"
                                 @error="
@@ -65,6 +65,7 @@
 
 <script setup>
     import { Button } from '@/components/ui/button';
+    import MediaImage from '../../MediaImage.vue';
     import { Card } from '@/components/ui/card';
     import { Image, RefreshCw } from 'lucide-vue-next';
     import { Spinner } from '@/components/ui/spinner';

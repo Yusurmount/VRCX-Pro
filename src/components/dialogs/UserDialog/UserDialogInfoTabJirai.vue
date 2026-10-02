@@ -226,7 +226,7 @@
                             <span v-text="link"></span>
                         </template>
                         <!-- onerror="this.onerror=null;this.class='icon-error'" -->
-                        <img
+                        <MediaImage
                             :src="getFaviconUrl(link)"
                             style="
                                 width: 16px;
@@ -503,6 +503,7 @@
         DropdownMenuTrigger
     } from '@/components/ui/dropdown-menu';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+    import MediaImage from '../../MediaImage.vue';
     import { ref, watch } from 'vue';
     import { Button } from '@/components/ui/button';
     import { Spinner } from '@/components/ui/spinner';

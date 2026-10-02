@@ -54,7 +54,7 @@
                                     :on-refresh="() => refreshInstancePlayerCount(userDialog.$location.tag)" />
                             </div>
                         </div>
-                        <img
+                        <MediaImage
                             v-if="!userDialog.loading"
                             :src="userDialog.instance?.ref?.world?.thumbnailImageUrl"
                             class="cursor-pointer"
@@ -168,7 +168,7 @@
                             <template #content>
                                 <span v-text="link"></span>
                             </template>
-                            <img
+                            <MediaImage
                                 :src="getFaviconUrl(link)"
                                 style="width: 16px; height: 16px; vertical-align: middle; cursor: pointer"
                                 @click.stop="openExternalLink(link)"
@@ -440,6 +440,7 @@
 <script setup>
     import { Info, Languages, Pencil, Trash2, User } from 'lucide-vue-next';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+    import MediaImage from '../../MediaImage.vue';
     import { ref, watch } from 'vue';
     import { Button } from '@/components/ui/button';
     import { Spinner } from '@/components/ui/spinner';

@@ -167,7 +167,7 @@
                                             :key="excluded.userId"
                                             class="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-muted/50">
                                             <div class="relative inline-block size-7 flex-none">
-                                                <img
+                                                <MediaImage
                                                     class="size-full rounded-full object-cover"
                                                     :src="userImage(getUser(excluded.userId), true)"
                                                     loading="lazy" />
@@ -240,7 +240,7 @@
                                     @click="selectedFriend = selectedFriend === friend.userId ? null : friend.userId">
                                     <span class="w-6 text-right text-xs text-muted-foreground tabular-nums">{{ idx + 1 }}</span>
                                     <div class="relative inline-block size-9 flex-none">
-                                        <img
+                                        <MediaImage
                                             class="size-full rounded-full object-cover"
                                             :src="userImage(getUser(friend.userId), true)"
                                             loading="lazy" />
@@ -329,6 +329,7 @@
     import HoverCardContent from '@/components/ui/hover-card/HoverCardContent.vue';
     import Button from '@/components/ui/button/Button.vue';
     import TooltipWrapper from '@/components/ui/tooltip/TooltipWrapper.vue';
+    import MediaImage from '../../../components/MediaImage.vue';
     import { Slider } from '@/components/ui/slider';
     import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
     import {

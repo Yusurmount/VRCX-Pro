@@ -93,7 +93,7 @@
                     {{ groupDialog.announcement.title }}
                 </div>
                 <div v-if="groupDialog.announcement.imageUrl" class="mb-2">
-                    <img
+                    <MediaImage
                         v-if="!announcementPhotoError"
                         :src="groupDialog.announcement.imageUrl"
                         class="cursor-pointer rounded-md object-cover"
@@ -214,6 +214,7 @@
     import { Eye, Image, Pencil, Trash2, User } from 'lucide-vue-next';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import { Button } from '@/components/ui/button';
+    import MediaImage from '../../MediaImage.vue';
     import { Spinner } from '@/components/ui/spinner';
     import { ref, watch } from 'vue';
     import { storeToRefs } from 'pinia';

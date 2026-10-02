@@ -34,7 +34,7 @@
                                         <div
                                             class="relative mr-2.5 in-[.is-compact-table]:mr-1.5! inline-block size-9 in-[.is-compact-table]:size-7! in-[.is-comfortable-table]:size-8! flex-none"
                                             :class="userStatusClass(item.user)">
-                                            <img
+                                            <MediaImage
                                                 class="size-full rounded-full object-cover"
                                                 :src="userImage(item.user, true)"
                                                 loading="lazy" />
@@ -83,7 +83,7 @@
                                         <div
                                             class="relative mr-2.5 in-[.is-compact-table]:mr-1.5! inline-block size-9 in-[.is-compact-table]:size-7! in-[.is-comfortable-table]:size-8! flex-none"
                                             :class="userStatusClass(item.user)">
-                                            <img
+                                            <MediaImage
                                                 class="size-full rounded-full object-cover"
                                                 :src="userImage(item.user, true)"
                                                 loading="lazy" />
@@ -280,6 +280,7 @@
     import { Switch } from '@/components/ui/switch';
     import { VirtualCombobox } from '@/components/ui/virtual-combobox';
     import TooltipWrapper from '@/components/ui/tooltip/TooltipWrapper.vue';
+    import MediaImage from '../../../components/MediaImage.vue';
     import Location from '@/components/Location.vue';
 
     import { showWorldDialog } from '@/coordinators/worldCoordinator';

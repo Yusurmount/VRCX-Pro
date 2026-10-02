@@ -13,7 +13,7 @@
                 :style="{
                     backgroundColor: userDialog.ref.bannerColor ? `#${userDialog.ref.bannerColor}` : 'hsl(var(--muted))'
                 }"></div>
-            <img
+            <MediaImage
                 v-else
                 class="absolute inset-0 block h-full w-full cursor-pointer object-cover"
                 :src="userDialog.ref.bannerUrl"
@@ -31,7 +31,7 @@
                 <Image
                     v-if="userDialog.loading || userIconError"
                     class="w-full! h-full! object-cover text-muted-foreground bg-accent" />
-                <img
+                <MediaImage
                     v-else
                     class="w-full h-full object-cover cursor-pointer"
                     :src="userImage(userDialog.publicProfileRef, true, '256')"
@@ -241,7 +241,7 @@
                     <div style="display: inline-block">
                         <Popover>
                             <PopoverTrigger asChild>
-                                <img
+                                <MediaImage
                                     class="cursor-pointer hover:grayscale-0"
                                     :src="badge.badgeImageUrl"
                                     style="
@@ -254,7 +254,7 @@
                                     loading="lazy" />
                             </PopoverTrigger>
                             <PopoverContent side="right" class="w-75">
-                                <img
+                                <MediaImage
                                     :src="badge.badgeImageUrl"
                                     :class="['cursor-pointer', 'max-w-full', 'max-h-full']"
                                     @click="showFullscreenImageDialog(badge.badgeImageUrl)"
@@ -364,7 +364,7 @@
                 :userid="userDialog.id"
                 :avatartags="userDialog.ref.currentAvatarTags"
                 style="display: inline-block" />
-            <img
+            <MediaImage
                 v-if="userDialog.ref.currentAvatarThumbnailImageUrl"
                 class="h-12 w-16 rounded-lg object-cover cursor-pointer flex-none"
                 :src="userDialog.ref.currentAvatarThumbnailImageUrl"
@@ -415,7 +415,7 @@
         <div v-else class="text-xs text-muted-foreground">—</div>
 
         <div class="mt-2">
-            <img
+            <MediaImage
                 v-if="userDialog.representedGroup.bannerUrl"
                 class="w-full rounded-lg object-cover cursor-pointer h-[80px] aspect-6/1"
                 :src="userDialog.representedGroup.bannerUrl"
@@ -444,6 +444,7 @@
     import { useI18n } from 'vue-i18n';
 
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+    import MediaImage from '../../MediaImage.vue';
     import { copyToClipboard, formatDateFilter, languageClass, openDiscordProfile } from '../../../shared/utils';
     import { useUserDisplay } from '../../../composables/useUserDisplay';
     import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';

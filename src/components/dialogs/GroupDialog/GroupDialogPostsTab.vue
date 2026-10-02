@@ -48,7 +48,7 @@
                             class="cursor-pointer"
                             style="flex: none; width: 60px; height: 60px"
                             @click="showFullscreenImageDialog(post.imageUrl)">
-                            <img
+                            <MediaImage
                                 :src="post.imageUrl"
                                 style="width: 60px; height: 60px; border-radius: var(--radius-md); object-fit: cover"
                                 loading="lazy" />
@@ -109,6 +109,7 @@
 <script setup>
     import { Eye, Image, Pencil, Trash2 } from 'lucide-vue-next';
     import { Button } from '@/components/ui/button';
+    import MediaImage from '../../MediaImage.vue';
     import { InputGroupField } from '@/components/ui/input-group';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';

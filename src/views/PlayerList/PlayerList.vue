@@ -6,7 +6,7 @@
                 ref="playerListHeaderRef"
                 style="display: flex; min-height: 120px"
                 class="mb-7">
-                <img
+                <MediaImage
                     v-if="!worldImageError"
                     :src="currentInstanceWorld.ref.thumbnailImageUrl"
                     class="cursor-pointer"
@@ -214,6 +214,7 @@
     } from '../../stores';
     import { commaNumber, createRateLimiter, executeWithBackoff, formatDateFilter } from '../../shared/utils';
     import { Badge } from '../../components/ui/badge';
+    import MediaImage from '../../components/MediaImage.vue';
     import { Button } from '../../components/ui/button';
     import { DataTableLayout } from '../../components/ui/data-table';
     import { createColumns } from './columns.jsx';

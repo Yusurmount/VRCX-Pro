@@ -320,7 +320,7 @@
                                                 <div
                                                     class="favorites-search-card__avatar"
                                                     :class="{ 'is-empty': !favorite.thumbnailImageUrl }">
-                                                    <img
+                                                    <MediaImage
                                                         v-if="favorite.thumbnailImageUrl"
                                                         :src="favorite.thumbnailImageUrl"
                                                         loading="lazy" />
@@ -429,6 +429,7 @@
     import { computed, markRaw, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue';
     import { Ellipsis, Loader, MoreHorizontal, Plus, RefreshCcw, RefreshCw } from 'lucide-vue-next';
     import { Button } from '@/components/ui/button';
+    import MediaImage from '../../components/MediaImage.vue';
     import { DataTableEmpty } from '@/components/ui/data-table';
     import { InputGroupField } from '@/components/ui/input-group';
     import { ScrollArea } from '@/components/ui/scroll-area';
