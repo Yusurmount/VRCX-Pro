@@ -91,7 +91,7 @@
     import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
     import { computed, watch } from 'vue';
     import { Button } from '@/components/ui/button';
-    import MediaImage from '../../MediaImage.vue';
+    import MediaImage from '../MediaImage.vue';
     import { Check as CheckIcon } from 'lucide-vue-next';
     import { storeToRefs } from 'pinia';
     import { toast } from 'vue-sonner';
