@@ -1,18 +1,16 @@
 <template>
     <div ref="rootRef" class="wizard-shell bg-background">
-        <!-- Top bar: step counter + segmented progress -->
-        <header class="wiz-header">
-            <span class="wiz-step-counter text-muted-foreground">
-                {{ t('common.wizard.step_of', { current: currentStep, total: totalSteps }) }}
-            </span>
-        </header>
-        <div
-            class="wiz-progress"
-            role="progressbar"
-            :aria-valuenow="currentStep"
-            aria-valuemin="1"
-            :aria-valuemax="totalSteps">
-            <div v-for="s in totalSteps" :key="s" class="wiz-progress-segment" :class="{ active: s <= currentStep }" />
+        <!-- Right edge: vertical dot progress (step 1 at top) with step counter below -->
+        <div class="wiz-progress-rail">
+            <div
+                class="wiz-progress"
+                role="progressbar"
+                :aria-valuenow="currentStep"
+                aria-valuemin="1"
+                :aria-valuemax="totalSteps">
+                <div v-for="s in totalSteps" :key="s" class="wiz-progress-dot" :class="{ active: s <= currentStep }" />
+            </div>
+            <span class="wiz-step-counter text-muted-foreground">{{ currentStep }} / {{ totalSteps }}</span>
         </div>
 
         <!-- Left: centered icon with SVG stroke animation -->
@@ -42,7 +40,6 @@
 
 <script setup>
     import { onUnmounted, ref } from 'vue';
-    import { useI18n } from 'vue-i18n';
     import { gsap } from 'gsap';
     import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
 
@@ -55,8 +52,6 @@
         /** Step -> icon component map (use markRaw on components) */
         icons: { type: Object, default: () => ({}) }
     });
-
-    const { t } = useI18n();
 
     const rootRef = ref(null);
     const iconWrapRef = ref(null);
@@ -210,15 +205,16 @@
         background-color: var(--background);
     }
 
-    /* ---- Top bar ---- */
-    .wiz-header {
+    /* ---- Right progress rail: dots + step counter ---- */
+    .wiz-progress-rail {
         position: absolute;
-        top: 24px;
-        left: 36px;
         right: 36px;
+        top: 50%;
+        transform: translateY(-50%);
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: flex-end;
+        gap: 12px;
     }
 
     .wiz-step-counter {
@@ -227,17 +223,14 @@
     }
 
     .wiz-progress {
-        position: absolute;
-        top: 78px;
-        left: 36px;
-        right: 36px;
         display: flex;
-        gap: 6px;
+        flex-direction: column;
+        gap: 8px;
     }
 
-    .wiz-progress-segment {
-        flex: 1;
-        height: 4px;
+    .wiz-progress-dot {
+        width: 8px;
+        height: 8px;
         border-radius: 999px;
         background-color: var(--muted-foreground);
         opacity: 0.2;
@@ -246,7 +239,7 @@
             background-color 0.3s ease;
     }
 
-    .wiz-progress-segment.active {
+    .wiz-progress-dot.active {
         opacity: 1;
         background-color: var(--primary);
     }
@@ -345,6 +338,10 @@
 
         .wiz-content {
             width: min(440px, calc(100vw - 200px));
+        }
+
+        .wiz-progress-rail {
+            right: 12px;
         }
     }
 

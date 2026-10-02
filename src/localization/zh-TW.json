@@ -43,9 +43,6 @@
         "duration": "持續時間",
         "load_more": "載入更多",
         "no_more": "沒有更多條目",
-        "wizard": {
-            "step_of": "第 {current} / {total} 步"
-        },
         "current_session": "當前會話"
     },
     "nav_tooltip": {

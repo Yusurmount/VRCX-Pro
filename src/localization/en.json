@@ -43,9 +43,6 @@
         "duration": "Duration",
         "load_more": "Load more",
         "no_more": "No more entries",
-        "wizard": {
-            "step_of": "Step {current} of {total}"
-        },
         "current_session": "Current"
     },
     "nav_tooltip": {
