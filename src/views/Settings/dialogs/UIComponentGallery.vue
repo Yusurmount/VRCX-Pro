@@ -220,7 +220,6 @@
                 <Kbd>Ctrl</Kbd> + <Kbd>V</Kbd>
             </div>
         </section>
-    </div>
     <Separator />
 
     <!-- Alert Dialog -->
@@ -908,6 +907,7 @@
         <h3 class="text-sm font-semibold text-foreground mb-3">VirtualCombobox</h3>
         <VirtualCombobox v-model="comboboxValue" :groups="comboboxGroups" placeholder="Select a fruit" class="w-72" />
     </section>
+</div>
 </template>
 
 <script setup>

@@ -99,6 +99,12 @@ describe('UIComponentGallery', () => {
             'VirtualCombobox'
         ]);
 
+        const galleryWrapper = wrapper.get('.space-y-6');
+        expect(galleryWrapper.findAll('section')).toHaveLength(headings.length);
+        expect(
+            wrapper.element.querySelectorAll(':scope > section')
+        ).toHaveLength(0);
+
         wrapper.unmount();
     });
 });

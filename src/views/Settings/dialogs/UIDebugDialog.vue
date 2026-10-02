@@ -5,7 +5,7 @@
                 <DialogTitle>{{ t('view.settings.advanced.advanced.ui_debug.header') }}</DialogTitle>
             </DialogHeader>
 
-            <Tabs default-value="notifications">
+            <Tabs v-model="activeTab" ref="tabsRef">
                 <TabsList class="w-full">
                     <TabsTrigger value="notifications">
                         {{ t('view.settings.advanced.advanced.ui_debug.tabs.notifications') }}
@@ -402,7 +402,7 @@
 </template>
 
 <script setup>
-    import { computed } from 'vue';
+    import { computed, nextTick, ref, watch } from 'vue';
     import { useI18n } from 'vue-i18n';
     import { useRouter } from 'vue-router';
     import { toast } from 'vue-sonner';
@@ -435,6 +435,24 @@
     const vrcxUpdater = useVRCXUpdaterStore();
 
     const currentUser = computed(() => userStore.currentUser ?? {});
+    const activeTab = ref('notifications');
+    const tabsRef = ref(null);
+
+    /**
+     * Keep each debug tab aligned to the top of the dialog's scroll container.
+     */
+    function resetDialogScroll() {
+        const tabsElement = tabsRef.value?.$el ?? tabsRef.value;
+        const scrollContainer = tabsElement?.closest?.('[data-slot="dialog-content"]');
+
+        if (scrollContainer) scrollContainer.scrollTop = 0;
+    }
+
+    watch(activeTab, async () => {
+        await nextTick();
+        resetDialogScroll();
+        requestAnimationFrame(resetDialogScroll);
+    });
 
     /**
      * @param {string} suffix
