@@ -239,32 +239,16 @@
             <p class="wiz-desc text-muted-foreground">{{ t('oobe.recovery.subtitle') }}</p>
             <div class="w-full">
                 <RadioGroup v-model="recoverMode" class="grid gap-2">
-                    <div
-                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                        :class="recoverMode === 'incremental' ? 'border-primary' : ''">
-                        <RadioGroupItem id="oobe-mode-incremental" value="incremental" />
-                        <div class="flex flex-col gap-1">
-                            <Label for="oobe-mode-incremental" class="text-sm font-medium cursor-pointer">
-                                {{ t('view.settings.advanced.advanced.db_import.mode_incremental') }}
-                            </Label>
-                            <p class="text-xs text-muted-foreground">
-                                {{ t('view.settings.advanced.advanced.db_import.mode_incremental_desc') }}
-                            </p>
-                        </div>
-                    </div>
-                    <div
-                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                        :class="recoverMode === 'full' ? 'border-primary' : ''">
-                        <RadioGroupItem id="oobe-mode-full" value="full" />
-                        <div class="flex flex-col gap-1">
-                            <Label for="oobe-mode-full" class="text-sm font-medium cursor-pointer">
-                                {{ t('view.settings.advanced.advanced.db_import.mode_full') }}
-                            </Label>
-                            <p class="text-xs text-muted-foreground">
-                                {{ t('view.settings.advanced.advanced.db_import.mode_full_desc') }}
-                            </p>
-                        </div>
-                    </div>
+                    <RadioCard
+                        id="oobe-mode-incremental"
+                        value="incremental"
+                        :title="t('view.settings.advanced.advanced.db_import.mode_incremental')"
+                        :description="t('view.settings.advanced.advanced.db_import.mode_incremental_desc')" />
+                    <RadioCard
+                        id="oobe-mode-full"
+                        value="full"
+                        :title="t('view.settings.advanced.advanced.db_import.mode_full')"
+                        :description="t('view.settings.advanced.advanced.db_import.mode_full_desc')" />
                 </RadioGroup>
             </div>
             <Button size="lg" class="w-full" :disabled="recovering" @click="handleRecoverImport">
@@ -304,8 +288,8 @@
 
     import { Button } from '@/components/ui/button';
     import WizardShell from '@/components/wizard/WizardShell.vue';
-    import { Label } from '@/components/ui/label';
     import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+    import { RadioCard } from '@/components/ui/radio-card';
     import { Switch } from '@/components/ui/switch';
     import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';

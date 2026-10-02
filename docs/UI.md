@@ -43,6 +43,7 @@ VRCX-Pro 的业务 UI 以 `src/components/ui/` 为组件库。页面和业务组
 - 数值滑动：`Slider`
 - 颜色值：`ColorInput`
 - 颜色快捷选择：`ColorSwatch`
+- 卡片式单选：`RadioCard`
 
 `ColorInput` 统一 `input[type="color"]` 的边框、焦点环、禁用态和色块显示：
 
@@ -59,6 +60,14 @@ VRCX-Pro 的业务 UI 以 `src/components/ui/` 为组件库。页面和业务组
     :color="color"
     :selected="selectedColor === color"
     @select="selectedColor = $event" />
+```
+
+`RadioCard` 统一卡片式单选：整卡是 `label`，点击任意位置即选中；选中边框由全局单选组件的 `data-state`（`has-[[data-state=checked]]`）驱动，业务组件只传 `id` / `value` / 文案：
+
+```vue
+<RadioGroup v-model="mode" class="grid gap-2">
+    <RadioCard id="mode-a" value="a" :title="t('...')" :description="t('...')" />
+</RadioGroup>
 ```
 
 ### 按钮
