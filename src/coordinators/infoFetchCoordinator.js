@@ -5,7 +5,7 @@ import {
     useTrackedNonFriendsStore,
     useManualRelationsStore
 } from '../stores';
-import { userRequest } from '../api';
+import { queryRequest, userRequest } from '../api';
 
 /**
  * 信息抓取补全的全局响应式状态。
@@ -116,16 +116,18 @@ export async function runSilentInfoFetch() {
 
         let userJson = null;
 
-        // 通过 API 获取最新资料
+        // 通过 API 获取最新资料（20s 内已获取过的用户直接走缓存）
         try {
-            const result = await userRequest.getUser({ userId: target.userId });
+            const result = await queryRequest.fetch('user', {
+                userId: target.userId
+            });
             userJson = result.json;
         } catch {
             // 如果失败（如 429），等 0.5s 后重试一次
             if (cancelled) break;
             await new Promise((r) => setTimeout(r, 500));
             try {
-                const result = await userRequest.getUser({
+                const result = await queryRequest.fetch('user', {
                     userId: target.userId
                 });
                 userJson = result.json;

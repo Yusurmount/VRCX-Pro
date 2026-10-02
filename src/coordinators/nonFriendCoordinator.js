@@ -1,5 +1,5 @@
 import { database } from '../services/database';
-import { userRequest } from '../api';
+import { queryRequest, userRequest } from '../api';
 import { useTrackedNonFriendsStore } from '../stores/trackedNonFriends';
 import { watchState } from '../services/watchState';
 
@@ -30,7 +30,7 @@ export async function refreshTrackedNonFriendsFlow() {
         for (const entry of tracked) {
             const userId = entry.userId;
             try {
-                const result = await userRequest.getUser({ userId });
+                const result = await queryRequest.fetch('user', { userId });
                 const ref = result?.ref;
                 if (!ref) continue;
 

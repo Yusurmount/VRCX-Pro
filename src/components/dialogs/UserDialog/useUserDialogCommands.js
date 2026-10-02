@@ -230,9 +230,7 @@ export function useUserDialogCommands(
         return {
             // --- Direct commands ---
             Refresh: () => {
-                const userId = D().id;
-                D().id = '';
-                showUserDialog(userId);
+                showUserDialog(D().id, { forceRefresh: true });
             },
             'Copy Profile URL': () => {
                 copyToClipboard(

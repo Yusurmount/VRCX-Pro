@@ -149,7 +149,7 @@
     import { useUserStore } from '../../../stores/user';
     import { useUserDisplay } from '../../../composables/useUserDisplay';
     import { showUserDialog } from '../../../coordinators/userCoordinator';
-    import { userRequest } from '../../../api';
+    import { queryRequest } from '../../../api';
 
     const { t } = useI18n();
     const { userImage, userStatusClass } = useUserDisplay();
@@ -196,7 +196,7 @@
         addError.value = '';
         isVerifying.value = true;
         try {
-            const result = await userRequest.getUser({ userId });
+            const result = await queryRequest.fetch('user', { userId });
             const userData = result?.ref;
             if (!userData) throw new Error('no_data');
             verifiedUser.value = userData;

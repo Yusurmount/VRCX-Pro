@@ -11,7 +11,7 @@ import {
     isRealInstance
 } from '../shared/utils';
 import { getUserMemo } from '../coordinators/memoCoordinator';
-import { friendRequest, userRequest } from '../api';
+import { friendRequest, queryRequest } from '../api';
 import { runInitFriendsListFlow } from '../coordinators/friendSyncCoordinator';
 import { prewarmAuthToken } from '../services/websocket';
 import {
@@ -769,7 +769,7 @@ export const useFriendStore = defineStore('Friend', () => {
                             friend
                         );
                     }
-                    const args = await userRequest.getUser({
+                    const args = await queryRequest.fetch('user.force', {
                         userId: friend.id
                     });
                     friendsArray[i] = args.json;
@@ -780,7 +780,7 @@ export const useFriendStore = defineStore('Friend', () => {
                             friend.displayName
                         );
                     }
-                    const args = await userRequest.getUser({
+                    const args = await queryRequest.fetch('user.force', {
                         userId: friend.id
                     });
                     friendsArray[i] = args.json;
@@ -806,7 +806,9 @@ export const useFriendStore = defineStore('Friend', () => {
                         return friends;
                     }
                     console.log('Fetching remaining friend', userId);
-                    const args = await userRequest.getUser({ userId });
+                    const args = await queryRequest.fetch('user', {
+                        userId
+                    });
                     friends.push(args.json);
                 } catch (err) {
                     console.error(err);

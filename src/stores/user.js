@@ -530,8 +530,8 @@ export const useUserStore = defineStore('User', () => {
         if (L.userId) {
             ref = cachedUsers.get(L.userId);
             if (typeof ref === 'undefined') {
-                userRequest
-                    .getUser({
+                queryRequest
+                    .fetch('user', {
                         userId: L.userId
                     })
                     .then((args) => {

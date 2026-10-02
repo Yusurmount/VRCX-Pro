@@ -1,7 +1,7 @@
 import { i18n } from '../plugins/i18n';
 
 import { database } from '../services/database';
-import { friendRequest, userRequest } from '../api';
+import { friendRequest, queryRequest } from '../api';
 import { getNameColour } from '../shared/utils';
 import { handleFavoriteDelete } from './favoriteCoordinator';
 import { useAppearanceSettingsStore } from '../stores/settings/appearance';
@@ -170,10 +170,8 @@ export function addFriendship(id) {
                 database.setFriendLogCurrent(friendLogCurrent);
                 uiStore.notifyMenu('friend-log');
                 deleteFriendRequest(id);
-                userRequest
-                    .getUser({
-                        userId: id
-                    })
+                queryRequest
+                    .fetch('user.force', { userId: id })
                     .then(() => {
                         if (
                             userStore.userDialog.visible &&

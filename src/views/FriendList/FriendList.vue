@@ -154,7 +154,7 @@
         useSearchStore,
         useUserStore
     } from '../../stores';
-    import { friendRequest, userRequest } from '../../api';
+    import { friendRequest, queryRequest } from '../../api';
     import { DataTableLayout } from '../../components/ui/data-table';
     import { Switch } from '../../components/ui/switch';
     import { Toggle } from '../../components/ui/toggle';
@@ -576,7 +576,7 @@
             }
             friendsListLoadingCurrent.value += 1;
             try {
-                await userRequest.getUser({ userId });
+                await queryRequest.fetch('user.force', { userId });
             } catch (err) {
                 console.error(err);
             }

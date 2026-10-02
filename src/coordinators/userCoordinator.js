@@ -274,8 +274,9 @@ export function applyUser(json) {
 
 /**
  * @param {string} userId
+ * @param {{forceRefresh?: boolean}} [options]
  */
-export function showUserDialog(userId) {
+export function showUserDialog(userId, options = {}) {
     if (
         !userId ||
         typeof userId !== 'string' ||
@@ -292,6 +293,7 @@ export function showUserDialog(userId) {
     const appearanceSettingsStore = useAppearanceSettingsStore();
     const t = i18n.global.t;
 
+    const forceRefresh = Boolean(options?.forceRefresh);
     const { currentUser, userDialog, showUserDialogHistory } = userStore;
 
     const isMainDialogOpen = uiStore.openDialog({
@@ -300,7 +302,7 @@ export function showUserDialog(userId) {
     });
     const D = userDialog;
     D.visible = true;
-    if (isMainDialogOpen && D.id === userId) {
+    if (isMainDialogOpen && D.id === userId && !forceRefresh) {
         uiStore.setDialogCrumbLabel('user', D.id, D.ref?.displayName || D.id);
         userStore.applyUserDialogLocation(true);
         return;
@@ -380,7 +382,7 @@ export function showUserDialog(userId) {
     updateUserDialogProfile();
     AppApi.SendIpc('ShowUserDialog', userId);
     queryRequest
-        .fetch('user', {
+        .fetch(forceRefresh ? 'user.force' : 'user.dialog', {
             userId
         })
         .catch((err) => {

@@ -24,8 +24,7 @@ import {
 } from '../shared/utils';
 import {
     instanceRequest,
-    queryRequest,
-    userRequest
+    queryRequest
 } from '../api';
 import {
     accessTypeLocaleKeyMap,
@@ -856,8 +855,8 @@ export const useInstanceStore = defineStore('Instance', () => {
             if (L.userId) {
                 ref = userStore.cachedUsers.get(L.userId);
                 if (typeof ref === 'undefined') {
-                    userRequest
-                        .getUser({
+                    queryRequest
+                        .fetch('user', {
                             userId: L.userId
                         })
                         .then((args) => {

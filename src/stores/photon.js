@@ -15,7 +15,7 @@ import {
     replaceBioSymbols,
     timeToText
 } from '../shared/utils';
-import { instanceRequest, userRequest } from '../api';
+import { instanceRequest, queryRequest } from '../api';
 import { photonEmojis, photonEventType } from '../shared/constants/photon';
 import { AppDebug } from '../services/appConfig';
 import { database } from '../services/database';
@@ -1456,7 +1456,7 @@ export const usePhotonStore = defineStore('Photon', () => {
         if (bias > Date.now()) {
             if (typeof ref === 'undefined' || typeof ref.id === 'undefined') {
                 try {
-                    const args = await userRequest.getUser({
+                    const args = await queryRequest.fetch('user', {
                         userId: user.id
                     });
                     ref = args.ref;

@@ -7,7 +7,7 @@ import { useNotificationStore } from '../stores/notification';
 import { syncFriendSearchIndex } from './searchIndexCoordinator';
 import { useSharedFeedStore } from '../stores/sharedFeed';
 import { useUserStore } from '../stores/user';
-import { userRequest } from '../api';
+import { queryRequest } from '../api';
 import { watchState } from '../services/watchState';
 
 /**
@@ -171,7 +171,7 @@ export async function runUpdateFriendFlow(
             ref.$lastFetch < now() - 10000 // 10 seconds
         ) {
             console.log(`Fetching offline friend in an instance ${ctx.name}`);
-            userRequest.getUser({ userId: id });
+            queryRequest.fetch('user.force', { userId: id });
         }
         // wtf, fetch user if online in an offline location
         if (
@@ -182,7 +182,7 @@ export async function runUpdateFriendFlow(
             console.log(
                 `Fetching online friend in an offline location ${ctx.name}`
             );
-            userRequest.getUser({ userId: id });
+            queryRequest.fetch('user.force', { userId: id });
         }
     }
     if (typeof stateInput === 'undefined' || ctx.state === stateInput) {
@@ -194,7 +194,7 @@ export async function runUpdateFriendFlow(
             // 서버에서 오는 순서라고 보면 될 듯.
             if (ctx.state === 'online') {
                 if (watchState.isFriendsLoaded) {
-                    userRequest.getUser({ userId: id });
+                    queryRequest.fetch('user.force', { userId: id });
                 }
             }
         }

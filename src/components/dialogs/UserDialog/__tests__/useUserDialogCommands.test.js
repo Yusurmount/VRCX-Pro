@@ -143,14 +143,15 @@ describe('useUserDialogCommands', () => {
             expect(deps.showUserDialog).not.toHaveBeenCalled();
         });
 
-        it('Refresh: should reset id and reopen dialog', () => {
+        it('Refresh: should reopen dialog with forceRefresh', () => {
             const { userDialogCommand } = useUserDialogCommands(
                 userDialog,
                 deps
             );
             userDialogCommand('Refresh');
-            expect(userDialog.value.id).toBe('');
-            expect(deps.showUserDialog).toHaveBeenCalledWith('usr_test123');
+            expect(deps.showUserDialog).toHaveBeenCalledWith('usr_test123', {
+                forceRefresh: true
+            });
         });
 
         it('Share: should copy user URL', () => {

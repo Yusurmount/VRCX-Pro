@@ -53,7 +53,7 @@
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
 
-    import { miscRequest, userRequest } from '../../../api';
+    import { miscRequest, queryRequest } from '../../../api';
     import { replaceBioSymbols } from '../../../shared/utils';
     import { saveUserMemo } from '../../../coordinators/memoCoordinator';
     import { useAppearanceSettingsStore, useUserStore } from '../../../stores';
@@ -124,7 +124,9 @@
                 userDialog.value.note = _note;
             } else {
                 // response is cached sadge :<
-                userRequest.getUser({ userId: targetUserId });
+                queryRequest.fetch('user.force', {
+                    userId: targetUserId
+                });
             }
         }
         const ref = cachedUsers.get(targetUserId);

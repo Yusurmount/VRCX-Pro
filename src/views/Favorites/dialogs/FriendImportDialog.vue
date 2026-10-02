@@ -129,7 +129,7 @@
     import { useUserDisplay } from '../../../composables/useUserDisplay';
     import { useFavoriteStore, useGalleryStore, useUserStore } from '../../../stores';
     import { addLocalFriendFavorite } from '../../../coordinators/favoriteCoordinator';
-    import { favoriteRequest, userRequest } from '../../../api';
+    import { favoriteRequest, queryRequest } from '../../../api';
     import { createColumns } from './friendImportColumns.jsx';
     import { useVrcxVueTable } from '../../../lib/table/useVrcxVueTable';
     import { showUserDialog } from '../../../coordinators/userCoordinator';
@@ -329,7 +329,7 @@
             const userId = data[i];
             if (!D.userIdList.has(userId)) {
                 try {
-                    const args = await userRequest.getUser({
+                    const args = await queryRequest.fetch('user', {
                         userId
                     });
                     friendImportTable.value.data.push(args.ref);

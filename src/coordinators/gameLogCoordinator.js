@@ -19,7 +19,7 @@ import {
     runUpdateCurrentUserLocationFlow
 } from './locationCoordinator';
 import { getGroupName } from '../shared/utils';
-import { userRequest } from '../api';
+import { queryRequest } from '../api';
 import { watchState } from '../services/watchState';
 import { toast } from 'vue-sonner';
 
@@ -117,7 +117,7 @@ export async function tryLoadPlayerList() {
                 typeof ref1.userId === 'string' &&
                 !userStore.cachedUsers.has(ref1.userId)
             ) {
-                userRequest.getUser({ userId: ref1.userId });
+                queryRequest.fetch('user', { userId: ref1.userId });
             }
         });
 
@@ -261,7 +261,7 @@ export function addGameLogEntry(gameLog, location, isLive = false) {
                 if (AppDebug.debugGameLog || AppDebug.debugWebRequests) {
                     console.log('Fetching user from gameLog:', userId);
                 }
-                userRequest.getUser({ userId });
+                queryRequest.fetch('user', { userId });
             }
             vrStore.updateVRLastLocation();
             instanceStore.getCurrentInstanceUserList();

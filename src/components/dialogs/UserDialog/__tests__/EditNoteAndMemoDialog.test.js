@@ -30,7 +30,8 @@ vi.mock('../../../../stores', () => ({
 }));
 vi.mock('../../../../api', () => ({
     miscRequest: { saveNote: (...a) => mocks.saveNote(...a) },
-    userRequest: { getUser: (...a) => mocks.getUser(...a) }
+    userRequest: { getUser: (...a) => mocks.getUser(...a) },
+    queryRequest: { fetch: (...a) => mocks.getUser(...a) }
 }));
 vi.mock('../../../../coordinators/memoCoordinator', () => ({
     saveUserMemo: (...a) => mocks.saveUserMemo(...a)
