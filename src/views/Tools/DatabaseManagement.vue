@@ -57,6 +57,43 @@
                 </div>
             </div>
 
+            <!-- Sections -->
+            <div class="mt-6 px-5">
+                <span class="text-base font-semibold">
+                    {{ t('view.tools.database_page.sections_header') }}
+                </span>
+                <div class="grid grid-cols-4 gap-3 mt-3 text-sm">
+                    <div v-for="section in sections" :key="section.key" class="rounded-md border p-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-medium truncate">
+                                {{ t(`view.tools.database_page.section_names.${section.key}`) }}
+                            </span>
+                            <span class="text-xs text-muted-foreground shrink-0">
+                                {{
+                                    t('view.tools.database_page.section_meta', {
+                                        tables: section.tableCount,
+                                        percent: Math.round(section.share * 100)
+                                    })
+                                }}
+                            </span>
+                        </div>
+                        <div class="text-lg font-semibold mt-1">
+                            {{ section.rowCount.toLocaleString() }}
+                        </div>
+                        <div class="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div
+                                class="h-full bg-primary transition-all"
+                                :style="{ width: `${Math.round(section.share * 100)}%` }" />
+                        </div>
+                    </div>
+                    <div
+                        v-if="loading && !sections.length"
+                        class="col-span-4 rounded-md border p-3 flex justify-center">
+                        <Spinner class="h-5 w-5" />
+                    </div>
+                </div>
+            </div>
+
             <!-- Tables & preview -->
             <div class="mt-6 px-5 grid grid-cols-2 gap-4 items-start">
                 <div>
@@ -221,7 +258,7 @@
 </template>
 
 <script setup>
-    import { onActivated, onMounted, reactive, ref, shallowRef } from 'vue';
+    import { computed, onActivated, onMounted, reactive, ref, shallowRef } from 'vue';
     import { useRouter } from 'vue-router';
     import { useI18n } from 'vue-i18n';
     import { toast } from 'vue-sonner';
@@ -236,6 +273,26 @@
     import DatabaseManagementDialog from './dialogs/DatabaseManagementDialog.vue';
 
     const PREVIEW_LIMIT = 50;
+
+    // 板块划分：按表名（含账户前缀）匹配，首个命中生效，未命中归入 other
+    const SECTION_RULES = [
+        { key: 'feed', patterns: [/(^|_)feed_/] },
+        { key: 'activity', patterns: [/(^|_)activity_/] },
+        { key: 'friend_log', patterns: [/(^|_)friend_log_/] },
+        { key: 'gamelog', patterns: [/^gamelog_/] },
+        { key: 'notifications', patterns: [/(^|_)notifications/] },
+        { key: 'favorites', patterns: [/(^|_)favorite_/] },
+        { key: 'cache', patterns: [/(^|_)cache_/, /(^|_)avatar_history$/] },
+        { key: 'mutual_graph', patterns: [/(^|_)mutual_graph/] },
+        {
+            key: 'social',
+            patterns: [/(^|_)moderation$/, /(^|_)tracked_nonfriends$/, /(^|_)manual_relations/]
+        },
+        {
+            key: 'notes_memos',
+            patterns: [/(^|_)memos$/, /(^|_)notes$/, /(^|_)avatar_tags$/]
+        }
+    ];
 
     const router = useRouter();
     const { t } = useI18n();
@@ -284,6 +341,26 @@
         const text = String(value);
         return text.length > 200 ? `${text.slice(0, 200)}…` : text;
     }
+
+    function resolveSection(tableName) {
+        const rule = SECTION_RULES.find((r) => r.patterns.some((re) => re.test(tableName)));
+        return rule ? rule.key : 'other';
+    }
+
+    const sections = computed(() => {
+        const grouped = new Map();
+        for (const tbl of tables.value) {
+            const key = resolveSection(tbl.name);
+            const entry = grouped.get(key) || { key, rowCount: 0, tableCount: 0 };
+            entry.rowCount += tbl.rowCount;
+            entry.tableCount += 1;
+            grouped.set(key, entry);
+        }
+        const total = [...grouped.values()].reduce((sum, s) => sum + s.rowCount, 0);
+        return [...grouped.values()]
+            .sort((a, b) => b.rowCount - a.rowCount || a.key.localeCompare(b.key))
+            .map((s) => ({ ...s, share: total > 0 ? s.rowCount / total : 0 }));
+    });
 
     async function loadOverview() {
         const dbList = [];

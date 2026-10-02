@@ -125,6 +125,19 @@ describe('DatabaseManagement.vue', () => {
         expect(countQueries).toHaveLength(1);
     });
 
+    test('groups tables into sections by name pattern', async () => {
+        const wrapper = mount(DatabaseManagement);
+        await flushPromises();
+
+        const text = wrapper.text();
+        // feed_post 命中 feed 板块，user_location 未命中任何规则归入 other
+        expect(text).toContain('view.tools.database_page.section_names.feed');
+        expect(text).toContain('view.tools.database_page.section_names.other');
+        expect(text).not.toContain(
+            'view.tools.database_page.section_names.gamelog'
+        );
+    });
+
     test('selecting a table renders schema and row preview', async () => {
         const wrapper = mount(DatabaseManagement);
         await flushPromises();
