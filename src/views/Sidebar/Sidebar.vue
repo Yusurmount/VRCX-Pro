@@ -294,11 +294,22 @@
                         </div>
                     </PopoverContent>
                 </Popover>
+                <TooltipWrapper side="bottom" :content="t('side_panel.collapse_tooltip')">
+                    <Button
+                        class="rounded-full"
+                        variant="ghost"
+                        size="icon-sm"
+                        :ariaLabel="t('side_panel.collapse_tooltip')"
+                        @click="setSidePanelCollapsed(true)">
+                        <PanelRightClose />
+                    </Button>
+                </TooltipWrapper>
             </div>
         </div>
         <TabsUnderline
-            default-value="friends"
+            :model-value="activeSidePanelTab"
             :items="sidebarTabs"
+            @update:model-value="handleTabChange"
             :unmount-on-hide="false"
             variant="equal"
             fill
@@ -348,7 +359,7 @@
         SelectTrigger,
         SelectValue
     } from '@/components/ui/select';
-    import { Bell, ChevronDown, RefreshCw, Search, Settings } from 'lucide-vue-next';
+    import { Bell, ChevronDown, PanelRightClose, RefreshCw, Search, Settings } from 'lucide-vue-next';
     import { toast } from 'vue-sonner';
     import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
     import { Field, FieldContent, FieldLabel } from '@/components/ui/field';
@@ -362,6 +373,7 @@
     import { Spinner } from '@/components/ui/spinner';
     import { Switch } from '@/components/ui/switch';
     import { TabsUnderline } from '@/components/ui/tabs';
+    import { TooltipWrapper } from '@/components/ui/tooltip';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
 
@@ -377,6 +389,8 @@
     import { normalizeFavoriteGroupsChange, resolveFavoriteGroups } from './sidebarSettingsUtils';
     import { useQuickSearchStore } from '../../stores/quickSearch';
     import { useTrackedNonFriendsStore } from '../../stores/trackedNonFriends';
+
+    import { activeSidePanelTab } from './sidePanelUiState';
 
     import FriendsSidebar from './components/FriendsSidebar.vue';
     import QuickSearchDialog from '../../components/QuickSearchDialog.vue';
@@ -436,7 +450,8 @@
         setIsHideFriendsInSameInstance,
         setIsSameInstanceAboveFavorites,
         setIsSidebarDivideByFriendGroup,
-        setSidebarFavoriteGroups
+        setSidebarFavoriteGroups,
+        setSidePanelCollapsed
     } = appearanceSettingsStore;
 
     const favoriteStore = useFavoriteStore();
@@ -470,6 +485,14 @@
     });
 
     const CLEAR_VALUE = '__clear__';
+
+    /**
+     * @param value
+     */
+    function handleTabChange(value) {
+        activeSidePanelTab.value = value;
+    }
+
     const isGroupOrderDialogOpen = ref(false);
     const isSettingsPopoverOpen = ref(false);
     const isAdvancedOpen = ref(false);

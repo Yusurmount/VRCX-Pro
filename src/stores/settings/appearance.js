@@ -108,6 +108,7 @@ export const useAppearanceSettingsStore = defineStore(
         const currentCulture = ref('');
         const notificationIconDot = ref(false);
         const isNavCollapsed = ref(true);
+        const isSidePanelCollapsed = ref(false);
         const isSideBarTabShow = computed(() => {
             const currentRouteName = router.currentRoute.value?.name;
             return ![
@@ -187,6 +188,7 @@ export const useAppearanceSettingsStore = defineStore(
                 trustColorConfig,
                 notificationIconDotConfig,
                 navIsCollapsedConfig,
+                sidePanelIsCollapsedConfig,
                 dataTableStripedConfig,
                 accessibleStatusIndicatorsConfig,
                 useOfficialStatusColorsConfig,
@@ -269,6 +271,7 @@ export const useAppearanceSettingsStore = defineStore(
                 ),
                 configRepository.getBool('VRCX_notificationIconDot', true),
                 configRepository.getBool('VRCX_navIsCollapsed', false),
+                configRepository.getBool('VRCX_sidePanelIsCollapsed', false),
                 configRepository.getBool('VRCX_dataTableStriped', false),
                 configRepository.getBool(
                     'VRCX_accessibleStatusIndicators',
@@ -399,6 +402,7 @@ export const useAppearanceSettingsStore = defineStore(
                 );
             }
             isNavCollapsed.value = navIsCollapsedConfig;
+            isSidePanelCollapsed.value = sidePanelIsCollapsedConfig;
             isDataTableStriped.value = dataTableStripedConfig;
             accessibleStatusIndicators.value = accessibleStatusIndicatorsConfig;
             useOfficialStatusColors.value = useOfficialStatusColorsConfig;
@@ -841,6 +845,14 @@ export const useAppearanceSettingsStore = defineStore(
          */
         function toggleNavCollapsed() {
             setNavCollapsed(!isNavCollapsed.value);
+        }
+        /**
+         *
+         * @param collapsed
+         */
+        function setSidePanelCollapsed(collapsed) {
+            isSidePanelCollapsed.value = collapsed;
+            configRepository.setBool('VRCX_sidePanelIsCollapsed', collapsed);
         }
         /**
          *
@@ -1304,6 +1316,7 @@ export const useAppearanceSettingsStore = defineStore(
             isSideBarTabShow,
             notificationIconDot,
             isNavCollapsed,
+            isSidePanelCollapsed,
             isDataTableStriped,
             accessibleStatusIndicators,
             useOfficialStatusColors,
@@ -1363,6 +1376,7 @@ export const useAppearanceSettingsStore = defineStore(
             applyTableDensity,
             setNavCollapsed,
             toggleNavCollapsed,
+            setSidePanelCollapsed,
             setAppFontFamily,
             customFontFamily,
             setCustomFontFamily,

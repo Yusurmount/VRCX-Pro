@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
     openSearch: vi.fn(),
     markAllAsSeen: vi.fn(),
     refreshFriends: vi.fn(),
+    setSidePanelCollapsed: vi.fn(),
     hasUnseen: { value: true },
     centerOpen: { value: false }
 }));
@@ -32,6 +33,9 @@ vi.mock('../../../stores', () => ({
         hasUnseenNotifications: mocks.hasUnseen,
         markAllAsSeen: (...a) => mocks.markAllAsSeen(...a)
     }),
+    useNotificationsSettingsStore: () => ({
+        notificationLayout: { value: 'list' }
+    }),
     useAppearanceSettingsStore: () => ({
         sidebarSortMethod1: ref(''),
         sidebarSortMethod2: ref(''),
@@ -48,7 +52,8 @@ vi.mock('../../../stores', () => ({
         setIsHideFriendsInSameInstance: vi.fn(),
         setIsSameInstanceAboveFavorites: vi.fn(),
         setIsSidebarDivideByFriendGroup: vi.fn(),
-        setSidebarFavoriteGroups: vi.fn()
+        setSidebarFavoriteGroups: vi.fn(),
+        setSidePanelCollapsed: (...a) => mocks.setSidePanelCollapsed(...a)
     }),
     useFavoriteStore: () => ({
         favoriteFriendGroups: ref([]),
@@ -57,6 +62,9 @@ vi.mock('../../../stores', () => ({
 }));
 vi.mock('../../../stores/quickSearch', () => ({
     useQuickSearchStore: () => ({ open: (...a) => mocks.openSearch(...a) })
+}));
+vi.mock('../../../stores/trackedNonFriends', () => ({
+    useTrackedNonFriendsStore: () => ({ trackedList: ref([]) })
 }));
 vi.mock('../../../coordinators/friendSyncCoordinator', () => ({
     runRefreshFriendsListFlow: (...a) => mocks.refreshFriends(...a)
@@ -67,9 +75,10 @@ vi.mock('../sidebarSettingsUtils', () => ({
 }));
 vi.mock('@/components/ui/button', () => ({
     Button: {
+        props: ['ariaLabel'],
         emits: ['click'],
         template:
-            '<button data-testid="btn" @click="$emit(\'click\')"><slot /></button>'
+            '<button data-testid="btn" :aria-label="ariaLabel" @click="$emit(\'click\')"><slot /></button>'
     }
 }));
 vi.mock('@/components/ui/context-menu', () => ({
@@ -127,6 +136,7 @@ vi.mock('@/components/ui/collapsible', () => ({
 vi.mock('lucide-vue-next', () => ({
     Bell: { template: '<i />' },
     ChevronDown: { template: '<i />' },
+    PanelRightClose: { template: '<i />' },
     RefreshCw: { template: '<i />' },
     Search: { template: '<i />' },
     Settings: { template: '<i />' }
@@ -153,6 +163,7 @@ describe('Sidebar.vue', () => {
     beforeEach(() => {
         mocks.openSearch.mockClear();
         mocks.markAllAsSeen.mockClear();
+        mocks.setSidePanelCollapsed.mockClear();
     });
 
     it('opens quick search and marks notifications read', async () => {
@@ -168,5 +179,14 @@ describe('Sidebar.vue', () => {
 
         expect(mocks.openSearch).toHaveBeenCalled();
         expect(mocks.markAllAsSeen).toHaveBeenCalled();
+    });
+
+    it('collapses the side panel when the collapse button is clicked', async () => {
+        const wrapper = mount(Sidebar);
+        await wrapper
+            .find('[aria-label="side_panel.collapse_tooltip"]')
+            .trigger('click');
+
+        expect(mocks.setSidePanelCollapsed).toHaveBeenCalledWith(true);
     });
 });

@@ -16,43 +16,47 @@
                     @pointerdown.prevent="startNavResize" />
 
                 <SidebarInset class="min-w-0 bg-sidebar">
-                    <ResizablePanelGroup
-                        direction="horizontal"
-                        auto-save-id="vrcx-main-layout-right-sidebar"
-                        :class="[
-                            'group/main-layout flex-1 h-full min-w-0',
-                            { 'aside-collapsed': isAsideCollapsedStatic }
-                        ]"
-                        @layout="handleLayout">
-                        <template #default="{ layout }">
-                            <ResizablePanel :default-size="mainDefaultSize" :order="1">
-                                <RouterView v-slot="{ Component }">
-                                    <!-- 图表页含 echarts/ResizeObserver/Worker，不适合 KeepAlive 常驻缓存，全部排除 -->
-                                    <KeepAlive
-                                        exclude="ChartsInstance, ChartsMutual, ChartsRelationshipTimeline, ChartsHotWorlds, ChartsTwoPersonRelationship">
-                                        <component :is="Component" />
-                                    </KeepAlive>
-                                </RouterView>
-                            </ResizablePanel>
+                    <div class="flex h-full min-w-0 flex-1">
+                        <ResizablePanelGroup
+                            direction="horizontal"
+                            auto-save-id="vrcx-main-layout-right-sidebar"
+                            :class="[
+                                'group/main-layout flex-1 h-full min-w-0',
+                                { 'aside-collapsed': isAsideCollapsedStatic }
+                            ]"
+                            @layout="handleLayout">
+                            <template #default="{ layout }">
+                                <ResizablePanel :default-size="mainDefaultSize" :order="1">
+                                    <RouterView v-slot="{ Component }">
+                                        <!-- 图表页含 echarts/ResizeObserver/Worker，不适合 KeepAlive 常驻缓存，全部排除 -->
+                                        <KeepAlive
+                                            exclude="ChartsInstance, ChartsMutual, ChartsRelationshipTimeline, ChartsHotWorlds, ChartsTwoPersonRelationship">
+                                            <component :is="Component" />
+                                        </KeepAlive>
+                                    </RouterView>
+                                </ResizablePanel>
 
-                            <ResizableHandle
-                                with-handle
-                                :class="[
-                                    isAsideCollapsed(layout) ? 'opacity-100' : 'opacity-0',
-                                    'z-20 [&>div]:-translate-x-1/2'
-                                ]"></ResizableHandle>
-                            <ResizablePanel
-                                ref="asidePanelRef"
-                                :default-size="asideDefaultSize"
-                                :min-size="asideMinSize"
-                                :collapsed-size="0"
-                                collapsible
-                                :order="2"
-                                :style="{ maxWidth: `${asideMaxPx}px` }">
-                                <Sidebar></Sidebar>
-                            </ResizablePanel>
-                        </template>
-                    </ResizablePanelGroup>
+                                <ResizableHandle
+                                    v-show="!showSidePanelRail"
+                                    with-handle
+                                    :class="[
+                                        isAsideCollapsed(layout) ? 'opacity-100' : 'opacity-0',
+                                        'z-20 [&>div]:-translate-x-1/2'
+                                    ]"></ResizableHandle>
+                                <ResizablePanel
+                                    ref="asidePanelRef"
+                                    :default-size="asideDefaultSize"
+                                    :min-size="asideMinSize"
+                                    :collapsed-size="0"
+                                    collapsible
+                                    :order="2"
+                                    :style="{ maxWidth: `${asideMaxPx}px` }">
+                                    <Sidebar></Sidebar>
+                                </ResizablePanel>
+                            </template>
+                        </ResizablePanelGroup>
+                        <SidePanelRail v-if="showSidePanelRail" />
+                    </div>
                 </SidebarInset>
             </SidebarProvider>
             <StatusBar />
@@ -132,6 +136,7 @@
     import NavMenu from '../../components/nav-menu/NavMenu.vue';
     const PrimaryPasswordDialog = defineAsyncComponent(() => import('../Settings/dialogs/PrimaryPasswordDialog.vue'));
     const SendBoopDialog = defineAsyncComponent(() => import('../../components/dialogs/SendBoopDialog.vue'));
+    import SidePanelRail from '../Sidebar/SidePanelRail.vue';
     import Sidebar from '../Sidebar/Sidebar.vue';
     import StatusBar from '../../components/StatusBar.vue';
     const VRChatConfigDialog = defineAsyncComponent(() => import('../Settings/dialogs/VRChatConfigDialog.vue'));
@@ -144,9 +149,11 @@
     const router = useRouter();
 
     const appearanceSettingsStore = useAppearanceSettingsStore();
-    const { navWidth, isNavCollapsed } = storeToRefs(appearanceSettingsStore);
+    const { navWidth, isNavCollapsed, isSidePanelCollapsed } = storeToRefs(appearanceSettingsStore);
 
     const sidebarOpen = computed(() => !isNavCollapsed.value);
+
+    const showSidePanelRail = computed(() => isSideBarTabShow.value && isSidePanelCollapsed.value);
 
     const handleSidebarOpenChange = (open) => {
         appearanceSettingsStore.setNavCollapsed(!open);
@@ -205,14 +212,18 @@
 
     const asidePanelRef = ref(null);
 
-    watch(isSideBarTabShow, async (show) => {
-        await nextTick();
-        if (show) {
-            asidePanelRef.value?.expand();
-        } else {
-            asidePanelRef.value?.collapse();
-        }
-    });
+    watch(
+        [isSideBarTabShow, isSidePanelCollapsed],
+        async ([show, collapsed]) => {
+            await nextTick();
+            if (!show || collapsed) {
+                asidePanelRef.value?.collapse();
+            } else {
+                asidePanelRef.value?.expand();
+            }
+        },
+        { immediate: true }
+    );
 
     watch(
         () => watchState.isLoggedIn,
