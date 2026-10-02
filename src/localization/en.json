@@ -867,7 +867,7 @@
                         "summary": "Each dimension is normalized first, then averaged by weight into the final score. Weights are relative shares and need not add up to 100; Reset restores the 40 / 30 / 20 / 10 defaults.",
                         "online_overlap": "Cumulative time both of you were online together — how much time you actually share.",
                         "co_world_frequency": "How often you both joined the same world — how often you run into each other.",
-                        "recency": "Time since your last interaction, decaying exponentially over 90 days — closer is higher.",
+                        "recency": "Time since your last interaction — quick decay over the first two weeks, then a long tail — discounted by how often you meet, so regular contact outscores a one-off.",
                         "consistency": "Number of distinct days you appeared together — whether contact stays steady."
                     }
                 },
