@@ -170,16 +170,14 @@ export function addFriendship(id) {
                 database.setFriendLogCurrent(friendLogCurrent);
                 uiStore.notifyMenu('friend-log');
                 deleteFriendRequest(id);
-                queryRequest
-                    .fetch('user.force', { userId: id })
-                    .then(() => {
-                        if (
-                            userStore.userDialog.visible &&
-                            id === userStore.userDialog.id
-                        ) {
-                            userStore.applyUserDialogLocation(true);
-                        }
-                    });
+                queryRequest.fetch('user.force', { userId: id }).then(() => {
+                    if (
+                        userStore.userDialog.visible &&
+                        id === userStore.userDialog.id
+                    ) {
+                        userStore.applyUserDialogLocation(true);
+                    }
+                });
             }
         });
 }

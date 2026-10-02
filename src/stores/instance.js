@@ -22,10 +22,7 @@ import {
     parseLocation,
     replaceBioSymbols
 } from '../shared/utils';
-import {
-    instanceRequest,
-    queryRequest
-} from '../api';
+import { instanceRequest, queryRequest } from '../api';
 import {
     accessTypeLocaleKeyMap,
     instanceContentSettings
