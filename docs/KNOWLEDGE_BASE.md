@@ -2,6 +2,8 @@
 
 > 本文档是 VRCX-Pro 项目的全面技术参考，涵盖架构设计、代码组织、开发规范和常见任务。
 
+按任务入口见 [文档索引](README.md)；跨层变更先读 [架构总览](ARCHITECTURE.md)，开发与验证步骤见 [开发指南](DEVELOPMENT.md) 和 [测试指南](TESTING.md)。
+
 ---
 
 ## 目录
@@ -22,6 +24,8 @@
   - [6.8 Components（组件）](#68-components组件)
   - [6.9 路由系统](#69-路由系统)
   - [6.10 国际化](#610-国际化)
+  - [6.11 好友亲密度评分](#611-好友亲密度评分)
+  - [6.12 数据库管理页面](#612-数据库管理页面)
 - [7. 平台桥接层](#7-平台桥接层)
   - [7.1 IPC 机制](#71-ipc-机制)
   - [7.2 Platform Runtime](#72-platform-runtime)
@@ -57,6 +61,9 @@ VRCX-Pro 是 [VRCX](https://github.com/vrcx-team/VRCX) 的社区增强分支，�
 - 画廊打印收藏、群组管理与日历导出
 - 批量解除审核、实例操作队列提示
 - 图表趋势、关系分析与 HTML 报告导出
+- 好友亲密度评分（稳健归一化、权重可调、好友排除、百分制/绝对评分口径）
+- 数据库管理页面（概览、表数据预览、备份 / 恢复）
+- 小窗口自适应缩放（最小窗口 800×600，窄窗口自动降缩放）
 - 自定义通知规则、文字转语音与邮件通知
 - 内置 MCP Server，支持 AI 助手集成
 
@@ -166,6 +173,13 @@ VRCX-Pro/
 ├── build-scripts/                   # 构建脚本
 ├── scripts/                         # 开发工具脚本
 └── docs/                            # 项目文档
+    ├── README.md                    # 文档索引
+    ├── ARCHITECTURE.md              # 跨层架构与数据流
+    ├── DEVELOPMENT.md               # 开发操作指南
+    ├── TESTING.md                   # 测试与验证矩阵
+    ├── RELEASE.md                   # 版本与打包
+    ├── TROUBLESHOOTING.md           # 故障排查
+    ├── SECURITY.md                  # 数据、网络与 MCP 边界
     ├── KNOWLEDGE_BASE.md            # 架构与开发参考
     ├── LAUNCH_ARGS.md               # 启动参数参考
     └── MCP.md                       # MCP Server 参考
@@ -193,11 +207,10 @@ View (用户点击)
 
 ```
 VRChat Pipeline (wss://pipeline.vrchat.cloud)
-  → .NET Sidecar (WebSocket 管理)
-    → Tauri Event System
-      → services/websocket.js (事件分发)
-        → Store (状态更新)
-          → View (响应式重渲染)
+  → src/services/websocket.js (前端 WebSocket)
+    → handlePipeline() / Coordinator
+      → Store (状态更新)
+        → View (响应式重渲染)
 ```
 
 ### 5.3 缓存与数据同步
@@ -230,9 +243,11 @@ Entity Cache (LRU) 维护本地实体缓存：
 5. **创建 Vue App** — 挂载 Pinia、i18n、Vue Query、组件、路由
 6. **等待就绪** — 路由就绪 + 页面加载完成 + 后端数据库初始化完成 → 隐藏启动画面
 
+**登录状态反馈**：登录过程中登录页（及 OOBE）显示页内遮罩层（全局 AlertDialog 样式），主按钮显示 Loader2 旋转动画并禁用所有登录相关按钮；遮罩持续到应用就绪，登录结束（成功或失败）后状态与动画复位。实现时先置 `loginBusy=true` 再 `await nextTick()`，确保加载动画被强制渲染。
+
 ### 6.2 Pinia Stores
 
-约 45 个 Store，按职责分四类：
+Store 按职责分为四类；数量以 `src/stores/index.js` 的实际导出为准：
 
 | 分类 | 目录/文件 | 说明 |
 |------|-----------|------|
@@ -287,6 +302,7 @@ Entity Cache (LRU) 维护本地实体缓存：
 | **websocket** | `services/websocket.js` | VRChat Pipeline WebSocket 连接管理，处理约 20 种事件类型 |
 | **config** | `services/config.js` | `ConfigRepository`，SQLite KV 存储 |
 | **watchState** | `services/watchState.js` | 响应式状态标志：isLoggedIn, isFriendsLoaded, isFavoritesLoaded |
+| **windowZoom** | `services/windowZoom.js` | 窗口缩放管理：持有手动缩放基准（`VRCX_ZoomLevel`），按窗口逻辑宽度自动降缩放（<880→85%、<960→90%）；接线 `AppApi.SetZoom/GetZoom` |
 | **database/** | `services/database/` | 数据库 Schema 定义、表创建、迁移、修复 |
 
 ### 6.5 API 层
@@ -365,10 +381,11 @@ TanStack Vue Query 集成层，提供声明式数据获取。
 | `/social/friend-list` | `FriendList/` | 好友列表 |
 | `/my-avatars` | `MyAvatars/` | 我的头像 |
 | `/notification` | `Notifications/` | 通知中心 |
-| `/charts/*` | `Charts/` | 数据图表（实例/互关/热门世界/双人/时间线） |
+| `/charts/*` | `Charts/` | 数据图表（实例/互关/热门世界/双人/时间线/亲密度） |
 | `/tools` | `Tools/` | 工具页 |
 | `/tools/gallery` | `Tools/` (子路由) | 画廊 |
 | `/tools/screenshot-metadata` | `Tools/` (子路由) | 截图元数据 |
+| `/tools/database` | `Tools/DatabaseManagement.vue` | 数据库管理（概览、表预览、备份/恢复） |
 | `/settings` | `Settings/` | 设置页 |
 
 ### 6.8 Components（组件）
@@ -397,6 +414,35 @@ vue-i18n + 静态 JSON 文件，支持语言：
 - `zh-TW` — 繁体中文
 
 语言文件位于 `src/localization/`，通过 BCP-47 代码自动匹配系统语言。
+
+### 6.11 好友亲密度评分
+
+[useRelationshipScoring.js](../src/views/Charts/composables/useRelationshipScoring.js) 是亲密度评分核心，消费方为 `/charts/intimacy` 路由的 [RelationshipIntimacy.vue](../src/views/Charts/components/RelationshipIntimacy.vue)。完整设计见 [feature spec](compose/spec/intimacy-scoring.md)。
+
+**评分模型（四个维度，各 0–100）：**
+
+| 维度 | 含义 | 归一化方式 |
+|------|------|-----------|
+| `onlineOverlap` | 在线时间重叠 | `ln(1+v)` 对数压缩后 ÷ 全体 P90 对数值，封顶 1 |
+| `coWorldFrequency` | 共同世界频次 | 同上（稳健归一化） |
+| `consistency` | 共存一致性 | 同上（稳健归一化） |
+| `recency` | 最近接触度 | 90 天指数衰减，不走归一化 |
+
+- **权重可调**：四维权重 0–100 可调，按权重和归一化合成（键 `intimacyWeights`）；全零权重得 0
+- **好友排除**：完全排除（移出归一化计算集）/ 仅隐藏显示（仍参与计算），名单与模式持久化（`intimacyExcludedFriends` / `intimacyExcludeMode`），支持一键恢复
+- **评分口径**（键 `intimacyScoreMode`）：百分制按全体好友 P90 归一化得 0–100；绝对评分按固定锚点换算（锚点 = 1000 分基准），不封顶、分值不随其他好友变化，进度条以榜内最高值为满格
+- **排行**：`topFriends` 展示全部参与评分的好友（无数量上限），`scoreMax` 为榜内最高分
+- **管理函数**：`setWeight` / `resetWeights`、`excludeFriend` / `includeFriend` / `includeAllFriends`、`setExcludeMode` / `setScoreMode` 等
+- 权重、评分口径与排除管理 UI 位于页头设置入口打开的右侧 Sheet 抽屉
+
+### 6.12 数据库管理页面
+
+路由 `/tools/database`，[DatabaseManagement.vue](../src/views/Tools/DatabaseManagement.vue)，旧的导出/导入对话框（[DatabaseManagementDialog.vue](../src/views/Tools/dialogs/DatabaseManagementDialog.vue)）仍作为对话框入口保留。
+
+**功能分区：**
+- **概览**：数据库文件信息、数据库版本、各表行数
+- **表数据预览**：选择表后浏览数据
+- **备份 / 恢复**：数据库备份导出、恢复导入（OOBE 数据恢复复用同一套导入逻辑，冲突时采用覆盖 + 新增策略）
 
 ---
 
@@ -445,6 +491,7 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
 | `desktopNotification` | 桌面通知 |
 | `restartApp` / `quitApplication` | 应用重启/退出 |
 | `showMainWindow` / `resizeWindow` / `centerWindow` | 窗口管理 |
+| `setWindowZoom` / `getWindowInnerSize` / `onWindowInnerResize` | 窗口缩放与逻辑内尺寸监听 |
 | `setCloseToTray` | 关闭时最小化到托盘 |
 | `getOverlayWindow` / `updateVr` | VR Overlay（占位） |
 
@@ -476,6 +523,7 @@ router.isReady() + window.load ─────────┘
 - `set_tray_icon_notification` — 托盘通知
 - `quit_application` — 退出应用
 - `show_main_window` / `resize_window` / `center_window` — 窗口管理
+- `set_window_zoom` — 设置 WebView 缩放比例
 - `open_devtools` — 打开开发者工具
 - `get_launch_args` — 获取启动参数
 
@@ -488,15 +536,9 @@ router.isReady() + window.load ─────────┘
 - 单实例锁（防止多开）
 
 **启动参数解析：**
-- `--startup` — 启动时最小化
-- `--debug` — 调试模式
-- `--overlay` — Overlay 模式
-- `--disable-gpu` — 禁用 GPU 加速
-- `--center` — 窗口居中
-- `--config=` — 自定义配置路径
-- `--proxy-server=` — 代理服务器
-- `--width=` / `--height=` — 窗口尺寸
-- `vrcx://` URI — 自定义协议处理
+- 当前有效：`--startup` / `--minimized`、`--debug`、`--proxy-server=`、`--width=` / `--height=`、`--center`、`--maximized`、`--fullscreen`、`--reset-window`
+- 仅保存或部分消费：`--disable-gpu`、`--overlay`、`--config=`、`vrcx://`
+- 参数的实际状态、持久化和限制见 [启动参数文档](LAUNCH_ARGS.md)
 
 ### 8.2 .NET Sidecar
 
@@ -563,7 +605,7 @@ router.isReady() + window.load ─────────┘
 
 ## 9. 数据库设计
 
-SQLite 数据库位于 `%APPDATA%/VRCX/vrcx.db`，表按功能分类：
+SQLite 数据库位于 `%APPDATA%/VRCX/VRCX.sqlite3`，表按功能分类；用户相关表使用由账号 ID 计算的前缀：
 
 ### 用户相关表（带用户前缀）
 
@@ -660,71 +702,23 @@ npm run verify:tauri
 
 ### 10.4 新增 Store
 
-```javascript
-// src/stores/myFeature.js
-import { defineStore } from 'pinia';
-
-export const useMyFeatureStore = defineStore('myFeature', {
-    state: () => ({
-        // 初始状态
-    }),
-    actions: {
-        // 操作方法
-    }
-});
-```
+以 `src/stores/settings/general.js` 或 `src/stores/auth.js` 为参考：使用 `defineStore()` 定义状态和 action，在 `src/stores/index.js` 导出并按现有方式注册。不要直接修改其他 Store 的状态。
 
 在 `src/stores/index.js` 中导入并注册到 `createGlobalStores()`。
 
 ### 10.5 新增 API 模块
 
-```javascript
-// src/api/myModule.js
-import { request } from '../services/request.js';
-import { queryClient } from '../queries/index.js';
-import { queryKeys } from '../queries/keys.js';
-
-export async function getMyData(id) {
-    const response = await request({
-        url: `https://api.vrchat.cloud/api/1/my-endpoint/${id}`,
-        method: 'GET'
-    });
-    return response;
-}
-
-export async function updateMyData(id, data) {
-    const response = await request({
-        url: `https://api.vrchat.cloud/api/1/my-endpoint/${id}`,
-        method: 'PUT',
-        body: data
-    });
-    queryClient.invalidateQueries({ queryKey: queryKeys.myData(id) });
-    return response;
-}
-```
+以 [src/api/user.js](../src/api/user.js) 为参考：每个函数封装一个 VRChat 端点并调用 `request()`；Mutation 完成后使用 `queryKeys` 工厂失效对应缓存。不要直接使用 `fetch()`，也不要绕过 `request()` 的限流、去重和错误语义。
 
 ### 10.6 新增 Coordinator
 
-```javascript
-// src/coordinators/myCoordinator.js
-import { useMyStore } from '../stores/myFeature.js';
-import { useOtherStore } from '../stores/otherFeature.js';
-
-export function runMyWorkflow() {
-    const myStore = useMyStore();
-    const otherStore = useOtherStore();
-    
-    // 编排多个 Store 的操作
-    myStore.setData(/* ... */);
-    otherStore.updateState(/* ... */);
-}
-```
+以 [src/coordinators/authCoordinator.js](../src/coordinators/authCoordinator.js) 为参考：协调器导出普通函数，按顺序调用多个 Store action 和 Service，并返回结果或抛出明确错误；不要在协调器中持有第二个状态源。
 
 协调器在 `src/coordinators/` 目录下，以函数形式导出，由 View 或 Store 调用。
 
 ### 10.7 新增 IPC 命令
 
-**前端侧：** 通过 InteropApi 代理自动路由，无需额外配置。
+**前端侧：** 新增原生命令时需在 `window.platform` 或 InteropApi 中建立调用入口；`Class.Method` 形状可复用代理，但仍要确认 .NET 分发存在。
 
 **Rust 侧（src-tauri/src/lib.rs）：**
 ```rust
@@ -747,10 +741,13 @@ fn my_new_command(arg: String) -> Result<String, String> {
 测试使用 Vitest，位于各模块的 `__tests__/` 目录。
 
 **测试覆盖的模块：**
-- `src/api/__tests__/` — API 层（entityQuerySync, favoriteQuerySync, friendQuerySync, groupQuerySync, mediaQuerySync, queryRequest）
-- `src/components/__tests__/` — 组件（AvatarInfo, BackToTop, DisplayName, Emoji, Location, LocationWorld, StatusBar, Timer）
-- `src/queries/__tests__/` — 查询层（entityCache, keys, policies）
-- `src/services/__tests__/` — 服务层（config, confusables, gameLog, request, security）
+- `src/api/__tests__/` — API 与查询同步
+- `src/components/**/__tests__/`、`src/views/**/__tests__/` — 组件、页面与交互
+- `src/queries/__tests__/` — 缓存键、策略与实体缓存
+- `src/stores/__tests__/`、`src/coordinators/__tests__/` — 状态与跨 Store 工作流
+- `src/services/__tests__/`、`src/services/database/__tests__/` — 请求、窗口、数据库等领域服务
+
+完整验证矩阵和原生层命令见 [测试指南](TESTING.md)。
 
 ```bash
 npm run test           # 运行所有测试

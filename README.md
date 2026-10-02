@@ -32,25 +32,27 @@ VRCX-Pro 在完全保留上游 [VRCX](https://github.com/vrcx-team/VRCX) 基础�
 - API 限流自动降速，防止触发 VRChat 风控
 - OOBE 首次启动向导，新手友好
 - 系统托盘、Windows 开机自启动
-- 独立数据库管理对话框（导出 / 导入 / 重置）
 - 图表趋势、关系分析与 HTML 报告导出
+- 好友亲密度评分：稳健归一化模型、权重可调、好友排除、百分制/绝对评分切换
+- 独立数据库管理页面（概览、表数据预览、备份 / 恢复）
+- 小窗口自适应：最小窗口 800×600，窄窗口自动降低缩放
 - 自定义通知规则、文字转语音与邮件通知
 - **MCP Server**：内置 AI 助手数据接口，支持 Claude Desktop、Cursor、Windsurf 等客户端直接查询本地 VRCX 数据
 
-> 详细功能说明请参阅 [项目知识库](docs/KNOWLEDGE_BASE.md)。
+> 文档入口见 [docs/README.md](docs/README.md)；完整架构与模块参考见 [项目知识库](docs/KNOWLEDGE_BASE.md)。
 
 ## 与上游的差异
 
 VRCX-Pro 绝大多数基础能力与上游 VRCX 一致，主要差异在于：
 
-| 方面 | VRCX（上游） | VRCX-Pro |
-|------|-------------|----------|
-| 桌面外壳 | Electron / CEF | Tauri 2（Rust） |
-| 前端框架 | Vue 3（CDN） | Vue 3 + Vite + Pinia |
-| UI 组件 | 自定义 | reka-ui + Tailwind CSS 4 |
-| 数据查询 | 手动管理 | TanStack Vue Query |
-| MCP 集成 | 无 | 内置 MCP Server（axum） |
-| 后端 | Node.js native / C# | .NET 9 Sidecar + Rust |
+| 方面     | VRCX（上游）        | VRCX-Pro                 |
+| -------- | ------------------- | ------------------------ |
+| 桌面外壳 | Electron / CEF      | Tauri 2（Rust）          |
+| 前端框架 | Vue 3（CDN）        | Vue 3 + Vite + Pinia     |
+| UI 组件  | 自定义              | reka-ui + Tailwind CSS 4 |
+| 数据查询 | 手动管理            | TanStack Vue Query       |
+| MCP 集成 | 无                  | 内置 MCP Server（axum）  |
+| 后端     | Node.js native / C# | .NET 9 Sidecar + Rust    |
 
 > 所有本地数据（收藏分组、备注、标签、在线记录等）仅存储于本地 SQLite，不上传任何第三方服务器。
 
@@ -88,6 +90,8 @@ build-scripts/build-portable-package.cmd   # 便携版
 构建频道由根目录 `version_channel` 控制：`Release` 保持原版本，`Beta`
 追加 `-beta`，`It` 追加 `-it` 并启用界面水印。
 
+环境准备、分层变更步骤和验证矩阵见 [开发指南](docs/DEVELOPMENT.md)、[测试指南](docs/TESTING.md) 与 [发布指南](docs/RELEASE.md)。
+
 ### 前端校验
 
 ```bash
@@ -104,6 +108,17 @@ npm run test:coverage   # 覆盖率报告
 > 需要先安装 Rust 及平台所需 WebView 前置依赖。
 > 其他细节请参考上游 [Building from source](https://github.com/vrcx-team/VRCX/wiki/Building-from-source)。
 
+## 文档
+
+| 主题 | 文档 |
+| --- | --- |
+| 文档总入口与维护约定 | [docs/README.md](docs/README.md) |
+| 架构、数据流与变更落点 | [架构总览](docs/ARCHITECTURE.md) |
+| 完整模块与数据库参考 | [项目知识库](docs/KNOWLEDGE_BASE.md) |
+| 开发、测试与发布 | [开发指南](docs/DEVELOPMENT.md)、[测试指南](docs/TESTING.md)、[发布指南](docs/RELEASE.md) |
+| 故障排查与安全边界 | [故障排查](docs/TROUBLESHOOTING.md)、[安全与隐私](docs/SECURITY.md) |
+| 启动参数与 MCP | [启动参数](docs/LAUNCH_ARGS.md)、[MCP Server](docs/MCP.md) |
+
 ## MCP Server
 
 VRCX-Pro 内置了 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 服务器，允许 AI 助手直接查询本地 VRCX 数据。
@@ -118,19 +133,21 @@ VRCX-Pro 内置了 [Model Context Protocol (MCP)](https://modelcontextprotocol.i
 
 ## 版本历史
 
-| 版本 | 主要变更 |
-|------|---------|
-| **3.4.2** | 修复房间更新、启动注册与个人资料更新等稳定性问题 |
-| **3.4.1** | 优化更新检测与下载反馈、登录体验和离线可用性 |
-| **3.4.0** | 数据导出、分析报告、MCP 工具扩展与启动体验完善 |
-| **3.3.0** | 群组与装扮功能、UI 调试预览、邮件通知 |
-| **3.2.0** | 内置 MCP Server，AI 助手集成 |
-| **3.1.3** | 独立数据库管理对话框、UI 组件库展厅、调试工具重构 |
-| **3.1.2** | 修复桌面通知 |
-| **3.1.1** | 浅色模式背景优化 |
-| **3.1.0** | OOBE 向导进度、启动动画、开机自启动 |
-| **3.0.0** | Tauri 2 全量迁移、系统托盘、API 限流降速 |
-| **2.3.0** | 画廊打印收藏、自动拒绝垃圾好友、批量解除审核 |
+| 版本      | 主要变更                                                                                      |
+| --------- | --------------------------------------------------------------------------------------------- |
+| **3.5.1** | 数据库管理页面、亲密度评分口径切换（百分制/绝对评分）与排行优化、登录遮罩优化、小窗口自适应、启动加载优化、界面调试工具组件页补全 |
+| **3.5.0** | 好友亲密度评分重设计（稳健归一化、权重可调、好友排除）、简介历史对比与差异视图、备份/恢复文案统一 |
+| **3.4.2** | 修复房间更新、启动注册与个人资料更新等稳定性问题                                              |
+| **3.4.1** | 优化更新检测与下载反馈、登录体验和离线可用性                                                  |
+| **3.4.0** | 数据导出、分析报告、MCP 工具扩展与启动体验完善                                                |
+| **3.3.0** | 群组与装扮功能、UI 调试预览、邮件通知                                                         |
+| **3.2.0** | 内置 MCP Server，AI 助手集成                                                                  |
+| **3.1.3** | 独立数据库管理对话框、UI 组件库展厅、调试工具重构                                             |
+| **3.1.2** | 修复桌面通知                                                                                  |
+| **3.1.1** | 浅色模式背景优化                                                                              |
+| **3.1.0** | OOBE 向导进度、启动动画、开机自启动                                                           |
+| **3.0.0** | Tauri 2 全量迁移、系统托盘、API 限流降速                                                      |
+| **2.3.0** | 画廊打印收藏、自动拒绝垃圾好友、批量解除审核                                                  |
 
 > 各版本详细更新日志请参阅 [GitHub Releases](https://github.com/Yusurmount/VRCX-Pro/releases)；本地存在时也可查看仓库根目录的 `*_CHANGELOG.md`。
 

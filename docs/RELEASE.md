@@ -1,0 +1,103 @@
+# 发布指南
+
+发布前先阅读[测试指南](TESTING.md)。本文只描述当前仓库已有脚本，不引入新的发布流程。
+
+## 版本来源
+
+| 文件 | 作用 |
+| --- | --- |
+| `Version` | 基础版本号，例如 `3.5.1` |
+| `version_channel` | 发布频道，必须是 `Release`、`Beta` 或 `It` |
+| `build-scripts/sync-version.js` | 把频道化版本写入 `src-tauri/tauri.conf.json` 和 `src-tauri/Cargo.toml` |
+| `package.json` | npm 依赖与脚本元数据，不是发布版本源 |
+
+频道后缀：
+
+| 频道 | 结果 | 行为 |
+| --- | --- | --- |
+| `Release` | `3.5.1` | 正式版本 |
+| `Beta` | `3.5.1-beta` | 测试版本后缀 |
+| `It` | `3.5.1-it` | 内部测试版本，前端启用界面水印 |
+
+修改版本可使用 `update-version.bat [patch|minor|major|1|2|3|0]`，它会更新 `Version` 并立即同步 Tauri 配置。不要手工维护多个版本源。
+
+## 构建流程
+
+```text
+Version + version_channel
+  -> sync-version.js
+  -> Vite 生产构建 + 第三方许可
+  -> .NET sidecar 发布
+  -> Tauri/Rust release 编译
+  -> NSIS 或便携包产物
+```
+
+`tauri.conf.json` 的 `beforeBuildCommand` 会执行：
+
+```text
+npm run prod:auto && npm run build:tauri-backend
+```
+
+直接运行 `npm run tauri:build` 会先同步版本，再执行完整 Tauri 构建。
+
+## 发布前验证
+
+```powershell
+git status --short
+npm run format:check
+npm run lint
+npm test
+npm run verify:tauri
+cargo check --manifest-path src-tauri/Cargo.toml
+npm run build:tauri-backend
+```
+
+跨 IPC 调用或 MCP 工具的版本还应运行：
+
+```powershell
+npm run probe:tauri-backend
+cargo test --manifest-path src-tauri/Cargo.toml
+```
+
+确认版本文件、文档、更新日志和实际变更一致，确认工作区没有把生成物或无关文件纳入提交。
+
+## 生成 NSIS 安装包
+
+```powershell
+build-scripts\build-install-package.cmd
+```
+
+脚本会：
+
+1. 读取并同步 `Version`；
+2. 运行 `npm run tauri:build -- --bundles nsis`；
+3. 将 `src-tauri\target\release\bundle\nsis\VRCX-Pro_<version>_x64-setup.exe` 移到仓库根目录。
+
+安装包使用 perMachine NSIS 配置，目标机需要 WebView2 运行时。
+
+## 生成便携包
+
+```powershell
+build-scripts\build-portable-package.cmd
+```
+
+脚本运行 `npm run tauri:build -- --no-bundle`，将可执行文件和 `dotnet-runtime` 打包为：
+
+```text
+VRCX-Pro-<version>-portable.zip
+```
+
+便携包同样依赖目标机的 WebView2 Runtime。不要把 `build/`、`src-tauri/target/` 或 `Dotnet/**/obj|bin` 的中间产物当作发布文件。
+
+## 发布检查清单
+
+- [ ] `Version`、`version_channel`、`tauri.conf.json`、`Cargo.toml` 一致。
+- [ ] README、知识库、变更日志和文档索引已同步。
+- [ ] 前端 lint、测试、格式检查已运行。
+- [ ] Rust 编译与 `verify:tauri` 已通过。
+- [ ] .NET 发布或 probe 已按改动范围运行。
+- [ ] 安装包与便携包实际生成并能在目标 WebView2 环境启动。
+- [ ] 只提交相关源码和文档，不提交安装包、构建目录或调试日志。
+- [ ] 未推送、未拉取、未丢弃任何现有改动。
+
+提交步骤必须由用户明确确认；未经确认不要执行 `git commit`、`git push` 或 `git pull`。

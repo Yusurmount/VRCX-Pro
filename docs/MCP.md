@@ -2,6 +2,8 @@
 
 VRCX-Pro 内置了 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 服务器，允许 AI 助手（如 Claude Desktop、Cursor、Windsurf 等）直接查询本地 VRCX 数据，实现更智能的 VRChat 社交管理体验。
 
+文档总入口见 [文档索引](README.md)；安全边界见 [安全与隐私](SECURITY.md)。
+
 ---
 
 ## 目录
@@ -82,15 +84,15 @@ MCP 服务器为 AI 助手提供了以下能力：
 | **Enable MCP Server** | 关闭     | 启用/禁用 MCP 服务器                  |
 | **Server Port**       | `3001`   | HTTP 监听端口（范围 1024–65535）      |
 | **Server Status**     | —        | 显示当前运行状态（Running / Stopped） |
-| **Database Path**     | 自动检测 | VRCX SQLite 数据库文件路径            |
 
 ### 数据库路径
 
-默认情况下，MCP 服务器会尝试读取 VRCX 标准数据库位置：
+MCP Server 当前固定读取 VRCX 标准数据库，设置界面不提供自定义路径：
 
-- **Windows**: `%APPDATA%/VRCX/vrcx.db`
+- **Windows**: `%APPDATA%/VRCX/VRCX.sqlite3`
+- **Linux**: `~/.local/share/VRCX/VRCX.sqlite3`
 
-如果使用自定义路径，可在设置中手动指定。
+数据库不存在时，Tauri 命令会返回 `Database not found`，服务不会启动。
 
 ---
 
@@ -526,7 +528,7 @@ AI 客户端 (Claude Desktop / Cursor / ...)
                  |  rusqlite (WAL 模式)
                  v
 +-----------------------------------+
-|  SQLite Database (vrcx.db)        |
+|  SQLite Database (VRCX.sqlite3)    |
 |  +-- friend_log_current           |
 |  +-- feed_* (GPS/状态/模型/签名)   |
 |  +-- favorite_* (好友/世界/模型)   |
@@ -567,14 +569,14 @@ AI 客户端 (Claude Desktop / Cursor / ...)
 
 ### Q: 提示 "Database not found"？
 
-确保 VRCX 数据库文件存在。默认路径为 `%APPDATA%/VRCX/vrcx.db`。如果使用自定义路径，在设置中手动指定。
+确保数据库文件存在。Windows 默认路径为 `%APPDATA%/VRCX/VRCX.sqlite3`；当前实现不支持在设置中指定自定义路径。
 
 ### Q: AI 助手无法连接？
 
 1. 确认 MCP 服务器状态显示 **Running**
 2. 确认端口号配置正确
 3. 检查是否有防火墙拦截本地连接
-4. 尝试在浏览器中访问 `http://127.0.0.1:3001/mcp` 确认服务响应
+4. 使用 POST JSON-RPC `tools/list` 请求确认服务响应；MCP 不是普通 GET 页面
 
 ### Q: 查询结果为空？
 

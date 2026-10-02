@@ -1,7 +1,7 @@
 ---
 feature: intimacy-scoring
 status: delivered
-updated: 2026-09-30
+updated: 2026-10-02
 branch: feature/intimacy-scoring
 commits: 493abb7e..2bfe43b8
 ---
@@ -19,7 +19,7 @@ commits: 493abb7e..2bfe43b8
 不再把其余好友的分数压扁到接近 0，排行与维度条恢复区分度。时间线对比不在本
 次范围内，未改动。
 
-交付后同一功能面追加了三项后续需求（均已完成并合并进 master）：
+交付后同一功能面追加了多轮后续需求（均已完成并合并进 master）：
 1. **权重可调节**（`e181dca0`）：四维权重改为 0–100 可调，按权重和归一化合成，
    存 `configRepository`（键 `intimacyWeights`）；全零权重时得 0。
 2. **好友排除**（`e181dca0`）：两种语义可切换——完全排除（移出归一化计算集）/
@@ -30,6 +30,17 @@ commits: 493abb7e..2bfe43b8
    `MutualFriends` 设置抽屉），页头新增滑杆图标入口；i18n 三语补齐
    （`settings.title` 等）。配套测试扩至 11 个用例（权重重算、双排除语义、
    分布隐藏、跨实例持久化），全部通过。
+4. **评分口径切换**（`7c817910`、`8b6e6fe5`）：新增百分制/绝对评分两种口径，
+   键 `intimacyScoreMode`。百分制维持 P90 归一化 0–100；绝对评分按固定锚点
+   （`ABSOLUTE_ANCHORS`，锚点值 = 1000 分基准）取 `log1p` 比值 ×1000，不封顶、
+   分值不随其他好友增减而变化；新增导出 `scoreMax`，进度条以榜内最高值为满格。
+5. **排行移除 20 人上限**（`0929181a`）：`topFriends` 改为展示全部参与评分的
+   好友，S2 所述「前 20 排序」契约随之作废。
+6. **排除名单一键恢复**（`654d63b2`）：新增 `includeAllFriends()`，抽屉内
+   一键恢复全部已排除好友。
+7. **配套修复**：评分设置抽屉内容溢出无法滚动（`c71ced98`）、评分权重提示
+   补齐缺失译文并收窄布局避免顶出窗口（`d97e5164`）、权重标题旁新增提示
+   解释各维度含义（`8379bcc9`）。
 
 **Verification** — `npx vitest run src/views/Charts/composables/__tests__/` → PASS
 （48 tests / 5 files，含新增 5 个用例：空数据、单好友=100、全零=0、离群不压扁
@@ -71,6 +82,8 @@ critical。
   lastSeen, distinctDays }, displayName }`。
 - 权重 `0.4 / 0.3 / 0.2 / 0.1`、`recency` 的 90 天指数衰减、`topFriends` 前 20 排序、
   `scoreDistribution` 十桶直方图、`loadScores` 的 `ensureUserContext` 流程均不变。
+  （后续变更：权重改为 0–100 可调、`topFriends` 移除前 20 上限、新增评分口径
+  与排除机制，以 Report 的交付后清单为准。）
 - 无新增 UI、无新增 i18n 文案。
 
 **新归一化算法**（仅替换三个共位维度的 `normalizeValue`，`recency` 不走归一化）：

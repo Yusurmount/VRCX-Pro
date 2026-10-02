@@ -2,6 +2,21 @@
 
 > 本文档详细说明 VRCX-Pro 支持的所有命令行启动参数。
 
+> 当前 Tauri 实现并非所有解析参数都有运行时效果。请先查看下方“参数状态”；`--config`、`--overlay`、`--disable-gpu` 等参数目前只部分或仅保存设置，不能直接套用旧版行为。
+
+## 参数状态
+
+| 参数 | 状态 | 当前行为 |
+| --- | --- | --- |
+| `--startup` / `--minimized` | 有效 | 不显示主窗口，托盘可恢复 |
+| `--debug` | 有效 | 设置 `AppDebug.debug`，细粒度日志仍需独立开关 |
+| `--proxy-server=` | 有效 | 写入 `VRCX_ProxyServer`，后续 WebApi 读取 |
+| `--width=` / `--height=` | 有效 | 写入尺寸键并立即调整当前窗口 |
+| `--center` / `--maximized` / `--fullscreen` / `--reset-window` | 有效 | 在前端或 Rust setup 中应用 |
+| `--disable-gpu` | 仅保存设置 | 写入 `VRCX_DisableGpuAcceleration`，当前 Tauri 启动路径未发现消费点 |
+| `--overlay` / `--config=` | 仅解析 | 当前启动路径未消费，不能依赖 Overlay 或多账号隔离 |
+| `vrcx://...` | 部分 | 可发出 `launch-command`，runtime bridge 无完整动作路由 |
+
 ---
 
 ## 目录
@@ -43,13 +58,13 @@ VRCX-Pro 支持通过命令行参数自定义启动行为。这些参数可以�
 |------|------|------|
 | `--startup` / `--minimized` | `--startup` 或 `--minimized` | 启动时最小化到系统托盘 |
 | `--debug` | `--debug` | 启用调试模式 |
-| `--overlay` | `--overlay` | 启用 VR 覆盖模式 |
-| `--config=` | `--config=<路径>` | 指定自定义配置目录 |
+| `--overlay` | `--overlay` | 仅解析，当前启动路径未消费 |
+| `--config=` | `--config=<路径>` | 仅解析，当前路径未切换配置目录 |
 | `--proxy-server=` | `--proxy-server=<地址>` | 设置代理服务器 |
 | `--width=` | `--width=<像素>` | 设置窗口宽度 |
 | `--height=` | `--height=<像素>` | 设置窗口高度 |
 | `--center` | `--center` | 窗口居中显示 |
-| `--disable-gpu` | `--disable-gpu` | 禁用 GPU 加速 |
+| `--disable-gpu` | `--disable-gpu` | 仅保存设置，当前路径未消费 |
 | `--maximized` | `--maximized` | 启动时最大化窗口 |
 | `--fullscreen` | `--fullscreen` | 启动时全屏显示 |
 | `--reset-window` | `--reset-window` | 重置窗口尺寸和位置 |
@@ -79,7 +94,7 @@ VRCX-Pro.exe --minimized
 
 ### 3.2 --debug
 
-**功能：** 启用调试模式，输出详细的调试信息。
+**功能：** 启用通用调试标志 `AppDebug.debug`；细粒度日志由各自开关控制。
 
 **使用场景：**
 - 问题排查
@@ -98,16 +113,9 @@ VRCX-Pro.exe --debug
 
 ### 3.3 --overlay
 
-**功能：** 启用 VR 覆盖模式（Overlay Mode）。
+**当前状态：** 解析到 `LaunchArgs.overlay`，但当前启动路径没有消费该字段。VR Overlay 由独立的 `update_vr` 命令接口控制，不能把 `--overlay` 当作自动启用 Overlay 的开关。
 
-**使用场景：**
-- VRChat 中使用叠加界面
-- 需要在 VR 环境中显示信息
-
-**行为：**
-- 启用 VR 覆盖窗口功能
-- 可能影响窗口显示模式
-- 需要 VR 头显支持
+**使用限制：** 如果需要 Overlay 行为，请检查对应 Overlay 窗口和命令的独立实现。
 
 **示例：**
 ```bash
@@ -116,22 +124,14 @@ VRCX-Pro.exe --overlay
 
 ### 3.4 --config=
 
-**功能：** 指定自定义配置目录路径。
+**当前状态：** 参数会被解析到 `LaunchArgs.config_directory`，但当前 Tauri 启动路径没有消费该字段。它不会切换 `%APPDATA%/VRCX` 或其他配置目录。
 
-**使用场景：**
-- 多账号管理
-- 便携版运行
-- 配置文件隔离
+**使用限制：** 当前版本不能依赖 `--config=` 实现多账号隔离或便携配置目录。
 
 **语法：**
 ```bash
 --config=<目录路径>
 ```
-
-**行为：**
-- 覆盖默认的配置目录 (`%APPDATA%/VRCX`)
-- 所有配置文件将存储在指定目录
-- 如果目录不存在，会自动创建
 
 **示例：**
 ```bash
@@ -159,9 +159,9 @@ VRCX-Pro.exe --config="C:\Portable\VRCX"
 - `socks5://host:port`
 
 **行为：**
-- 所有网络请求通过指定代理
-- 覆盖系统代理设置
-- 保存到配置中，后续启动继续使用
+- 写入 `VRCX_ProxyServer`，.NET `WebApi` 构造请求时读取
+- 无效 URI 会被拒绝并清空配置
+- 该配置会保留到后续会话
 
 **示例：**
 ```bash
@@ -188,7 +188,7 @@ VRCX-Pro.exe --proxy-server="socks5://localhost:1080"
 - 设置窗口的初始宽度和高度
 - 单位为像素
 - 可以只指定一个维度
-- 保存到配置中，后续启动继续使用
+- 写入 `VRCX_SizeWidth` / `VRCX_SizeHeight` 并立即调整当前窗口
 
 **示例：**
 ```bash
@@ -219,17 +219,9 @@ VRCX-Pro.exe --width=1280 --height=800 --center
 
 ### 3.8 --disable-gpu
 
-**功能：** 禁用 GPU 硬件加速。
+**当前状态：** 该参数会写入 `VRCX_DisableGpuAcceleration` 设置键，但当前 Tauri 启动路径没有发现额外 GPU 开关消费点。
 
-**使用场景：**
-- GPU 驱动问题
-- 兼容性问题
-- 性能问题排查
-
-**行为：**
-- 禁用 WebView2 的 GPU 加速
-- 使用软件渲染
-- 可能影响性能，但提高兼容性
+**使用限制：** 不要把该参数视为已验证的 WebView2 软件渲染开关；如需 GPU 排查，请检查当前 Tauri 配置和运行时行为。
 
 **示例：**
 ```bash
@@ -385,22 +377,22 @@ VRCX-Pro.exe --width=1600 --height=900 --center
 
 ### 6.1 参数优先级
 
-- 命令行参数会覆盖配置文件中的设置
-- 窗口大小和位置参数会保存到配置中
-- 代理服务器参数会保存到配置中
+- 命令行参数在本次启动时应用，但只有“参数状态”标记为有效的参数会实际消费
+- `--proxy-server` 和 `--width` / `--height` 会写入对应设置键
+- `--center`、`--reset-window` 会清除保存的窗口状态；`--overlay`、`--config` 当前不改变配置
 
 ### 6.2 配置持久化
 
-以下参数在首次设置后会保存到配置文件，后续启动会继续使用：
-- `--proxy-server`
-- `--width` / `--height`
-- 窗口位置（非 `--center`）
+会写入或清除本地设置的参数：
+- 写入：`--proxy-server`、`--width` / `--height`、`--disable-gpu`
+- 清除：`--center`、`--reset-window` 的位置/尺寸状态
+- 仅本次启动：`--startup`、`--debug`、`--maximized`、`--fullscreen`
+- 仅解析：`--overlay`、`--config`
 
 ### 6.3 兼容性
 
-- 所有参数均支持 Windows 10/11
-- `--overlay` 需要 VR 头显支持
-- `--disable-gpu` 可能影响性能，建议仅在必要时使用
+- 解析器支持 Windows 10/11 上的参数输入，但实际消费范围以“参数状态”表为准
+- `--overlay` 当前不会自动创建 Overlay；`--disable-gpu` 当前只保存设置
 
 ### 6.4 故障排除
 
@@ -409,9 +401,9 @@ VRCX-Pro.exe --width=1600 --height=900 --center
 - 确保参数在可执行文件名称之后
 - 检查是否有引号包裹的路径问题
 
-**问题：** GPU 加速禁用后性能下降
-- 这是正常现象，软件渲染比硬件加速慢
-- 如无必要，不要使用 `--disable-gpu`
+**问题：** `--disable-gpu` 看起来没有效果
+- 当前实现只写入 `VRCX_DisableGpuAcceleration`，未发现 Tauri 启动路径消费该键
+- 如需 GPU 行为排查，请检查当前 Tauri 配置和运行时，而不是假设参数已生效
 
 **问题：** 自启动时窗口仍然显示
 - 确认是否添加了 `--startup` 参数
@@ -469,23 +461,24 @@ struct LaunchArgs {
 ### v3.3.0 (2026-09-19)
 - 新增 `--width` 和 `--height` 参数，支持指定窗口大小
 - 新增 `--center` 参数，支持窗口居中启动
-- 新增 `--disable-gpu` 参数，支持禁用 GPU 加速
+- 新增 `--disable-gpu` 参数解析与设置键保存（当前 Tauri 路径未消费）
 - 优化启动参数解析逻辑
 
 ### v3.2.0 (2026-09-18)
 - 新增 `--startup` 参数，支持启动时最小化
 - 新增 `--debug` 参数，支持调试模式
-- 新增 `--overlay` 参数，支持 VR 覆盖模式
-- 新增 `--config` 参数，支持自定义配置目录
+- 新增 `--overlay`、`--config` 参数解析（当前启动路径未消费）
 - 新增 `--proxy-server` 参数，支持代理服务器
 
 ---
 
 ## 9. 相关文档
 
-- [KNOWLEDGE_BASE.md](./KNOWLEDGE_BASE.md) - 项目知识库
-- [MCP.md](./MCP.md) - MCP Server 文档
+- [文档索引](./README.md) - 文档总入口
+- [架构总览](./ARCHITECTURE.md) - 跨层架构与数据流
+- [项目知识库](./KNOWLEDGE_BASE.md) - 项目知识库
+- [MCP Server](./MCP.md) - MCP Server 文档
 
 ---
 
-**最后更新：** 2026-09-24
+**最后更新：** 2026-10-02

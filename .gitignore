@@ -13,6 +13,7 @@ VRCX-Pro_Setup_*.exe
 SHA256SUMS.txt
 bun.lock
 TESTING.md
+!docs/TESTING.md
 .env.sentry-build-plugin
 AGENTS.md
 AI_GUIDE.md
