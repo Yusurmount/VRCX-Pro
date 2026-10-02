@@ -162,6 +162,9 @@
                                     </Button>
                                 </TooltipWrapper>
                             </template>
+                            <DialogRefreshButton
+                                :loading="groupDialog.loading"
+                                @click="groupDialogCommand('Refresh')" />
                             <DropdownMenu>
                                 <DropdownMenuTrigger as-child>
                                     <Button
@@ -626,6 +629,7 @@
     import { formatJsonVars } from '../../../shared/utils/base/ui';
 
     import DialogJsonTab from '../DialogJsonTab.vue';
+    import DialogRefreshButton from '../DialogRefreshButton.vue';
     import GroupDialogInfoTab from './GroupDialogInfoTab.vue';
     import { useGroupDialogCommands } from './useGroupDialogCommands';
     import GroupDialogMembersTab from './GroupDialogMembersTab.vue';

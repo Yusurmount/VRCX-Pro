@@ -192,6 +192,10 @@
                                 ><Star
                             /></Button>
                         </TooltipWrapper>
+                        <DialogRefreshButton
+                            class="ml-2"
+                            :loading="worldDialog.loading"
+                            @click="worldDialogCommand('Refresh')" />
                         <DropdownMenu>
                             <DropdownMenuTrigger as-child>
                                 <Button variant="outline" size="icon-lg" class="rounded-full ml-2">
@@ -445,6 +449,7 @@
     import { useWorldDialogCommands } from './useWorldDialogCommands';
 
     import DialogJsonTab from '../DialogJsonTab.vue';
+    import DialogRefreshButton from '../DialogRefreshButton.vue';
     import ImageCropDialog from '../ImageCropDialog.vue';
     import WorldDialogInfoTab from './WorldDialogInfoTab.vue';
     import WorldDialogInstancesTab from './WorldDialogInstancesTab.vue';

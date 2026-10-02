@@ -231,6 +231,10 @@
                                 <CheckCircle
                             /></Button>
                         </TooltipWrapper>
+                        <DialogRefreshButton
+                            class="ml-2"
+                            :loading="avatarDialog.loading"
+                            @click="avatarDialogCommand('Refresh')" />
                         <DropdownMenu>
                             <DropdownMenuTrigger as-child>
                                 <Button
@@ -646,6 +650,7 @@
     import { useAvatarDialogCommands } from './useAvatarDialogCommands';
 
     import DialogJsonTab from '../DialogJsonTab.vue';
+    import DialogRefreshButton from '../DialogRefreshButton.vue';
     import ImageCropDialog from '../ImageCropDialog.vue';
     import { showUserDialog } from '../../../coordinators/userCoordinator';
 

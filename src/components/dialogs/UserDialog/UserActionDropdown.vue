@@ -39,6 +39,7 @@
                 /></Button>
             </TooltipWrapper>
         </template>
+        <DialogRefreshButton class="ml-2" :loading="userDialog.loading" @click="onCommand('Refresh')" />
         <DropdownMenu>
             <DropdownMenuTrigger as-child>
                 <div class="ml-2">
@@ -316,6 +317,7 @@
     import { useGameStore, useLocationStore, useUserStore } from '../../../stores';
     import { useInviteChecks } from '../../../composables/useInviteChecks';
     import { isActionRecent } from '../../../composables/useRecentActions';
+    import DialogRefreshButton from '../DialogRefreshButton.vue';
 
     const props = defineProps({
         userDialogCommand: {
