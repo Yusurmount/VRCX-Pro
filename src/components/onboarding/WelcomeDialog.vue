@@ -34,11 +34,11 @@
     import { Button } from '@/components/ui/button';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import configRepository from '../../services/config';
+    import { PERSONAL_WELCOME_SEEN_KEY } from '../../services/oobe';
     import { useUserDisplay } from '../../composables/useUserDisplay';
     import { useUserStore } from '../../stores';
     import { welcomeDialogShowRequest } from './welcomeDialogState';
 
-    const WELCOME_SEEN_KEY = 'VRCX_onboarding_personal_welcome_seen';
     const OPEN_DELAY_MS = 800;
 
     const { t } = useI18n();
@@ -72,7 +72,7 @@
         if (isOpen.value || openTimer) {
             return;
         }
-        const seen = await configRepository.getBool(WELCOME_SEEN_KEY, false);
+        const seen = await configRepository.getBool(PERSONAL_WELCOME_SEEN_KEY, false);
         if (seen) {
             return;
         }
@@ -89,6 +89,6 @@
      */
     async function handleDismiss() {
         isOpen.value = false;
-        await configRepository.setBool(WELCOME_SEEN_KEY, true);
+        await configRepository.setBool(PERSONAL_WELCOME_SEEN_KEY, true);
     }
 </script>

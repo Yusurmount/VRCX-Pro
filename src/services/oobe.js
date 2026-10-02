@@ -1,6 +1,7 @@
 import configRepository from './config';
 
 const OOBE_COMPLETED_KEY = 'VRCX_OobeCompleted';
+export const PERSONAL_WELCOME_SEEN_KEY = 'VRCX_onboarding_personal_welcome_seen';
 
 let completedCache = null;
 
@@ -16,12 +17,17 @@ export async function isOobeCompleted() {
 }
 
 /**
- * Mark the OOBE wizard as finished.
+ * Mark the OOBE wizard as finished. Also clears the personalized-welcome seen
+ * flag so both new and returning users get the welcome dialog after entering
+ * the main UI, no matter how many times they have seen it before.
  * @returns {Promise<void>}
  */
 export async function completeOobe() {
     completedCache = true;
-    await configRepository.setBool(OOBE_COMPLETED_KEY, true);
+    await Promise.all([
+        configRepository.setBool(OOBE_COMPLETED_KEY, true),
+        configRepository.setBool(PERSONAL_WELCOME_SEEN_KEY, false)
+    ]);
 }
 
 /**

@@ -410,7 +410,7 @@
     import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
     import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
     import configRepository from '@/services/config';
-    import { resetOobe } from '@/services/oobe';
+    import { PERSONAL_WELCOME_SEEN_KEY, resetOobe } from '@/services/oobe';
     import { requestWelcomeDialogShow } from '@/components/onboarding/welcomeDialogState';
     import { getLatestWhatsNewRelease } from '@/shared/constants/whatsNewReleases';
     import { useAppearanceSettingsStore } from '@/stores/settings/appearance';
@@ -604,7 +604,7 @@
      * WelcomeDialog to show again.
      */
     async function showWelcomeDialog() {
-        await configRepository.setBool('VRCX_onboarding_personal_welcome_seen', false);
+        await configRepository.setBool(PERSONAL_WELCOME_SEEN_KEY, false);
         requestWelcomeDialogShow();
         router.push('/feed');
     }
