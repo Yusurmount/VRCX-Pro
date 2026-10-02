@@ -27,3 +27,4 @@ AGENTS.md
 *_SUMMARY.md
 film/
 .worktrees/
+.tmp_*
