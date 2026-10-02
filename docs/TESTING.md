@@ -17,6 +17,8 @@
 | .NET sidecar | `npm run build:tauri-backend` | 发布构建 |
 | IPC 调用语义 | `npm run probe:tauri-backend` | 真实 sidecar probe |
 | MCP Rust 行为 | `cargo test --manifest-path src-tauri/Cargo.toml` | 工具查询与边界测试 |
+| IPC 并发/大数据性能 | `python scripts/measure-ipc-latency.py` | 慢 HTTP 期间本地读延迟关键实验（基线约 4.9s，应保持亚毫秒） |
+| 合成大数据集 | `python scripts/seed-performance-dataset.py --db <path> [--scale N]` | 自动备份、幂等（种子行 `id>=900000000`），用于性能回归 |
 
 `npm test` 的测试发现规则是 `src/**/*.{test,spec}.js`，测试环境为 jsdom，原生绑定由 `vitest.setup.js` 替身提供。
 

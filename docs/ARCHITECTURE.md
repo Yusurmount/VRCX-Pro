@@ -123,6 +123,8 @@ ClassName.Method(...args)
 
 新增原生方法时，前端调用、Rust 注册和 .NET 分发必须同时存在。
 
+并发模型：Rust 为每个请求分配 sidecar id，写入后即释放锁并按响应 id 路由回等待方（响应可能乱序完成，id 会被改写回调用方原值）；.NET 在读循环处以信号量（32 并发上限）背压并发调度，EOF 时排空全部在途响应。跨请求**没有 FIFO 保证**——依赖顺序的调用方必须真正 `await` 前序 promise（例如 `database.begin()/commit()` 返回 promise 而非 fire-and-forget）。SQLite 保持单连接：前端事务以独立 RPC 行发送 `BEGIN`/`COMMIT`，单连接是事务语义的基础。
+
 ### window.platform
 
 `src/platform/runtime.js` 暴露启动、窗口、剪贴板、文件和通知等能力。原生调用失败通常由 `call()` 吞掉并返回 `null`；调用方仍需处理不可用状态。

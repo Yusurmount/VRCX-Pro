@@ -16,7 +16,7 @@ commits: 75c96ec6..b568d0fe
 
 **Journey log**：
 - 工具 shell 与机器级环境缺失 `ProgramFiles` 环境变量 → NuGet `Path.Combine(null)` 使 `dotnet publish`/`dotnet nuget locals` 全部失败；设 `ProgramFiles` 后恢复。该问题独立于本仓库，建议系统侧修复。
-- 运行时插桩发现启动最大瓶颈是 sidecar 约 15s 的锁等待/阻塞（首个配置读取起卡满 busy_timeout），登录后所有查询排队其后——属 .NET/SQLite 层，本轮范围外，建议单独立项排查（含双连接自锁/写锁持有者排查）。
+- 运行时插桩发现启动最大瓶颈是 sidecar 约 15s 的锁等待/阻塞（首个配置读取起卡满 busy_timeout），登录后所有查询排队其后——属 .NET/SQLite 层，本轮范围外，建议单独立项排查（含双连接自锁/写锁持有者排查）。（后续：该项已由 [fullstack-performance](fullstack-performance.md) 立项解决——IPC 按 id 多路复用 + .NET 并发调度。）
 - master 基线本身红：全量测试 38 failed files、oxlint 38 errors、部分文件未过 oxfmt、`typecheck:js` 因未安装 typescript 无法运行——验证一律以“相对 master 无新增”为准。
 - 预存的 NavMenu.test 2/2 失败（缺 `stores/settings/notifications` mock）顺手补齐 mock 后转绿。
 - 临时插桩把耗时 JSON 写入 `%TEMP%\vrcx-startup-probe.json`（经 `platform.writeFile`），免开 DevTools 即可做 A/B。
