@@ -92,6 +92,15 @@ vi.mock('../dialogs/DatabaseManagementDialog.vue', () => ({
     }
 }));
 
+vi.mock('../DatabaseRestoreWizard.vue', () => ({
+    default: {
+        name: 'DatabaseRestoreWizard',
+        props: ['visible'],
+        emits: ['close'],
+        template: '<div class="db-restore-wizard-stub" />'
+    }
+}));
+
 import DatabaseManagement from '../DatabaseManagement.vue';
 
 function findButtonByText(wrapper, textKey) {
@@ -170,6 +179,28 @@ describe('DatabaseManagement.vue', () => {
         expect(dialog.exists()).toBe(true);
         expect(dialog.props('visible')).toBe(true);
         expect(dialog.props('operation')).toBe('export');
+    });
+
+    test('restore button opens the full-screen wizard instead of the dialog', async () => {
+        const wrapper = mount(DatabaseManagement);
+        await flushPromises();
+
+        const restoreButton = findButtonByText(
+            wrapper,
+            'view.settings.advanced.advanced.db_import.button'
+        );
+        expect(restoreButton).toBeTruthy();
+        await restoreButton.trigger('click');
+        await flushPromises();
+
+        const wizard = wrapper.findComponent({ name: 'DatabaseRestoreWizard' });
+        expect(wizard.exists()).toBe(true);
+        expect(wizard.props('visible')).toBe(true);
+
+        const dialog = wrapper.findComponent({
+            name: 'DatabaseManagementDialog'
+        });
+        expect(dialog.props('visible')).toBe(false);
     });
 
     test('optimize button runs vacuum and optimize', async () => {

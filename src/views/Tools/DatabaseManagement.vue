@@ -211,7 +211,7 @@
                         <p class="text-xs text-muted-foreground grow">
                             {{ t('view.settings.advanced.advanced.db_import.description') }}
                         </p>
-                        <Button size="sm" class="self-start" @click="openOperation('import')">
+                        <Button size="sm" class="self-start" @click="restoreWizardVisible = true">
                             <Upload class="h-4 w-4 mr-1" />
                             {{ t('view.settings.advanced.advanced.db_import.button') }}
                         </Button>
@@ -254,6 +254,7 @@
         </div>
 
         <DatabaseManagementDialog :visible="dialogVisible" :operation="dialogOperation" @close="handleDialogClose" />
+        <DatabaseRestoreWizard :visible="restoreWizardVisible" @close="handleWizardClose" />
     </div>
 </template>
 
@@ -271,6 +272,7 @@
     import configRepository from '@/services/config.js';
 
     import DatabaseManagementDialog from './dialogs/DatabaseManagementDialog.vue';
+    import DatabaseRestoreWizard from './DatabaseRestoreWizard.vue';
 
     const PREVIEW_LIMIT = 50;
 
@@ -307,6 +309,7 @@
 
     const dialogVisible = ref(false);
     const dialogOperation = ref('');
+    const restoreWizardVisible = ref(false);
 
     function goBack() {
         router.push({ name: 'tools' });
@@ -458,6 +461,11 @@
 
     async function handleDialogClose() {
         dialogVisible.value = false;
+        await refreshAll();
+    }
+
+    async function handleWizardClose() {
+        restoreWizardVisible.value = false;
         await refreshAll();
     }
 
