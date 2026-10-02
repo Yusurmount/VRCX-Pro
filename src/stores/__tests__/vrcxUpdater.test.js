@@ -329,4 +329,19 @@ describe('useVRCXUpdaterStore.setAutoUpdateVRCX', () => {
         );
         expect(mocks.toast.error).toHaveBeenCalledOnce();
     });
+
+    test('relaunches the app without the installer when not upgrading', async () => {
+        const store = useVRCXUpdaterStore();
+        globalThis.AppApi.RestartApplication = vi.fn().mockResolvedValue(true);
+        globalThis.window.platform.restartApp = vi
+            .fn()
+            .mockResolvedValue(undefined);
+
+        await store.restartVRCX(false);
+
+        expect(globalThis.AppApi.RestartApplication).not.toHaveBeenCalled();
+        expect(globalThis.window.platform.restartApp).toHaveBeenCalledOnce();
+        expect(store.updateError).toBe('');
+        expect(mocks.toast.error).not.toHaveBeenCalled();
+    });
 });
