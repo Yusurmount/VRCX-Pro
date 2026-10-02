@@ -19,7 +19,6 @@ const testDefinitions = [
     { key: 'charts-avatar-usage', routeName: 'charts-avatar-usage' },
     { key: 'charts-timeline', routeName: 'charts-timeline' },
     { key: 'charts-intimacy', routeName: 'charts-intimacy' },
-    { key: 'charts-report-export', routeName: 'charts-report-export' },
     { key: 'notification', routeName: 'notification' },
     { key: 'direct-access', action: 'direct-access' }
 ];
@@ -294,8 +293,7 @@ describe('sanitizeLayout', () => {
             'charts-hot-worlds',
             'charts-avatar-usage',
             'charts-timeline',
-            'charts-intimacy',
-            'charts-report-export'
+            'charts-intimacy'
         ]);
     });
 

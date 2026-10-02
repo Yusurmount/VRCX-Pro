@@ -38,8 +38,7 @@ export function createBaseDefaultNavLayout(t) {
                 'charts-hot-worlds',
                 'charts-avatar-usage',
                 'charts-timeline',
-                'charts-intimacy',
-                'charts-report-export'
+                'charts-intimacy'
             ]
         },
         { type: 'item', key: 'tools' },

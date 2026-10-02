@@ -128,13 +128,6 @@ const navDefinitions = [
         routeName: 'charts-avatar-usage'
     },
     {
-        key: 'charts-report-export',
-        icon: 'ri-file-download-line',
-        tooltip: 'view.charts.report_export.tab_label',
-        labelKey: 'view.charts.report_export.tab_label',
-        routeName: 'charts-report-export'
-    },
-    {
         key: 'charts-timeline',
         icon: 'ri-time-line',
         tooltip: 'view.charts.relationship_timeline.header',
