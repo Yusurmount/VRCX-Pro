@@ -43,6 +43,9 @@
         "duration": "持續時間",
         "load_more": "載入更多",
         "no_more": "沒有更多條目",
+        "wizard": {
+            "step_of": "第 {current} / {total} 步"
+        },
         "current_session": "當前會話"
     },
     "nav_tooltip": {
@@ -1930,10 +1933,10 @@
                         "mode_full_desc": "清空現有資料後完全依照備份檔案重建；目前的登入狀態會保留",
                         "confirm_full_warning": "完全還原會取代所有現有資料（登入狀態除外），此動作無法復原。",
                         "clearing": "正在清空現有資料... ({progress}%)",
-                        "wizard_step": "第 {current} / {total} 步",
-                        "wizard_mode_title": "選擇還原模式",
+                        "wizard_mode_title": "資料還原精靈",
                         "wizard_mode_desc": "增量還原在現有資料上合併備份內容；完全還原清空現有資料後完全依照備份檔案重建，目前的登入狀態會保留。",
-                        "wizard_options_title": "還原選項與備份檔案",
+                        "wizard_options_title": "還原選項",
+                        "wizard_file_title": "選擇備份檔案",
                         "wizard_next": "下一步",
                         "wizard_done_title": "還原完成",
                         "wizard_done_desc": "資料已還原，重啟 VRCX 後生效。",

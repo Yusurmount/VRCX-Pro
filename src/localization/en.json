@@ -43,6 +43,9 @@
         "duration": "Duration",
         "load_more": "Load more",
         "no_more": "No more entries",
+        "wizard": {
+            "step_of": "Step {current} of {total}"
+        },
         "current_session": "Current"
     },
     "nav_tooltip": {
@@ -1950,10 +1953,10 @@
                         "mode_full_desc": "Wipe existing data and rebuild it exactly from the backup file; your current login is kept",
                         "confirm_full_warning": "A full restore replaces all existing data (login state is kept). This cannot be undone.",
                         "clearing": "Clearing existing data... ({progress}%)",
-                        "wizard_step": "Step {current} of {total}",
-                        "wizard_mode_title": "Choose a restore mode",
+                        "wizard_mode_title": "Restore Data Wizard",
                         "wizard_mode_desc": "Incremental merges the backup into your existing data; full wipes existing data and rebuilds it exactly from the backup file, keeping your current login.",
-                        "wizard_options_title": "Options and backup file",
+                        "wizard_options_title": "Restore options",
+                        "wizard_file_title": "Choose a backup file",
                         "wizard_next": "Next",
                         "wizard_done_title": "Restore complete",
                         "wizard_done_desc": "Your data has been restored. Restart VRCX to apply the changes.",

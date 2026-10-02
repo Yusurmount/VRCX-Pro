@@ -1,345 +1,284 @@
 <template>
-    <div class="oobe bg-background">
-        <!-- Right edge: vertical dot progress (step 1 at top) with step counter below -->
-        <div class="oobe-progress-rail">
-            <div
-                class="oobe-progress"
-                role="progressbar"
-                :aria-valuenow="currentStep"
-                aria-valuemin="1"
-                aria-valuemax="7">
-                <div v-for="step in 7" :key="step" class="oobe-progress-dot" :class="{ active: step <= currentStep }" />
-            </div>
-            <span class="oobe-step-counter text-muted-foreground">{{ currentStep }} / 7</span>
+    <WizardShell ref="shellRef" :current-step="currentStep" :total-steps="7" :icons="stepIcons">
+        <template #icon="{ step }">
+            <img v-if="step === 1" :src="vrcxLogo" alt="VRCX-Pro" class="oobe-vrcx-logo" @click="onLogoClick" />
+            <component v-else :is="stepIcons[step]" class="wiz-icon-svg text-foreground" :stroke-width="1.5" />
+        </template>
+
+        <template #overlay>
+            <OpenSourceSoftwareNoticeDialog v-if="ossDialog" v-model:ossDialog="ossDialog" />
+        </template>
+
+        <!-- Step 1: Welcome -->
+        <div v-if="currentStep === 1" class="wiz-panel">
+            <h2 class="wiz-title text-foreground">{{ t('oobe.welcome.title') }}</h2>
+            <p class="wiz-desc text-muted-foreground">{{ t('oobe.welcome.subtitle') }}</p>
+            <Button size="lg" class="w-full" @click="goTo(2)">{{ t('oobe.welcome.cta') }}</Button>
         </div>
 
-        <!-- Left: centered icon with SVG stroke animation -->
-        <aside class="oobe-left">
-            <Transition @enter="onIconEnter" @leave="onIconLeave" :css="false" mode="out-in">
-                <div ref="iconWrapRef" :key="currentStep" class="oobe-icon-wrap">
-                    <img
-                        v-if="currentStep === 1"
-                        :src="vrcxLogo"
-                        alt="VRCX-Pro"
-                        class="oobe-vrcx-logo"
-                        @click="onLogoClick" />
-                    <component v-else :is="currentIcon" class="oobe-icon-svg text-foreground" :stroke-width="1.5" />
+        <!-- Step 2: Legal / disclaimer -->
+        <div v-else-if="currentStep === 2" class="wiz-panel">
+            <h2 class="wiz-title text-foreground">{{ t('oobe.legal.title') }}</h2>
+            <div class="oobe-scroll border-border bg-muted text-muted-foreground">
+                <p>{{ t('view.settings.general.legal_notice.info') }}</p>
+                <p>{{ t('view.settings.general.legal_notice.disclaimer1') }}</p>
+                <p>{{ t('view.settings.general.legal_notice.disclaimer2') }}</p>
+                <div class="mt-2">
+                    <Button variant="outline" @click="ossDialog = true">
+                        {{ t('view.settings.general.legal_notice.open_source_software_notice') }}
+                    </Button>
                 </div>
-            </Transition>
-        </aside>
+            </div>
+            <div class="wiz-actions">
+                <Button @click="goTo(3)">{{ t('oobe.legal.agree') }}</Button>
+                <Button variant="ghost" @click="quitApp">{{ t('oobe.legal.decline') }}</Button>
+            </div>
+            <Button variant="ghost" class="w-full" @click="goBack">{{ t('oobe.back') }}</Button>
+        </div>
 
-        <!-- Right: content -->
-        <section class="oobe-right">
-            <Transition @enter="onContentEnter" @leave="onContentLeave" :css="false" mode="out-in">
-                <div ref="contentRef" :key="currentStep" class="oobe-content">
-                    <!-- Step 1: Welcome -->
-                    <div v-if="currentStep === 1" class="oobe-step-panel">
-                        <h2 class="oobe-title text-foreground">{{ t('oobe.welcome.title') }}</h2>
-                        <p class="oobe-desc text-muted-foreground">{{ t('oobe.welcome.subtitle') }}</p>
-                        <Button size="lg" class="w-full" @click="goTo(2)">{{ t('oobe.welcome.cta') }}</Button>
+        <!-- Step 3: Not official warning -->
+        <div v-else-if="currentStep === 3" class="wiz-panel">
+            <h2 class="wiz-title text-foreground">{{ t('oobe.warning.title') }}</h2>
+            <p class="wiz-desc text-muted-foreground">{{ t('oobe.warning.subtitle') }}</p>
+            <div class="oobe-scroll border-border bg-muted text-muted-foreground">
+                <p>{{ t('oobe.warning.body') }}</p>
+                <ul class="oobe-warning-list">
+                    <li>{{ t('oobe.warning.account_1') }}</li>
+                    <li>{{ t('oobe.warning.account_2') }}</li>
+                    <li>{{ t('oobe.warning.account_3') }}</li>
+                </ul>
+            </div>
+            <Button size="lg" class="w-full" @click="goTo(4)">{{ t('oobe.warning.acknowledge') }}</Button>
+            <Button variant="ghost" class="w-full" @click="goBack">{{ t('oobe.back') }}</Button>
+        </div>
+
+        <!-- Step 4: Simple settings -->
+        <div v-else-if="currentStep === 4" class="wiz-panel">
+            <h2 class="wiz-title text-foreground">{{ t('oobe.setup.title') }}</h2>
+            <p class="wiz-desc text-muted-foreground">{{ t('oobe.setup.subtitle') }}</p>
+            <div class="oobe-settings border-border bg-muted">
+                <label class="oobe-setting">
+                    <div class="oobe-setting-text">
+                        <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.tray') }}</span>
+                        <span class="oobe-setting-desc text-muted-foreground">{{ t('oobe.setup.tray_desc') }}</span>
                     </div>
-
-                    <!-- Step 2: Legal / disclaimer -->
-                    <div v-else-if="currentStep === 2" class="oobe-step-panel">
-                        <h2 class="oobe-title text-foreground">{{ t('oobe.legal.title') }}</h2>
-                        <div class="oobe-scroll border-border bg-muted text-muted-foreground">
-                            <p>{{ t('view.settings.general.legal_notice.info') }}</p>
-                            <p>{{ t('view.settings.general.legal_notice.disclaimer1') }}</p>
-                            <p>{{ t('view.settings.general.legal_notice.disclaimer2') }}</p>
-                            <div class="mt-2">
-                                <Button variant="outline" @click="ossDialog = true">
-                                    {{ t('view.settings.general.legal_notice.open_source_software_notice') }}
-                                </Button>
-                            </div>
-                        </div>
-                        <div class="oobe-actions">
-                            <Button @click="goTo(3)">{{ t('oobe.legal.agree') }}</Button>
-                            <Button variant="ghost" @click="quitApp">{{ t('oobe.legal.decline') }}</Button>
-                        </div>
-                        <Button variant="ghost" class="w-full" @click="goBack">{{ t('oobe.back') }}</Button>
+                    <Switch :model-value="isCloseToTray" @update:modelValue="setIsCloseToTray" />
+                </label>
+                <label class="oobe-setting">
+                    <div class="oobe-setting-text">
+                        <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.startup') }}</span>
+                        <span class="oobe-setting-desc text-muted-foreground">{{ t('oobe.setup.startup_desc') }}</span>
                     </div>
-
-                    <!-- Step 3: Not official warning -->
-                    <div v-else-if="currentStep === 3" class="oobe-step-panel">
-                        <h2 class="oobe-title text-foreground">{{ t('oobe.warning.title') }}</h2>
-                        <p class="oobe-desc text-muted-foreground">{{ t('oobe.warning.subtitle') }}</p>
-                        <div class="oobe-scroll border-border bg-muted text-muted-foreground">
-                            <p>{{ t('oobe.warning.body') }}</p>
-                            <ul class="oobe-warning-list">
-                                <li>{{ t('oobe.warning.account_1') }}</li>
-                                <li>{{ t('oobe.warning.account_2') }}</li>
-                                <li>{{ t('oobe.warning.account_3') }}</li>
-                            </ul>
-                        </div>
-                        <Button size="lg" class="w-full" @click="goTo(4)">{{ t('oobe.warning.acknowledge') }}</Button>
-                        <Button variant="ghost" class="w-full" @click="goBack">{{ t('oobe.back') }}</Button>
+                    <Switch :model-value="isStartAtWindowsStartup" @update:modelValue="setIsStartAtWindowsStartup" />
+                </label>
+                <label class="oobe-setting">
+                    <div class="oobe-setting-text">
+                        <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.minimized') }}</span>
+                        <span class="oobe-setting-desc text-muted-foreground">{{
+                            t('oobe.setup.minimized_desc')
+                        }}</span>
                     </div>
-
-                    <!-- Step 4: Simple settings -->
-                    <div v-else-if="currentStep === 4" class="oobe-step-panel">
-                        <h2 class="oobe-title text-foreground">{{ t('oobe.setup.title') }}</h2>
-                        <p class="oobe-desc text-muted-foreground">{{ t('oobe.setup.subtitle') }}</p>
-                        <div class="oobe-settings border-border bg-muted">
-                            <label class="oobe-setting">
-                                <div class="oobe-setting-text">
-                                    <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.tray') }}</span>
-                                    <span class="oobe-setting-desc text-muted-foreground">{{
-                                        t('oobe.setup.tray_desc')
-                                    }}</span>
-                                </div>
-                                <Switch :model-value="isCloseToTray" @update:modelValue="setIsCloseToTray" />
-                            </label>
-                            <label class="oobe-setting">
-                                <div class="oobe-setting-text">
-                                    <span class="oobe-setting-label text-foreground">{{
-                                        t('oobe.setup.startup')
-                                    }}</span>
-                                    <span class="oobe-setting-desc text-muted-foreground">{{
-                                        t('oobe.setup.startup_desc')
-                                    }}</span>
-                                </div>
-                                <Switch
-                                    :model-value="isStartAtWindowsStartup"
-                                    @update:modelValue="setIsStartAtWindowsStartup" />
-                            </label>
-                            <label class="oobe-setting">
-                                <div class="oobe-setting-text">
-                                    <span class="oobe-setting-label text-foreground">{{
-                                        t('oobe.setup.minimized')
-                                    }}</span>
-                                    <span class="oobe-setting-desc text-muted-foreground">{{
-                                        t('oobe.setup.minimized_desc')
-                                    }}</span>
-                                </div>
-                                <Switch
-                                    :model-value="isStartAsMinimizedState"
-                                    @update:modelValue="setIsStartAsMinimizedState" />
-                            </label>
-                            <label class="oobe-setting">
-                                <div class="oobe-setting-text">
-                                    <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.theme') }}</span>
-                                    <span class="oobe-setting-desc text-muted-foreground">{{
-                                        t('oobe.setup.theme_desc')
-                                    }}</span>
-                                </div>
-                                <Switch :model-value="isDarkMode" @update:modelValue="toggleThemeMode" />
-                            </label>
-                            <div class="oobe-setting">
-                                <div class="oobe-setting-text">
-                                    <span class="oobe-setting-label text-foreground">{{
-                                        t('oobe.setup.language')
-                                    }}</span>
-                                    <span class="oobe-setting-desc text-muted-foreground">{{
-                                        t('oobe.setup.language_desc')
-                                    }}</span>
-                                </div>
-                                <Select :model-value="appLanguage" @update:modelValue="changeAppLanguage">
-                                    <SelectTrigger size="sm" class="w-40">
-                                        <SelectValue :placeholder="getLanguageName(appLanguage)" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectItem
-                                                v-for="language in languageCodes"
-                                                :key="language"
-                                                :value="language">
-                                                {{ getLanguageName(language) }}
-                                            </SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <Button size="lg" class="w-full mt-4" @click="nextFromSetup">
-                            {{ t('oobe.setup.next') }}
-                        </Button>
-                        <Button variant="ghost" class="w-full" @click="goBack">{{ t('oobe.back') }}</Button>
+                    <Switch :model-value="isStartAsMinimizedState" @update:modelValue="setIsStartAsMinimizedState" />
+                </label>
+                <label class="oobe-setting">
+                    <div class="oobe-setting-text">
+                        <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.theme') }}</span>
+                        <span class="oobe-setting-desc text-muted-foreground">{{ t('oobe.setup.theme_desc') }}</span>
                     </div>
-
-                    <!-- Step 5: Login -->
-                    <div v-else-if="currentStep === 5" class="oobe-step-panel">
-                        <h2 class="oobe-title text-foreground">{{ t('oobe.login.title') }}</h2>
-                        <p class="oobe-desc text-muted-foreground">{{ t('oobe.login.subtitle') }}</p>
-
-                        <!-- Account list mode (already logged in / saved accounts) -->
-                        <template v-if="loginMode === 'list'">
-                            <div v-if="hasSavedAccounts" class="oobe-scroll oobe-account-list">
-                                <label
-                                    v-for="cred in savedAccounts"
-                                    :key="cred.user.id"
-                                    class="oobe-account-item"
-                                    :class="{ 'pointer-events-none opacity-50': loginBusy }"
-                                    @click="!loginBusy && (selectedUserId = cred.user.id)">
-                                    <input
-                                        type="radio"
-                                        :value="cred.user.id"
-                                        v-model="selectedUserId"
-                                        :disabled="loginBusy" />
-                                    <Avatar class="rounded-full size-7">
-                                        <AvatarImage :src="userImage(cred.user, true)" />
-                                        <AvatarFallback><User class="size-4 text-muted-foreground" /></AvatarFallback>
-                                    </Avatar>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="truncate text-sm text-foreground">{{ cred.user.displayName }}</div>
-                                        <div class="truncate text-xs text-muted-foreground">
-                                            {{ cred.user.username }}
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
-                            <Button
-                                size="lg"
-                                class="w-full"
-                                :disabled="!selectedUserId || loginBusy"
-                                @click="loginSelectedAccount">
-                                <Loader2 v-if="loginBusy" class="size-4 animate-spin" />
-                                {{ t('oobe.login.useSelected') }}
-                            </Button>
-                            <Button variant="outline" class="w-full" :disabled="loginBusy" @click="loginMode = 'form'">
-                                {{ t('oobe.login.addAccount') }}
-                            </Button>
-                            <Button variant="ghost" class="w-full" :disabled="loginBusy" @click="goBack">
-                                {{ t('oobe.back') }}
-                            </Button>
-                        </template>
-
-                        <!-- Login form mode -->
-                        <template v-else>
-                            <form @submit.prevent="onLoginSubmit">
-                                <FieldGroup class="gap-3">
-                                    <VeeField v-slot="{ field, errors }" name="username">
-                                        <Field :data-invalid="!!errors.length">
-                                            <FieldLabel for="oobe-login-username" class="text-foreground">
-                                                {{ t('view.login.field.username') }}
-                                            </FieldLabel>
-                                            <FieldContent>
-                                                <InputGroupField
-                                                    id="oobe-login-username"
-                                                    :model-value="field.value"
-                                                    autocomplete="off"
-                                                    name="username"
-                                                    :placeholder="t('view.login.field.username')"
-                                                    :aria-invalid="!!errors.length"
-                                                    :disabled="loginBusy"
-                                                    @update:modelValue="field.onChange"
-                                                    @blur="field.onBlur" />
-                                                <FieldError v-if="errors.length" :errors="errors" />
-                                            </FieldContent>
-                                        </Field>
-                                    </VeeField>
-                                    <VeeField v-slot="{ field, errors, handleChange }" name="password">
-                                        <Field :data-invalid="!!errors.length">
-                                            <FieldLabel for="oobe-login-password" class="text-foreground">
-                                                {{ t('view.login.field.password') }}
-                                            </FieldLabel>
-                                            <FieldContent>
-                                                <InputGroupField
-                                                    id="oobe-login-password"
-                                                    :model-value="field.value"
-                                                    type="password"
-                                                    autocomplete="off"
-                                                    name="password"
-                                                    :placeholder="t('view.login.field.password')"
-                                                    :aria-invalid="!!errors.length"
-                                                    show-password
-                                                    :disabled="loginBusy"
-                                                    @keydown.delete="handleChange('', false)"
-                                                    @update:modelValue="field.onChange"
-                                                    @blur="field.onBlur" />
-                                                <FieldError v-if="errors.length" :errors="errors" />
-                                            </FieldContent>
-                                        </Field>
-                                    </VeeField>
-                                </FieldGroup>
-                                <label class="inline-flex items-center gap-2 mr-2 mt-3 text-sm">
-                                    <Checkbox v-model="loginForm.saveCredentials" :disabled="loginBusy" />
-                                    <span>{{ t('view.login.field.saveCredentials') }}</span>
-                                </label>
-                                <Field class="mt-4">
-                                    <Button type="submit" size="lg" class="w-full" :disabled="loginBusy">
-                                        <Loader2 v-if="loginBusy" class="size-4 animate-spin" />
-                                        {{ t('view.login.login') }}
-                                    </Button>
-                                </Field>
-                            </form>
-                            <Button
-                                v-if="hasSavedAccounts"
-                                variant="ghost"
-                                class="w-full"
-                                :disabled="loginBusy"
-                                @click="loginMode = 'list'">
-                                {{ t('oobe.login.backToAccounts') }}
-                            </Button>
-                            <Button variant="ghost" class="w-full" :disabled="loginBusy" @click="goBack">{{
-                                t('oobe.back')
-                            }}</Button>
-                        </template>
+                    <Switch :model-value="isDarkMode" @update:modelValue="toggleThemeMode" />
+                </label>
+                <div class="oobe-setting">
+                    <div class="oobe-setting-text">
+                        <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.language') }}</span>
+                        <span class="oobe-setting-desc text-muted-foreground">{{ t('oobe.setup.language_desc') }}</span>
                     </div>
-
-                    <!-- Step 6: Data recovery (optional) -->
-                    <div v-else-if="currentStep === 6" class="oobe-step-panel">
-                        <h2 class="oobe-title text-foreground">{{ t('oobe.recovery.title') }}</h2>
-                        <p class="oobe-desc text-muted-foreground">{{ t('oobe.recovery.subtitle') }}</p>
-                        <div class="w-full">
-                            <RadioGroup v-model="recoverMode" class="grid gap-2">
-                                <div
-                                    class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                                    :class="recoverMode === 'incremental' ? 'border-primary' : ''">
-                                    <RadioGroupItem id="oobe-mode-incremental" value="incremental" />
-                                    <div class="flex flex-col gap-1">
-                                        <Label for="oobe-mode-incremental" class="text-sm font-medium cursor-pointer">
-                                            {{ t('view.settings.advanced.advanced.db_import.mode_incremental') }}
-                                        </Label>
-                                        <p class="text-xs text-muted-foreground">
-                                            {{ t('view.settings.advanced.advanced.db_import.mode_incremental_desc') }}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                                    :class="recoverMode === 'full' ? 'border-primary' : ''">
-                                    <RadioGroupItem id="oobe-mode-full" value="full" />
-                                    <div class="flex flex-col gap-1">
-                                        <Label for="oobe-mode-full" class="text-sm font-medium cursor-pointer">
-                                            {{ t('view.settings.advanced.advanced.db_import.mode_full') }}
-                                        </Label>
-                                        <p class="text-xs text-muted-foreground">
-                                            {{ t('view.settings.advanced.advanced.db_import.mode_full_desc') }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </RadioGroup>
-                        </div>
-                        <Button size="lg" class="w-full" :disabled="recovering" @click="handleRecoverImport">
-                            <Loader2 v-if="recovering" class="size-4 animate-spin" />
-                            {{ t('oobe.recovery.import') }}
-                        </Button>
-                        <Button variant="ghost" class="w-full" :disabled="recovering" @click="goTo(7)">
-                            {{ t('oobe.recovery.skip') }}
-                        </Button>
-                        <Button variant="ghost" class="w-full" :disabled="recovering" @click="goBack">{{
-                            t('oobe.back')
-                        }}</Button>
-                    </div>
-
-                    <!-- Step 7: Complete -->
-                    <div v-else class="oobe-step-panel">
-                        <h2 class="oobe-title text-foreground">{{ t('oobe.complete.title') }}</h2>
-                        <p class="oobe-desc text-muted-foreground">{{ t('oobe.complete.subtitle') }}</p>
-                        <Button size="lg" class="w-full" @click="finish">{{ t('oobe.complete.enter') }}</Button>
-                    </div>
+                    <Select :model-value="appLanguage" @update:modelValue="changeAppLanguage">
+                        <SelectTrigger size="sm" class="w-40">
+                            <SelectValue :placeholder="getLanguageName(appLanguage)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem v-for="language in languageCodes" :key="language" :value="language">
+                                    {{ getLanguageName(language) }}
+                                </SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
                 </div>
-            </Transition>
-        </section>
+            </div>
+            <Button size="lg" class="w-full mt-4" @click="nextFromSetup">
+                {{ t('oobe.setup.next') }}
+            </Button>
+            <Button variant="ghost" class="w-full" @click="goBack">{{ t('oobe.back') }}</Button>
+        </div>
 
-        <OpenSourceSoftwareNoticeDialog v-if="ossDialog" v-model:ossDialog="ossDialog" />
-    </div>
+        <!-- Step 5: Login -->
+        <div v-else-if="currentStep === 5" class="wiz-panel">
+            <h2 class="wiz-title text-foreground">{{ t('oobe.login.title') }}</h2>
+            <p class="wiz-desc text-muted-foreground">{{ t('oobe.login.subtitle') }}</p>
+
+            <!-- Account list mode (already logged in / saved accounts) -->
+            <template v-if="loginMode === 'list'">
+                <div v-if="hasSavedAccounts" class="oobe-scroll oobe-account-list">
+                    <label
+                        v-for="cred in savedAccounts"
+                        :key="cred.user.id"
+                        class="oobe-account-item"
+                        :class="{ 'pointer-events-none opacity-50': loginBusy }"
+                        @click="!loginBusy && (selectedUserId = cred.user.id)">
+                        <input type="radio" :value="cred.user.id" v-model="selectedUserId" :disabled="loginBusy" />
+                        <Avatar class="rounded-full size-7">
+                            <AvatarImage :src="userImage(cred.user, true)" />
+                            <AvatarFallback><User class="size-4 text-muted-foreground" /></AvatarFallback>
+                        </Avatar>
+                        <div class="min-w-0 flex-1">
+                            <div class="truncate text-sm text-foreground">{{ cred.user.displayName }}</div>
+                            <div class="truncate text-xs text-muted-foreground">
+                                {{ cred.user.username }}
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <Button size="lg" class="w-full" :disabled="!selectedUserId || loginBusy" @click="loginSelectedAccount">
+                    <Loader2 v-if="loginBusy" class="size-4 animate-spin" />
+                    {{ t('oobe.login.useSelected') }}
+                </Button>
+                <Button variant="outline" class="w-full" :disabled="loginBusy" @click="loginMode = 'form'">
+                    {{ t('oobe.login.addAccount') }}
+                </Button>
+                <Button variant="ghost" class="w-full" :disabled="loginBusy" @click="goBack">
+                    {{ t('oobe.back') }}
+                </Button>
+            </template>
+
+            <!-- Login form mode -->
+            <template v-else>
+                <form @submit.prevent="onLoginSubmit">
+                    <FieldGroup class="gap-3">
+                        <VeeField v-slot="{ field, errors }" name="username">
+                            <Field :data-invalid="!!errors.length">
+                                <FieldLabel for="oobe-login-username" class="text-foreground">
+                                    {{ t('view.login.field.username') }}
+                                </FieldLabel>
+                                <FieldContent>
+                                    <InputGroupField
+                                        id="oobe-login-username"
+                                        :model-value="field.value"
+                                        autocomplete="off"
+                                        name="username"
+                                        :placeholder="t('view.login.field.username')"
+                                        :aria-invalid="!!errors.length"
+                                        :disabled="loginBusy"
+                                        @update:modelValue="field.onChange"
+                                        @blur="field.onBlur" />
+                                    <FieldError v-if="errors.length" :errors="errors" />
+                                </FieldContent>
+                            </Field>
+                        </VeeField>
+                        <VeeField v-slot="{ field, errors, handleChange }" name="password">
+                            <Field :data-invalid="!!errors.length">
+                                <FieldLabel for="oobe-login-password" class="text-foreground">
+                                    {{ t('view.login.field.password') }}
+                                </FieldLabel>
+                                <FieldContent>
+                                    <InputGroupField
+                                        id="oobe-login-password"
+                                        :model-value="field.value"
+                                        type="password"
+                                        autocomplete="off"
+                                        name="password"
+                                        :placeholder="t('view.login.field.password')"
+                                        :aria-invalid="!!errors.length"
+                                        show-password
+                                        :disabled="loginBusy"
+                                        @keydown.delete="handleChange('', false)"
+                                        @update:modelValue="field.onChange"
+                                        @blur="field.onBlur" />
+                                    <FieldError v-if="errors.length" :errors="errors" />
+                                </FieldContent>
+                            </Field>
+                        </VeeField>
+                    </FieldGroup>
+                    <label class="inline-flex items-center gap-2 mr-2 mt-3 text-sm">
+                        <Checkbox v-model="loginForm.saveCredentials" :disabled="loginBusy" />
+                        <span>{{ t('view.login.field.saveCredentials') }}</span>
+                    </label>
+                    <Field class="mt-4">
+                        <Button type="submit" size="lg" class="w-full" :disabled="loginBusy">
+                            <Loader2 v-if="loginBusy" class="size-4 animate-spin" />
+                            {{ t('view.login.login') }}
+                        </Button>
+                    </Field>
+                </form>
+                <Button
+                    v-if="hasSavedAccounts"
+                    variant="ghost"
+                    class="w-full"
+                    :disabled="loginBusy"
+                    @click="loginMode = 'list'">
+                    {{ t('oobe.login.backToAccounts') }}
+                </Button>
+                <Button variant="ghost" class="w-full" :disabled="loginBusy" @click="goBack">{{
+                    t('oobe.back')
+                }}</Button>
+            </template>
+        </div>
+
+        <!-- Step 6: Data recovery (optional) -->
+        <div v-else-if="currentStep === 6" class="wiz-panel">
+            <h2 class="wiz-title text-foreground">{{ t('oobe.recovery.title') }}</h2>
+            <p class="wiz-desc text-muted-foreground">{{ t('oobe.recovery.subtitle') }}</p>
+            <div class="w-full">
+                <RadioGroup v-model="recoverMode" class="grid gap-2">
+                    <div
+                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                        :class="recoverMode === 'incremental' ? 'border-primary' : ''">
+                        <RadioGroupItem id="oobe-mode-incremental" value="incremental" />
+                        <div class="flex flex-col gap-1">
+                            <Label for="oobe-mode-incremental" class="text-sm font-medium cursor-pointer">
+                                {{ t('view.settings.advanced.advanced.db_import.mode_incremental') }}
+                            </Label>
+                            <p class="text-xs text-muted-foreground">
+                                {{ t('view.settings.advanced.advanced.db_import.mode_incremental_desc') }}
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                        :class="recoverMode === 'full' ? 'border-primary' : ''">
+                        <RadioGroupItem id="oobe-mode-full" value="full" />
+                        <div class="flex flex-col gap-1">
+                            <Label for="oobe-mode-full" class="text-sm font-medium cursor-pointer">
+                                {{ t('view.settings.advanced.advanced.db_import.mode_full') }}
+                            </Label>
+                            <p class="text-xs text-muted-foreground">
+                                {{ t('view.settings.advanced.advanced.db_import.mode_full_desc') }}
+                            </p>
+                        </div>
+                    </div>
+                </RadioGroup>
+            </div>
+            <Button size="lg" class="w-full" :disabled="recovering" @click="handleRecoverImport">
+                <Loader2 v-if="recovering" class="size-4 animate-spin" />
+                {{ t('oobe.recovery.import') }}
+            </Button>
+            <Button variant="ghost" class="w-full" :disabled="recovering" @click="goTo(7)">
+                {{ t('oobe.recovery.skip') }}
+            </Button>
+            <Button variant="ghost" class="w-full" :disabled="recovering" @click="goBack">{{ t('oobe.back') }}</Button>
+        </div>
+
+        <!-- Step 7: Complete -->
+        <div v-else class="wiz-panel">
+            <h2 class="wiz-title text-foreground">{{ t('oobe.complete.title') }}</h2>
+            <p class="wiz-desc text-muted-foreground">{{ t('oobe.complete.subtitle') }}</p>
+            <Button size="lg" class="w-full" @click="finish">{{ t('oobe.complete.enter') }}</Button>
+        </div>
+    </WizardShell>
 </template>
 
 <script setup>
-    import { computed, defineAsyncComponent, markRaw, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-    import { gsap } from 'gsap';
-    import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
+    import { computed, defineAsyncComponent, markRaw, nextTick, onMounted, ref, watch } from 'vue';
     import {
         DatabaseBackup,
         CheckCircle2,
@@ -355,6 +294,7 @@
     import { useI18n } from 'vue-i18n';
 
     import { Button } from '@/components/ui/button';
+    import WizardShell from '@/components/wizard/WizardShell.vue';
     import { Label } from '@/components/ui/label';
     import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
     import { Switch } from '@/components/ui/switch';
@@ -376,8 +316,6 @@
     import { toast } from 'vue-sonner';
 
     import vrcxLogo from '../../../images/VRCX.png';
-
-    gsap.registerPlugin(DrawSVGPlugin);
 
     const OpenSourceSoftwareNoticeDialog = defineAsyncComponent(
         () => import('../Settings/dialogs/OpenSourceSoftwareNoticeDialog.vue')
@@ -414,7 +352,7 @@
         } catch (e) {
             console.error('[OOBE] completeOobe failed:', e);
         } finally {
-            await playCloseAnimation();
+            await shellRef.value?.playCloseAnimation();
             router.replace('/login').catch((e) => console.error('[OOBE] navigation failed:', e));
         }
     }
@@ -521,86 +459,7 @@
         6: markRaw(DatabaseBackup),
         7: markRaw(CheckCircle2)
     };
-    const currentIcon = computed(() => stepIcons[currentStep.value]);
-
-    const iconWrapRef = ref(null);
-    const contentRef = ref(null);
-
-    /**
-     * Animate SVG icon stroke drawing
-     */
-    function animateIconDraw(el) {
-        const svg = el?.querySelector('svg.oobe-icon-svg');
-        if (!svg) return;
-        const shapes = svg.querySelectorAll('path, circle, line, polyline, rect');
-        if (!shapes.length) return;
-        gsap.killTweensOf(shapes);
-        gsap.fromTo(
-            shapes,
-            { drawSVG: '0%' },
-            {
-                drawSVG: '100%',
-                duration: 0.67,
-                ease: 'sine.inOut',
-                stagger: 0,
-                overwrite: true
-            }
-        );
-    }
-
-    // ---- Icon Transition hooks (JS mode) ----
-    function onIconEnter(el, done) {
-        // Match the content's upward transition and run the stroke draw simultaneously
-        gsap.fromTo(
-            el,
-            { opacity: 0, y: 24 },
-            {
-                opacity: 1,
-                y: 0,
-                duration: 0.4,
-                ease: 'power3.out'
-            }
-        );
-        // Start stroke draw at the same time (delayed slightly for overlap)
-        animateIconDraw(el);
-        // Call done after the container animation finishes
-        setTimeout(done, 400);
-    }
-
-    function onIconLeave(el, done) {
-        gsap.to(el, {
-            opacity: 0,
-            y: -24,
-            duration: 0.25,
-            ease: 'power2.in',
-            onComplete: done
-        });
-    }
-
-    // ---- Content Transition hooks (JS mode) ----
-    function onContentEnter(el, done) {
-        gsap.fromTo(
-            el,
-            { opacity: 0, y: 24 },
-            {
-                opacity: 1,
-                y: 0,
-                duration: 0.4,
-                ease: 'power3.out',
-                onComplete: done
-            }
-        );
-    }
-
-    function onContentLeave(el, done) {
-        gsap.to(el, {
-            opacity: 0,
-            y: -24,
-            duration: 0.25,
-            ease: 'power2.in',
-            onComplete: done
-        });
-    }
+    const shellRef = ref(null);
 
     onMounted(async () => {
         // ?debug=1 forces the wizard to start from step 1 (used by the UI debug tool)
@@ -611,17 +470,6 @@
         // Default-select the first account in the list.
         if (savedAccounts.value.length > 0) {
             selectedUserId.value = savedAccounts.value[0].user.id;
-        }
-    });
-
-    onUnmounted(() => {
-        // Kill any lingering GSAP tweens on this component's elements
-        if (iconWrapRef.value) {
-            gsap.killTweensOf(iconWrapRef.value);
-            gsap.killTweensOf(iconWrapRef.value.querySelectorAll('*'));
-        }
-        if (contentRef.value) {
-            gsap.killTweensOf(contentRef.value);
         }
     });
 
@@ -667,7 +515,7 @@
         } catch (e) {
             console.error('[OOBE] completeOobe failed:', e);
         } finally {
-            await playCloseAnimation();
+            await shellRef.value?.playCloseAnimation();
             router.replace('/feed').catch((e) => console.error('[OOBE] navigation failed:', e));
         }
     }
@@ -689,23 +537,6 @@
 
     const recovering = ref(false);
     const recoverMode = ref('incremental');
-
-    /**
-     * Play a closing animation then navigate away.
-     */
-    async function playCloseAnimation() {
-        const el = document.querySelector('.oobe');
-        if (!el) return;
-        await new Promise((resolve) => {
-            gsap.to(el, {
-                opacity: 0,
-                scale: 0.92,
-                duration: 0.4,
-                ease: 'power2.in',
-                onComplete: resolve
-            });
-        });
-    }
 
     /**
      * Data recovery (optional): restore a backup database file, same as
@@ -750,91 +581,10 @@
 </script>
 
 <style scoped>
-    .oobe {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 192px;
-        width: 100%;
-        height: 100%;
-        padding: 40px;
-        overflow: hidden;
-        position: relative;
-        z-index: 50;
-        background-color: var(--background);
-    }
-
-    /* ---- Right progress rail: dots + step counter ---- */
-    .oobe-progress-rail {
-        position: absolute;
-        right: 36px;
-        top: 50%;
-        transform: translateY(-50%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .oobe-step-counter {
-        font-size: 13px;
-        font-weight: 500;
-    }
-
-    .oobe-progress {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .oobe-progress-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background-color: var(--muted-foreground);
-        opacity: 0.2;
-        transition:
-            opacity 0.3s ease,
-            background-color 0.3s ease;
-    }
-
-    .oobe-progress-dot.active {
-        opacity: 1;
-        background-color: var(--primary);
-    }
-
-    /* ---- Left icon ---- */
-    .oobe-left {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        width: 140px;
-        height: 140px;
-        flex: none;
-    }
-
-    .oobe-icon-wrap {
-        position: absolute;
-        inset: 0;
-        margin: auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 140px;
-        height: 140px;
-        will-change: transform, opacity;
-    }
-
     .oobe-vrcx-logo {
         width: 140px;
         height: 140px;
         border-radius: 24px;
-    }
-
-    .oobe-icon-svg {
-        width: 140px;
-        height: 140px;
     }
 
     .oobe-warning-list {
@@ -845,42 +595,6 @@
         flex-direction: column;
         gap: 0.5rem;
         margin-top: 0.75rem;
-    }
-
-    /* ---- Right content ---- */
-    .oobe-right {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .oobe-content {
-        width: 440px;
-        max-width: 440px;
-        flex: none;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        will-change: transform, opacity;
-    }
-
-    .oobe-step-panel {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .oobe-title {
-        margin: 0;
-        font-size: 26px;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-    }
-
-    .oobe-desc {
-        margin: 0;
-        font-size: 14px;
-        line-height: 1.6;
     }
 
     .oobe-scroll {
@@ -924,16 +638,6 @@
         background-color: var(--muted);
     }
 
-    .oobe-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .oobe-actions > * {
-        width: 100%;
-    }
-
     .oobe-settings {
         display: flex;
         flex-direction: column;
@@ -969,35 +673,5 @@
 
     .oobe-setting-desc {
         font-size: 12px;
-    }
-
-    /* ---- Responsive: keep the layout usable in smaller windows ---- */
-    @media (max-width: 900px) {
-        .oobe {
-            gap: 48px;
-            padding: 40px 24px;
-        }
-
-        .oobe-left,
-        .oobe-icon-wrap,
-        .oobe-vrcx-logo,
-        .oobe-icon-svg {
-            width: 100px;
-            height: 100px;
-        }
-
-        .oobe-content {
-            width: min(440px, calc(100vw - 200px));
-        }
-
-        .oobe-progress-rail {
-            right: 12px;
-        }
-    }
-
-    @media (max-width: 640px) {
-        .oobe-left {
-            display: none;
-        }
     }
 </style>
