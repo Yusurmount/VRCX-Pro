@@ -344,9 +344,16 @@ function validateImportData(data, currentUserId, allowUserMismatch = false) {
  */
 
 /**
+ * @typedef {'incremental'|'full'} RestoreMode
+ * - 'incremental': merge backup rows into the existing database (default)
+ * - 'full': wipe existing data first, then rebuild it from the backup file
+ */
+
+/**
  * @typedef {Object} ImportStrategies
  * @property {ConflictStrategy} conflictStrategy - How to handle existing records
  * @property {NewDataStrategy} newDataStrategy - How to handle new records
+ * @property {RestoreMode} [mode] - Restore mode, defaults to 'incremental'
  */
 
 /**
@@ -444,6 +451,56 @@ export async function readImportFile(currentUserId, options = {}) {
 }
 
 /**
+ * Delete existing data so the database ends up matching the backup file.
+ * Login state is never touched: the `cookies` table is left alone and the
+ * credential config keys are kept, so a full restore cannot log the user out.
+ * Only writes run inside the transaction - the backend deadlocks on reads
+ * issued while a transaction is open.
+ *
+ * @param {function} [onProgress] - (cleared, total)
+ * @returns {Promise<number>} Number of cleared tables
+ */
+async function clearForFullRestore(onProgress) {
+    const tableNames = await getAllTableNames();
+    const targets = tableNames.filter(
+        (name) => !name.startsWith('sqlite_') && !isSensitiveTable(name)
+    );
+    const total = targets.length;
+
+    await sqliteService.executeNonQuery('BEGIN');
+    try {
+        for (let i = 0; i < total; i++) {
+            const tableName = targets[i];
+            if (tableName === 'configs') {
+                // Keep the current login/credential keys, drop the rest.
+                const keys = [...SENSITIVE_CONFIG_KEYS];
+                const params = {};
+                keys.forEach((key, idx) => {
+                    params[`@k${idx}`] = key;
+                });
+                const placeholders = keys
+                    .map((_, idx) => `@k${idx}`)
+                    .join(', ');
+                await sqliteService.executeNonQuery(
+                    `DELETE FROM "configs" WHERE "key" NOT IN (${placeholders})`,
+                    params
+                );
+            } else {
+                await sqliteService.executeNonQuery(
+                    `DELETE FROM "${tableName}"`
+                );
+            }
+            onProgress?.(i + 1, total);
+        }
+        await sqliteService.executeNonQuery('COMMIT');
+    } catch (e) {
+        await sqliteService.executeNonQuery('ROLLBACK').catch(() => {});
+        throw e;
+    }
+    return total;
+}
+
+/**
  * Execute import with VRCX-Pro Previous import logic.
  *
  * Backup rows are written to the database with the columns exactly as
@@ -452,11 +509,17 @@ export async function readImportFile(currentUserId, options = {}) {
  * objects that the backend cannot bind, SQLite internal tables and login
  * credentials (cookies table, saved credentials) are never imported.
  *
- * Note: the work is intentionally NOT wrapped in a BEGIN/COMMIT transaction.
+ * Two modes are supported (see `RestoreMode`): 'incremental' merges rows into
+ * the existing data using the conflict/new-data strategies, 'full' clears the
+ * existing data first so the result matches the file - login state is always
+ * kept from the current session, never from the file.
+ *
+ * Note: row import is intentionally NOT wrapped in a BEGIN/COMMIT transaction.
  * The C# backend guards `Execute` (read) and `ExecuteNonQuery` (write) with a
  * non-recursive `ReaderWriterLockSlim`, so a SELECT issued inside an open
  * transaction deadlocks/throws on the same thread. Rows are committed
- * individually instead.
+ * individually instead. Only the write-only clear phase of 'full' mode runs in
+ * a transaction.
  *
  * @param {ExportPackage} data
  * @param {ImportStrategies} strategies
@@ -464,12 +527,14 @@ export async function readImportFile(currentUserId, options = {}) {
  * @returns {Promise<{success: boolean, report?: ImportReport, error?: string, tablesProcessed?: number}>}
  */
 export async function executeImport(data, strategies, onProgress) {
+    const mode = strategies.mode === 'full' ? 'full' : 'incremental';
     const tableNames = Object.keys(data.tables);
     const totalRows = tableNames.reduce(
         (sum, name) => sum + data.tables[name].length,
         0
     );
     let processedRows = 0;
+    let clearedTables = 0;
 
     /** @type {ImportReport} */
     const report = {
@@ -483,6 +548,17 @@ export async function executeImport(data, strategies, onProgress) {
     };
 
     try {
+        if (mode === 'full') {
+            clearedTables = await clearForFullRestore((cleared, total) => {
+                const workTotal = total + totalRows;
+                onProgress?.({
+                    phase: 'clearing',
+                    progress: workTotal > 0 ? cleared / workTotal : 0
+                });
+            });
+        }
+        const workTotal = Math.max(clearedTables + totalRows, 1);
+
         for (const tableName of tableNames) {
             let rows = data.tables[tableName];
             if (!Array.isArray(rows) || rows.length === 0) continue;
@@ -520,7 +596,15 @@ export async function executeImport(data, strategies, onProgress) {
             // Previous logic: use the backup columns verbatim.
             const columns = Object.keys(rows[0]);
             const quotedColumns = columns.map((c) => `"${c}"`).join(', ');
-            const pkColumns = (await getTableColumnInfo(tableName))
+            const tableColumns = await getTableColumnInfo(tableName);
+            if (mode === 'full' && tableColumns.length === 0) {
+                // The file has a table this database doesn't - no schema to
+                // insert into, so it cannot be restored.
+                tableReport.skipped = 'table_missing';
+                report.tables.push(tableReport);
+                continue;
+            }
+            const pkColumns = tableColumns
                 .filter((c) => c.pk > 0)
                 .map((c) => c.name);
 
@@ -529,9 +613,10 @@ export async function executeImport(data, strategies, onProgress) {
                     row[c] === undefined ? null : normalizeImportValue(row[c])
                 );
 
-                // Check if record exists by primary key
+                // Check if record exists by primary key. Skipped in full mode:
+                // the data was cleared above, so every row is a fresh insert.
                 let recordExists = false;
-                if (pkColumns.length > 0) {
+                if (mode === 'incremental' && pkColumns.length > 0) {
                     const whereClauses = pkColumns
                         .map((pk, i) => `"${pk}"=@pk${i}`)
                         .join(' AND ');
@@ -579,7 +664,10 @@ export async function executeImport(data, strategies, onProgress) {
                         tableReport.skippedExisting++;
                     }
                 } else {
-                    if (strategies.newDataStrategy === 'add') {
+                    if (
+                        mode === 'full' ||
+                        strategies.newDataStrategy === 'add'
+                    ) {
                         const paramNames = columns.map((_, i) => `@p${i}`);
                         const argsObj = {};
                         paramNames.forEach((name, i) => {
@@ -596,7 +684,7 @@ export async function executeImport(data, strategies, onProgress) {
                 processedRows++;
                 onProgress?.({
                     phase: 'importing',
-                    progress: processedRows / totalRows
+                    progress: (clearedTables + processedRows) / workTotal
                 });
             }
 
