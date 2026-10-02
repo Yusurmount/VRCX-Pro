@@ -4,6 +4,7 @@ const mockFetchWithEntityPolicy = vi.fn();
 const mockGetUser = vi.fn();
 const mockGetWorlds = vi.fn();
 const mockGetGroupCalendar = vi.fn();
+const mockGetInstance = vi.fn();
 
 vi.mock('../../queries', () => ({
     queryClient: {
@@ -73,6 +74,12 @@ vi.mock('../../queries', () => ({
         world: {
             staleTime: 60000,
             gcTime: 300000,
+            retry: 1,
+            refetchOnWindowFocus: false
+        },
+        instance: {
+            staleTime: 30000,
+            gcTime: 120000,
             retry: 1,
             refetchOnWindowFocus: false
         },
@@ -164,6 +171,10 @@ vi.mock('../../queries', () => ({
         ],
         avatar: (avatarId) => ['avatar', avatarId],
         world: (worldId) => ['world', worldId],
+        instance: (worldId, instanceId) => [
+            'instance',
+            `${worldId}:${instanceId}`
+        ],
         group: (groupId, includeRoles) => [
             'group',
             groupId,
@@ -260,6 +271,11 @@ vi.mock('../avatar', () => ({
         getAvatar: vi.fn(),
         getAvatarGallery: vi.fn(),
         getAvatars: vi.fn()
+    }
+}));
+vi.mock('../instance', () => ({
+    default: {
+        getInstance: (...args) => mockGetInstance(...args)
     }
 }));
 vi.mock('../friend', () => ({ default: { getFriends: vi.fn() } }));
@@ -395,6 +411,54 @@ describe('queryRequest', () => {
         expect(mockFetchWithEntityPolicy).toHaveBeenCalledWith(
             expect.objectContaining({
                 queryKey: ['worlds', 'user', 'usr_me', params]
+            })
+        );
+    });
+
+    test('routes instance fetch through policy wrapper with composite key', async () => {
+        const params = { worldId: 'wrld_1', instanceId: '12345' };
+        const data = {
+            json: { id: 'wrld_1:12345' },
+            params,
+            ref: { id: 'wrld_1:12345' }
+        };
+        mockGetInstance.mockResolvedValue(data);
+        mockFetchWithEntityPolicy.mockImplementation(async ({ queryFn }) => ({
+            data: await queryFn(),
+            cache: false
+        }));
+
+        const args = await queryRequest.fetch('instance', params);
+
+        expect(mockFetchWithEntityPolicy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                queryKey: ['instance', 'wrld_1:12345'],
+                policy: expect.objectContaining({ staleTime: 30000 }),
+                label: 'instance'
+            })
+        );
+        expect(args.ref.id).toBe('wrld_1:12345');
+    });
+
+    test('applies staleTime zero for instance.force', async () => {
+        mockGetInstance.mockResolvedValue({
+            json: { id: 'wrld_1:12345' },
+            params: { worldId: 'wrld_1', instanceId: '12345' }
+        });
+        mockFetchWithEntityPolicy.mockImplementation(async ({ queryFn }) => ({
+            data: await queryFn(),
+            cache: false
+        }));
+
+        await queryRequest.fetch('instance.force', {
+            worldId: 'wrld_1',
+            instanceId: '12345'
+        });
+
+        expect(mockFetchWithEntityPolicy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                policy: expect.objectContaining({ staleTime: 0 }),
+                label: 'instance.force'
             })
         );
     });
