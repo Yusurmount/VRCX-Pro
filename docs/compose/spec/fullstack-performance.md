@@ -1,0 +1,117 @@
+---
+feature: fullstack-performance
+status: delivered
+updated: 2026-10-02
+branch: perf/fullstack-performance
+commits: 
+---
+
+# 全栈性能专项：IPC 并发化与大数据流畅度
+
+## Report
+
+**What was built** — 后端 IPC 从"全局锁串行"改为"按 id 多路复用 + 并发调度"：Rust 侧 `dotnet_call` 为每个请求分配自增 id，写入 stdin 后立即释放锁等待 oneshot，独立读线程按响应 id 路由并把 id 改写回调用方原值（前端 `interopApi` 零改动）；.NET 主循环经 `SemaphoreSlim(32)` 背压并发执行，响应在锁内逐行写出（天然乱序），EOF 时排空全部在途响应，错误响应回显请求 id。SQLite 保持单连接 + `ReaderWriterLockSlim`（前端事务跨 RPC 分行发送，单连接是事务语义基础，连接池列为 Out of Scope）。审查发现并发化消除了跨请求 FIFO 后，`database.begin()/commit()` 的 fire-and-forget 会与后续语句竞争，已改为返回 promise 使调用方 `await` 真正等待事务边界。前端数据层按实测聚焦优化：FriendLog 查询改 SQL 端 `ORDER BY created_at DESC, id DESC` 并移除 JS 端 dayjs 全量排序（10 万行 64ms→0.8ms，且每次筛选键入都受益）；`getGameLogInstancesTime` 改 `GROUP BY SUM` 聚合（启动修复路径不再全表传输）。保留 `scripts/seed-performance-dataset.py`（合成大数据集：自动备份、幂等、`id>=900000000` 种子段）与 `scripts/measure-ipc-latency.py`（关键实验）两个回归工具；全部临时插桩已删除且全仓 grep 零残留。文档同步：`docs/KNOWLEDGE_BASE.md` 增补 IPC 并发模型、.NET 调度模型与性能工具命令。
+
+**Verification** — 关键实验（`scripts/measure-ipc-latency.py`，慢 HTTP 期间本地读延迟）：基线 4973/4903/4902ms → 改造后 **0.7/0.8/0.7ms**；应用启动 `boot-hidden` 35322ms → **411ms**（基线采集于小数据+HMR 环境，修复后为 10 万行种子数据冷启动，条件更苛刻仍大幅领先）；前端 IPC `SQLite.Execute` p50 1168ms→**24ms**、p95 15138ms→**1251ms**（p95 残留为 10 万行大查询的数据本体重载，属 T6 数据层范畴）。回归对照一律用同 worktree stash 基线：`oxlint` 69w/38e == 基线、`eslint` 181 problems == 基线、`tsc`（临时 typescript@5.9.3）输出 254 行逐行 diff=0、全量 `npm test` 36 failed files/152 failed/2160 passed 与基线 FAIL 清单 diff=0（零新增失败）；`build:tauri-backend`、`probe:tauri-backend`（按 id 排序断言）、`cargo check`、`verify:tauri` 全部 PASS；真机 10 万行种子数据下好友日志页渲染截图确认时间列严格倒序；最终代码冒烟：自动登录→feed、sidecar 存活。两轮独立审查均 PASS（无 critical；major 的 begin/commit 顺序问题修复后复核确认消除）。
+
+**Journey log**:
+- `@tauri-apps/api/path` 导出名是 `tempDir`（驼峰）；误写 `tempdir` 是 ESM 链接期 SyntaxError，会杀死整个模块图且 vite 日志无痕——用无头 Edge `--enable-logging=stderr --dump-dom` 抓 `Uncaught` 一击定位。
+- `tauri dev` 自带 vite 会发出根相对 dep URL（`/node_modules/.vite/deps/...`）返回 HTML 兜底（根因未解）；绕法：独立 `npx vite serve src --port 9000` + `npx tauri dev --config <file>`（`{"build":{"beforeDevCommand":""}}`），不改仓库文件。
+- 并发化后跨请求 FIFO 消失，暴露 `database.begin/commit` fire-and-forget 竞争（审查发现）；同类隐含顺序假设值得在后续并发改造中逐处审计。
+- 机器级环境坑：工具 shell 缺 `ProgramFiles` 使 NuGet `Path.Combine(null)` 失败（设 `$env:ProgramFiles` 恢复）；`dotnet run` Debug 重编译把 CA1416 警告行混入 stdout 污染 probe。
+- 种子数据 location 近乎唯一，`GROUP BY` 收益被低估（真实数据会大量折叠）；页面级真机测量用"延迟 hash 注入 + PrintWindow 抓被遮窗口"绕过登录与桌面遮挡。
+
+## [S1] Problem
+
+应用在三个维度存在用户可见的性能问题，且共享同一根因链：
+
+1. **响应速度**：Rust `dotnet_call`（`src-tauri/src/lib.rs:140-165`）在全局 Mutex 下“写请求 + 读一行响应”，锁跨整个等待期持有；.NET 主循环（`Program.cs:67-71`）逐行串行 `await Handle(line)`。任何一个慢调用（WebApi HTTP 最长 60s、大数据查询、启动迁移）会把**全部**后续 IPC（本地 SQLite 读、配置 KV、AppApi）卡在队列后面。前次 `startup-loading-states` 实测：登录后数据洪峰排队 4–8s。
+2. **启动时间**：启动链路的配置/dashboard/导航读取全部排在串行队列尾部；前次实测 sidecar 队列启动期约 15s 阻塞（前端串行问题上轮已修，剩余瓶颈在 IPC 串行层）。
+3. **巨量数据压力**：大表（gamelog / feed / friend_log 等）查询结果全量物化为 JSON、经单管道串行传输，传输期间整条链路继续停摆；前端大列表页一次性持有并渲染全量行。
+
+### Grill 决策记录
+
+- **范围**：后端 + 前端全栈（后端 IPC 并发化 + 前端大数据渲染与查询分页）。
+- **验收方式**：插桩实测 + 前后对比数据；不设绝对硬指标。
+- **前端聚焦**：按实测数据量/耗时排序，只优化 Top 3–5 页面，抽象可复用模式。
+- **测试数据**：脚本合成大数据集（可复现，脚本保留供后续回归）。
+
+## [S2] Design
+
+### 1. 临时插桩（交付前移除）
+
+- 前缀 `[perf-probe]`，沿用 `startup-loading-states` 的模式：console 日志 + 事件 JSON 写入 `%TEMP%\vrcx-perf-probe.json`。
+- 覆盖：
+  - 前端 `src/ipc/interopApi.js`：按 `class.method` 聚合 invoke 耗时（次数 / P50 / P95 / 最大值）。
+  - 前端启动阶段（`app.js` 各 await、bootReady 就绪时刻）与 Top 页面级探针（数据就绪、首渲染）。
+  - .NET 每请求排队等待（读入到开始处理）与处理耗时。
+- 全部为临时代码，交付前删除（grep `perf-probe` 零残留）。
+
+### 2. 合成大数据脚本（保留件）
+
+- `scripts/seed-performance-dataset.py`：Python 3 标准库 `sqlite3`，无第三方依赖（本机以 `MIMO_PYTHON` 运行）。
+- 目标表：以实测 Top 页面依赖的大表为准，首轮至少覆盖 `gamelog_*`、`feed_gps` / `feed_status`、`friend_log_history`；表结构从 `src/services/database/` 现有 schema 复制，不新造表。
+- 量级参数化（`--scale`），首轮默认：单表 10万–50万行量级，足以压出瓶颈。
+- 安全与幂等：执行前若无备份则复制目标 DB 为 `*.perf-backup`；种子行使用保留 id 段（如 `id >= 900000000`），重复执行先删该段再写入，可反复运行。
+
+### 3. 后端 IPC 并发化
+
+**Rust（`src-tauri/src/lib.rs`）——按 id 多路复用：**
+
+- `SidecarProcess` 拆分为：`child`、`stdin: ChildStdin`、`pending: Arc<Mutex<HashMap<u64, oneshot sender>>>`；sidecar 启动时创建独立读线程：循环 `read_line` → 解析 JSON → 按响应 `id` 路由到对应 pending sender；无法解析的行跳过并记日志，EOF 时清空 pending（所有等待方收到 "sidecar stopped" 类错误，不悬挂）。
+- `dotnet_call`：临界区仅覆盖“登记 id → 写一行 + flush”，随后 await oneshot；**互斥锁不再跨等待期持有**。
+- 未知 id / 无 id 响应：stderr 记日志，不 panic。
+
+**.NET（`Dotnet/TauriBackend/Program.cs`）——并发调度：**
+
+- 主循环读行后不再串行等待：经 `SemaphoreSlim(32)` 背压（信号量在读循环处 await，天然回压到管道），把 `Handle(line)` 作为并发任务执行；响应写出用 `lock(writer)` 保证行完整（serialize 在锁外完成）。
+- **错误 id 回显修复**：当前 `Handle` 的 catch 分支固定返回 `id: 0`，多路复用下无法路由。改为：请求已解析时回显原 `id`；仅反序列化失败时保持 0。
+
+**SQLite（`Sqlite.cs`）——保持单连接 + 现有 `ReaderWriterLockSlim`，不引入连接池：**
+
+- 前端事务跨 RPC（`BEGIN` / `COMMIT` 分行发送，见 `exportImport.js` / `mutualGraph.js` / `activityV2.js`），单连接是当前事务语义的基础；连接池需要事务 pinning + 全局事务门，且仓库无 .NET 测试基建，风险/收益不匹配。
+- IPC 并发化已消除“HTTP / 存储与 DB 互相阻塞”；巨量查询对 DB 锁的占用由前端 Top 页面的查询分批/分页化解（§4）。读连接池列入 Out of Scope，若复测显示 DB 锁等待仍为首要瓶颈则另行立项。
+
+**前端 `src/ipc/interopApi.js`：零改动。** `id` 已全链路存在（前端生成 → Rust 转发 → .NET 回显），响应形状 `{id, ok, result|error}` 不变。
+- `database.begin()/commit()` 改为返回 `executeNonQuery` 的 promise：并发调度下不再依赖跨请求的隐式 FIFO，调用方 `await` 真正等待事务边界落库（审查发现后补充）。
+
+**WebApi 并发安全**：基于 `HttpClient` + `CookieContainer`（文档保证并发安全），Cookie 落盘已有 timer；不加锁。
+
+### 4. 前端 Top 页面优化（实测后定页面）
+
+- 方法：巨量数据 + 插桩跑两轮 → 按“数据就绪耗时 / 渲染耗时 / 行数”排序 → 取 Top 3–5 页面。
+- 手段按页面实测选用（不限定组合）：
+  a. 查询层 `LIMIT`/分页，减少进入前端的行数；
+  b. 列表虚拟化（仓库已有 `@tanstack/vue-virtual`，TanStack Table 已在技术栈中）；
+  c. 大数组同步变换改为分片/空闲调度，避免长任务阻塞渲染；
+  d. 空态/loading 门控沿用 `startup-loading-states` 已建立的模式。
+- 每个入选页面给出优化前后同一数据集的对比数据。
+
+### 5. 验收与前后对比
+
+- **关键实验（并发化定义性证据）**：挂起 1 个慢 WebApi 请求（或等价慢调用）期间并发发起本地 SQLite 读——基线中本地读被阻塞至 HTTP 完成；改造后本地读应在毫秒级返回。记录两轮具体数值。
+- 对比维度：启动关键路径耗时、IPC 调用 P95（按 class）、Top 页面加载耗时、巨量数据集下整体交互流畅度。
+- 功能回归（相对 master 基线，master 失败项记 PRE-EXISTING）：
+  - `npm run lint`、`npm run typecheck:js`、`npm test`（零新增失败）；
+  - `npm run build:tauri-backend` + `npm run probe:tauri-backend`；
+  - `src-tauri` 下 `cargo check` + `npm run verify:tauri`。
+
+## [S3] Out of Scope
+
+- SQLite 读写连接池 / 事务 pinning 改造（保持单连接，理由见 S2 §3）。
+- 迁移、tableFixes、VACUUM 算法优化；启动期写操作本身的加速。
+- `storage.json` 每次 Set 全量落盘的合并/去频优化。
+- 永久性性能监控/告警设施（插桩为临时；合成数据脚本保留）。
+- Top 页面之外的前端渲染优化；登录/OOBE 流程行为变更。
+- VRChat API 限流策略变更、任何批量抓取。
+- 仓库基线问题：master 既有 38 个失败测试文件、oxlint errors、部分文件未过 oxfmt、未安装 typescript 导致 `typecheck:js` 不可用（以“相对 master 无新增”为准）。
+
+## Tasks
+
+- [x] T1: 前后端临时插桩（interopApi 聚合、启动阶段、页面探针、.NET 排队/处理耗时） — acceptance: 运行应用后输出 `[perf-probe]` 耗时并写入 `%TEMP%\vrcx-perf-probe.json`，能读出 IPC 按 class.method 的 P50/P95 (covers: S2 §1)
+- [x] T2: 合成数据脚本 `scripts/seed-performance-dataset.py` — acceptance: `MIMO_PYTHON` 下可对指定 DB 按 `--scale` 生成种子数据；自动备份；同 id 段幂等可重复执行 (covers: S2 §2)
+- [x] T3: 采集基线（现有数据 + 巨量数据两轮） — acceptance: 产出启动/IPC/页面基线数据与瓶颈排序，含“慢 HTTP 阻塞本地读”的基线证据 (covers: S2 §1, §5; depends: T1, T2)
+- [x] T4: Rust 按 id 多路复用 + .NET 并发调度 + 错误 id 回显 — acceptance: 慢 HTTP 挂起期间本地 SQLite 读毫秒级返回（对照 T3 基线被阻塞）；`cargo check`、`npm run build:tauri-backend`、`npm run probe:tauri-backend` 通过 (covers: S2 §3; depends: T3)
+- [x] T5: 后端复测并记录前后对比 — acceptance: 启动关键路径、IPC P95、关键实验两轮数据写入 spec Report 素材 (covers: S2 §5; depends: T4)
+- [x] T6: 实测排序确定 Top 3–5 页面并逐一优化 — acceptance: 每页给出同数据集优化前后对比数据；所选手段与页面实测瓶颈对应 (covers: S2 §4; depends: T5)
+- [x] T7: 移除全部插桩 + 全量验证 — acceptance: 全仓无 `perf-probe` 残留；lint/typecheck/npm test 相对 master 零新增失败；`cargo check` + `verify:tauri` + `probe:tauri-backend` 通过；合成数据脚本保留 (covers: S2 §1, §5; depends: T4, T5, T6)

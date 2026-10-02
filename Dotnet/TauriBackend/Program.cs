@@ -64,24 +64,63 @@ internal static class Program
 
         using var reader = new StreamReader(Console.OpenStandardInput());
         await using var writer = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
+        // Concurrent dispatch: requests are handled as parallel tasks so a slow
+        // WebApi HTTP call no longer blocks local SQLite/KV traffic behind it.
+        // The semaphore is acquired in the read loop, so overload backpressures
+        // into the stdin pipe instead of piling up unbounded tasks.
+        var dispatchGate = new SemaphoreSlim(32);
+        var writerLock = new object();
         while (await reader.ReadLineAsync() is { } line)
         {
-            if (!string.IsNullOrWhiteSpace(line))
-                await writer.WriteLineAsync(JsonSerializer.Serialize(await Handle(line), JsonOptions));
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+            await dispatchGate.WaitAsync();
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var response = JsonSerializer.Serialize(await Handle(line), JsonOptions);
+                    lock (writerLock)
+                        writer.WriteLine(response);
+                }
+                catch (Exception error)
+                {
+                    try
+                    {
+                        lock (writerLock)
+                            writer.WriteLine(JsonSerializer.Serialize(new { id = 0L, ok = false, error = error.Message }, JsonOptions));
+                    }
+                    catch
+                    {
+                        // stdout is gone; nothing left to report
+                    }
+                }
+                finally
+                {
+                    dispatchGate.Release();
+                }
+            });
         }
+        // EOF reached: hold the process open until every in-flight response has
+        // been written, otherwise stdout closes before the tasks flush.
+        for (var i = 0; i < 32; i++)
+            await dispatchGate.WaitAsync();
     }
 
     private static async Task<object> Handle(string line)
     {
+        RpcRequest? request = null;
         try
         {
-            var request = JsonSerializer.Deserialize<RpcRequest>(line, JsonOptions)
+            request = JsonSerializer.Deserialize<RpcRequest>(line, JsonOptions)
                 ?? throw new InvalidDataException("Request is empty");
             return new { id = request.Id, ok = true, result = await Dispatch(request) };
         }
         catch (Exception error)
         {
-            return new { id = 0L, ok = false, error = error.Message };
+            // Echo the request id when available so concurrent callers can
+            // still route the failure to the right waiter.
+            return new { id = request?.Id ?? 0L, ok = false, error = error.Message };
         }
     }
 
