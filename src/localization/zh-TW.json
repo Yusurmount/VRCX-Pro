@@ -893,28 +893,6 @@
                     "empty": "未排除任何好友"
                 }
             },
-            "timeline_comparison": {
-                "header": "時間軸對比",
-                "tips": {
-                    "description": "對比兩位好友的互動時間軸。查看共同活動隨時間的變化趨勢，了解關係的發展或疏遠。"
-                },
-                "select_friend_a": "選擇好友 A",
-                "select_friend_b": "選擇好友 B",
-                "search_friend": "搜尋好友...",
-                "swap_friends": "交換好友",
-                "friends": "好友",
-                "momentum": "趨勢",
-                "momentum_growing": "增長中",
-                "momentum_declining": "下降中",
-                "momentum_stable": "穩定",
-                "peak_month": "峰值月份",
-                "total_encounters": "總相遇次數",
-                "total_months": "活躍月數",
-                "co_time_minutes": "分鐘",
-                "co_presence": "共處時間",
-                "visits": "訪問次數",
-                "chart_label": "月度共處時間軸"
-            },
             "avatar_usage": {
                 "header": "模型使用分析",
                 "tab_label": "模型使用",
@@ -1002,8 +980,6 @@
             },
             "user": {
                 "discord_names_description": "尋找你 VRChat 好友的 Discord 使用者名稱",
-                "export_friend_list_description": "匯出你的 VRChat 好友列表",
-                "export_own_avatars_description": "匯出你的個人 VRChat 化身",
                 "export_feed_description": "匯出動態資料（JSON/Excel）至本機檔案",
                 "export_friend_log_description": "匯出好友日誌資料（JSON/Excel）至本機檔案",
                 "export_friend_list_data_description": "匯出好友列表資料（JSON/Excel）至本機檔案",
@@ -1013,18 +989,13 @@
                 "export_my_avatars_description": "匯出我的模型資料（JSON/Excel）至本機檔案",
                 "export_favorite_worlds_description": "匯出世界收藏資料（JSON/Excel）至本機檔案",
                 "export_favorite_friends_description": "匯出好友收藏資料（JSON/Excel）至本機檔案",
-                "export_favorite_avatars_description": "匯出模型收藏資料（JSON/Excel）至本機檔案",
-                "world_export_description": "複製世界收藏夾的 CSV 文字",
-                "avatar_export_description": "複製模型收藏夾的 CSV 文字",
-                "friend_export_description": "複製收藏好友的 CSV 文字"
+                "export_favorite_avatars_description": "匯出模型收藏資料（JSON/Excel）至本機檔案"
             },
             "export": {
                 "header": "匯出",
                 "export_notes": "匯出使用者備註",
                 "export_notes_description": "將 VRCX 使用者備註匯出至 VRChat 備註",
-                "discord_names": "Discord 名稱",
-                "export_friend_list": "匯出好友列表",
-                "export_own_avatars": "匯出個人化身"
+                "discord_names": "Discord 名稱"
             },
             "redirect_message": "此功能現在已可在此頁面使用。",
             "pictures": {
@@ -1769,7 +1740,7 @@
                             },
                             "welcome": {
                                 "label": "歡迎引導對話框",
-                                "desc": "重置已見標記，重新顯示歡迎引導彈窗。"
+                                "desc": "重置已見標記並立即重新顯示歡迎對話框。"
                             },
                             "whats_new": {
                                 "label": "新功能對話框",
@@ -2822,9 +2793,6 @@
             "cancel": "取消",
             "send": "傳送"
         },
-        "world_export": {
-            "header": "世界收藏匯出"
-        },
         "world_import": {
             "header": "世界收藏匯入",
             "description": "輸入世界 ID 列表",
@@ -2839,9 +2807,6 @@
             "errors": "錯誤：",
             "clear_errors": "清除錯誤"
         },
-        "avatar_export": {
-            "header": "角色收藏匯出"
-        },
         "avatar_import": {
             "header": "角色收藏匯入",
             "description": "輸入角色 ID 列表",
@@ -2855,9 +2820,6 @@
             "errors": "錯誤：",
             "clear_errors": "清除錯誤"
         },
-        "friend_export": {
-            "header": "好友收藏匯出"
-        },
         "friend_import": {
             "header": "好友收藏匯入",
             "description": "輸入用戶 ID 列表",
@@ -2870,14 +2832,6 @@
             "clear_table": "清除表格",
             "errors": "錯誤：",
             "clear_errors": "清除錯誤"
-        },
-        "export_friends_list": {
-            "header": "匯出好友列表",
-            "csv": "CSV",
-            "json": "原始資料"
-        },
-        "export_own_avatars": {
-            "header": "匯出私有角色"
         },
         "discord_names": {
             "header": "Discord 名稱",

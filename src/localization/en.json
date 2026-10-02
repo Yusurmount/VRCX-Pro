@@ -893,28 +893,6 @@
                     "empty": "No excluded friends"
                 }
             },
-            "timeline_comparison": {
-                "header": "Timeline Comparison",
-                "tips": {
-                    "description": "Compares the interaction timeline between two friends. See how shared activity evolved over time and whether the relationship is growing or declining."
-                },
-                "select_friend_a": "Select Friend A",
-                "select_friend_b": "Select Friend B",
-                "search_friend": "Search friends...",
-                "swap_friends": "Swap friends",
-                "friends": "Friends",
-                "momentum": "Trend",
-                "momentum_growing": "Growing",
-                "momentum_declining": "Declining",
-                "momentum_stable": "Stable",
-                "peak_month": "Peak Month",
-                "total_encounters": "Total Encounters",
-                "total_months": "Active Months",
-                "co_time_minutes": "Minutes",
-                "co_presence": "Co-presence Time",
-                "visits": "Visit Count",
-                "chart_label": "Monthly co-presence timeline"
-            },
             "avatar_usage": {
                 "header": "Avatar Usage Analysis",
                 "tab_label": "Avatar Usage",
@@ -1002,8 +980,6 @@
             },
             "user": {
                 "discord_names_description": "Find the Discord usernames of your VRChat friends",
-                "export_friend_list_description": "Export your friends list from VRChat",
-                "export_own_avatars_description": "Export your personal avatars from VRChat",
                 "export_feed_description": "Export feed data to a local file (JSON/Excel)",
                 "export_friend_log_description": "Export friend log data to a local file (JSON/Excel)",
                 "export_friend_list_data_description": "Export friends list data to a local file (JSON/Excel)",
@@ -1013,18 +989,13 @@
                 "export_my_avatars_description": "Export my avatars data to a local file (JSON/Excel)",
                 "export_favorite_worlds_description": "Export favorite worlds data to a local file (JSON/Excel)",
                 "export_favorite_friends_description": "Export favorite friends data to a local file (JSON/Excel)",
-                "export_favorite_avatars_description": "Export favorite avatars data to a local file (JSON/Excel)",
-                "world_export_description": "Copy world favorites as CSV text",
-                "avatar_export_description": "Copy avatar favorites as CSV text",
-                "friend_export_description": "Copy favorite friends as CSV text"
+                "export_favorite_avatars_description": "Export favorite avatars data to a local file (JSON/Excel)"
             },
             "export": {
                 "header": "Export",
                 "export_notes": "Export User Memos",
                 "export_notes_description": "Export VRCX user memos to VRChat notes",
-                "discord_names": "Discord Names",
-                "export_friend_list": "Export Friends List",
-                "export_own_avatars": "Export Own Avatars"
+                "discord_names": "Discord Names"
             },
             "redirect_message": "This feature is now available on this page.",
             "pictures": {
@@ -1772,7 +1743,7 @@
                             },
                             "welcome": {
                                 "label": "Welcome Dialog",
-                                "desc": "Reset the seen flag and show the welcome dialog again."
+                                "desc": "Reset the seen flag, then show the welcome dialog again immediately."
                             },
                             "whats_new": {
                                 "label": "What's New Dialog",
@@ -2934,9 +2905,6 @@
             "cancel": "Cancel",
             "send": "Send"
         },
-        "world_export": {
-            "header": "World Favorites Export"
-        },
         "world_import": {
             "header": "World Favorites Import",
             "description": "Enter a list of world IDs",
@@ -2951,9 +2919,6 @@
             "errors": "Errors:",
             "clear_errors": "Clear Errors"
         },
-        "avatar_export": {
-            "header": "Avatar Favorites Export"
-        },
         "avatar_import": {
             "header": "Avatar Favorites Import",
             "description": "Enter a list of avatar IDs",
@@ -2967,9 +2932,6 @@
             "errors": "Errors:",
             "clear_errors": "Clear Errors"
         },
-        "friend_export": {
-            "header": "Friend Favorites Export"
-        },
         "friend_import": {
             "header": "Friend Favorites Import",
             "description": "Enter a list of user IDs",
@@ -2982,14 +2944,6 @@
             "clear_table": "Clear Table",
             "errors": "Errors:",
             "clear_errors": "Clear Errors"
-        },
-        "export_friends_list": {
-            "header": "Export Friends List",
-            "csv": "CSV",
-            "json": "JSON"
-        },
-        "export_own_avatars": {
-            "header": "Export Own Avatars"
         },
         "discord_names": {
             "header": "Discord Names",

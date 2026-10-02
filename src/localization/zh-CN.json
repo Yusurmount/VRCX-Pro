@@ -894,28 +894,6 @@
                     "empty": "未排除任何好友"
                 }
             },
-            "timeline_comparison": {
-                "header": "时间线对比",
-                "tips": {
-                    "description": "对比两位好友的互动时间线。查看共同活动随时间的变化趋势，了解关系的发展或疏远。"
-                },
-                "select_friend_a": "选择好友 A",
-                "select_friend_b": "选择好友 B",
-                "search_friend": "搜索好友...",
-                "swap_friends": "交换好友",
-                "friends": "好友",
-                "momentum": "趋势",
-                "momentum_growing": "增长中",
-                "momentum_declining": "下降中",
-                "momentum_stable": "稳定",
-                "peak_month": "峰值月份",
-                "total_encounters": "总相遇次数",
-                "total_months": "活跃月数",
-                "co_time_minutes": "分钟",
-                "co_presence": "共处时间",
-                "visits": "访问次数",
-                "chart_label": "月度共处时间线"
-            },
             "avatar_usage": {
                 "header": "模型使用分析",
                 "tab_label": "模型使用",
@@ -1003,8 +981,6 @@
             },
             "user": {
                 "discord_names_description": "查找好友的 Discord 名称（如果他们有写上去的话）",
-                "export_friend_list_description": "从 VRChat 导出你的好友列表",
-                "export_own_avatars_description": "从 VRChat 中导出你创建的模型的 ID 列表",
                 "export_feed_description": "导出动态数据（JSON/Excel）到本地文件",
                 "export_friend_log_description": "导出好友日志数据（JSON/Excel）到本地文件",
                 "export_friend_list_data_description": "导出好友列表数据（JSON/Excel）到本地文件",
@@ -1014,18 +990,13 @@
                 "export_my_avatars_description": "导出我的模型数据（JSON/Excel）到本地文件",
                 "export_favorite_worlds_description": "导出世界收藏数据（JSON/Excel）到本地文件",
                 "export_favorite_friends_description": "导出好友收藏数据（JSON/Excel）到本地文件",
-                "export_favorite_avatars_description": "导出模型收藏数据（JSON/Excel）到本地文件",
-                "world_export_description": "复制世界收藏夹的 CSV 文本",
-                "avatar_export_description": "复制模型收藏夹的 CSV 文本",
-                "friend_export_description": "复制收藏好友的 CSV 文本"
+                "export_favorite_avatars_description": "导出模型收藏数据（JSON/Excel）到本地文件"
             },
             "export": {
                 "header": "导出",
                 "export_notes": "导出备注",
                 "export_notes_description": "导出好友备注到文本文件",
-                "discord_names": "查找好友的 Discord 名称",
-                "export_friend_list": "导出好友列表",
-                "export_own_avatars": "导出自己创建的模型 ID 列表"
+                "discord_names": "查找好友的 Discord 名称"
             },
             "redirect_message": "此类功能现在将在本页面提供",
             "pictures": {
@@ -1770,7 +1741,7 @@
                             },
                             "welcome": {
                                 "label": "欢迎引导对话框",
-                                "desc": "重置已见标记，重新显示欢迎引导弹窗。"
+                                "desc": "重置已见标记并立即重新显示欢迎对话框。"
                             },
                             "whats_new": {
                                 "label": "新功能对话框",
@@ -2810,9 +2781,6 @@
             "cancel": "取消",
             "send": "发送"
         },
-        "world_export": {
-            "header": "导出世界收藏夹"
-        },
         "world_import": {
             "header": "导入世界",
             "description": "在下方输入世界 ID",
@@ -2827,9 +2795,6 @@
             "errors": "错误：",
             "clear_errors": "清除错误"
         },
-        "avatar_export": {
-            "header": "导出模型收藏夹"
-        },
         "avatar_import": {
             "header": "导入模型",
             "description": "在下方输入模型 ID",
@@ -2843,9 +2808,6 @@
             "errors": "错误：",
             "clear_errors": "清除错误信息"
         },
-        "friend_export": {
-            "header": "导出收藏（星标）好友"
-        },
         "friend_import": {
             "header": "导入好友",
             "description": "在下方输入玩家 ID",
@@ -2858,14 +2820,6 @@
             "clear_table": "清除显示结果",
             "errors": "错误：",
             "clear_errors": "清除错误"
-        },
-        "export_friends_list": {
-            "header": "导出好友列表",
-            "csv": "CSV格式",
-            "json": "JSON格式"
-        },
-        "export_own_avatars": {
-            "header": "导出自己创建的模型的 ID"
         },
         "discord_names": {
             "header": "Discord 名称",

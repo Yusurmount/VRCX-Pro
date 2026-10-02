@@ -5,15 +5,10 @@ const initialDialogState = () => ({
     groupCalendar: false,
     noteExport: false,
     exportDiscordNames: false,
-    exportFriendsList: false,
-    exportAvatarsList: false,
     editInviteMessages: false,
     autoChangeStatus: false,
     infoCompletion: false,
-    dataExport: false,
-    worldExport: false,
-    avatarExport: false,
-    friendExport: false
+    dataExport: false
 });
 
 export const useToolsStore = defineStore('Tools', () => {

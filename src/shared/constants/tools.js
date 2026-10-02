@@ -189,7 +189,7 @@ const toolDefinitions = [
     },
     {
         key: 'discord-names',
-        category: 'user',
+        category: 'other',
         iconKey: 'users',
         navIcon: 'ri-discord-line',
         titleKey: 'view.tools.export.discord_names',
@@ -199,33 +199,13 @@ const toolDefinitions = [
     },
     {
         key: 'export-notes',
-        category: 'user',
+        category: 'other',
         iconKey: 'file-text',
         navIcon: 'ri-file-list-3-line',
         titleKey: 'view.tools.export.export_notes',
         descriptionKey: 'view.tools.export.export_notes_description',
         navEligible: true,
         action: { type: 'dialog', dialogKey: 'note-export' }
-    },
-    {
-        key: 'export-friend-list',
-        category: 'user',
-        iconKey: 'users',
-        navIcon: 'ri-file-list-3-line',
-        titleKey: 'view.tools.export.export_friend_list',
-        descriptionKey: 'view.tools.user.export_friend_list_description',
-        navEligible: true,
-        action: { type: 'dialog', dialogKey: 'export-friends-list' }
-    },
-    {
-        key: 'export-own-avatars',
-        category: 'user',
-        iconKey: 'download',
-        navIcon: 'ri-file-list-3-line',
-        titleKey: 'view.tools.export.export_own_avatars',
-        descriptionKey: 'view.tools.user.export_own_avatars_description',
-        navEligible: true,
-        action: { type: 'dialog', dialogKey: 'export-avatars-list' }
     },
     {
         key: 'export-feed',
@@ -326,36 +306,6 @@ const toolDefinitions = [
         descriptionKey: 'view.tools.user.export_favorite_avatars_description',
         navEligible: false,
         action: { type: 'export', source: 'favorite-avatars' }
-    },
-    {
-        key: 'world-export',
-        category: 'user',
-        iconKey: 'download',
-        navIcon: 'ri-file-download-line',
-        titleKey: 'dialog.world_export.header',
-        descriptionKey: 'view.tools.user.world_export_description',
-        navEligible: false,
-        action: { type: 'dialog', dialogKey: 'world-export' }
-    },
-    {
-        key: 'avatar-export',
-        category: 'user',
-        iconKey: 'download',
-        navIcon: 'ri-file-download-line',
-        titleKey: 'dialog.avatar_export.header',
-        descriptionKey: 'view.tools.user.avatar_export_description',
-        navEligible: false,
-        action: { type: 'dialog', dialogKey: 'avatar-export' }
-    },
-    {
-        key: 'friend-export',
-        category: 'user',
-        iconKey: 'download',
-        navIcon: 'ri-file-download-line',
-        titleKey: 'dialog.friend_export.header',
-        descriptionKey: 'view.tools.user.friend_export_description',
-        navEligible: false,
-        action: { type: 'dialog', dialogKey: 'friend-export' }
     },
     {
         key: 'edit-invite-message',
