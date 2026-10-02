@@ -8,6 +8,7 @@ import avatarRequest from './avatar';
 import favoriteRequest from './favorite';
 import friendRequest from './friend';
 import groupRequest from './group';
+import instanceRequest from './instance';
 import inventoryRequest from './inventory';
 import miscRequest from './misc';
 import userRequest from './user';
@@ -78,6 +79,19 @@ const registry = Object.freeze({
             staleTime: 0
         }),
         queryFn: (params) => worldRequest.getWorld(params)
+    },
+    instance: {
+        key: (params) => queryKeys.instance(params.worldId, params.instanceId),
+        policy: entityQueryPolicies.instance,
+        queryFn: (params) => instanceRequest.getInstance(params)
+    },
+    'instance.force': {
+        key: (params) => queryKeys.instance(params.worldId, params.instanceId),
+        policy: Object.freeze({
+            ...entityQueryPolicies.instance,
+            staleTime: 0
+        }),
+        queryFn: (params) => instanceRequest.getInstance(params)
     },
     worldsByUser: {
         key: (params) => queryKeys.worldsByUser(params),

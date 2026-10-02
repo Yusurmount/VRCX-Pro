@@ -17,12 +17,7 @@ import {
     getReadableProfileThemeColor
 } from '../shared/utils';
 import { getUserMemo } from './memoCoordinator';
-import {
-    avatarRequest,
-    instanceRequest,
-    queryRequest,
-    userRequest
-} from '../api';
+import { avatarRequest, queryRequest, userRequest } from '../api';
 import { processBulk, request } from '../services/request';
 import { AppDebug } from '../services/appConfig';
 import { database } from '../services/database';
@@ -168,7 +163,7 @@ export function applyUser(json) {
         !instanceStore.cachedInstances.has(ref.$location.tag) &&
         isRealInstance(ref.location)
     ) {
-        instanceRequest.getInstance({
+        queryRequest.fetch('instance', {
             worldId: ref.$location.worldId,
             instanceId: ref.$location.instanceId
         });

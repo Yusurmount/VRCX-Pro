@@ -12,7 +12,7 @@ import {
     sanitizeEntityJson
 } from '../shared/utils';
 import { getWorldMemo } from './memoCoordinator';
-import { instanceRequest, queryRequest, worldRequest } from '../api';
+import { queryRequest, worldRequest } from '../api';
 import { database } from '../services/database';
 import { patchWorldFromEvent } from '../queries';
 import { processBulk } from '../services/request';
@@ -61,7 +61,7 @@ export function showWorldDialog(tag, shortName = null, options = {}) {
         return;
     }
     if (L.instanceId) {
-        instanceRequest.getInstance({
+        queryRequest.fetch('instance', {
             worldId: L.worldId,
             instanceId: L.instanceId
         });
@@ -112,9 +112,12 @@ export function showWorldDialog(tag, shortName = null, options = {}) {
             D.timeSpent = ref.timeSpent;
         }
     });
-    const loadWorldRequest = worldRequest.getWorld({
-        worldId: L.worldId
-    });
+    const loadWorldRequest = queryRequest.fetch(
+        forceRefresh ? 'world.force' : 'world.dialog',
+        {
+            worldId: L.worldId
+        }
+    );
     loadWorldRequest
         .catch((err) => {
             nextTick(() => (D.loading = false));
@@ -133,7 +136,7 @@ export function showWorldDialog(tag, shortName = null, options = {}) {
                         const instanceId = instance[0];
                         const tag = `${D.id}:${instanceId}`;
                         if (isRealInstance(tag)) {
-                            instanceRequest.getInstance({
+                            queryRequest.fetch('instance', {
                                 worldId: D.id,
                                 instanceId
                             });
@@ -216,7 +219,7 @@ export function applyWorld(json) {
         instanceStore.applyWorldDialogInstances();
         for (const room of worldDialog.rooms) {
             if (isRealInstance(room.tag)) {
-                instanceRequest.getInstance({
+                queryRequest.fetch('instance', {
                     worldId: worldDialog.id,
                     instanceId: room.id
                 });

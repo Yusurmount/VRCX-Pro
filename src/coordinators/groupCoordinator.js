@@ -8,7 +8,7 @@ import {
     hasGroupPermission,
     sanitizeEntityJson
 } from '../shared/utils';
-import { groupRequest, instanceRequest, queryRequest } from '../api';
+import { groupRequest, queryRequest } from '../api';
 import { database } from '../services/database';
 import { FILTER_EVERYONE } from '../shared/constants/';
 import { patchGroupFromEvent } from '../queries';
@@ -329,10 +329,13 @@ export function showGroupDialog(groupId, options = {}) {
     D.members = [];
     D.memberFilter = FILTER_EVERYONE;
     D.calendar = [];
-    const loadGroupRequest = groupRequest.getGroup({
-        groupId,
-        includeRoles: true
-    });
+    const loadGroupRequest = queryRequest.fetch(
+        forceRefresh ? 'group.force' : 'group.dialog',
+        {
+            groupId,
+            includeRoles: true
+        }
+    );
 
     loadGroupRequest
         .catch((err) => {
@@ -513,7 +516,7 @@ export function getGroupDialogGroup(groupId, existingRef) {
                                     json.world = args1.ref;
                                 });
                             // get queue size etc
-                            instanceRequest.getInstance({
+                            queryRequest.fetch('instance', {
                                 worldId: json.worldId,
                                 instanceId: json.instanceId
                             });
@@ -577,11 +580,13 @@ export function onGroupJoined(groupId) {
             ownerId: '',
             iconUrl: ''
         });
-        groupRequest.getGroup({ groupId, includeRoles: true }).then((args) => {
-            applyGroup(args.json);
-            saveCurrentUserGroups();
-            return args;
-        });
+        queryRequest
+            .fetch('group.force', { groupId, includeRoles: true })
+            .then((args) => {
+                applyGroup(args.json);
+                saveCurrentUserGroups();
+                return args;
+            });
     }
 }
 
@@ -591,7 +596,7 @@ export function onGroupJoined(groupId) {
  */
 export async function onGroupLeft(groupId) {
     const groupStore = useGroupStore();
-    const args = await groupRequest.getGroup({ groupId });
+    const args = await queryRequest.fetch('group.force', { groupId });
     const ref = applyGroup(args.json);
     if (ref.membershipStatus === 'member') {
         // wtf, not trusting presence
@@ -684,7 +689,7 @@ export async function loadCurrentUserGroups(userId, groups) {
 
             try {
                 console.log(`Fetching group with missing roles ${groupId}`);
-                const args = await groupRequest.getGroup({
+                const args = await queryRequest.fetch('group', {
                     groupId,
                     includeRoles: true
                 });
@@ -1066,7 +1071,7 @@ export async function handleGroupUserInstances(args) {
         const groupRef = groupStore.cachedGroups.get(json.ownerId);
         if (typeof groupRef === 'undefined') {
             if (watchState.isFriendsLoaded) {
-                const args = await groupRequest.getGroup({
+                const args = await queryRequest.fetch('group', {
                     groupId: json.ownerId
                 });
                 applyGroup(args.json);

@@ -1,4 +1,4 @@
-﻿import { AppDebug, logWebRequest, withQueryLog } from '../services/appConfig';
+import { AppDebug, logWebRequest, withQueryLog } from '../services/appConfig';
 import { queryClient } from './client';
 import { queryKeys } from './keys';
 import { toQueryOptions } from './policies';
@@ -22,7 +22,8 @@ const ENTITY_CACHE_MAX_ENTRIES = Object.freeze({
     user: 400,
     avatar: 200,
     world: 200,
-    group: 100
+    group: 100,
+    instance: 200
 });
 
 /**

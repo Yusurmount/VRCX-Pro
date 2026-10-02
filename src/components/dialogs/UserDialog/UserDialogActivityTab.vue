@@ -266,7 +266,7 @@
     import * as echarts from 'echarts';
 
     import configRepository from '../../../services/config';
-    import { worldRequest } from '../../../api';
+    import { queryRequest } from '../../../api';
     import { showWorldDialog } from '../../../coordinators/worldCoordinator';
     import { parseLocation, timeToText } from '../../../shared/utils';
     import { useActivityStore, useAppearanceSettingsStore, useUserStore } from '../../../stores';
@@ -662,7 +662,7 @@
         const fetches = missingWorldIds.map(async (worldId) => {
             pendingWorldThumbnailFetches.add(worldId);
             try {
-                await worldRequest.getWorld({ worldId });
+                await queryRequest.fetch('world', { worldId });
             } finally {
                 pendingWorldThumbnailFetches.delete(worldId);
             }

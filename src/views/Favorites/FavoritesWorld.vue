@@ -372,7 +372,7 @@
     } from '../../components/ui/dropdown-menu';
     import { useAppearanceSettingsStore, useFavoriteStore, useModalStore } from '../../stores';
     import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../components/ui/resizable';
-    import { favoriteRequest, worldRequest } from '../../api';
+    import { favoriteRequest, queryRequest } from '../../api';
     import { debounce } from '../../shared/utils';
     import { useFavoritesCardScaling } from './composables/useFavoritesCardScaling.js';
     import { useFavoritesGroupPanel } from './composables/useFavoritesGroupPanel.js';
@@ -1117,7 +1117,7 @@
                     break;
                 }
                 try {
-                    await worldRequest.getWorld({
+                    await queryRequest.fetch('world', {
                         worldId
                     });
                 } catch (err) {

@@ -129,7 +129,7 @@
     import { useFavoriteStore, useGalleryStore, useUserStore, useWorldStore } from '../../../stores';
     import { showWorldDialog } from '../../../coordinators/worldCoordinator';
     import { addLocalWorldFavorite } from '../../../coordinators/favoriteCoordinator';
-    import { favoriteRequest, worldRequest } from '../../../api';
+    import { favoriteRequest, queryRequest } from '../../../api';
     import { createColumns } from './worldImportColumns.jsx';
     import { removeFromArray } from '../../../shared/utils';
     import { useVrcxVueTable } from '../../../lib/table/useVrcxVueTable';
@@ -251,7 +251,7 @@
             const worldId = data[i];
             if (!D.worldIdList.has(worldId)) {
                 try {
-                    const args = await worldRequest.getWorld({
+                    const args = await queryRequest.fetch('world', {
                         worldId
                     });
                     worldImportTable.value.data.push(args.ref);

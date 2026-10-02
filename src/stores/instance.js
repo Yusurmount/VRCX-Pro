@@ -25,8 +25,7 @@ import {
 import {
     instanceRequest,
     queryRequest,
-    userRequest,
-    worldRequest
+    userRequest
 } from '../api';
 import {
     accessTypeLocaleKeyMap,
@@ -429,8 +428,8 @@ export const useInstanceStore = defineStore('Instance', () => {
             };
             L = parseLocation(instanceId);
             currentInstanceLocation.value = L;
-            worldRequest
-                .getWorld({
+            queryRequest
+                .fetch('world.location', {
                     worldId: L.worldId
                 })
                 .then((args) => {
@@ -502,8 +501,8 @@ export const useInstanceStore = defineStore('Instance', () => {
             } else {
                 L = parseLocation(instanceId);
                 if (L.isRealInstance) {
-                    instanceRequest
-                        .getInstance({
+                    queryRequest
+                        .fetch('instance', {
                             worldId: L.worldId,
                             instanceId: L.instanceId
                         })
@@ -597,7 +596,7 @@ export const useInstanceStore = defineStore('Instance', () => {
         const L = parseLocation(location);
         if (L.isRealInstance && L.worldId && L.instanceId) {
             try {
-                const args = await instanceRequest.getInstance({
+                const args = await queryRequest.fetch('instance', {
                     worldId: L.worldId,
                     instanceId: L.instanceId
                 });
@@ -1071,7 +1070,7 @@ export const useInstanceStore = defineStore('Instance', () => {
             if (typeof ref !== 'undefined') {
                 Object.assign(room.ref, ref);
             } else if (isRealInstance(room.tag)) {
-                instanceRequest.getInstance({
+                queryRequest.fetch('instance', {
                     worldId: room.$location.worldId,
                     instanceId: room.$location.instanceId
                 });
@@ -1146,8 +1145,8 @@ export const useInstanceStore = defineStore('Instance', () => {
         if (!queuedInstances.has(instanceId)) {
             const L = parseLocation(instanceId);
             if (L.isRealInstance) {
-                instanceRequest
-                    .getInstance({
+                queryRequest
+                    .fetch('instance.force', {
                         worldId: L.worldId,
                         instanceId: L.instanceId
                     })

@@ -20,7 +20,6 @@ import {
 import { getUserMemo } from '../../coordinators/memoCoordinator';
 import {
     friendRequest,
-    instanceRequest,
     notificationRequest,
     queryRequest
 } from '../../api';
@@ -223,7 +222,7 @@ export const useNotificationStore = defineStore('Notification', () => {
                     // get instance name for invite
                     const L = parseLocation(ref.details.worldId);
                     if (L.isRealInstance) {
-                        instanceRequest.getInstance({
+                        queryRequest.fetch('instance', {
                             worldId: L.worldId,
                             instanceId: L.instanceId
                         });

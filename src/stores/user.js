@@ -13,7 +13,7 @@ import {
     replaceBioSymbols
 } from '../shared/utils';
 import { getAllUserMemos } from '../coordinators/memoCoordinator';
-import { cosmeticsRequest, instanceRequest, userRequest } from '../api';
+import { cosmeticsRequest, queryRequest, userRequest } from '../api';
 import { AppDebug } from '../services/appConfig';
 import { database } from '../services/database';
 import { runUpdateCurrentUserLocationFlow } from '../coordinators/locationCoordinator';
@@ -520,7 +520,7 @@ export const useUserStore = defineStore('User', () => {
         }
         const L = parseLocation(D.ref.$location?.tag);
         if (updateInstanceOccupants && L.isRealInstance) {
-            instanceRequest.getInstance({
+            queryRequest.fetch('instance', {
                 worldId: L.worldId,
                 instanceId: L.instanceId
             });

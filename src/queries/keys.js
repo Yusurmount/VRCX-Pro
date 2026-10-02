@@ -2,6 +2,7 @@ export const queryKeys = Object.freeze({
     user: (userId) => ['user', userId],
     avatar: (avatarId) => ['avatar', avatarId],
     world: (worldId) => ['world', worldId],
+    instance: (worldId, instanceId) => ['instance', `${worldId}:${instanceId}`],
     group: (groupId, includeRoles = false) => [
         'group',
         groupId,

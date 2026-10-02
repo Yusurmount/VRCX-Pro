@@ -298,8 +298,8 @@
             return;
         }
         inviteGroupDialog.value.loading = true;
-        groupRequest
-            .getGroup({ groupId })
+        queryRequest
+            .fetch('group', { groupId })
             .then((args) => {
                 const ref = applyGroup(args.json);
                 if (hasGroupPermission(ref, 'group-invites-manage')) {

@@ -1,4 +1,4 @@
-import { instanceRequest } from '../api';
+import { queryRequest } from '../api';
 import { parseLocation } from '../shared/utils/locationParser';
 
 /**
@@ -8,7 +8,7 @@ import { parseLocation } from '../shared/utils/locationParser';
 function refreshInstancePlayerCount(instance) {
     const L = parseLocation(instance);
     if (L.isRealInstance) {
-        instanceRequest.getInstance({
+        queryRequest.fetch('instance.force', {
             worldId: L.worldId,
             instanceId: L.instanceId
         });

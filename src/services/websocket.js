@@ -25,7 +25,7 @@ import {
 } from '../coordinators/friendRelationshipCoordinator';
 import { parseLocation } from '../shared/utils';
 import { AppDebug } from './appConfig';
-import { groupRequest } from '../api';
+import { queryRequest } from '../api';
 import { request } from './request';
 import { runUpdateFriendFlow } from '../coordinators/friendPresenceCoordinator';
 import { runSetCurrentUserLocationFlow } from '../coordinators/locationCoordinator';
@@ -515,8 +515,8 @@ function handlePipeline(args) {
 
         case 'group-role-updated':
             const groupId = content.role.groupId;
-            groupRequest
-                .getGroup({ groupId, includeRoles: true })
+            queryRequest
+                .fetch('group.force', { groupId, includeRoles: true })
                 .then((args) => applyGroup(args.json));
             console.log('group-role-updated', content);
 
