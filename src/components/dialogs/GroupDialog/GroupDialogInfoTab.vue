@@ -1,10 +1,7 @@
 <template>
     <!-- Instances -->
     <template v-if="groupDialog.instances.length">
-        <div
-            v-for="room in groupDialog.instances"
-            :key="room.tag"
-            class="rounded-xl bg-muted/80 p-3 mb-2.5 flex flex-col gap-2">
+        <Panel v-for="room in groupDialog.instances" :key="room.tag" variant="muted" class="mb-2.5 flex flex-col gap-2">
             <div class="flex items-center justify-between gap-2">
                 <Location :location="room.tag" class="text-sm text-muted-foreground rounded-full border py-0.5 px-2" />
                 <InstanceActionBar
@@ -45,13 +42,13 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </Panel>
     </template>
 
     <!-- Info cards -->
     <div class="flex flex-col gap-2.5">
         <!-- Description card -->
-        <div class="rounded-xl bg-muted/80 p-3">
+        <Panel variant="muted">
             <div
                 class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-2 pb-2 border-b border-border">
                 {{ t('dialog.group.info.header') }}
@@ -59,10 +56,10 @@
             <pre class="text-xs font-[inherit]" style="white-space: pre-wrap; max-height: 210px; overflow-y: auto">{{
                 groupDialog.ref.description || '—'
             }}</pre>
-        </div>
+        </Panel>
 
         <!-- Announcement card -->
-        <div class="rounded-xl bg-muted/80 p-3">
+        <Panel variant="muted">
             <div class="flex items-center justify-between mb-2 pb-2 border-b border-border">
                 <span class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
                     {{ t('dialog.group.info.announcement') }}
@@ -155,10 +152,10 @@
                 </div>
             </div>
             <pre v-else class="text-xs font-[inherit] text-muted-foreground">—</pre>
-        </div>
+        </Panel>
 
         <!-- Upcoming Events card -->
-        <div v-if="upcomingCalenderEvents.length" class="rounded-xl bg-muted/80 p-3">
+        <Panel v-if="upcomingCalenderEvents.length" variant="muted">
             <div
                 class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-2 pb-2 border-b border-border">
                 {{ t('dialog.group.info.upcoming_events') }}
@@ -174,10 +171,10 @@
                     card-class="group-dialog-grid-card" />
             </div>
             <span v-else class="text-xs text-muted-foreground">—</span>
-        </div>
+        </Panel>
 
         <!-- Past Events card -->
-        <div v-if="pastCalenderEvents.length" class="rounded-xl bg-muted/80 p-3">
+        <Panel v-if="pastCalenderEvents.length" variant="muted">
             <div
                 class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-2 pb-2 border-b border-border">
                 {{ t('dialog.group.info.past_events') }}
@@ -195,10 +192,10 @@
                     card-class="group-dialog-grid-card" />
             </div>
             <span v-else class="text-xs text-muted-foreground">—</span>
-        </div>
+        </Panel>
 
         <!-- Rules card -->
-        <div class="rounded-xl bg-muted/80 p-3">
+        <Panel variant="muted">
             <div
                 class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-2 pb-2 border-b border-border">
                 {{ t('dialog.group.info.rules') }}
@@ -206,7 +203,7 @@
             <pre class="text-xs font-[inherit]" style="white-space: pre-wrap; max-height: 210px; overflow-y: auto">{{
                 groupDialog.ref.rules || '—'
             }}</pre>
-        </div>
+        </Panel>
     </div>
 </template>
 
@@ -214,6 +211,7 @@
     import { Eye, Image, Pencil, Trash2, User } from 'lucide-vue-next';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import { Button } from '@/components/ui/button';
+    import { Panel } from '@/components/ui/panel';
     import MediaImage from '../../MediaImage.vue';
     import { Spinner } from '@/components/ui/spinner';
     import { ref, watch } from 'vue';

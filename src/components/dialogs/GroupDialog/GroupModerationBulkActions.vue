@@ -42,22 +42,14 @@
                 <AlertTriangle style="margin-left: 3px; display: inline-block" />
             </TooltipWrapper>
             <span v-text="user.user?.displayName || user.userId" style="font-weight: bold; margin-left: 6px"></span>
-            <button
-                type="button"
+            <Button
+                size="icon-sm"
+                variant="ghost"
+                class="ml-2 size-4 p-0 text-current"
                 :ariaLabel="t('common.actions.delete')"
-                style="
-                    margin-left: 8px;
-                    border: none;
-                    background: transparent;
-                    padding: 0;
-                    display: inline-flex;
-                    align-items: center;
-                    color: inherit;
-                    cursor: pointer;
-                "
                 @click="$emit('delete-user', user)">
                 <X class="h-3 w-3" />
-            </button>
+            </Button>
         </Badge>
         <br />
         <br />

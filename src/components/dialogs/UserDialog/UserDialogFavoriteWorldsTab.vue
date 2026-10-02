@@ -11,7 +11,7 @@
             @click="getUserFavoriteWorlds(userDialog.id)">
         </Button> -->
     <template v-if="userDialog.userFavoriteWorlds && userDialog.userFavoriteWorlds.length > 0">
-        <div class="flex h-full min-h-0 flex-col overflow-hidden p-2 rounded-xl bg-muted/80">
+        <Panel variant="muted" padding="sm" class="flex h-full min-h-0 flex-col overflow-hidden">
             <div class="pb-2">
                 <Input v-model="searchQuery" class="h-8 w-40 shrink-0" placeholder="Search worlds" @click.stop />
             </div>
@@ -93,7 +93,7 @@
                     </div>
                 </template>
             </TabsUnderline>
-        </div>
+        </Panel>
     </template>
     <template v-else-if="!userDialog.isFavoriteWorldsLoading">
         <div style="display: flex; justify-content: center; align-items: center; height: 100%">
@@ -106,6 +106,7 @@
     import { computed, ref, watch } from 'vue';
     import { Image } from 'lucide-vue-next';
     import { Input } from '@/components/ui/input';
+    import { Panel } from '@/components/ui/panel';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import { DataTableEmpty } from '@/components/ui/data-table';
     import { TabsUnderline } from '@/components/ui/tabs';

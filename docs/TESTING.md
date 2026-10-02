@@ -62,6 +62,7 @@ describe('feature', () => {
 | --- | --- |
 | 纯工具函数 | 目标 Vitest + lint |
 | Vue 页面/组件 | 目标 Vitest + lint + 受影响交互 |
+| UI 组件库 | 组件级 Vitest + `npx vite build src` + 浅色/暗色与窄窗口检查 |
 | Store/coordinator | owner-action 测试 + 相关功能测试 |
 | API/query | 请求与缓存测试 + lint |
 | 本地化 | 语言键一致性 + 受影响组件 |

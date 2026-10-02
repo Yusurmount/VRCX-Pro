@@ -1,5 +1,5 @@
 <template>
-    <div class="flex h-full min-h-0 flex-col overflow-hidden p-2 rounded-xl bg-muted/80">
+    <Panel variant="muted" padding="sm" class="flex h-full min-h-0 flex-col overflow-hidden">
         <div class="shrink-0" style="display: flex; align-items: center; justify-content: space-between">
             <div style="display: flex; align-items: center">
                 <Button
@@ -371,7 +371,7 @@
                 </template>
             </div>
         </div>
-    </div>
+    </Panel>
 </template>
 
 <script setup>
@@ -392,6 +392,7 @@
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { computed, nextTick, ref, watch } from 'vue';
     import { Button } from '@/components/ui/button';
+    import { Panel } from '@/components/ui/panel';
     import { Checkbox } from '@/components/ui/checkbox';
     import { Input } from '@/components/ui/input';
     import { Spinner } from '@/components/ui/spinner';

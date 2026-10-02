@@ -4,9 +4,9 @@
         <template v-if="event.type === 'JoinGroup'">
             <Collapsible v-model:open="isExpanded">
                 <CollapsibleTrigger as-child>
-                    <button
-                        type="button"
-                        class="flex items-center gap-1.5 px-2 py-0.5 rounded w-full text-left text-[0.8125rem] min-h-7 hover:bg-muted/50 border-none bg-transparent text-muted-foreground cursor-pointer">
+                    <Button
+                        variant="ghost"
+                        class="h-auto min-h-7 w-full justify-start gap-1.5 rounded px-2 py-0.5 text-left text-[0.8125rem] font-normal text-muted-foreground hover:bg-muted/50">
                         <span class="shrink-0 min-w-22 text-muted-foreground text-[0.75rem] tabular-nums">
                             {{ formatTime(event.created_at) }}
                         </span>
@@ -21,7 +21,7 @@
                         <ChevronRight
                             class="size-3.5 shrink-0 text-muted-foreground transition-transform duration-150"
                             :class="{ 'rotate-90': isExpanded }" />
-                    </button>
+                    </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                     <div class="pl-20 py-0.5 pb-1">
@@ -43,9 +43,9 @@
         <template v-else-if="event.type === 'LeftGroup'">
             <Collapsible v-model:open="isExpanded">
                 <CollapsibleTrigger as-child>
-                    <button
-                        type="button"
-                        class="flex items-center gap-1.5 px-2 py-0.5 rounded w-full text-left text-[0.8125rem] min-h-7 hover:bg-muted/50 border-none bg-transparent text-muted-foreground cursor-pointer">
+                    <Button
+                        variant="ghost"
+                        class="h-auto min-h-7 w-full justify-start gap-1.5 rounded px-2 py-0.5 text-left text-[0.8125rem] font-normal text-muted-foreground hover:bg-muted/50">
                         <span class="shrink-0 min-w-22 text-muted-foreground text-[0.75rem] tabular-nums">
                             {{ formatTime(event.created_at) }}
                         </span>
@@ -60,7 +60,7 @@
                         <ChevronRight
                             class="size-3.5 shrink-0 text-muted-foreground transition-transform duration-150"
                             :class="{ 'rotate-90': isExpanded }" />
-                    </button>
+                    </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                     <div class="pl-20 py-0.5 pb-1">
@@ -174,6 +174,7 @@
     import { useI18n } from 'vue-i18n';
 
     import { Badge } from '../../../components/ui/badge';
+    import { Button } from '../../../components/ui/button';
     import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../../components/ui/collapsible';
     import {
         ContextMenu,

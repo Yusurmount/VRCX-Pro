@@ -84,14 +84,13 @@
 
                 <div class="flex items-center justify-end gap-2 px-4 py-1">
                     <ZoomOut class="size-3.5 shrink-0 text-muted-foreground" />
-                    <input
-                        type="range"
-                        v-model.number="scaleSlider"
-                        min="0"
-                        max="100"
-                        step="1"
-                        class="w-28 accent-primary"
-                        @change="debouncedRebuildChart" />
+                    <Slider
+                        v-model="scaleSliderModel"
+                        :min="0"
+                        :max="100"
+                        :step="1"
+                        class="w-28"
+                        @valueCommit="debouncedRebuildChart" />
                     <ZoomIn class="size-3.5 shrink-0 text-muted-foreground" />
                     <span class="w-20 text-right text-xs tabular-nums text-muted-foreground">
                         {{ bucketDays }}
@@ -127,11 +126,7 @@
         computeZoomRange
     } from './relationshipTimelineUtils';
     import { debounce } from '../../../shared/utils';
-    import {
-        useAppearanceSettingsStore,
-        useFriendStore,
-        useUserStore
-    } from '../../../stores';
+    import { useAppearanceSettingsStore, useFriendStore, useUserStore } from '../../../stores';
 
     const { t } = useI18n();
 
@@ -156,6 +151,12 @@
     const showOthers = ref(false);
     const showFriendsOnly = ref(false);
     const scaleSlider = ref(51);
+    const scaleSliderModel = computed({
+        get: () => [scaleSlider.value],
+        set: ([value]) => {
+            scaleSlider.value = value;
+        }
+    });
     const bucketDays = computed(() => Math.max(1, Math.round(Math.pow(90, scaleSlider.value / 100))));
 
     const hasData = computed(() => rawRows.value.length > 0);
@@ -478,9 +479,7 @@
         isLoading.value = true;
         rawRows.value = [];
         try {
-            const contextReady = await database.ensureUserContext(
-                userStore.currentUser?.id
-            );
+            const contextReady = await database.ensureUserContext(userStore.currentUser?.id);
             if (!contextReady) {
                 rawRows.value = [];
                 return;

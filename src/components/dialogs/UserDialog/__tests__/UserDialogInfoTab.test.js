@@ -209,6 +209,7 @@ function mountComponent(overrides = {}) {
         global: {
             plugins: [pinia],
             stubs: {
+                Panel: { template: '<div><slot /></div>' },
                 Location: true,
                 Timer: true,
                 TooltipWrapper: true,

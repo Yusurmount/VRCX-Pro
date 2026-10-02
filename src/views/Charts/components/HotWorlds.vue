@@ -74,11 +74,11 @@
 
                 <div class="mx-auto mt-3 flex max-w-[1100px] gap-x-6">
                     <div v-for="(column, colIdx) in columns" :key="colIdx" class="min-w-0 flex-1">
-                        <button
+                        <Button
                             v-for="world in column"
                             :key="world.worldId"
-                            type="button"
-                            class="group flex w-full items-start gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent cursor-pointer"
+                            variant="ghost"
+                            class="group h-auto w-full items-start justify-start gap-3 rounded-lg px-3 py-2 text-left font-normal"
                             :class="world._rank === 1 ? 'bg-primary/[0.04]' : ''"
                             @click="openDetail(world)">
                             <span
@@ -120,7 +120,7 @@
                                         :style="{ width: getBarWidth(world.uniqueFriends) }"></div>
                                 </div>
                             </div>
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </template>
@@ -131,12 +131,12 @@
         <SheetContent side="right" class="w-[340px] sm:max-w-[340px]">
             <SheetHeader class="px-5">
                 <SheetTitle class="text-left">
-                    <button
-                        type="button"
-                        class="text-left text-base font-semibold hover:underline cursor-pointer"
+                    <Button
+                        variant="link"
+                        class="h-auto p-0 text-left text-base font-semibold"
                         @click="handleWorldClick">
                         {{ selectedWorld?.worldName }}
-                    </button>
+                    </Button>
                 </SheetTitle>
             </SheetHeader>
 
@@ -188,18 +188,18 @@
                         {{ t('view.charts.hot_worlds.no_friend_data') }}
                     </div>
                     <div v-else class="space-y-0.5">
-                        <button
+                        <Button
                             v-for="friend in friendDetail"
                             :key="friend.userId"
-                            type="button"
-                            class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm transition-colors hover:bg-accent cursor-pointer"
+                            variant="ghost"
+                            class="h-auto w-full justify-start gap-2 rounded-md px-2.5 py-2 text-left text-sm font-normal"
                             @click="openUserDialog(friend.userId)">
                             <span class="min-w-0 flex-1 truncate">{{ friend.displayName }}</span>
                             <span
                                 class="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground">
                                 {{ friend.visitCount }}×
                             </span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -354,14 +354,27 @@
         trendChart = echarts.init(trendChartRef.value, isDarkMode.value ? 'dark' : undefined);
         trendChart.setOption({
             tooltip: { trigger: 'axis' },
-            xAxis: { type: 'category', data: worldVisitTrend.value.map((d) => d.date), axisLabel: { color: isDarkMode.value ? '#9ca3af' : '#6b7280' } },
+            xAxis: {
+                type: 'category',
+                data: worldVisitTrend.value.map((d) => d.date),
+                axisLabel: { color: isDarkMode.value ? '#9ca3af' : '#6b7280' }
+            },
             yAxis: { type: 'value', axisLabel: { color: isDarkMode.value ? '#9ca3af' : '#6b7280' } },
-            series: [{
-                type: 'line', data: worldVisitTrend.value.map((d) => d.visitCount), smooth: true,
-                lineStyle: { color: '#6366f1', width: 2 },
-                areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(99,102,241,0.3)' }, { offset: 1, color: 'rgba(99,102,241,0.02)' }]) },
-                itemStyle: { color: '#6366f1' }
-            }],
+            series: [
+                {
+                    type: 'line',
+                    data: worldVisitTrend.value.map((d) => d.visitCount),
+                    smooth: true,
+                    lineStyle: { color: '#6366f1', width: 2 },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(99,102,241,0.3)' },
+                            { offset: 1, color: 'rgba(99,102,241,0.02)' }
+                        ])
+                    },
+                    itemStyle: { color: '#6366f1' }
+                }
+            ],
             grid: { left: 40, right: 10, top: 10, bottom: 30 }
         });
     }

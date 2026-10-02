@@ -130,6 +130,10 @@ queryClient.invalidateQueries({ queryKey: queryKeys.user(userId) });
 - 使用 `npm run localization` 的辅助命令时，先确认它只改动目标键。
 - 添加或修改文案后运行受影响组件测试。
 
+## UI 样式复用
+
+UI 组件选型、变体、例外场景和扩展流程见 [UI 组件库与样式规范](UI.md)。业务组件优先复用 `src/components/ui/`，不要在本地重新实现已有按钮、输入框、面板或色块。
+
 ## 提交前检查
 
 ```powershell

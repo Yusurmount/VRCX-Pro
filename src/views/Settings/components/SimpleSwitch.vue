@@ -1,13 +1,15 @@
 <template>
-    <div class="simple-switch">
-        <div class="name" :style="{ width: longLabel ? '300px' : undefined }">
+    <div class="flex items-center text-xs">
+        <div
+            class="name flex w-[225px] min-w-[225px] items-center break-words pt-[7px]"
+            :style="{ width: longLabel ? '300px' : undefined }">
             {{ label }}
             <TooltipWrapper v-if="tooltip" side="top" :content="tooltip">
-                <Info class="tooltip" />
+                <Info class="ml-[3px]" />
             </TooltipWrapper>
         </div>
 
-        <Switch class="switch" :model-value="value" @update:modelValue="change" :disabled="disabled" />
+        <Switch class="ml-2" :model-value="value" @update:modelValue="change" :disabled="disabled" />
     </div>
 </template>
 
@@ -33,25 +35,3 @@
         emit('change', event);
     }
 </script>
-
-<style scoped>
-    .simple-switch {
-        font-size: 12px;
-        display: flex;
-        align-items: center;
-    }
-    .simple-switch > .name {
-        width: 225px;
-        min-width: 225px;
-        word-wrap: break-word;
-        padding-top: 7px;
-        display: flex;
-        align-items: center;
-    }
-    .simple-switch > .switch {
-        margin-left: 8px;
-    }
-    .simple-switch .tooltip {
-        margin-left: 3px;
-    }
-</style>

@@ -1,7 +1,12 @@
 <template>
     <WizardShell ref="shellRef" :current-step="currentStep" :total-steps="7" :icons="stepIcons">
         <template #icon="{ step }">
-            <img v-if="step === 1" :src="vrcxLogo" alt="VRCX-Pro" class="oobe-vrcx-logo" @click="onLogoClick" />
+            <img
+                v-if="step === 1"
+                :src="vrcxLogo"
+                alt="VRCX-Pro"
+                class="oobe-vrcx-logo h-[140px] w-[140px] rounded-3xl"
+                @click="onLogoClick" />
             <component v-else :is="stepIcons[step]" class="wiz-icon-svg text-foreground" :stroke-width="1.5" />
         </template>
 
@@ -19,7 +24,8 @@
         <!-- Step 2: Legal / disclaimer -->
         <div v-else-if="currentStep === 2" class="wiz-panel">
             <h2 class="wiz-title text-foreground">{{ t('oobe.legal.title') }}</h2>
-            <div class="oobe-scroll border-border bg-muted text-muted-foreground">
+            <div
+                class="max-h-[220px] overflow-y-auto rounded-[10px] border border-border bg-muted p-3 text-[12.5px] leading-[1.7] text-muted-foreground [&_p:last-child]:mb-0 [&_p]:mb-2">
                 <p>{{ t('view.settings.general.legal_notice.info') }}</p>
                 <p>{{ t('view.settings.general.legal_notice.disclaimer1') }}</p>
                 <p>{{ t('view.settings.general.legal_notice.disclaimer2') }}</p>
@@ -40,9 +46,10 @@
         <div v-else-if="currentStep === 3" class="wiz-panel">
             <h2 class="wiz-title text-foreground">{{ t('oobe.warning.title') }}</h2>
             <p class="wiz-desc text-muted-foreground">{{ t('oobe.warning.subtitle') }}</p>
-            <div class="oobe-scroll border-border bg-muted text-muted-foreground">
+            <div
+                class="max-h-[220px] overflow-y-auto rounded-[10px] border border-border bg-muted p-3 text-[12.5px] leading-[1.7] text-muted-foreground [&_p:last-child]:mb-0 [&_p]:mb-2">
                 <p>{{ t('oobe.warning.body') }}</p>
-                <ul class="oobe-warning-list">
+                <ul class="m-0 mt-3 flex list-disc flex-col gap-2 pl-[1.1rem]">
                     <li>{{ t('oobe.warning.account_1') }}</li>
                     <li>{{ t('oobe.warning.account_2') }}</li>
                     <li>{{ t('oobe.warning.account_3') }}</li>
@@ -56,41 +63,39 @@
         <div v-else-if="currentStep === 4" class="wiz-panel">
             <h2 class="wiz-title text-foreground">{{ t('oobe.setup.title') }}</h2>
             <p class="wiz-desc text-muted-foreground">{{ t('oobe.setup.subtitle') }}</p>
-            <div class="oobe-settings border-border bg-muted">
-                <label class="oobe-setting">
-                    <div class="oobe-setting-text">
-                        <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.tray') }}</span>
-                        <span class="oobe-setting-desc text-muted-foreground">{{ t('oobe.setup.tray_desc') }}</span>
+            <div class="flex flex-col gap-0.5 rounded-xl border border-border bg-muted p-2">
+                <label class="flex cursor-pointer items-center justify-between gap-3 px-2.5 py-3">
+                    <div class="flex min-w-0 flex-col gap-0.5">
+                        <span class="text-sm font-semibold text-foreground">{{ t('oobe.setup.tray') }}</span>
+                        <span class="text-xs text-muted-foreground">{{ t('oobe.setup.tray_desc') }}</span>
                     </div>
                     <Switch :model-value="isCloseToTray" @update:modelValue="setIsCloseToTray" />
                 </label>
-                <label class="oobe-setting">
-                    <div class="oobe-setting-text">
-                        <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.startup') }}</span>
-                        <span class="oobe-setting-desc text-muted-foreground">{{ t('oobe.setup.startup_desc') }}</span>
+                <label class="flex cursor-pointer items-center justify-between gap-3 px-2.5 py-3">
+                    <div class="flex min-w-0 flex-col gap-0.5">
+                        <span class="text-sm font-semibold text-foreground">{{ t('oobe.setup.startup') }}</span>
+                        <span class="text-xs text-muted-foreground">{{ t('oobe.setup.startup_desc') }}</span>
                     </div>
                     <Switch :model-value="isStartAtWindowsStartup" @update:modelValue="setIsStartAtWindowsStartup" />
                 </label>
-                <label class="oobe-setting">
-                    <div class="oobe-setting-text">
-                        <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.minimized') }}</span>
-                        <span class="oobe-setting-desc text-muted-foreground">{{
-                            t('oobe.setup.minimized_desc')
-                        }}</span>
+                <label class="flex cursor-pointer items-center justify-between gap-3 px-2.5 py-3">
+                    <div class="flex min-w-0 flex-col gap-0.5">
+                        <span class="text-sm font-semibold text-foreground">{{ t('oobe.setup.minimized') }}</span>
+                        <span class="text-xs text-muted-foreground">{{ t('oobe.setup.minimized_desc') }}</span>
                     </div>
                     <Switch :model-value="isStartAsMinimizedState" @update:modelValue="setIsStartAsMinimizedState" />
                 </label>
-                <label class="oobe-setting">
-                    <div class="oobe-setting-text">
-                        <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.theme') }}</span>
-                        <span class="oobe-setting-desc text-muted-foreground">{{ t('oobe.setup.theme_desc') }}</span>
+                <label class="flex cursor-pointer items-center justify-between gap-3 px-2.5 py-3">
+                    <div class="flex min-w-0 flex-col gap-0.5">
+                        <span class="text-sm font-semibold text-foreground">{{ t('oobe.setup.theme') }}</span>
+                        <span class="text-xs text-muted-foreground">{{ t('oobe.setup.theme_desc') }}</span>
                     </div>
                     <Switch :model-value="isDarkMode" @update:modelValue="toggleThemeMode" />
                 </label>
-                <div class="oobe-setting">
-                    <div class="oobe-setting-text">
-                        <span class="oobe-setting-label text-foreground">{{ t('oobe.setup.language') }}</span>
-                        <span class="oobe-setting-desc text-muted-foreground">{{ t('oobe.setup.language_desc') }}</span>
+                <div class="flex items-center justify-between gap-3 px-2.5 py-3">
+                    <div class="flex min-w-0 flex-col gap-0.5">
+                        <span class="text-sm font-semibold text-foreground">{{ t('oobe.setup.language') }}</span>
+                        <span class="text-xs text-muted-foreground">{{ t('oobe.setup.language_desc') }}</span>
                     </div>
                     <Select :model-value="appLanguage" @update:modelValue="changeAppLanguage">
                         <SelectTrigger size="sm" class="w-40">
@@ -119,14 +124,18 @@
 
             <!-- Account list mode (already logged in / saved accounts) -->
             <template v-if="loginMode === 'list'">
-                <div v-if="hasSavedAccounts" class="oobe-scroll oobe-account-list">
+                <RadioGroup
+                    v-if="hasSavedAccounts"
+                    v-model="selectedUserId"
+                    :disabled="loginBusy"
+                    class="flex max-h-[220px] flex-col gap-1 overflow-y-auto rounded-[10px] border border-border bg-muted p-3">
                     <label
                         v-for="cred in savedAccounts"
                         :key="cred.user.id"
-                        class="oobe-account-item"
+                        class="flex cursor-pointer items-center gap-2.5 rounded-lg p-2 text-foreground hover:bg-muted"
                         :class="{ 'pointer-events-none opacity-50': loginBusy }"
                         @click="!loginBusy && (selectedUserId = cred.user.id)">
-                        <input type="radio" :value="cred.user.id" v-model="selectedUserId" :disabled="loginBusy" />
+                        <RadioGroupItem :value="cred.user.id" />
                         <Avatar class="rounded-full size-7">
                             <AvatarImage :src="userImage(cred.user, true)" />
                             <AvatarFallback><User class="size-4 text-muted-foreground" /></AvatarFallback>
@@ -138,7 +147,7 @@
                             </div>
                         </div>
                     </label>
-                </div>
+                </RadioGroup>
                 <Button size="lg" class="w-full" :disabled="!selectedUserId || loginBusy" @click="loginSelectedAccount">
                     <Loader2 v-if="loginBusy" class="size-4 animate-spin" />
                     {{ t('oobe.login.useSelected') }}
@@ -579,99 +588,3 @@
         }
     }
 </script>
-
-<style scoped>
-    .oobe-vrcx-logo {
-        width: 140px;
-        height: 140px;
-        border-radius: 24px;
-    }
-
-    .oobe-warning-list {
-        margin: 0;
-        padding-left: 1.1rem;
-        list-style: disc;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
-    }
-
-    .oobe-scroll {
-        max-height: 220px;
-        overflow-y: auto;
-        padding: 12px;
-        border-radius: 10px;
-        border-width: 1px;
-        border-style: solid;
-        font-size: 12.5px;
-        line-height: 1.7;
-        background-color: var(--muted);
-        border-color: var(--border);
-    }
-
-    .oobe-scroll p {
-        margin: 0 0 8px;
-    }
-
-    .oobe-scroll p:last-child {
-        margin-bottom: 0;
-    }
-
-    .oobe-account-list {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .oobe-account-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px;
-        border-radius: 8px;
-        cursor: pointer;
-        color: var(--foreground);
-    }
-
-    .oobe-account-item:hover {
-        background-color: var(--muted);
-    }
-
-    .oobe-settings {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        padding: 8px;
-        border-radius: 12px;
-        border-width: 1px;
-        border-style: solid;
-        background-color: var(--muted);
-        border-color: var(--border);
-    }
-
-    .oobe-setting {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 12px 10px;
-        cursor: pointer;
-    }
-
-    .oobe-setting-text {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        min-width: 0;
-    }
-
-    .oobe-setting-label {
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .oobe-setting-desc {
-        font-size: 12px;
-    }
-</style>

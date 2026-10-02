@@ -87,14 +87,15 @@
         <template #default="{ isExpanded }">
             <GripVertical class="size-4 shrink-0 text-muted-foreground opacity-50 group-hover:opacity-100" />
 
-            <button
+            <Button
                 v-if="hasChildren"
-                type="button"
-                class="flex size-4 shrink-0 items-center justify-center rounded transition-transform cursor-pointer"
+                size="icon-sm"
+                variant="ghost"
+                class="size-4 shrink-0 p-0"
                 :class="isExpanded ? 'rotate-90' : ''"
                 @click.stop="emit('toggle')">
                 <ChevronRight class="size-3.5" />
-            </button>
+            </Button>
             <span v-else class="size-4 shrink-0" />
 
             <i v-if="displayIcon" :class="displayIcon" class="text-base" />

@@ -390,12 +390,16 @@ TanStack Vue Query 集成层，提供声明式数据获取。
 
 ### 6.8 Components（组件）
 
-`src/components/` 包含可复用组件，其中 `ui/` 是基础组件库（60+ 组件），包含：
-- 布局：Card, Sheet, Sidebar, Tabs, ScrollArea, Resizable
-- 表单：Input, Select, Checkbox, Switch, Slider, RadioGroup, Textarea
+`src/components/` 包含可复用组件，其中 `ui/` 是基础组件库（50+ 目录），包含：
+- 布局：Panel, Card, Sheet, Sidebar, Tabs, ScrollArea, Resizable
+- 表单：Input, InputGroup, ColorInput, ColorSwatch, Select, Checkbox, Switch, Slider, RadioGroup, Textarea
 - 反馈：Alert, AlertDialog, Dialog, Sonner (Toast), Progress, Skeleton
 - 导航：Breadcrumb, Command, ContextMenu, DropdownMenu, Pagination
 - 数据展示：Table, Badge, Avatar, Calendar, Carousel, Tree
+
+业务 UI 优先复用 `ui/` 组件。完整选型、例外场景和扩展流程见
+[UI 组件库与样式规范](UI.md)。已有基础组件可直接覆盖的场景，不再新增
+局部按钮、输入框或表面样式。
 
 ### 6.9 路由系统
 

@@ -168,85 +168,94 @@
             <SettingsItem
                 :label="t('view.settings.notifications.email.enable')"
                 :description="t('view.settings.notifications.email.enable_description')">
-                <Switch
-                    :model-value="emailEnabled"
-                    @update:modelValue="emailStore.setEnabled" />
+                <Switch :model-value="emailEnabled" @update:modelValue="emailStore.setEnabled" />
             </SettingsItem>
 
             <template v-if="emailEnabled">
                 <SettingsItem :label="t('view.settings.notifications.email.smtp_host')">
-                    <input
+                    <InputGroupField
                         v-model="emailSmtpHost"
-                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        size="sm"
+                        class="w-48"
                         :placeholder="t('view.settings.notifications.email.smtp_host_placeholder')"
-                        @change="emailStore.setSmtpHost(emailSmtpHost)" />
+                        @change="emailStore.setSmtpHost" />
                 </SettingsItem>
 
                 <SettingsItem :label="t('view.settings.notifications.email.smtp_port')">
-                    <input
+                    <InputGroupField
                         v-model.number="emailSmtpPort"
                         type="number"
-                        class="text-sm bg-background border rounded px-2 py-1 w-20"
-                        @change="emailStore.setSmtpPort(emailSmtpPort)" />
+                        size="sm"
+                        class="w-20"
+                        @change="emailStore.setSmtpPort" />
                 </SettingsItem>
 
                 <SettingsItem :label="t('view.settings.notifications.email.smtp_ssl')">
-                    <Switch
-                        :model-value="emailSmtpUseSsl"
-                        @update:modelValue="emailStore.setSmtpUseSsl" />
+                    <Switch :model-value="emailSmtpUseSsl" @update:modelValue="emailStore.setSmtpUseSsl" />
                 </SettingsItem>
 
                 <SettingsItem :label="t('view.settings.notifications.email.smtp_username')">
-                    <input
+                    <InputGroupField
                         v-model="emailSmtpUsername"
-                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        size="sm"
+                        class="w-48"
                         :placeholder="t('view.settings.notifications.email.smtp_username_placeholder')"
-                        @change="emailStore.setSmtpUsername(emailSmtpUsername)" />
+                        @change="emailStore.setSmtpUsername" />
                 </SettingsItem>
 
                 <SettingsItem :label="t('view.settings.notifications.email.smtp_password')">
-                    <input
+                    <InputGroupField
                         v-model="emailSmtpPassword"
                         type="password"
-                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        size="sm"
+                        class="w-48"
+                        show-password
                         :placeholder="t('view.settings.notifications.email.smtp_password_placeholder')"
-                        @change="emailStore.setSmtpPassword(emailSmtpPassword)" />
+                        @change="emailStore.setSmtpPassword" />
                 </SettingsItem>
 
                 <SettingsItem :label="t('view.settings.notifications.email.from_address')">
-                    <input
+                    <InputGroupField
                         v-model="emailSmtpFromAddress"
-                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        size="sm"
+                        class="w-48"
                         :placeholder="t('view.settings.notifications.email.from_address_placeholder')"
-                        @change="emailStore.setSmtpFromAddress(emailSmtpFromAddress)" />
+                        @change="emailStore.setSmtpFromAddress" />
                 </SettingsItem>
 
                 <SettingsItem :label="t('view.settings.notifications.email.from_name')">
-                    <input
+                    <InputGroupField
                         v-model="emailSmtpFromName"
-                        class="text-sm bg-background border rounded px-2 py-1 w-48"
-                        @change="emailStore.setSmtpFromName(emailSmtpFromName)" />
+                        size="sm"
+                        class="w-48"
+                        @change="emailStore.setSmtpFromName" />
                 </SettingsItem>
 
                 <SettingsItem :label="t('view.settings.notifications.email.recipient_address')">
-                    <input
+                    <InputGroupField
                         v-model="emailRecipientAddress"
-                        class="text-sm bg-background border rounded px-2 py-1 w-48"
+                        size="sm"
+                        class="w-48"
                         :placeholder="t('view.settings.notifications.email.recipient_address_placeholder')"
-                        @change="emailStore.setRecipientAddress(emailRecipientAddress)" />
+                        @change="emailStore.setRecipientAddress" />
                 </SettingsItem>
 
                 <SettingsItem :label="t('view.settings.notifications.email.recipient_name')">
-                    <input
+                    <InputGroupField
                         v-model="emailRecipientName"
-                        class="text-sm bg-background border rounded px-2 py-1 w-48"
-                        @change="emailStore.setRecipientName(emailRecipientName)" />
+                        size="sm"
+                        class="w-48"
+                        @change="emailStore.setRecipientName" />
                 </SettingsItem>
 
                 <SettingsItem :label="t('view.settings.notifications.email.test')">
                     <Button size="sm" variant="outline" @click="testEmail" :disabled="isEmailSending">
                         <Play class="h-4 w-4" />
-                        {{ isEmailSending ? t('view.settings.notifications.email.sending') : t('view.settings.notifications.email.send_test') }}
+                        {{
+                            isEmailSending
+                                ? t('view.settings.notifications.email.sending')
+                                : t('view.settings.notifications.email.send_test')
+                        }}
                     </Button>
                 </SettingsItem>
             </template>

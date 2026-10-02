@@ -172,17 +172,17 @@
                                                 class="mb-2"
                                                 @input="onGroupSearchInput(cond)" />
                                             <div class="max-h-56 overflow-auto">
-                                                <button
+                                                <Button
                                                     v-for="group in getGroupResults(cond)"
                                                     :key="group.id"
-                                                    type="button"
-                                                    class="flex w-full cursor-pointer flex-col items-start rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                                                    variant="ghost"
+                                                    class="h-auto w-full flex-col items-start rounded-sm px-2 py-1.5 text-left text-sm font-normal"
                                                     @click="selectGroup(cond, group)">
                                                     <span class="w-full truncate">{{ group.name }}</span>
                                                     <span class="text-xs opacity-60"
                                                         >{{ group.shortCode }}.{{ group.discriminator }}</span
                                                     >
-                                                </button>
+                                                </Button>
                                                 <div
                                                     v-if="!getGroupResults(cond)?.length"
                                                     class="p-2 text-sm opacity-60">

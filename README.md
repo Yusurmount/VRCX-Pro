@@ -115,6 +115,7 @@ npm run test:coverage   # 覆盖率报告
 | 文档总入口与维护约定 | [docs/README.md](docs/README.md) |
 | 架构、数据流与变更落点 | [架构总览](docs/ARCHITECTURE.md) |
 | 完整模块与数据库参考 | [项目知识库](docs/KNOWLEDGE_BASE.md) |
+| UI 组件库与样式规范 | [UI 规范](docs/UI.md) |
 | 开发、测试与发布 | [开发指南](docs/DEVELOPMENT.md)、[测试指南](docs/TESTING.md)、[发布指南](docs/RELEASE.md) |
 | 故障排查与安全边界 | [故障排查](docs/TROUBLESHOOTING.md)、[安全与隐私](docs/SECURITY.md) |
 | 启动参数与 MCP | [启动参数](docs/LAUNCH_ARGS.md)、[MCP Server](docs/MCP.md) |

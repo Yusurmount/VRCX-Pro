@@ -1,5 +1,5 @@
 <template>
-    <div class="h-full min-h-0 flex flex-col p-2 rounded-xl bg-muted/80">
+    <Panel variant="muted" padding="sm" class="h-full min-h-0 flex flex-col">
         <Button
             class="rounded-full"
             variant="ghost"
@@ -60,11 +60,12 @@
                 </div>
             </template>
         </TabsUnderline>
-    </div>
+    </Panel>
 </template>
 
 <script setup>
     import { Button } from '@/components/ui/button';
+    import { Panel } from '@/components/ui/panel';
     import MediaImage from '../../MediaImage.vue';
     import { Card } from '@/components/ui/card';
     import { Image, RefreshCw } from 'lucide-vue-next';

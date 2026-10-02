@@ -38,13 +38,13 @@
                                 alt="VRCX"
                                 @click="emit('open-github')" />
                             <div class="flex min-w-0 flex-col">
-                                <button
-                                    type="button"
-                                    class="text-left text-sm font-medium truncate flex items-center gap-1 cursor-pointer"
+                                <Button
+                                    variant="link"
+                                    class="h-auto max-w-full justify-start gap-1 truncate p-0 text-left text-sm font-medium text-foreground"
                                     @click="emit('open-github')">
                                     VRCX
                                     <Heart class="text-primary fill-current stroke-none" />
-                                </button>
+                                </Button>
                                 <span class="text-xs text-muted-foreground">{{ version }}</span>
                             </div>
                         </div>
@@ -81,21 +81,14 @@
                                             side="top"
                                             :content="themeColorTooltip(theme)"
                                             :delay-duration="600">
-                                            <button
-                                                type="button"
+                                            <ColorSwatch
+                                                :color="theme.swatch"
+                                                :selected="currentThemeColor === theme.key"
                                                 :disabled="isApplyingThemeColor"
-                                                :aria-disabled="isApplyingThemeColor"
-                                                :aria-pressed="currentThemeColor === theme.key"
-                                                :aria-label="themeColorTooltip(theme)"
-                                                :title="themeColorTooltip(theme)"
-                                                @click="handleThemeColorClick(theme)"
-                                                class="h-3.5 w-3.5 shrink-0 rounded-sm transition-transform hover:scale-125 cursor-pointer"
-                                                :class="
-                                                    isApplyingThemeColor
-                                                        ? 'opacity-50 cursor-not-allowed hover:scale-100'
-                                                        : ''
-                                                "
-                                                :style="{ backgroundColor: theme.swatch }"></button>
+                                                :label="themeColorTooltip(theme)"
+                                                size="sm"
+                                                class="size-3.5"
+                                                @select="handleThemeColorClick(theme)" />
                                         </TooltipWrapper>
                                     </div>
                                 </DropdownMenuLabel>
@@ -160,6 +153,8 @@
     import { computed, ref, watch } from 'vue';
 
     import { TooltipWrapper } from '@/components/ui/tooltip';
+    import { Button } from '@/components/ui/button';
+    import { ColorSwatch } from '@/components/ui/color-swatch';
     import {
         DropdownMenu,
         DropdownMenuCheckboxItem,

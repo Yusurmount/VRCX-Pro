@@ -1,9 +1,9 @@
 <template>
     <div class="border-b border-border last:border-b-0" :class="{ 'border-b-0': isLast }">
         <!-- Session header: sticky + clickable to collapse -->
-        <button
-            type="button"
-            class="sticky top-0 z-[5] flex items-center gap-2 px-3 py-2 bg-muted/80 backdrop-blur-sm w-full text-left border-none cursor-pointer hover:bg-muted transition-colors border-b border-border"
+        <Button
+            variant="ghost"
+            class="sticky top-0 z-[5] h-auto w-full justify-start gap-2 rounded-none border-b border-border bg-muted/80 px-3 py-2 text-left font-normal backdrop-blur-sm hover:bg-muted"
             @click="collapsed = !collapsed">
             <ChevronRight
                 class="size-3.5 shrink-0 text-muted-foreground transition-transform duration-150"
@@ -43,7 +43,7 @@
                     <Play class="size-3" /> {{ videoCount }}
                 </span>
             </div>
-        </button>
+        </Button>
 
         <!-- Session events list -->
         <div v-if="!collapsed && segment.events && segment.events.length > 0" class="py-1 px-1">
@@ -55,6 +55,7 @@
 <script setup>
     import { computed, ref } from 'vue';
     import { ChevronRight, Play, UserMinus, UserPlus } from 'lucide-vue-next';
+    import { Button } from '../../../components/ui/button';
     import { useI18n } from 'vue-i18n';
 
     import { Badge } from '../../../components/ui/badge';

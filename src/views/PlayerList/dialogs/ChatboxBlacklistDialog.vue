@@ -34,21 +34,13 @@
                     variant="outline"
                     style="margin-right: 6px; margin-top: 6px">
                     <span>{{ user[1] }}</span>
-                    <button
-                        type="button"
-                        style="
-                            margin-left: 8px;
-                            border: none;
-                            background: transparent;
-                            padding: 0;
-                            display: inline-flex;
-                            align-items: center;
-                            color: inherit;
-                            cursor: pointer;
-                        "
+                    <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        class="ml-2 size-4 p-0 text-current"
                         @click="deleteChatboxUserBlacklist(user[0])">
-                        <X class="h-3 w-3" style="line-height: 1" />
-                    </button>
+                        <X class="size-3" />
+                    </Button>
                 </Badge>
             </div>
         </DialogContent>

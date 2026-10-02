@@ -1,6 +1,8 @@
 <script setup>
     import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
     import { Button } from '@/components/ui/button';
+    import { ColorInput } from '@/components/ui/color-input';
+    import { ColorSwatch } from '@/components/ui/color-swatch';
     import { computed } from 'vue';
     import { useI18n } from 'vue-i18n';
 
@@ -41,12 +43,6 @@
         emit('change', color);
     }
 
-    function onInput(e) {
-        if (props.disabled) return;
-        const v = e?.target?.value;
-        setColor(String(v || ''));
-    }
-
     function clear() {
         if (props.disabled || !props.clearable) return;
         emit('update:modelValue', props.emptyValue);
@@ -73,27 +69,22 @@
 
         <PopoverContent class="w-56 p-3">
             <div class="mb-3 grid gap-2" :style="gridStyle">
-                <button
+                <ColorSwatch
                     v-for="color in presets"
                     :key="color"
-                    type="button"
-                    class="h-6 w-6 rounded border"
-                    :style="{ backgroundColor: color }"
+                    :color="color"
                     :disabled="disabled"
-                    :aria-disabled="disabled ? 'true' : 'false'"
-                    :class="[
-                        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
-                        safeValue === String(color).toLowerCase() ? 'ring-2 ring-offset-2' : ''
-                    ]"
-                    @click="setColor(color)" />
+                    :selected="safeValue === String(color).toLowerCase()"
+                    :label="color"
+                    @select="setColor" />
             </div>
 
-            <input
-                type="color"
-                class="h-8 w-full cursor-pointer border-none bg-transparent p-0"
-                :value="safeValue"
+            <ColorInput
+                :model-value="safeValue"
                 :disabled="disabled"
-                @input="onInput" />
+                :label="displayText"
+                class="w-full"
+                @update:model-value="setColor" />
 
             <div v-if="clearable" class="mt-3 flex justify-end">
                 <Button variant="ghost" size="sm" :disabled="disabled" @click="clear">

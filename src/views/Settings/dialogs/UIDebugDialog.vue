@@ -29,40 +29,43 @@
 
                 <TabsContent value="notifications">
                     <div class="grid gap-3">
-                        <button
+                        <Button
                             v-for="item in notificationItems"
                             :key="item.id"
-                            class="ui-debug-row border-border bg-card hover:border-ring hover:bg-accent"
+                            variant="outline"
+                            class="h-auto w-full flex-col items-start justify-start gap-1 whitespace-normal rounded-md px-3.5 py-3 text-left hover:border-ring hover:bg-accent"
                             @click="item.run">
-                            <span class="ui-debug-name text-foreground">{{ item.label }}</span>
-                            <span class="ui-debug-desc text-muted-foreground">{{ item.desc }}</span>
-                        </button>
+                            <span class="text-sm font-semibold text-foreground">{{ item.label }}</span>
+                            <span class="text-xs leading-normal text-muted-foreground">{{ item.desc }}</span>
+                        </Button>
                     </div>
                 </TabsContent>
 
                 <TabsContent value="onboarding">
                     <div class="grid gap-3">
-                        <button
+                        <Button
                             v-for="item in onboardingItems"
                             :key="item.id"
-                            class="ui-debug-row border-border bg-card hover:border-ring hover:bg-accent"
+                            variant="outline"
+                            class="h-auto w-full flex-col items-start justify-start gap-1 whitespace-normal rounded-md px-3.5 py-3 text-left hover:border-ring hover:bg-accent"
                             @click="item.run">
-                            <span class="ui-debug-name text-foreground">{{ item.label }}</span>
-                            <span class="ui-debug-desc text-muted-foreground">{{ item.desc }}</span>
-                        </button>
+                            <span class="text-sm font-semibold text-foreground">{{ item.label }}</span>
+                            <span class="text-xs leading-normal text-muted-foreground">{{ item.desc }}</span>
+                        </Button>
                     </div>
                 </TabsContent>
 
                 <TabsContent value="dialogs">
                     <div class="grid gap-3">
-                        <button
+                        <Button
                             v-for="item in dialogItems"
                             :key="item.id"
-                            class="ui-debug-row border-border bg-card hover:border-ring hover:bg-accent"
+                            variant="outline"
+                            class="h-auto w-full flex-col items-start justify-start gap-1 whitespace-normal rounded-md px-3.5 py-3 text-left hover:border-ring hover:bg-accent"
                             @click="item.run">
-                            <span class="ui-debug-name text-foreground">{{ item.label }}</span>
-                            <span class="ui-debug-desc text-muted-foreground">{{ item.desc }}</span>
-                        </button>
+                            <span class="text-sm font-semibold text-foreground">{{ item.label }}</span>
+                            <span class="text-xs leading-normal text-muted-foreground">{{ item.desc }}</span>
+                        </Button>
                     </div>
                 </TabsContent>
 
@@ -408,6 +411,7 @@
     import { toast } from 'vue-sonner';
 
     import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+    import { Button } from '@/components/ui/button';
     import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
     import configRepository from '@/services/config';
     import { PERSONAL_WELCOME_SEEN_KEY, resetOobe } from '@/services/oobe';
@@ -880,32 +884,3 @@
         }
     ]);
 </script>
-
-<style scoped>
-    .ui-debug-row {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-        width: 100%;
-        padding: 12px 14px;
-        text-align: left;
-        border-radius: var(--radius);
-        border-width: 1px;
-        border-style: solid;
-        cursor: pointer;
-        transition:
-            background-color 0.15s ease,
-            border-color 0.15s ease;
-    }
-
-    .ui-debug-name {
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .ui-debug-desc {
-        font-size: 12.5px;
-        line-height: 1.5;
-    }
-</style>

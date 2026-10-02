@@ -1,5 +1,5 @@
 <template>
-    <div v-if="groupDialog.visible" class="flex h-full min-h-0 flex-col p-2 rounded-xl bg-muted/80">
+    <Panel v-if="groupDialog.visible" variant="muted" padding="sm" class="flex h-full min-h-0 flex-col">
         <div class="sticky top-0 z-10 pb-2">
             <span v-if="hasGroupPermission(groupDialog.ref, 'group-members-viewall')" class="text-base font-bold p-1">{{
                 t('dialog.group.members.all_members')
@@ -201,7 +201,7 @@
                 </div>
             </div>
         </ul>
-    </div>
+    </Panel>
 </template>
 
 <script setup>
@@ -210,6 +210,7 @@
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { Button } from '@/components/ui/button';
     import { InputGroupField } from '@/components/ui/input-group';
+    import { Panel } from '@/components/ui/panel';
     import { Spinner } from '@/components/ui/spinner';
     import { VirtualCombobox } from '@/components/ui/virtual-combobox';
     import { storeToRefs } from 'pinia';

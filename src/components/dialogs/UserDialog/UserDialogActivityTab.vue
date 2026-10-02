@@ -1,5 +1,5 @@
 <template>
-    <div class="flex h-full min-h-0 min-w-0 flex-col overflow-y-auto overflow-x-hidden p-2 rounded-xl bg-muted/80">
+    <Panel variant="muted" padding="sm" class="flex h-full min-h-0 min-w-0 flex-col overflow-y-auto overflow-x-hidden">
         <div style="display: flex; align-items: center; justify-content: space-between">
             <div style="display: flex; align-items: center">
                 <Button
@@ -195,11 +195,11 @@
                 {{ t('dialog.user.activity.no_data_in_period') }}
             </div>
             <div v-else class="flex flex-col gap-0.5">
-                <button
+                <Button
                     v-for="(world, index) in sortedTopWorlds"
                     :key="world.worldId"
-                    type="button"
-                    class="group flex w-full items-start gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent cursor-pointer"
+                    variant="ghost"
+                    class="group h-auto w-full items-start justify-start gap-3 rounded-lg px-3 py-2 text-left font-normal"
                     :class="index === 0 ? 'bg-primary/4' : ''"
                     @click="openWorld(world.worldId)">
                     <span
@@ -244,16 +244,17 @@
                                 }" />
                         </div>
                     </div>
-                </button>
+                </Button>
             </div>
         </div>
-    </div>
+    </Panel>
 </template>
 
 <script setup>
     import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import { Button } from '@/components/ui/button';
+    import { Panel } from '@/components/ui/panel';
     import { DataTableEmpty } from '@/components/ui/data-table';
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { Switch } from '@/components/ui/switch';

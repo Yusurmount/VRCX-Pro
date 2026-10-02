@@ -24,19 +24,14 @@
                         </PopoverTrigger>
                         <PopoverContent class="w-auto p-2" side="top" :side-offset="8">
                             <div class="flex items-center gap-1.5">
-                                <button
+                                <ColorSwatch
                                     v-for="color in TAG_COLORS"
                                     :key="color.name"
-                                    type="button"
-                                    class="h-4 w-4 shrink-0 rounded-sm transition-transform hover:scale-125 cursor-pointer"
-                                    :class="
-                                        isColorSelected(entry, color)
-                                            ? 'ring-1 ring-ring ring-offset-1 ring-offset-background'
-                                            : ''
-                                    "
-                                    :style="{ backgroundColor: color.bg.replace('/ 0.2)', '/ 1)') }"
-                                    :title="color.label"
-                                    @click="setEntryColor(entry, color)" />
+                                    :color="color.bg.replace('/ 0.2)', '/ 1)')"
+                                    :selected="isColorSelected(entry, color)"
+                                    :label="color.label"
+                                    size="sm"
+                                    @select="setEntryColor(entry, color)" />
                             </div>
                         </PopoverContent>
                     </Popover>
@@ -77,6 +72,7 @@
     import { computed, ref, watch } from 'vue';
     import { TAG_COLORS, getTagColor } from '@/shared/constants';
     import { Button } from '@/components/ui/button';
+    import { ColorSwatch } from '@/components/ui/color-swatch';
     import { useI18n } from 'vue-i18n';
 
     const props = defineProps({

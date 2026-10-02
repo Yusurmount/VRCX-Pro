@@ -1,5 +1,5 @@
 <template v-if="groupDialog.visible">
-    <div class="flex h-full min-h-0 flex-col p-2 rounded-xl bg-muted/80">
+    <Panel variant="muted" padding="sm" class="flex h-full min-h-0 flex-col">
         <div class="sticky flex items-center gap-2 top-0 z-10 p-2">
             <span style="margin-right: 8px; vertical-align: top"
                 >{{ t('dialog.group.posts.posts_count') }} {{ groupDialog.posts.length }}</span
@@ -103,7 +103,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </Panel>
 </template>
 
 <script setup>
@@ -111,6 +111,7 @@
     import { Button } from '@/components/ui/button';
     import MediaImage from '../../MediaImage.vue';
     import { InputGroupField } from '@/components/ui/input-group';
+    import { Panel } from '@/components/ui/panel';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
 

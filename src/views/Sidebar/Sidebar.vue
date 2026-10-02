@@ -2,9 +2,9 @@
     <div class="x-aside-container">
         <div style="display: flex; align-items: baseline">
             <div class="search-container p-2 pl-0" style="flex: 1">
-                <button
-                    type="button"
-                    class="border-input dark:bg-input/30 flex h-9 w-full items-center gap-2 rounded-md border bg-transparent px-3 shadow-xs transition-[color,box-shadow] hover:border-ring cursor-pointer overflow-hidden"
+                <Button
+                    variant="outline"
+                    class="h-9 w-full justify-start gap-2 overflow-hidden px-3 font-normal text-muted-foreground shadow-xs hover:border-ring"
                     @click="openQuickSearch">
                     <Search class="size-4 shrink-0 opacity-50" />
                     <span class="search-text flex-1 min-w-0 text-left text-sm text-muted-foreground truncate">{{
@@ -12,7 +12,7 @@
                     }}</span>
                     <Kbd class="search-kbd shrink-0">{{ isMac ? '⌘' : 'Ctrl' }}</Kbd>
                     <Kbd class="search-kbd shrink-0">K</Kbd>
-                </button>
+                </Button>
             </div>
             <div class="flex items-center mx-1 gap-1">
                 <TooltipWrapper side="bottom" :content="t('side_panel.refresh_tooltip')">
@@ -119,14 +119,14 @@
                             <!-- Advanced Section (Collapsible) -->
                             <Collapsible v-model:open="isAdvancedOpen">
                                 <CollapsibleTrigger as-child>
-                                    <button
-                                        type="button"
-                                        class="flex w-full items-center justify-between py-0.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide cursor-pointer hover:text-foreground transition-colors cursor-pointer">
+                                    <Button
+                                        variant="ghost"
+                                        class="h-auto w-full justify-between rounded-none px-0 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground hover:bg-transparent hover:text-foreground">
                                         {{ t('side_panel.settings.advanced') }}
                                         <ChevronDown
                                             class="size-3.5 transition-transform duration-200"
                                             :class="{ 'rotate-180': isAdvancedOpen }" />
-                                    </button>
+                                    </Button>
                                 </CollapsibleTrigger>
                                 <CollapsibleContent>
                                     <div class="flex flex-col gap-2.5 pt-2.5">

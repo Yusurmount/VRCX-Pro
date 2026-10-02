@@ -30,11 +30,11 @@
                     {{ t('dialog.group.transfer.no_results') }}
                 </div>
                 <div v-else-if="searchResults.length > 0" class="max-h-64 overflow-y-auto">
-                    <button
+                    <Button
                         v-for="member in searchResults"
                         :key="member.userId"
-                        type="button"
-                        class="flex w-full items-center rounded-md p-2 text-left hover:bg-accent"
+                        variant="ghost"
+                        class="h-auto w-full justify-start rounded-md p-2 text-left font-normal"
                         :class="{ 'bg-accent': selectedMember?.userId === member.userId }"
                         :aria-pressed="selectedMember?.userId === member.userId"
                         :disabled="submitting || checkingMember"
@@ -50,7 +50,7 @@
                             {{ member.user?.displayName || member.userId }}
                         </span>
                         <Check v-if="selectedMember?.userId === member.userId" class="ml-2 size-4" />
-                    </button>
+                    </Button>
                 </div>
             </div>
 

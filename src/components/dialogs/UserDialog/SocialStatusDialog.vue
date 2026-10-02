@@ -71,11 +71,13 @@
                         @click="applyPreset(preset)">
                         <i class="x-user-status flex-none" :class="getStatusClass(preset.status)"></i>
                         <span class="truncate">{{ preset.statusDescription || getStatusLabel(preset.status) }}</span>
-                        <button
-                            class="flex-none size-4 inline-flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 hover:bg-muted transition-opacity cursor-pointer"
+                        <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            class="size-4 flex-none p-0 opacity-0 group-hover:opacity-100"
                             @click.stop="handleDeletePreset(index)">
                             <X class="size-3" />
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

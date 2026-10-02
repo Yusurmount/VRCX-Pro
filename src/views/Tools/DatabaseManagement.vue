@@ -101,18 +101,18 @@
                         {{ t('view.tools.database_page.tables_header') }}
                     </span>
                     <div class="mt-3 max-h-96 overflow-y-auto rounded-md border divide-y">
-                        <button
+                        <Button
                             v-for="tbl in tables"
                             :key="tbl.name"
-                            type="button"
-                            class="w-full flex items-center justify-between px-3 py-2 text-sm text-left hover:bg-muted transition-colors"
+                            variant="ghost"
+                            class="h-auto w-full justify-between rounded-none px-3 py-2 text-left text-sm font-normal"
                             :class="selectedTable === tbl.name ? 'bg-muted' : ''"
                             @click="selectTable(tbl.name)">
                             <span class="truncate font-mono text-xs mr-2">{{ tbl.name }}</span>
                             <span class="text-muted-foreground shrink-0 text-xs">
                                 {{ tbl.rowCount.toLocaleString() }}
                             </span>
-                        </button>
+                        </Button>
                         <div v-if="!tables.length" class="px-3 py-2 text-sm text-muted-foreground">
                             <div v-if="loading" class="flex justify-center py-4">
                                 <Spinner class="h-5 w-5" />

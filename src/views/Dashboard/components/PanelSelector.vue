@@ -12,11 +12,11 @@
                         {{ t('dashboard.selector.widgets') }}
                     </span>
                     <div class="grid grid-cols-2 gap-2 mt-1.5">
-                        <button
+                        <Button
                             v-for="option in widgetOptions"
                             :key="option.key"
-                            type="button"
-                            class="flex items-center gap-2 rounded-md border p-2 text-left text-sm hover:bg-accent cursor-pointer"
+                            variant="outline"
+                            class="h-auto justify-start rounded-md p-2 text-left text-sm font-normal hover:bg-accent"
                             :class="
                                 option.key === currentPanelKey
                                     ? 'border-primary bg-primary/5 ring-1 ring-primary/40'
@@ -25,7 +25,7 @@
                             @click="handleSelectWidget(option)">
                             <i :class="option.icon" class="text-base"></i>
                             <span>{{ t(option.labelKey) }}</span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -35,11 +35,11 @@
                         {{ t('dashboard.selector.pages') }}
                     </span>
                     <div class="grid grid-cols-2 gap-2 mt-1.5">
-                        <button
+                        <Button
                             v-for="option in panelOptions"
                             :key="option.key"
-                            type="button"
-                            class="flex items-center gap-2 rounded-md border p-2 text-left text-sm hover:bg-accent cursor-pointer"
+                            variant="outline"
+                            class="h-auto justify-start rounded-md p-2 text-left text-sm font-normal hover:bg-accent"
                             :class="
                                 option.key === currentPanelKey
                                     ? 'border-primary bg-primary/5 ring-1 ring-primary/40'
@@ -48,7 +48,7 @@
                             @click="emit('select', option.key)">
                             <i :class="option.icon" class="text-base"></i>
                             <span>{{ t(option.labelKey) }}</span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

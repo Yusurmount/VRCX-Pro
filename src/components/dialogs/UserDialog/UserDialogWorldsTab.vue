@@ -1,5 +1,5 @@
 <template>
-    <div class="flex h-full min-h-0 flex-col overflow-hidden p-2 rounded-xl bg-muted/80">
+    <Panel variant="muted" padding="sm" class="flex h-full min-h-0 flex-col overflow-hidden">
         <div class="shrink-0" style="display: flex; align-items: center; justify-content: space-between">
             <div style="display: flex; align-items: center">
                 <Button
@@ -86,12 +86,13 @@
                 </div>
             </div>
         </div>
-    </div>
+    </Panel>
 </template>
 
 <script setup>
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { Button } from '@/components/ui/button';
+    import { Panel } from '@/components/ui/panel';
     import { DataTableEmpty } from '@/components/ui/data-table';
     import { Image, RefreshCw } from 'lucide-vue-next';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

@@ -13,20 +13,13 @@
                             :class="languageClass(item.key)"
                             style="display: inline-block"></span>
                         {{ item.value }} ({{ item.key.toUpperCase() }})
-                        <button
-                            class="ml-2 p-0"
-                            type="button"
-                            style="
-                                border: none;
-                                background: transparent;
-                                display: inline-flex;
-                                align-items: center;
-                                color: inherit;
-                                cursor: pointer;
-                            "
+                        <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            class="ml-2 size-4 p-0 text-current"
                             @click="removeUserLanguage(item.key)">
-                            <X class="h-3 w-3" />
-                        </button>
+                            <X class="size-3" />
+                        </Button>
                     </Badge>
                 </div>
                 <Select
@@ -61,6 +54,7 @@
 
 <script setup>
     import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+    import { Button } from '@/components/ui/button';
     import { X } from 'lucide-vue-next';
     import { ref } from 'vue';
     import { storeToRefs } from 'pinia';

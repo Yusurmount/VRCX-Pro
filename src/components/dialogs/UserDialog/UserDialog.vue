@@ -54,13 +54,14 @@
                 </template>
 
                 <template #JSON>
-                    <DialogJsonTab
-                        class="rounded-xl bg-muted/80 p-2"
-                        :tree-data="treeData"
-                        :tree-data-key="treeData?.id"
-                        :dialog-id="userDialog.id"
-                        :dialog-ref="userDialog.ref"
-                        @refresh="refreshUserDialogTreeData()" />
+                    <Panel variant="muted" padding="sm">
+                        <DialogJsonTab
+                            :tree-data="treeData"
+                            :tree-data-key="treeData?.id"
+                            :dialog-id="userDialog.id"
+                            :dialog-ref="userDialog.ref"
+                            @refresh="refreshUserDialogTreeData()" />
+                    </Panel>
                 </template>
             </TabsUnderline>
             <SendInviteDialog
@@ -79,6 +80,7 @@
 <script setup>
     import { computed, ref, watch } from 'vue';
     import { DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+    import { Panel } from '@/components/ui/panel';
     import { TabsUnderline } from '@/components/ui/tabs';
     import { storeToRefs } from 'pinia';
     import { toast } from 'vue-sonner';

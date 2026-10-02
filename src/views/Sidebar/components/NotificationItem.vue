@@ -58,26 +58,28 @@
                                 v-if="notification.type === 'friendRequest'"
                                 side="top"
                                 :content="t('view.notification.actions.accept')">
-                                <button
-                                    type="button"
-                                    class="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+                                <Button
+                                    size="icon-sm"
+                                    variant="ghost"
+                                    class="size-5 text-muted-foreground hover:text-foreground"
                                     @click.stop="notificationStore.acceptFriendRequestNotification(notification)"
                                     :ariaLabel="t('view.notification.actions.accept')">
                                     <Check class="size-3" />
-                                </button>
+                                </Button>
                             </TooltipWrapper>
 
                             <TooltipWrapper
                                 v-if="notification.type === 'invite'"
                                 side="top"
                                 :content="t('view.notification.actions.decline_with_message')">
-                                <button
-                                    type="button"
-                                    class="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+                                <Button
+                                    size="icon-sm"
+                                    variant="ghost"
+                                    class="size-5 text-muted-foreground hover:text-foreground"
                                     @click.stop="$emit('show-invite-response', notification)"
                                     :ariaLabel="t('view.notification.actions.decline_with_message')">
                                     <MessageCircle class="size-3" />
-                                </button>
+                                </Button>
                             </TooltipWrapper>
 
                             <template v-if="notification.type === 'requestInvite'">
@@ -85,24 +87,26 @@
                                     v-if="canInvite"
                                     side="top"
                                     :content="t('view.notification.actions.invite')">
-                                    <button
-                                        type="button"
-                                        class="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+                                    <Button
+                                        size="icon-sm"
+                                        variant="ghost"
+                                        class="size-5 text-muted-foreground hover:text-foreground"
                                         @click.stop="notificationStore.acceptRequestInvite(notification)"
                                         :ariaLabel="t('view.notification.actions.invite')">
                                         <Check class="size-3" />
-                                    </button>
+                                    </Button>
                                 </TooltipWrapper>
                                 <TooltipWrapper
                                     side="top"
                                     :content="t('view.notification.actions.decline_with_message')">
-                                    <button
-                                        type="button"
-                                        class="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+                                    <Button
+                                        size="icon-sm"
+                                        variant="ghost"
+                                        class="size-5 text-muted-foreground hover:text-foreground"
                                         @click.stop="$emit('show-invite-request-response', notification)"
                                         :ariaLabel="t('view.notification.actions.decline_with_message')">
                                         <MessageCircle class="size-3" />
-                                    </button>
+                                    </Button>
                                 </TooltipWrapper>
                             </template>
 
@@ -112,13 +116,14 @@
                                     :key="`${response.text}:${response.type}`"
                                     side="top"
                                     :content="response.text">
-                                    <button
-                                        type="button"
-                                        class="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+                                    <Button
+                                        size="icon-sm"
+                                        variant="ghost"
+                                        class="size-5 text-muted-foreground hover:text-foreground"
                                         :ariaLabel="response.text"
                                         @click.stop="handleResponse(response)">
                                         <component :is="getResponseIcon(response)" class="size-3" />
-                                    </button>
+                                    </Button>
                                 </TooltipWrapper>
                             </template>
 
@@ -126,13 +131,14 @@
                                 v-if="showDecline"
                                 side="top"
                                 :content="t('view.notification.actions.decline')">
-                                <button
-                                    type="button"
-                                    class="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-muted cursor-pointer"
+                                <Button
+                                    size="icon-sm"
+                                    variant="ghost"
+                                    class="size-5 text-muted-foreground hover:text-destructive"
                                     @click.stop="notificationStore.hideNotificationPrompt(notification)"
                                     :ariaLabel="t('view.notification.actions.decline')">
                                     <X class="size-3" />
-                                </button>
+                                </Button>
                             </TooltipWrapper>
                         </template>
 
@@ -140,13 +146,14 @@
                             v-if="showDeleteLog"
                             side="top"
                             :content="t('view.notification.actions.delete_log')">
-                            <button
-                                type="button"
-                                class="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-muted cursor-pointer"
+                            <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                class="size-5 text-muted-foreground hover:text-destructive"
                                 @click.stop="notificationStore.deleteNotificationLogPrompt(notification)"
                                 :ariaLabel="t('view.notification.actions.delete_log')">
                                 <Trash2 class="size-3" />
-                            </button>
+                            </Button>
                         </TooltipWrapper>
                     </div>
                 </div>
@@ -254,6 +261,7 @@
     import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
     import { computed, onBeforeUnmount } from 'vue';
     import { Badge } from '@/components/ui/badge';
+    import { Button } from '@/components/ui/button';
     import { Separator } from '@/components/ui/separator';
     import { TooltipWrapper } from '@/components/ui/tooltip';
     import { storeToRefs } from 'pinia';

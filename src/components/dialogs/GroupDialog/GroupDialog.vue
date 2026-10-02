@@ -9,7 +9,7 @@
 
         <!-- Summary card -->
         <div class="flex-none w-77 pr-4 overflow-y-auto">
-            <div class="rounded-xl bg-muted/80 overflow-hidden flex flex-col">
+            <Panel variant="muted" padding="none" class="flex flex-col overflow-hidden">
                 <!-- Banner with icon -->
                 <div class="relative aspect-17/6">
                     <MediaImage
@@ -386,10 +386,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </Panel>
 
             <!-- Stats card -->
-            <div class="rounded-xl bg-muted/80 p-3 mt-2.5">
+            <Panel variant="muted" class="mt-2.5">
                 <div
                     class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-2 pb-2 border-b border-border">
                     {{ t('dialog.group.info.header') }}
@@ -445,11 +445,12 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </Panel>
 
-            <div
+            <Panel
                 v-if="groupDialog.ref.membershipStatus === 'member' && groupDialog.ref.myMember"
-                class="rounded-xl bg-muted/80 p-3 mt-2.5">
+                variant="muted"
+                class="mt-2.5">
                 <div
                     class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-2 pb-2 border-b border-border">
                     {{ t('dialog.group.info.member_info') }}
@@ -515,7 +516,7 @@
                         </span>
                     </div>
                 </div>
-            </div>
+            </Panel>
         </div>
 
         <!-- Right side Tabs -->
@@ -543,13 +544,14 @@
                     <GroupDialogPhotosTab ref="photosTabRef" />
                 </template>
                 <template #JSON>
-                    <DialogJsonTab
-                        class="rounded-xl bg-muted/80 p-2"
-                        :tree-data="treeData"
-                        :tree-data-key="treeData?.group?.id"
-                        :dialog-id="groupDialog.id"
-                        :dialog-ref="groupDialog.ref"
-                        @refresh="refreshGroupDialogTreeData()" />
+                    <Panel variant="muted" padding="sm">
+                        <DialogJsonTab
+                            :tree-data="treeData"
+                            :tree-data-key="treeData?.group?.id"
+                            :dialog-id="groupDialog.id"
+                            :dialog-ref="groupDialog.ref"
+                            @refresh="refreshGroupDialogTreeData()" />
+                    </Panel>
                 </template>
             </TabsUnderline>
         </div>
@@ -587,6 +589,7 @@
     import { computed, reactive, ref, watch } from 'vue';
     import { DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
     import { Button } from '@/components/ui/button';
+    import { Panel } from '@/components/ui/panel';
     import { TabsUnderline } from '@/components/ui/tabs';
     import { storeToRefs } from 'pinia';
     import { toast } from 'vue-sonner';

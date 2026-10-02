@@ -16,14 +16,13 @@
             </div>
             <div v-if="hasData" class="flex items-center gap-2 pr-1">
                 <ZoomOut class="size-3.5 shrink-0 text-muted-foreground" />
-                <input
-                    type="range"
-                    v-model.number="scaleSlider"
-                    min="0"
-                    max="100"
-                    step="1"
-                    class="w-28 accent-primary"
-                    @change="rebuildChart" />
+                <Slider
+                    v-model="scaleSliderModel"
+                    :min="0"
+                    :max="100"
+                    :step="1"
+                    class="w-28"
+                    @valueCommit="rebuildChart" />
                 <ZoomIn class="size-3.5 shrink-0 text-muted-foreground" />
                 <span class="w-20 text-right text-xs tabular-nums text-muted-foreground">
                     {{ bucketDays }}
@@ -67,6 +66,7 @@
 
     import { Button } from '@/components/ui/button';
     import { DataTableEmpty } from '@/components/ui/data-table';
+    import { Slider } from '@/components/ui/slider';
     import { Spinner } from '@/components/ui/spinner';
 
     import { database } from '../../../services/database';
@@ -99,6 +99,12 @@
     // Mapped to bucketDays = round(90 ^ (slider/100)).
     // 0 → 1 day/bucket, 51 → ~10 days, 100 → 90 days
     const scaleSlider = ref(51);
+    const scaleSliderModel = computed({
+        get: () => [scaleSlider.value],
+        set: ([value]) => {
+            scaleSlider.value = value;
+        }
+    });
     const bucketDays = computed(() => Math.max(1, Math.round(Math.pow(90, scaleSlider.value / 100))));
     const DEFAULT_VISIBLE_BUCKETS = 10;
 

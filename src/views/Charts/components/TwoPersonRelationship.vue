@@ -169,11 +169,11 @@
 
                 <div
                     class="mx-auto mt-3 in-[.is-compact-table]:mt-1.5! in-[.is-comfortable-table]:mt-2! max-w-[900px] flex flex-col gap-3 pb-8">
-                    <button
+                    <Button
                         v-for="item in sharedInstances"
                         :key="item.location + '_' + item.friendALeave"
-                        type="button"
-                        class="group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all hover:bg-accent hover:shadow-sm"
+                        variant="outline"
+                        class="group h-auto w-full justify-start gap-3 rounded-lg p-3 text-left font-normal hover:shadow-sm"
                         @click="openInstanceDialog(item.location)">
                         <div class="w-32 shrink-0 text-xs text-muted-foreground tabular-nums">
                             {{ item.formattedDate }}
@@ -257,7 +257,7 @@
                                 </span>
                             </div>
                         </div>
-                    </button>
+                    </Button>
                 </div>
             </template>
         </div>

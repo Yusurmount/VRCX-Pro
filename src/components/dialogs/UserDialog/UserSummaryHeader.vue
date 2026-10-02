@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded-xl bg-muted/80 overflow-hidden flex flex-col relative">
+    <Panel variant="muted" padding="none" class="relative flex flex-col overflow-hidden">
         <ProfileEffect :profile-effect="userDialog.ref.profileEffect" class="z-1" />
         <div class="relative aspect-17/6">
             <div
@@ -335,9 +335,9 @@
                 </div>
             </div>
         </div>
-    </div>
+    </Panel>
 
-    <div class="rounded-xl bg-muted/80 p-3 flex flex-col mt-2">
+    <Panel variant="muted" class="mt-2 flex flex-col">
         <div
             class="text-[10px] font-bold uppercase tracking-wide mb-2 pb-2 border-b border-border"
             :style="{ color: userDialog.theme.subtextColor }">
@@ -375,9 +375,9 @@
                 "
                 loading="lazy" />
         </div>
-    </div>
+    </Panel>
 
-    <div class="rounded-xl bg-muted/80 p-3 flex flex-col mt-2">
+    <Panel variant="muted" class="mt-2 flex flex-col">
         <div
             class="text-[10px] font-bold uppercase tracking-wide mb-2 pb-2 border-b border-border"
             :style="{ color: userDialog.theme.subtextColor }">
@@ -422,7 +422,7 @@
                 @click="showFullscreenImageDialog(userDialog.representedGroup.bannerUrl)"
                 loading="lazy" />
         </div>
-    </div>
+    </Panel>
 </template>
 
 <script setup>
@@ -444,6 +444,7 @@
     import { useI18n } from 'vue-i18n';
 
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+    import { Panel } from '@/components/ui/panel';
     import MediaImage from '../../MediaImage.vue';
     import { copyToClipboard, formatDateFilter, languageClass, openDiscordProfile } from '../../../shared/utils';
     import { useUserDisplay } from '../../../composables/useUserDisplay';

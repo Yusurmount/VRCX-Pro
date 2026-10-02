@@ -1,7 +1,7 @@
 <template>
     <template v-if="isFriendOnline(userDialog.friend) || currentUser.id === userDialog.id">
         <div class="flex flex-col gap-2.5 mb-2.5">
-            <div class="rounded-xl bg-muted/80 p-3">
+            <Panel variant="muted">
                 <div class="flex items-center justify-between mb-2 border-b border-background-muted">
                     <span
                         class="text-[10px] font-bold uppercase tracking-wide"
@@ -123,14 +123,14 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </Panel>
         </div>
     </template>
 
     <div class="@container">
         <div class="grid gap-2.5 grid-cols-1 @[560px]:grid-cols-[minmax(0,1fr)_230px]" style="align-items: start">
             <div class="flex flex-col gap-2.5">
-                <div class="rounded-xl bg-muted/80 p-3">
+                <Panel variant="muted">
                     <div class="flex items-center justify-between mb-2 pb-2 border-b border-border">
                         <span
                             class="text-[10px] font-bold uppercase tracking-wide"
@@ -175,11 +175,12 @@
                                 loading="lazy" />
                         </TooltipWrapper>
                     </div>
-                </div>
+                </Panel>
 
-                <div
+                <Panel
                     v-if="!hideUserNotes"
-                    class="rounded-xl bg-muted/80 p-3 cursor-pointer"
+                    variant="muted"
+                    class="cursor-pointer"
                     @click="isEditNoteAndMemoDialogVisible = true">
                     <div class="flex items-center justify-between mb-2 pb-2 border-b border-border">
                         <span
@@ -197,11 +198,12 @@
                         style="white-space: pre-wrap; max-height: 210px; overflow-y: auto"
                         >{{ userDialog.note }}</pre>
                     <pre class="text-xs font-[inherit] text-muted-foreground" v-else>—</pre>
-                </div>
+                </Panel>
 
-                <div
+                <Panel
                     v-if="!hideUserMemos"
-                    class="rounded-xl bg-muted/80 p-3 cursor-pointer"
+                    variant="muted"
+                    class="cursor-pointer"
                     @click="isEditNoteAndMemoDialogVisible = true">
                     <div class="flex items-center justify-between mb-2 pb-2 border-b border-border">
                         <span
@@ -219,11 +221,11 @@
                         style="white-space: pre-wrap; max-height: 210px; overflow-y: auto"
                         >{{ userDialog.memo }}</pre>
                     <pre class="text-xs font-[inherit] text-muted-foreground" v-else>—</pre>
-                </div>
+                </Panel>
             </div>
 
             <div class="flex flex-col gap-2.5">
-                <div class="rounded-xl bg-muted/80 p-3">
+                <Panel variant="muted">
                     <div class="flex items-center justify-between mb-2 pb-2 border-b border-border">
                         <span
                             class="text-[10px] font-bold uppercase tracking-wide"
@@ -343,9 +345,9 @@
                             </TooltipWrapper>
                         </template>
                     </div>
-                </div>
+                </Panel>
 
-                <div class="rounded-xl bg-muted/80 p-3">
+                <Panel variant="muted">
                     <div
                         class="text-[10px] font-bold uppercase tracking-wide mb-2 pb-2 border-b border-border"
                         :style="{ color: userDialog.theme.subtextColor }">
@@ -408,11 +410,9 @@
                             }}</span>
                         </div>
                     </div>
-                </div>
+                </Panel>
 
-                <div
-                    v-if="userDialog.ref.id === currentUser.id && currentUser.homeLocation"
-                    class="rounded-xl bg-muted/80 p-3">
+                <Panel v-if="userDialog.ref.id === currentUser.id && currentUser.homeLocation" variant="muted">
                     <div
                         class="text-[10px] font-bold uppercase tracking-wide mb-2 pb-2 border-b border-border"
                         :style="{ color: userDialog.theme.subtextColor }">
@@ -430,7 +430,7 @@
                             <Trash2 class="h-3 w-3" :style="{ color: userDialog.theme.iconColor }" />
                         </Button>
                     </div>
-                </div>
+                </Panel>
             </div>
         </div>
     </div>
@@ -443,6 +443,7 @@
     import MediaImage from '../../MediaImage.vue';
     import { ref, watch } from 'vue';
     import { Button } from '@/components/ui/button';
+    import { Panel } from '@/components/ui/panel';
     import { Spinner } from '@/components/ui/spinner';
     import { storeToRefs } from 'pinia';
     import { toast } from 'vue-sonner';

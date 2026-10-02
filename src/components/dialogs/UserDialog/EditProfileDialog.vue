@@ -81,11 +81,13 @@
                                 <span class="truncate">{{
                                     preset.statusDescription || getStatusLabel(preset.status)
                                 }}</span>
-                                <button
-                                    class="flex-none size-4 inline-flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 hover:bg-muted transition-opacity cursor-pointer"
+                                <Button
+                                    size="icon-sm"
+                                    variant="ghost"
+                                    class="size-4 flex-none p-0 opacity-0 group-hover:opacity-100"
                                     @click.stop="handleDeletePreset(index)">
                                     <X class="size-3" />
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -144,12 +146,10 @@
                     </Select>
 
                     <div v-if="selectedBannerType === 'color'" class="flex items-center gap-1">
-                        <input
-                            type="color"
-                            class="h-8 w-12 cursor-pointer appearance-none rounded-md border-0 bg-transparent p-0 disabled:cursor-not-allowed [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0 [&::-moz-color-swatch]:rounded-md [&::-moz-color-swatch]:border-0"
-                            :value="bannerColorValue"
+                        <ColorInput
+                            :model-value="bannerColorValue"
                             :disabled="editProfileDialog.loading"
-                            @input="handleBannerColorInput" />
+                            @change="handleBannerColorInput" />
                         <span class="w-20 text-xs font-mono text-muted-foreground uppercase">
                             {{ bannerColorValue }}
                         </span>
@@ -243,12 +243,10 @@
                         <label class="space-y-1">
                             <span class="text-xs text-muted-foreground">Button</span>
                             <div class="flex items-center gap-1">
-                                <input
-                                    type="color"
-                                    class="h-8 w-12 cursor-pointer appearance-none rounded-md border-0 bg-transparent p-0 disabled:cursor-not-allowed [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0 [&::-moz-color-swatch]:rounded-md [&::-moz-color-swatch]:border-0"
-                                    :value="themeButtonColorValue"
+                                <ColorInput
+                                    :model-value="themeButtonColorValue"
                                     :disabled="editProfileDialog.loading"
-                                    @input="handleThemeButtonColorInput" />
+                                    @change="handleThemeButtonColorInput" />
                                 <span class="w-20 text-xs font-mono text-muted-foreground uppercase">
                                     {{ themeButtonColorValue }}
                                 </span>
@@ -258,12 +256,10 @@
                         <label class="space-y-1">
                             <span class="text-xs text-muted-foreground">Icon</span>
                             <div class="flex items-center gap-1">
-                                <input
-                                    type="color"
-                                    class="h-8 w-12 cursor-pointer appearance-none rounded-md border-0 bg-transparent p-0 disabled:cursor-not-allowed [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0 [&::-moz-color-swatch]:rounded-md [&::-moz-color-swatch]:border-0"
-                                    :value="themeIconColorValue"
+                                <ColorInput
+                                    :model-value="themeIconColorValue"
                                     :disabled="editProfileDialog.loading"
-                                    @input="handleThemeIconColorInput" />
+                                    @change="handleThemeIconColorInput" />
                                 <span class="w-20 text-xs font-mono text-muted-foreground uppercase">
                                     {{ themeIconColorValue }}
                                 </span>
@@ -273,12 +269,10 @@
                         <label class="space-y-1">
                             <span class="text-xs text-muted-foreground">Subtext</span>
                             <div class="flex items-center gap-1">
-                                <input
-                                    type="color"
-                                    class="h-8 w-12 cursor-pointer appearance-none rounded-md border-0 bg-transparent p-0 disabled:cursor-not-allowed [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0 [&::-moz-color-swatch]:rounded-md [&::-moz-color-swatch]:border-0"
-                                    :value="themeSubtextColorValue"
+                                <ColorInput
+                                    :model-value="themeSubtextColorValue"
                                     :disabled="editProfileDialog.loading"
-                                    @input="handleThemeSubtextColorInput" />
+                                    @change="handleThemeSubtextColorInput" />
                                 <span class="w-20 text-xs font-mono text-muted-foreground uppercase">
                                     {{ themeSubtextColorValue }}
                                 </span>
@@ -317,12 +311,10 @@
                                 t('dialog.edit_profile.gradient_top')
                             }}</span>
                             <div class="flex items-center gap-1">
-                                <input
-                                    type="color"
-                                    class="h-8 w-12 cursor-pointer appearance-none rounded-md border-0 bg-transparent p-0 disabled:cursor-not-allowed [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0 [&::-moz-color-swatch]:rounded-md [&::-moz-color-swatch]:border-0"
-                                    :value="backgroundGradientTopColorValue"
+                                <ColorInput
+                                    :model-value="backgroundGradientTopColorValue"
                                     :disabled="editProfileDialog.loading"
-                                    @input="handleBackgroundGradientTopColorInput" />
+                                    @change="handleBackgroundGradientTopColorInput" />
                                 <span class="w-20 text-xs font-mono text-muted-foreground uppercase">
                                     {{ backgroundGradientTopColorValue }}
                                 </span>
@@ -334,12 +326,10 @@
                                 t('dialog.edit_profile.gradient_bottom')
                             }}</span>
                             <div class="flex items-center gap-1">
-                                <input
-                                    type="color"
-                                    class="h-8 w-12 cursor-pointer appearance-none rounded-md border-0 bg-transparent p-0 disabled:cursor-not-allowed [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0 [&::-moz-color-swatch]:rounded-md [&::-moz-color-swatch]:border-0"
-                                    :value="backgroundGradientBottomColorValue"
+                                <ColorInput
+                                    :model-value="backgroundGradientBottomColorValue"
                                     :disabled="editProfileDialog.loading"
-                                    @input="handleBackgroundGradientBottomColorInput" />
+                                    @change="handleBackgroundGradientBottomColorInput" />
                                 <span class="w-20 text-xs font-mono text-muted-foreground uppercase">
                                     {{ backgroundGradientBottomColorValue }}
                                 </span>
@@ -427,11 +417,11 @@
                             <div
                                 v-if="nameplateEffects.length"
                                 class="grid max-h-105 grid-cols-2 gap-3 overflow-y-auto">
-                                <button
+                                <Button
                                     v-for="item in nameplateEffects"
                                     :key="item.templateId"
-                                    type="button"
-                                    class="relative min-w-0 overflow-hidden rounded-md border bg-background text-left transition-colors hover:bg-accent"
+                                    variant="outline"
+                                    class="relative h-auto min-w-0 overflow-hidden rounded-md bg-background p-0 text-left"
                                     :class="{
                                         'border-primary ring-2 ring-inset ring-primary/40':
                                             editProfileDialog.nameplateEffect === item.templateId
@@ -444,15 +434,13 @@
                                         :alt="item.name"
                                         class="aspect-square w-full object-cover"
                                         loading="lazy" />
-                                    <span class="block truncate px-3 py-2 text-sm font-medium">{{
-                                        item.name
-                                    }}</span>
+                                    <span class="block truncate px-3 py-2 text-sm font-medium">{{ item.name }}</span>
                                     <span
                                         v-if="editProfileDialog.nameplateEffect === item.templateId"
                                         class="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
                                         <Check class="size-4" />
                                     </span>
-                                </button>
+                                </Button>
                             </div>
                             <p v-else class="text-sm text-muted-foreground">{{ t('common.no_data') }}</p>
                         </PopoverContent>
@@ -492,14 +480,12 @@
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent class="w-130 max-w-[calc(100vw-2rem)] p-3" align="start">
-                            <div
-                                v-if="profileEffects.length"
-                                class="grid max-h-105 grid-cols-2 gap-3 overflow-y-auto">
-                                <button
+                            <div v-if="profileEffects.length" class="grid max-h-105 grid-cols-2 gap-3 overflow-y-auto">
+                                <Button
                                     v-for="item in profileEffects"
                                     :key="item.templateId"
-                                    type="button"
-                                    class="relative min-w-0 overflow-hidden rounded-md border bg-background text-left transition-colors hover:bg-accent"
+                                    variant="outline"
+                                    class="relative h-auto min-w-0 overflow-hidden rounded-md bg-background p-0 text-left"
                                     :class="{
                                         'border-primary ring-2 ring-inset ring-primary/40':
                                             editProfileDialog.profileEffect === item.templateId
@@ -512,15 +498,13 @@
                                         :alt="item.name"
                                         class="aspect-square w-full object-cover"
                                         loading="lazy" />
-                                    <span class="block truncate px-3 py-2 text-sm font-medium">{{
-                                        item.name
-                                    }}</span>
+                                    <span class="block truncate px-3 py-2 text-sm font-medium">{{ item.name }}</span>
                                     <span
                                         v-if="editProfileDialog.profileEffect === item.templateId"
                                         class="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
                                         <Check class="size-4" />
                                     </span>
-                                </button>
+                                </Button>
                             </div>
                             <p v-else class="text-sm text-muted-foreground">{{ t('common.no_data') }}</p>
                         </PopoverContent>
@@ -560,14 +544,12 @@
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent class="w-130 max-w-[calc(100vw-2rem)] p-3" align="start">
-                            <div
-                                v-if="iconFrames.length"
-                                class="grid max-h-105 grid-cols-2 gap-3 overflow-y-auto">
-                                <button
+                            <div v-if="iconFrames.length" class="grid max-h-105 grid-cols-2 gap-3 overflow-y-auto">
+                                <Button
                                     v-for="item in iconFrames"
                                     :key="item.templateId"
-                                    type="button"
-                                    class="relative min-w-0 overflow-hidden rounded-md border bg-background text-left transition-colors hover:bg-accent"
+                                    variant="outline"
+                                    class="relative h-auto min-w-0 overflow-hidden rounded-md bg-background p-0 text-left"
                                     :class="{
                                         'border-primary ring-2 ring-inset ring-primary/40':
                                             editProfileDialog.iconFrame === item.templateId
@@ -580,15 +562,13 @@
                                         :alt="item.name"
                                         class="aspect-square w-full object-cover"
                                         loading="lazy" />
-                                    <span class="block truncate px-3 py-2 text-sm font-medium">{{
-                                        item.name
-                                    }}</span>
+                                    <span class="block truncate px-3 py-2 text-sm font-medium">{{ item.name }}</span>
                                     <span
                                         v-if="editProfileDialog.iconFrame === item.templateId"
                                         class="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
                                         <Check class="size-4" />
                                     </span>
-                                </button>
+                                </Button>
                             </div>
                             <p v-else class="text-sm text-muted-foreground">{{ t('common.no_data') }}</p>
                         </PopoverContent>
@@ -660,20 +640,13 @@
                                 :class="languageClass(item.key)"
                                 style="display: inline-block"></span>
                             {{ item.value }} ({{ item.key.toUpperCase() }})
-                            <button
-                                class="ml-2 p-0"
-                                type="button"
-                                style="
-                                    border: none;
-                                    background: transparent;
-                                    display: inline-flex;
-                                    align-items: center;
-                                    color: inherit;
-                                    cursor: pointer;
-                                "
+                            <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                class="ml-2 size-4 p-0 text-current"
                                 @click="removeUserLanguage(item.key)">
-                                <X class="h-3 w-3" />
-                            </button>
+                                <X class="size-3" />
+                            </Button>
                         </Badge>
                     </div>
 
@@ -731,6 +704,7 @@
 
     import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
     import { Button } from '@/components/ui/button';
+    import { ColorInput } from '@/components/ui/color-input';
     import {
         InputGroupAction,
         InputGroupButton,
@@ -799,9 +773,7 @@
     const profileEffects = computed(
         () => inventoryTable.value?.filter((item) => item.itemType === 'profileEffect') ?? []
     );
-    const iconFrames = computed(
-        () => inventoryTable.value?.filter((item) => item.itemType === 'iconFrame') ?? []
-    );
+    const iconFrames = computed(() => inventoryTable.value?.filter((item) => item.itemType === 'iconFrame') ?? []);
     const selectedNameplateEffect = computed(() =>
         nameplateEffects.value.find((item) => item.templateId === props.editProfileDialog.nameplateEffect)
     );
@@ -937,8 +909,8 @@
         props.editProfileDialog.statusDescription = val.status;
     }
 
-    function handleBannerColorInput(event) {
-        const normalized = normalizeColor(event?.target?.value);
+    function handleBannerColorInput(value) {
+        const normalized = normalizeColor(value);
         if (!normalized) {
             return;
         }
@@ -980,8 +952,8 @@
         D.backgroundType = 'texture';
     }
 
-    function handleBackgroundGradientTopColorInput(event) {
-        const normalized = normalizeColor(event?.target?.value);
+    function handleBackgroundGradientTopColorInput(value) {
+        const normalized = normalizeColor(value);
         if (!normalized) {
             return;
         }
@@ -990,8 +962,8 @@
         D.backgroundType = 'gradient';
     }
 
-    function handleBackgroundGradientBottomColorInput(event) {
-        const normalized = normalizeColor(event?.target?.value);
+    function handleBackgroundGradientBottomColorInput(value) {
+        const normalized = normalizeColor(value);
         if (!normalized) {
             return;
         }
@@ -1013,21 +985,21 @@
         D.themeSubtextColor = normalizeColor(selectedTheme.subtextColor);
     }
 
-    function handleThemeButtonColorInput(event) {
+    function handleThemeButtonColorInput(value) {
         const D = props.editProfileDialog;
-        D.themeButtonColor = normalizeColor(event?.target?.value);
+        D.themeButtonColor = normalizeColor(value);
         handleThemeInput();
     }
 
-    function handleThemeIconColorInput(event) {
+    function handleThemeIconColorInput(value) {
         const D = props.editProfileDialog;
-        D.themeIconColor = normalizeColor(event?.target?.value);
+        D.themeIconColor = normalizeColor(value);
         handleThemeInput();
     }
 
-    function handleThemeSubtextColorInput(event) {
+    function handleThemeSubtextColorInput(value) {
         const D = props.editProfileDialog;
-        D.themeSubtextColor = normalizeColor(event?.target?.value);
+        D.themeSubtextColor = normalizeColor(value);
         handleThemeInput();
     }
 

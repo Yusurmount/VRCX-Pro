@@ -68,17 +68,19 @@
                                 :key="`${rel.userIdA}-${rel.userIdB}`"
                                 class="flex items-center justify-between p-3 rounded-md border bg-card shadow-sm">
                                 <div class="flex items-center gap-3 overflow-hidden">
-                                    <button
-                                        class="font-medium underline underline-offset-2 truncate hover:text-primary transition-colors"
+                                    <Button
+                                        variant="link"
+                                        class="h-auto max-w-full justify-start truncate p-0 font-medium"
                                         @click="showUserDialog(rel.userIdA)">
                                         {{ rel.nameA }}
-                                    </button>
+                                    </Button>
                                     <span class="text-muted-foreground shrink-0 text-xs">↔</span>
-                                    <button
-                                        class="font-medium underline underline-offset-2 truncate hover:text-primary transition-colors"
+                                    <Button
+                                        variant="link"
+                                        class="h-auto max-w-full justify-start truncate p-0 font-medium"
                                         @click="showUserDialog(rel.userIdB)">
                                         {{ rel.nameB }}
-                                    </button>
+                                    </Button>
                                 </div>
                                 <div class="flex items-center gap-4 shrink-0">
                                     <Tooltip v-if="rel.suggestion">
@@ -132,17 +134,19 @@
                                 :key="s.key"
                                 class="flex items-center gap-3 p-2 hover:bg-accent/50 rounded-lg group">
                                 <div class="flex-1 flex items-center gap-1 text-sm overflow-hidden min-w-0">
-                                    <button
-                                        class="underline underline-offset-2 truncate hover:text-primary max-w-[140px]"
+                                    <Button
+                                        variant="link"
+                                        class="h-auto max-w-[140px] justify-start truncate p-0"
                                         @click="showUserDialog(s.userIdA)">
                                         {{ s.nameA }}
-                                    </button>
+                                    </Button>
                                     <span class="text-muted-foreground shrink-0">↔</span>
-                                    <button
-                                        class="underline underline-offset-2 truncate hover:text-primary max-w-[140px]"
+                                    <Button
+                                        variant="link"
+                                        class="h-auto max-w-[140px] justify-start truncate p-0"
                                         @click="showUserDialog(s.userIdB)">
                                         {{ s.nameB }}
-                                    </button>
+                                    </Button>
                                 </div>
                                 <Tooltip>
                                     <TooltipTrigger asChild>

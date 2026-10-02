@@ -49,11 +49,12 @@
 
             <!-- View Changelog -->
             <div class="mt-2 flex justify-center">
-                <button
-                    class="cursor-pointer border-0 bg-transparent text-xs text-muted-foreground/70 transition-colors duration-200 hover:text-foreground cursor-pointer"
+                <Button
+                    variant="link"
+                    class="h-auto p-0 text-xs text-muted-foreground/70 hover:text-foreground"
                     @click="handleViewChangelog">
                     {{ t('onboarding.whatsnew.common.view_changelog') }} →
-                </button>
+                </Button>
             </div>
 
             <!-- CTA -->

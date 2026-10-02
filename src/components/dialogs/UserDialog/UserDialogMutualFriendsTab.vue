@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded-xl bg-muted/80 p-2">
+    <Panel variant="muted" padding="sm">
         <div style="display: flex; align-items: center; justify-content: space-between">
             <div style="display: flex; align-items: center">
                 <Button
@@ -59,13 +59,14 @@
                 </div>
             </li>
         </ul>
-    </div>
+    </Panel>
 </template>
 
 <script setup>
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { Button } from '@/components/ui/button';
+    import { Panel } from '@/components/ui/panel';
     import { RefreshCw, User, Users } from 'lucide-vue-next';
     import { Spinner } from '@/components/ui/spinner';
     import { Input } from '@/components/ui/input';
