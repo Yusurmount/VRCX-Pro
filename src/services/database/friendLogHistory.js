@@ -20,8 +20,10 @@ const friendLogHistory = {
                 row.trustLevel = dbRow[6];
                 row.previousTrustLevel = dbRow[7];
             }
-            friendLogHistory.unshift(row);
-        }, `SELECT * FROM ${dbVars.userPrefix}_friend_log_history`);
+            friendLogHistory.push(row);
+            // Ordering is done in SQL (created_at DESC, id DESC) so 100k-row
+            // tables skip the client-side dayjs sort on every page entry.
+        }, `SELECT * FROM ${dbVars.userPrefix}_friend_log_history ORDER BY created_at DESC, id DESC`);
         return friendLogHistory;
     },
 

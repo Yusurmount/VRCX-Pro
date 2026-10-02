@@ -1441,17 +1441,11 @@ const gameLog = {
     async getGameLogInstancesTime() {
         var instances = new Map();
         await sqliteService.execute((dbRow) => {
-            var time = 0;
-            var location = dbRow[0];
-            if (dbRow[1]) {
-                time = dbRow[1];
-            }
-            var ref = instances.get(location);
-            if (typeof ref !== 'undefined') {
-                time += ref;
-            }
-            instances.set(location, time);
-        }, 'SELECT location, time FROM gamelog_location');
+            var time = dbRow[1];
+            instances.set(dbRow[0], typeof time === 'number' ? time : 0);
+            // Aggregate in SQL: GROUP BY returns one row per location instead
+            // of streaming the whole gamelog_location table over IPC.
+        }, 'SELECT location, SUM(time) FROM gamelog_location GROUP BY location');
         return instances;
     },
 

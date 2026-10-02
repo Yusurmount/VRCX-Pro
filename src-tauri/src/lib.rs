@@ -1,7 +1,9 @@
 use std::io::{BufRead, BufReader, Write};
-use std::process::{Child, ChildStdout, Command, Stdio};
-use std::sync::{Arc, Mutex};
+use std::process::{Child, ChildStdout, ChildStdin, Command, Stdio};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{mpsc, Arc, Mutex};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::fs;
 use tauri::menu::{Menu, MenuItem, Submenu};
 use tauri::tray::TrayIconBuilder;
@@ -9,12 +11,20 @@ use tauri::{Emitter, Manager, State};
 
 mod mcp;
 
+type PendingResponses = Arc<Mutex<HashMap<u64, (u64, mpsc::Sender<Value>)>>>;
+
 struct SidecarProcess {
-    child: Child,
-    reader: BufReader<ChildStdout>,
+    // Kept only so the child process handle stays owned by this struct;
+    // stdin/stdout are split out for concurrent request multiplexing.
+    _child: Child,
+    stdin: Mutex<ChildStdin>,
 }
 
-struct DotnetSidecar(Arc<Mutex<Option<SidecarProcess>>>);
+struct DotnetSidecar {
+    process: Arc<Mutex<Option<SidecarProcess>>>,
+    pending: PendingResponses,
+    next_request_id: AtomicU64,
+}
 
 struct TrayState(Mutex<Option<tauri::tray::TrayIcon>>);
 
@@ -121,7 +131,55 @@ fn get_arch() -> String {
 
 #[tauri::command]
 fn dotnet_status(state: State<'_, DotnetSidecar>) -> bool {
-    state.0.lock().expect("sidecar mutex poisoned").is_some()
+    state.process.lock().expect("sidecar mutex poisoned").is_some()
+}
+
+/// Reads sidecar responses on a dedicated thread and routes each line to the
+/// waiting caller by response id, so concurrent `dotnet_call`s can share the
+/// pipe. An unparsable line is skipped; EOF fails every pending caller instead
+/// of hanging.
+fn spawn_response_reader(stdout: BufReader<ChildStdout>, pending: PendingResponses) {
+    std::thread::spawn(move || {
+        let mut reader = stdout;
+        let mut line = String::new();
+        loop {
+            line.clear();
+            match reader.read_line(&mut line) {
+                Ok(0) | Err(_) => break,
+                Ok(_) => {
+                    match serde_json::from_str::<Value>(line.trim()) {
+                        Ok(mut value) => {
+                            let response_id = value.get("id").and_then(Value::as_u64);
+                            if let Some(response_id) = response_id {
+                                let entry = pending
+                                    .lock()
+                                    .unwrap_or_else(|poisoned| poisoned.into_inner())
+                                    .remove(&response_id);
+                                if let Some((caller_id, sender)) = entry {
+                                    // .NET echoes the id Rust sent; restore the
+                                    // caller's original id to keep the response
+                                    // contract unchanged for the frontend.
+                                    value["id"] = Value::from(caller_id);
+                                    let _ = sender.send(value);
+                                } else {
+                                    eprintln!("[dotnet] response with unknown id {response_id} dropped");
+                                }
+                            } else {
+                                eprintln!("[dotnet] response without id dropped");
+                            }
+                        }
+                        Err(_) => {
+                            eprintln!("[dotnet] unparsable response line skipped");
+                        }
+                    }
+                }
+            }
+        }
+        pending
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clear();
+    });
 }
 
 #[tauri::command]
@@ -132,36 +190,56 @@ async fn dotnet_call(
     method_name: String,
     args: Vec<Value>,
 ) -> Result<Value, String> {
-    // The sidecar I/O is blocking, so run it on the dedicated blocking pool instead
-    // of the main thread / async workers, otherwise the UI freezes while waiting
-    // for a slow (e.g. network) response. The mutex serializes access, so at most
-    // one thread is ever waiting on the sidecar.
-    let inner = Arc::clone(&state.0);
+    // The sidecar I/O is blocking, so run it on the dedicated blocking pool
+    // instead of the main thread / async workers, otherwise the UI freezes
+    // while waiting for a slow (e.g. network) response. The stdin mutex only
+    // covers writing the request line; waiting for the response happens
+    // without holding any lock, so other calls can proceed concurrently.
+    let process = Arc::clone(&state.process);
+    let pending = Arc::clone(&state.pending);
+    let rust_id = state.next_request_id.fetch_add(1, Ordering::Relaxed);
     tauri::async_runtime::spawn_blocking(move || {
-        let mut guard = inner.lock().map_err(|_| "sidecar mutex poisoned".to_string())?;
-        let process = guard
-            .as_mut()
-            .ok_or_else(|| "The .NET sidecar is not running".to_string())?;
-        let stdin = process
-            .child
-            .stdin
-            .as_mut()
-            .ok_or_else(|| "sidecar stdin unavailable".to_string())?;
+        let (sender, receiver) = mpsc::channel();
+        pending
+            .lock()
+            .map_err(|_| "sidecar pending map poisoned".to_string())?
+            .insert(rust_id, (id, sender));
+
         let request = serde_json::json!({
-            "id": id,
+            "id": rust_id,
             "className": class_name,
             "methodName": method_name,
             "args": args
         });
-        writeln!(stdin, "{}", request).map_err(|error| error.to_string())?;
-        stdin.flush().map_err(|error| error.to_string())?;
+        {
+            let result = process
+                .lock()
+                .map_err(|_| "sidecar mutex poisoned".to_string())
+                .and_then(|guard| {
+                    guard
+                        .as_ref()
+                        .ok_or_else(|| "The .NET sidecar is not running".to_string())
+                        .and_then(|sidecar| {
+                            let mut stdin = sidecar
+                                .stdin
+                                .lock()
+                                .map_err(|_| "sidecar stdin mutex poisoned".to_string())?;
+                            writeln!(stdin, "{}", request).map_err(|error| error.to_string())?;
+                            stdin.flush().map_err(|error| error.to_string())
+                        })
+                });
+            if let Err(error) = result {
+                pending
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner())
+                    .remove(&rust_id);
+                return Err(error);
+            }
+        }
 
-        let mut response = String::new();
-        process
-            .reader
-            .read_line(&mut response)
-            .map_err(|error| error.to_string())?;
-        serde_json::from_str(response.trim()).map_err(|error| error.to_string())
+        receiver
+            .recv()
+            .map_err(|_| "The .NET sidecar stopped before responding".to_string())
     })
     .await
     .map_err(|error| error.to_string())?
@@ -181,7 +259,7 @@ fn write_file(file_path: String, bytes: Vec<u8>) -> Result<bool, String> {
 
 #[tauri::command]
 fn start_dotnet_sidecar(app: tauri::AppHandle, state: State<'_, DotnetSidecar>) -> Result<bool, String> {
-    let mut guard = state.0.lock().map_err(|_| "sidecar mutex poisoned".to_string())?;
+    let mut guard = state.process.lock().map_err(|_| "sidecar mutex poisoned".to_string())?;
     if guard.is_some() {
         return Ok(true);
     }
@@ -233,10 +311,16 @@ fn start_dotnet_sidecar(app: tauri::AppHandle, state: State<'_, DotnetSidecar>) 
         .stdout
         .take()
         .ok_or_else(|| "sidecar stdout unavailable".to_string())?;
+    let stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| "sidecar stdin unavailable".to_string())?;
     *guard = Some(SidecarProcess {
-        child,
-        reader: BufReader::new(stdout),
+        _child: child,
+        stdin: Mutex::new(stdin),
     });
+    drop(guard);
+    spawn_response_reader(BufReader::new(stdout), Arc::clone(&state.pending));
     Ok(true)
 }
 
@@ -373,7 +457,11 @@ pub fn run() {
                 let _ = window.emit("launch-command", argv.last().cloned().unwrap_or_default());
             }
         }))
-        .manage(DotnetSidecar(Arc::new(Mutex::new(None))))
+        .manage(DotnetSidecar {
+            process: Arc::new(Mutex::new(None)),
+            pending: Arc::new(Mutex::new(HashMap::new())),
+            next_request_id: AtomicU64::new(1),
+        })
         .manage(TrayState(Mutex::new(None)))
         .manage(CloseToTray(Mutex::new(false)))
         .manage(LaunchArgsState(launch_args))

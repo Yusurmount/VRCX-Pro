@@ -52,8 +52,6 @@
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
 
-    import dayjs from 'dayjs';
-
     import {
         Select,
         SelectContent,
@@ -114,19 +112,9 @@
             return true;
         });
 
-        return filtered.slice().sort((a, b) => {
-            const aTime = typeof a?.created_at === 'string' ? a.created_at : '';
-            const bTime = typeof b?.created_at === 'string' ? b.created_at : '';
-            const aTs = dayjs(aTime).valueOf();
-            const bTs = dayjs(bTime).valueOf();
-            if (Number.isFinite(aTs) && Number.isFinite(bTs) && aTs !== bTs) {
-                return bTs - aTs;
-            }
-
-            const aId = typeof a?.rowId === 'number' ? a.rowId : 0;
-            const bId = typeof b?.rowId === 'number' ? b.rowId : 0;
-            return bId - aId;
-        });
+        // Rows arrive pre-sorted from SQL (created_at DESC, id DESC); filtering
+        // preserves order, so no client-side re-sort of the full table here.
+        return filtered;
     });
 
     watch(

@@ -213,11 +213,14 @@ const database = {
     },
 
     begin() {
-        sqliteService.executeNonQuery('BEGIN');
+        // Return the promise so callers can actually await the transaction
+        // boundary; with concurrent IPC dispatch a fire-and-forget BEGIN would
+        // race the statements that follow it.
+        return sqliteService.executeNonQuery('BEGIN');
     },
 
     commit() {
-        sqliteService.executeNonQuery('COMMIT');
+        return sqliteService.executeNonQuery('COMMIT');
     },
 
     async vacuum() {
