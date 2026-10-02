@@ -464,6 +464,8 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
     → .NET Sidecar (stdin/stdout JSON-RPC)
 ```
 
+**并发模型（按 id 多路复用）：** `dotnet_call` 在 Rust 侧为每个请求分配自增 id，写入 stdin 后即释放锁并等待对应响应；独立读线程按响应 id 将结果路由回等待方（错误响应回显原请求 id）。.NET 侧主循环经 `SemaphoreSlim(32)` 背压后并发执行请求，响应加锁逐行写出。慢 WebApi HTTP 不再阻塞本地 SQLite/KV 请求（关键实验：慢请求期间本地读从 ~4.9s 降为亚毫秒）。SQLite 仍为单连接 + `ReaderWriterLockSlim`（前端事务跨多次 RPC，BEGIN/COMMIT 分行发送，单连接是事务语义基础）。
+
 全局绑定通过 [plugins/interopApi.js](../src/plugins/interopApi.js) 初始化：
 - `window.WebApi` — HTTP 请求代理
 - `window.SQLite` — SQLite 操作代理
@@ -552,6 +554,8 @@ router.isReady() + window.load ─────────┘
 | `SQLite` | SQL 执行（SELECT/INSERT/UPDATE/DELETE/PRAGMA/VACUUM/CREATE/ALTER/DROP），带安全校验 |
 | `AppApi` | 版本信息、语言、剪贴板、启动注册表、更新下载/检查/取消、重启、VRChat 路径 |
 | `WebApi` | HTTP 请求代理（Cookie 管理、图片上传、代理配置、60s 超时） |
+
+**调度模型：** 读循环逐行读取请求，经信号量（32 并发上限）背压后以独立任务执行，响应在锁内逐行写出（乱序完成，按 id 路由）；stdin EOF 时等待全部在途响应写出后再退出。错误响应回显请求 id。
 
 **SQLite 配置：**
 - WAL 模式，5s busy timeout
@@ -687,6 +691,10 @@ npm run format         # 格式化
 # 测试
 npm run test           # 单元测试
 npm run test:coverage  # 覆盖率
+
+# 性能回归工具（保留件；脚本为 Python 标准库，python3 即可运行）
+python scripts/seed-performance-dataset.py --db <path> [--scale N]  # 合成大数据集（自动备份、幂等，种子行 id>=900000000）
+python scripts/measure-ipc-latency.py [--delay-ms 5000]             # 慢 HTTP 期间本地读延迟关键实验（A/B）
 
 # 验证 Tauri 迁移完整性
 npm run verify:tauri
