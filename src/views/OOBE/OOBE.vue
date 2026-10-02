@@ -1,13 +1,14 @@
 <template>
     <div class="oobe bg-background">
-        <!-- Top bar: step counter + segmented progress -->
+        <!-- Top bar: step counter -->
         <header class="oobe-header">
             <span class="oobe-step-counter text-muted-foreground">
                 {{ t('oobe.step_of', { current: currentStep, total: 7 }) }}
             </span>
         </header>
+        <!-- Right edge: vertical dot progress, filling bottom-to-top with the step transitions -->
         <div class="oobe-progress" role="progressbar" :aria-valuenow="currentStep" aria-valuemin="1" aria-valuemax="7">
-            <div v-for="step in 7" :key="step" class="oobe-progress-segment" :class="{ active: step <= currentStep }" />
+            <div v-for="step in 7" :key="step" class="oobe-progress-dot" :class="{ active: step <= currentStep }" />
         </div>
 
         <!-- Left: centered icon with SVG stroke animation -->
@@ -779,16 +780,18 @@
 
     .oobe-progress {
         position: absolute;
-        top: 78px;
-        left: 36px;
         right: 36px;
+        top: 50%;
+        transform: translateY(-50%);
         display: flex;
-        gap: 6px;
+        /* step 1 at the bottom so progress fills upward with the step transitions */
+        flex-direction: column-reverse;
+        gap: 8px;
     }
 
-    .oobe-progress-segment {
-        flex: 1;
-        height: 4px;
+    .oobe-progress-dot {
+        width: 8px;
+        height: 8px;
         border-radius: 999px;
         background-color: var(--muted-foreground);
         opacity: 0.2;
@@ -797,7 +800,7 @@
             background-color 0.3s ease;
     }
 
-    .oobe-progress-segment.active {
+    .oobe-progress-dot.active {
         opacity: 1;
         background-color: var(--primary);
     }
@@ -987,6 +990,10 @@
 
         .oobe-content {
             width: min(440px, calc(100vw - 200px));
+        }
+
+        .oobe-progress {
+            right: 12px;
         }
     }
 
