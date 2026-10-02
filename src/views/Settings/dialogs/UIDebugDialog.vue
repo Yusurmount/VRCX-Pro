@@ -411,6 +411,7 @@
     import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
     import configRepository from '@/services/config';
     import { resetOobe } from '@/services/oobe';
+    import { requestWelcomeDialogShow } from '@/components/onboarding/welcomeDialogState';
     import { getLatestWhatsNewRelease } from '@/shared/constants/whatsNewReleases';
     import { useAppearanceSettingsStore } from '@/stores/settings/appearance';
     import { useModalStore } from '@/stores/modal';
@@ -599,10 +600,12 @@
     }
 
     /**
-     * Reset the personalized welcome-dialog seen flag so WelcomeDialog shows again.
+     * Reset the personalized welcome-dialog seen flag and immediately ask
+     * WelcomeDialog to show again.
      */
     async function showWelcomeDialog() {
         await configRepository.setBool('VRCX_onboarding_personal_welcome_seen', false);
+        requestWelcomeDialogShow();
         router.push('/feed');
     }
 

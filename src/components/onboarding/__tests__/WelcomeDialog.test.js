@@ -28,6 +28,10 @@ vi.mock('../../../stores', () => ({
 }));
 
 import WelcomeDialog from '../WelcomeDialog.vue';
+import {
+    requestWelcomeDialogShow,
+    welcomeDialogShowRequest
+} from '../welcomeDialogState';
 
 const i18n = createI18n({
     locale: 'en',
@@ -80,6 +84,7 @@ describe('WelcomeDialog.vue', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.useFakeTimers();
+        welcomeDialogShowRequest.value = 0;
         currentUser.value = {
             id: 'usr_123',
             displayName: 'TestUser',
@@ -136,5 +141,27 @@ describe('WelcomeDialog.vue', () => {
             true
         );
         expect(wrapper.find('.dialog-stub').exists()).toBe(false);
+    });
+
+    test('UI debug show request re-opens the dialog after dismiss', async () => {
+        mocks.getBool.mockResolvedValue(false);
+
+        const wrapper = mountDialog();
+        await passOpenDelay(wrapper);
+
+        const cta = wrapper
+            .findAll('button')
+            .find((b) => b.text() === en.onboarding.welcome.cta);
+        await cta.trigger('click');
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('.dialog-stub').exists()).toBe(false);
+
+        // Simulate the UI debug tool: reset the seen flag, then request a show.
+        mocks.getBool.mockResolvedValue(false);
+        requestWelcomeDialogShow();
+        await wrapper.vm.$nextTick();
+        await passOpenDelay(wrapper);
+
+        expect(wrapper.find('.dialog-stub').exists()).toBe(true);
     });
 });

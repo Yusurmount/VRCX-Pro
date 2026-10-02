@@ -27,7 +27,7 @@
 </template>
 
 <script setup>
-    import { computed, onMounted, ref } from 'vue';
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useI18n } from 'vue-i18n';
 
     import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -36,12 +36,15 @@
     import configRepository from '../../services/config';
     import { useUserDisplay } from '../../composables/useUserDisplay';
     import { useUserStore } from '../../stores';
+    import { welcomeDialogShowRequest } from './welcomeDialogState';
 
     const WELCOME_SEEN_KEY = 'VRCX_onboarding_personal_welcome_seen';
+    const OPEN_DELAY_MS = 800;
 
     const { t } = useI18n();
 
     const isOpen = ref(false);
+    let openTimer = null;
 
     const userStore = useUserStore();
     const { userImage } = useUserDisplay();
@@ -50,15 +53,34 @@
     const avatarUrl = computed(() => userImage(userStore.currentUser, true));
     const avatarInitial = computed(() => displayName.value.trim().charAt(0) || '?');
 
-    onMounted(async () => {
+    onMounted(() => {
+        maybeOpen();
+    });
+
+    // UI debug tool: reset the seen flag, then bump the request to re-open
+    // the dialog immediately instead of waiting for the next app start.
+    watch(welcomeDialogShowRequest, () => {
+        maybeOpen();
+    });
+
+    /**
+     * Open the dialog after a short delay unless it is already shown, already
+     * scheduled, or the seen flag is set.
+     * @returns {Promise<void>}
+     */
+    async function maybeOpen() {
+        if (isOpen.value || openTimer) {
+            return;
+        }
         const seen = await configRepository.getBool(WELCOME_SEEN_KEY, false);
         if (seen) {
             return;
         }
-        setTimeout(() => {
+        openTimer = setTimeout(() => {
+            openTimer = null;
             isOpen.value = true;
-        }, 800);
-    });
+        }, OPEN_DELAY_MS);
+    }
 
     /**
      * Close the dialog and mark the personalized welcome as seen so it
