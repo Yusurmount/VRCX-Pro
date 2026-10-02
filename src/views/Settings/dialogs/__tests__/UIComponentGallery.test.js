@@ -57,6 +57,7 @@ describe('UIComponentGallery', () => {
             'Spinner',
             'Toggle',
             'Radio Group',
+            'Radio Card',
             'Tabs',
             'KBD (Keyboard)',
             'AlertDialog',

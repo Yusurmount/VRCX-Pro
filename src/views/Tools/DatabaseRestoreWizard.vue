@@ -16,32 +16,16 @@
                     {{ t('view.settings.advanced.advanced.db_import.wizard_mode_desc') }}
                 </p>
                 <RadioGroup v-model="restoreMode" class="grid gap-2">
-                    <div
-                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                        :class="restoreMode === 'incremental' ? 'border-primary' : ''">
-                        <RadioGroupItem id="rw-mode-incremental" value="incremental" />
-                        <div class="flex flex-col gap-1">
-                            <Label for="rw-mode-incremental" class="text-sm font-medium cursor-pointer">
-                                {{ t('view.settings.advanced.advanced.db_import.mode_incremental') }}
-                            </Label>
-                            <p class="text-xs text-muted-foreground">
-                                {{ t('view.settings.advanced.advanced.db_import.mode_incremental_desc') }}
-                            </p>
-                        </div>
-                    </div>
-                    <div
-                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                        :class="restoreMode === 'full' ? 'border-primary' : ''">
-                        <RadioGroupItem id="rw-mode-full" value="full" />
-                        <div class="flex flex-col gap-1">
-                            <Label for="rw-mode-full" class="text-sm font-medium cursor-pointer">
-                                {{ t('view.settings.advanced.advanced.db_import.mode_full') }}
-                            </Label>
-                            <p class="text-xs text-muted-foreground">
-                                {{ t('view.settings.advanced.advanced.db_import.mode_full_desc') }}
-                            </p>
-                        </div>
-                    </div>
+                    <RadioCard
+                        id="rw-mode-incremental"
+                        value="incremental"
+                        :title="t('view.settings.advanced.advanced.db_import.mode_incremental')"
+                        :description="t('view.settings.advanced.advanced.db_import.mode_incremental_desc')" />
+                    <RadioCard
+                        id="rw-mode-full"
+                        value="full"
+                        :title="t('view.settings.advanced.advanced.db_import.mode_full')"
+                        :description="t('view.settings.advanced.advanced.db_import.mode_full_desc')" />
                 </RadioGroup>
                 <div class="wiz-actions">
                     <Button size="lg" @click="step = 2">
@@ -68,32 +52,18 @@
                             {{ t('view.settings.advanced.advanced.db_import.strategy_conflict_label') }}
                         </Label>
                         <RadioGroup v-model="conflictStrategy" class="grid gap-2">
-                            <div
-                                class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                                :class="conflictStrategy === 'overwrite' ? 'border-primary' : ''">
-                                <RadioGroupItem id="rw-conflict-overwrite" value="overwrite" />
-                                <div class="flex flex-col gap-1">
-                                    <Label for="rw-conflict-overwrite" class="text-sm font-medium cursor-pointer">
-                                        {{ t('view.settings.advanced.advanced.db_import.strategy_overwrite') }}
-                                    </Label>
-                                    <p class="text-xs text-muted-foreground">
-                                        {{ t('view.settings.advanced.advanced.db_import.strategy_overwrite_desc') }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div
-                                class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                                :class="conflictStrategy === 'skip' ? 'border-primary' : ''">
-                                <RadioGroupItem id="rw-conflict-skip" value="skip" />
-                                <div class="flex flex-col gap-1">
-                                    <Label for="rw-conflict-skip" class="text-sm font-medium cursor-pointer">
-                                        {{ t('view.settings.advanced.advanced.db_import.strategy_skip_existing') }}
-                                    </Label>
-                                    <p class="text-xs text-muted-foreground">
-                                        {{ t('view.settings.advanced.advanced.db_import.strategy_skip_existing_desc') }}
-                                    </p>
-                                </div>
-                            </div>
+                            <RadioCard
+                                id="rw-conflict-overwrite"
+                                value="overwrite"
+                                :title="t('view.settings.advanced.advanced.db_import.strategy_overwrite')"
+                                :description="t('view.settings.advanced.advanced.db_import.strategy_overwrite_desc')" />
+                            <RadioCard
+                                id="rw-conflict-skip"
+                                value="skip"
+                                :title="t('view.settings.advanced.advanced.db_import.strategy_skip_existing')"
+                                :description="
+                                    t('view.settings.advanced.advanced.db_import.strategy_skip_existing_desc')
+                                " />
                         </RadioGroup>
                     </div>
                     <div class="space-y-2">
@@ -101,32 +71,16 @@
                             {{ t('view.settings.advanced.advanced.db_import.strategy_new_label') }}
                         </Label>
                         <RadioGroup v-model="newDataStrategy" class="grid gap-2">
-                            <div
-                                class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                                :class="newDataStrategy === 'add' ? 'border-primary' : ''">
-                                <RadioGroupItem id="rw-new-add" value="add" />
-                                <div class="flex flex-col gap-1">
-                                    <Label for="rw-new-add" class="text-sm font-medium cursor-pointer">
-                                        {{ t('view.settings.advanced.advanced.db_import.strategy_add') }}
-                                    </Label>
-                                    <p class="text-xs text-muted-foreground">
-                                        {{ t('view.settings.advanced.advanced.db_import.strategy_add_desc') }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div
-                                class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                                :class="newDataStrategy === 'skip' ? 'border-primary' : ''">
-                                <RadioGroupItem id="rw-new-skip" value="skip" />
-                                <div class="flex flex-col gap-1">
-                                    <Label for="rw-new-skip" class="text-sm font-medium cursor-pointer">
-                                        {{ t('view.settings.advanced.advanced.db_import.strategy_skip_new') }}
-                                    </Label>
-                                    <p class="text-xs text-muted-foreground">
-                                        {{ t('view.settings.advanced.advanced.db_import.strategy_skip_new_desc') }}
-                                    </p>
-                                </div>
-                            </div>
+                            <RadioCard
+                                id="rw-new-add"
+                                value="add"
+                                :title="t('view.settings.advanced.advanced.db_import.strategy_add')"
+                                :description="t('view.settings.advanced.advanced.db_import.strategy_add_desc')" />
+                            <RadioCard
+                                id="rw-new-skip"
+                                value="skip"
+                                :title="t('view.settings.advanced.advanced.db_import.strategy_skip_new')"
+                                :description="t('view.settings.advanced.advanced.db_import.strategy_skip_new_desc')" />
                         </RadioGroup>
                     </div>
                 </template>
@@ -316,7 +270,8 @@
     import { Button } from '@/components/ui/button';
     import { Switch } from '@/components/ui/switch';
     import { Label } from '@/components/ui/label';
-    import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+    import { RadioGroup } from '@/components/ui/radio-group';
+    import { RadioCard } from '@/components/ui/radio-card';
     import { Alert, AlertDescription } from '@/components/ui/alert';
     import WizardShell from '@/components/wizard/WizardShell.vue';
 

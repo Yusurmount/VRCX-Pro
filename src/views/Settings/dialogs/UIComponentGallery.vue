@@ -1,4 +1,4 @@
-﻿<template>
+<template>
     <div class="space-y-6">
         <!-- Buttons -->
         <section>
@@ -179,6 +179,21 @@
                     <RadioGroupItem value="option3" id="gallery-r3" />
                     <label for="gallery-r3" class="text-sm">Option 3</label>
                 </div>
+            </RadioGroup>
+        </section>
+
+        <Separator />
+
+        <!-- Radio Card -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Radio Card</h3>
+            <RadioGroup default-value="card1" class="max-w-sm grid gap-2">
+                <RadioCard
+                    id="gallery-rc1"
+                    value="card1"
+                    title="Card option 1"
+                    description="Whole card is clickable and the checked card follows the radio state" />
+                <RadioCard id="gallery-rc2" value="card2" title="Card option 2" description="Description is optional" />
             </RadioGroup>
         </section>
 
@@ -924,6 +939,7 @@
     import { Kbd } from '@/components/ui/kbd';
     import { Progress } from '@/components/ui/progress';
     import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+    import { RadioCard } from '@/components/ui/radio-card';
     import { Separator } from '@/components/ui/separator';
     import { Skeleton } from '@/components/ui/skeleton';
     import { Spinner } from '@/components/ui/spinner';
