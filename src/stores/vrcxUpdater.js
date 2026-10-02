@@ -397,6 +397,7 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         }
         logWebRequest('[EXTERNAL GET]', url, `(${response.status})`, json);
         const releases = [];
+        const stableReleases = [];
         if (typeof json !== 'object' || json === null || json.message) {
             updateError.value = t('message.vrcx_updater.failed', {
                 message:
@@ -409,6 +410,7 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
             if (release.prerelease) {
                 continue;
             }
+            stableReleases.push(release);
             assetLoop: for (const asset of release.assets) {
                 if (asset.state === 'uploaded') {
                     releases.push(release);
@@ -417,9 +419,11 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
             }
         }
         D.releases = releases;
+        // Latest = newest non-prerelease release, even if it has no
+        // downloadable assets yet (assets only gate the download step).
         const latestRelease =
-            releases.length > 0
-                ? releases[0]
+            stableReleases.length > 0
+                ? stableReleases[0]
                 : json.length > 0
                   ? json[0]
                   : null;

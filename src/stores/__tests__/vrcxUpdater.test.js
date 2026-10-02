@@ -129,6 +129,42 @@ describe('useVRCXUpdaterStore.setAutoUpdateVRCX', () => {
         expect(store.pendingVRCXUpdate).toBe(true);
     });
 
+    test('treats a newer release without assets as the latest version', async () => {
+        const store = useVRCXUpdaterStore();
+        globalThis.webApiService.execute.mockResolvedValue({
+            status: 200,
+            data: JSON.stringify([
+                {
+                    name: 'VRCX-Pro 2026.3.0',
+                    tag_name: 'v2026.3.0',
+                    body: 'Empty build without assets',
+                    assets: []
+                },
+                {
+                    name: 'VRCX-Pro 2026.2.0',
+                    tag_name: 'v2026.2.0',
+                    body: 'Previous release with assets',
+                    assets: [
+                        {
+                            state: 'uploaded',
+                            name: 'VRCX-Pro.exe',
+                            content_type: 'application/x-msdownload',
+                            browser_download_url:
+                                'https://github.com/Yusurmount/VRCX-Pro/releases/download/v2026.2.0/VRCX-Pro.exe',
+                            digest: 'sha256:abcdef',
+                            size: 1234
+                        }
+                    ]
+                }
+            ])
+        });
+
+        await store.showChangeLogDialog({ prefetch: true });
+
+        expect(store.latestAppVersion).toBe('v2026.3.0');
+        expect(store.pendingVRCXUpdate).toBe(true);
+    });
+
     test('does not mark an update when the current version exceeds the release', async () => {
         const store = useVRCXUpdaterStore();
         store.appVersion = 'VRCX-Pro 2026.3.0';
