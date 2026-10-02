@@ -277,6 +277,36 @@
                     <div v-else-if="currentStep === 6" class="oobe-step-panel">
                         <h2 class="oobe-title text-foreground">{{ t('oobe.recovery.title') }}</h2>
                         <p class="oobe-desc text-muted-foreground">{{ t('oobe.recovery.subtitle') }}</p>
+                        <div class="w-full">
+                            <RadioGroup v-model="recoverMode" class="grid gap-2">
+                                <div
+                                    class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                                    :class="recoverMode === 'incremental' ? 'border-primary' : ''">
+                                    <RadioGroupItem id="oobe-mode-incremental" value="incremental" />
+                                    <div class="flex flex-col gap-1">
+                                        <Label for="oobe-mode-incremental" class="text-sm font-medium cursor-pointer">
+                                            {{ t('view.settings.advanced.advanced.db_import.mode_incremental') }}
+                                        </Label>
+                                        <p class="text-xs text-muted-foreground">
+                                            {{ t('view.settings.advanced.advanced.db_import.mode_incremental_desc') }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                                    :class="recoverMode === 'full' ? 'border-primary' : ''">
+                                    <RadioGroupItem id="oobe-mode-full" value="full" />
+                                    <div class="flex flex-col gap-1">
+                                        <Label for="oobe-mode-full" class="text-sm font-medium cursor-pointer">
+                                            {{ t('view.settings.advanced.advanced.db_import.mode_full') }}
+                                        </Label>
+                                        <p class="text-xs text-muted-foreground">
+                                            {{ t('view.settings.advanced.advanced.db_import.mode_full_desc') }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </RadioGroup>
+                        </div>
                         <Button size="lg" class="w-full" :disabled="recovering" @click="handleRecoverImport">
                             <Loader2 v-if="recovering" class="size-4 animate-spin" />
                             {{ t('oobe.recovery.import') }}
@@ -322,6 +352,8 @@
     import { useI18n } from 'vue-i18n';
 
     import { Button } from '@/components/ui/button';
+    import { Label } from '@/components/ui/label';
+    import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
     import { Switch } from '@/components/ui/switch';
     import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -653,6 +685,7 @@
     }
 
     const recovering = ref(false);
+    const recoverMode = ref('incremental');
 
     /**
      * Play a closing animation then navigate away.
@@ -690,7 +723,8 @@
             }
             const importResult = await executeImport(result.data, {
                 conflictStrategy: 'overwrite',
-                newDataStrategy: 'add'
+                newDataStrategy: 'add',
+                mode: recoverMode.value
             });
             if (importResult.success) {
                 toast.success(

@@ -119,91 +119,128 @@
                     </p>
 
                     <div class="space-y-4">
-                        <!-- Existing data strategy -->
+                        <!-- Restore mode -->
                         <div class="space-y-2">
                             <Label class="text-sm font-medium">
-                                {{ t('view.settings.advanced.advanced.db_import.strategy_conflict_label') }}
+                                {{ t('view.settings.advanced.advanced.db_import.mode_label') }}
                             </Label>
-                            <RadioGroup v-model="conflictStrategy" class="grid gap-2">
+                            <RadioGroup v-model="restoreMode" class="grid gap-2">
                                 <div
                                     class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                                    :class="conflictStrategy === 'overwrite' ? 'border-primary' : ''">
-                                    <RadioGroupItem id="conflict-overwrite" value="overwrite" />
+                                    :class="restoreMode === 'incremental' ? 'border-primary' : ''">
+                                    <RadioGroupItem id="mode-incremental" value="incremental" />
                                     <div class="flex flex-col gap-1">
-                                        <Label for="conflict-overwrite" class="text-sm font-medium cursor-pointer">
-                                            {{ t('view.settings.advanced.advanced.db_import.strategy_overwrite') }}
+                                        <Label for="mode-incremental" class="text-sm font-medium cursor-pointer">
+                                            {{ t('view.settings.advanced.advanced.db_import.mode_incremental') }}
                                         </Label>
                                         <p class="text-xs text-muted-foreground">
-                                            {{
-                                                t(
-                                                    'view.settings.advanced.advanced.db_import.strategy_overwrite_desc'
-                                                )
-                                            }}
+                                            {{ t('view.settings.advanced.advanced.db_import.mode_incremental_desc') }}
                                         </p>
                                     </div>
                                 </div>
                                 <div
                                     class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                                    :class="conflictStrategy === 'skip' ? 'border-primary' : ''">
-                                    <RadioGroupItem id="conflict-skip" value="skip" />
+                                    :class="restoreMode === 'full' ? 'border-primary' : ''">
+                                    <RadioGroupItem id="mode-full" value="full" />
                                     <div class="flex flex-col gap-1">
-                                        <Label for="conflict-skip" class="text-sm font-medium cursor-pointer">
-                                            {{
-                                                t(
-                                                    'view.settings.advanced.advanced.db_import.strategy_skip_existing'
-                                                )
-                                            }}
+                                        <Label for="mode-full" class="text-sm font-medium cursor-pointer">
+                                            {{ t('view.settings.advanced.advanced.db_import.mode_full') }}
                                         </Label>
                                         <p class="text-xs text-muted-foreground">
-                                            {{
-                                                t(
-                                                    'view.settings.advanced.advanced.db_import.strategy_skip_existing_desc'
-                                                )
-                                            }}
+                                            {{ t('view.settings.advanced.advanced.db_import.mode_full_desc') }}
                                         </p>
                                     </div>
                                 </div>
                             </RadioGroup>
                         </div>
 
-                        <!-- New data strategy -->
-                        <div class="space-y-2">
-                            <Label class="text-sm font-medium">
-                                {{ t('view.settings.advanced.advanced.db_import.strategy_new_label') }}
-                            </Label>
-                            <RadioGroup v-model="newDataStrategy" class="grid gap-2">
-                                <div
-                                    class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                                    :class="newDataStrategy === 'add' ? 'border-primary' : ''">
-                                    <RadioGroupItem id="new-add" value="add" />
-                                    <div class="flex flex-col gap-1">
-                                        <Label for="new-add" class="text-sm font-medium cursor-pointer">
-                                            {{ t('view.settings.advanced.advanced.db_import.strategy_add') }}
-                                        </Label>
-                                        <p class="text-xs text-muted-foreground">
-                                            {{ t('view.settings.advanced.advanced.db_import.strategy_add_desc') }}
-                                        </p>
+                        <template v-if="restoreMode === 'incremental'">
+                            <!-- Existing data strategy -->
+                            <div class="space-y-2">
+                                <Label class="text-sm font-medium">
+                                    {{ t('view.settings.advanced.advanced.db_import.strategy_conflict_label') }}
+                                </Label>
+                                <RadioGroup v-model="conflictStrategy" class="grid gap-2">
+                                    <div
+                                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                                        :class="conflictStrategy === 'overwrite' ? 'border-primary' : ''">
+                                        <RadioGroupItem id="conflict-overwrite" value="overwrite" />
+                                        <div class="flex flex-col gap-1">
+                                            <Label for="conflict-overwrite" class="text-sm font-medium cursor-pointer">
+                                                {{ t('view.settings.advanced.advanced.db_import.strategy_overwrite') }}
+                                            </Label>
+                                            <p class="text-xs text-muted-foreground">
+                                                {{
+                                                    t(
+                                                        'view.settings.advanced.advanced.db_import.strategy_overwrite_desc'
+                                                    )
+                                                }}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div
-                                    class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                                    :class="newDataStrategy === 'skip' ? 'border-primary' : ''">
-                                    <RadioGroupItem id="new-skip" value="skip" />
-                                    <div class="flex flex-col gap-1">
-                                        <Label for="new-skip" class="text-sm font-medium cursor-pointer">
-                                            {{ t('view.settings.advanced.advanced.db_import.strategy_skip_new') }}
-                                        </Label>
-                                        <p class="text-xs text-muted-foreground">
-                                            {{
-                                                t(
-                                                    'view.settings.advanced.advanced.db_import.strategy_skip_new_desc'
-                                                )
-                                            }}
-                                        </p>
+                                    <div
+                                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                                        :class="conflictStrategy === 'skip' ? 'border-primary' : ''">
+                                        <RadioGroupItem id="conflict-skip" value="skip" />
+                                        <div class="flex flex-col gap-1">
+                                            <Label for="conflict-skip" class="text-sm font-medium cursor-pointer">
+                                                {{
+                                                    t(
+                                                        'view.settings.advanced.advanced.db_import.strategy_skip_existing'
+                                                    )
+                                                }}
+                                            </Label>
+                                            <p class="text-xs text-muted-foreground">
+                                                {{
+                                                    t(
+                                                        'view.settings.advanced.advanced.db_import.strategy_skip_existing_desc'
+                                                    )
+                                                }}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            </RadioGroup>
-                        </div>
+                                </RadioGroup>
+                            </div>
+
+                            <!-- New data strategy -->
+                            <div class="space-y-2">
+                                <Label class="text-sm font-medium">
+                                    {{ t('view.settings.advanced.advanced.db_import.strategy_new_label') }}
+                                </Label>
+                                <RadioGroup v-model="newDataStrategy" class="grid gap-2">
+                                    <div
+                                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                                        :class="newDataStrategy === 'add' ? 'border-primary' : ''">
+                                        <RadioGroupItem id="new-add" value="add" />
+                                        <div class="flex flex-col gap-1">
+                                            <Label for="new-add" class="text-sm font-medium cursor-pointer">
+                                                {{ t('view.settings.advanced.advanced.db_import.strategy_add') }}
+                                            </Label>
+                                            <p class="text-xs text-muted-foreground">
+                                                {{ t('view.settings.advanced.advanced.db_import.strategy_add_desc') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                                        :class="newDataStrategy === 'skip' ? 'border-primary' : ''">
+                                        <RadioGroupItem id="new-skip" value="skip" />
+                                        <div class="flex flex-col gap-1">
+                                            <Label for="new-skip" class="text-sm font-medium cursor-pointer">
+                                                {{ t('view.settings.advanced.advanced.db_import.strategy_skip_new') }}
+                                            </Label>
+                                            <p class="text-xs text-muted-foreground">
+                                                {{
+                                                    t(
+                                                        'view.settings.advanced.advanced.db_import.strategy_skip_new_desc'
+                                                    )
+                                                }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </RadioGroup>
+                            </div>
+                        </template>
 
                         <!-- Compatibility options -->
                         <div class="space-y-2">
@@ -254,6 +291,13 @@
                         </AlertDescription>
                     </Alert>
 
+                    <Alert v-if="restoreMode === 'full'" variant="warning" class="mb-0">
+                        <TriangleAlert class="h-4 w-4" />
+                        <AlertDescription class="text-sm">
+                            {{ t('view.settings.advanced.advanced.db_import.confirm_full_warning') }}
+                        </AlertDescription>
+                    </Alert>
+
                     <div class="rounded-md border p-3 space-y-2 text-sm">
                         <div class="flex justify-between">
                             <span class="text-muted-foreground">{{
@@ -270,37 +314,43 @@
                         <div class="border-t pt-2 mt-2">
                             <div class="flex justify-between">
                                 <span class="text-muted-foreground">{{
-                                    t('view.settings.advanced.advanced.db_import.strategy_conflict_label')
+                                    t('view.settings.advanced.advanced.db_import.mode_label')
                                 }}</span>
                                 <span class="font-medium">{{
-                                    conflictStrategy === 'overwrite'
-                                        ? t('view.settings.advanced.advanced.db_import.strategy_overwrite')
-                                        : t('view.settings.advanced.advanced.db_import.strategy_skip_existing')
+                                    restoreMode === 'full'
+                                        ? t('view.settings.advanced.advanced.db_import.mode_full')
+                                        : t('view.settings.advanced.advanced.db_import.mode_incremental')
                                 }}</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-muted-foreground">{{
-                                    t('view.settings.advanced.advanced.db_import.strategy_new_label')
-                                }}</span>
-                                <span class="font-medium">{{
-                                    newDataStrategy === 'add'
-                                        ? t('view.settings.advanced.advanced.db_import.strategy_add')
-                                        : t('view.settings.advanced.advanced.db_import.strategy_skip_new')
-                                }}</span>
-                            </div>
+                            <template v-if="restoreMode === 'incremental'">
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">{{
+                                        t('view.settings.advanced.advanced.db_import.strategy_conflict_label')
+                                    }}</span>
+                                    <span class="font-medium">{{
+                                        conflictStrategy === 'overwrite'
+                                            ? t('view.settings.advanced.advanced.db_import.strategy_overwrite')
+                                            : t('view.settings.advanced.advanced.db_import.strategy_skip_existing')
+                                    }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">{{
+                                        t('view.settings.advanced.advanced.db_import.strategy_new_label')
+                                    }}</span>
+                                    <span class="font-medium">{{
+                                        newDataStrategy === 'add'
+                                            ? t('view.settings.advanced.advanced.db_import.strategy_add')
+                                            : t('view.settings.advanced.advanced.db_import.strategy_skip_new')
+                                    }}</span>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </template>
 
                 <!-- Importing Phase -->
                 <template v-else-if="importPhase === 'importing'">
-                    <p class="text-sm">
-                        {{
-                            t('view.settings.advanced.advanced.db_import.importing', {
-                                progress: Math.round(importProgressPercent)
-                            })
-                        }}
-                    </p>
+                    <p class="text-sm">{{ importProgressText }}</p>
                     <div class="w-full bg-secondary rounded-full h-2">
                         <div
                             class="bg-primary h-2 rounded-full transition-all"
@@ -456,11 +506,7 @@
                 <!-- Importing: disabled -->
                 <template v-else-if="importPhase === 'importing'">
                     <Button variant="outline" size="sm" disabled>
-                        {{
-                            t('view.settings.advanced.advanced.db_import.importing', {
-                                progress: Math.round(importProgressPercent)
-                            })
-                        }}
+                        {{ importProgressText }}
                     </Button>
                 </template>
 
@@ -690,10 +736,20 @@
     const importPhase = ref('confirm');
     const importInProgress = ref(false);
     const importProgressPercent = ref(0);
+    // 'clearing' | 'importing' — which step the progress bar is showing
+    const importProgressPhase = ref('importing');
 
+    const restoreMode = ref('incremental');
     const conflictStrategy = ref('overwrite');
     const newDataStrategy = ref('add');
     const allowUserMismatch = ref(false);
+
+    const importProgressText = computed(() => {
+        const progress = Math.round(importProgressPercent.value);
+        return importProgressPhase.value === 'clearing'
+            ? t('view.settings.advanced.advanced.db_import.clearing', { progress })
+            : t('view.settings.advanced.advanced.db_import.importing', { progress });
+    });
 
     const importDataCache = shallowRef(null);
     const importFileSummary = ref(null);
@@ -714,6 +770,8 @@
     function confirmImport() {
         importPhase.value = 'strategy';
         importProgressPercent.value = 0;
+        importProgressPhase.value = 'importing';
+        restoreMode.value = 'incremental';
         conflictStrategy.value = 'overwrite';
         newDataStrategy.value = 'add';
         allowUserMismatch.value = false;
@@ -776,9 +834,14 @@
 
         const result = await executeImport(
             importDataCache.value,
-            { conflictStrategy: conflictStrategy.value, newDataStrategy: newDataStrategy.value },
+            {
+                conflictStrategy: conflictStrategy.value,
+                newDataStrategy: newDataStrategy.value,
+                mode: restoreMode.value
+            },
             (state) => {
-                if (state.phase === 'importing') {
+                if (state.phase === 'importing' || state.phase === 'clearing') {
+                    importProgressPhase.value = state.phase;
                     importProgressPercent.value = state.progress * 100;
                 }
             }
