@@ -112,6 +112,7 @@
     import { SidebarInset, SidebarProvider } from '../../components/ui/sidebar';
     import { useAppearanceSettingsStore } from '../../stores';
     import { useMainLayoutResizable } from '../../composables/useMainLayoutResizable';
+    import { useNavAutoCollapse } from '../../composables/useNavAutoCollapse';
     import { watchState } from '../../services/watchState';
 
     const AvatarImportDialog = defineAsyncComponent(() => import('../Favorites/dialogs/AvatarImportDialog.vue'));
@@ -150,6 +151,8 @@
 
     const appearanceSettingsStore = useAppearanceSettingsStore();
     const { navWidth, isNavCollapsed, isSidePanelCollapsed } = storeToRefs(appearanceSettingsStore);
+
+    const { stop: stopNavAutoCollapse } = useNavAutoCollapse(appearanceSettingsStore);
 
     const sidebarOpen = computed(() => !isNavCollapsed.value);
 
@@ -197,6 +200,7 @@
 
     onUnmounted(() => {
         cleanupNavResize?.();
+        stopNavAutoCollapse();
     });
 
     const {

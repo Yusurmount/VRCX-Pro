@@ -108,6 +108,8 @@ export const useAppearanceSettingsStore = defineStore(
         const currentCulture = ref('');
         const notificationIconDot = ref(false);
         const isNavCollapsed = ref(true);
+        // 窗口过窄触发的自动折叠接管标记，仅内存态、不持久化
+        const navAutoCollapsed = ref(false);
         const isSidePanelCollapsed = ref(false);
         const isSideBarTabShow = computed(() => {
             const currentRouteName = router.currentRoute.value?.name;
@@ -838,6 +840,10 @@ export const useAppearanceSettingsStore = defineStore(
          */
         function setNavCollapsed(collapsed) {
             isNavCollapsed.value = collapsed;
+            if (!collapsed) {
+                // 展开（无论来自 UI 还是自动恢复）都视为接管自动折叠
+                navAutoCollapsed.value = false;
+            }
             configRepository.setBool('VRCX_navIsCollapsed', collapsed);
         }
         /**
@@ -845,6 +851,21 @@ export const useAppearanceSettingsStore = defineStore(
          */
         function toggleNavCollapsed() {
             setNavCollapsed(!isNavCollapsed.value);
+        }
+        /**
+         * 窗口宽度向下穿越阈值时调用：折叠导航并记录接管标记，供恢复时判断。
+         */
+        function autoCollapseNav() {
+            if (isNavCollapsed.value) return;
+            setNavCollapsed(true);
+            navAutoCollapsed.value = true;
+        }
+        /**
+         * 窗口宽度向上穿越阈值时调用：仅当折叠是自动触发的才恢复展开。
+         */
+        function autoExpandNav() {
+            if (!navAutoCollapsed.value) return;
+            setNavCollapsed(false);
         }
         /**
          *
@@ -1376,6 +1397,8 @@ export const useAppearanceSettingsStore = defineStore(
             applyTableDensity,
             setNavCollapsed,
             toggleNavCollapsed,
+            autoCollapseNav,
+            autoExpandNav,
             setSidePanelCollapsed,
             setAppFontFamily,
             customFontFamily,
