@@ -102,9 +102,20 @@ describe('gameLog.getFriendshipMetrics', () => {
     const MY_LOC = 'wrld_a:1~region(jp)';
     const OTHER_LOC = 'wrld_b:2~region(jp)';
 
-    function mockSessionQueries({ mySessions = [], friendSessions = [] }) {
+    function mockSessionQueries({
+        mySessions = [],
+        friendSessions = [],
+        friendNumbers = []
+    }) {
         mocks.execute.mockImplementation(async (callback, sql) => {
-            const rows = sql.includes('AS src') ? friendSessions : mySessions;
+            let rows;
+            if (sql.includes('friend_log_current')) {
+                rows = friendNumbers;
+            } else if (sql.includes('AS src')) {
+                rows = friendSessions;
+            } else {
+                rows = mySessions;
+            }
             for (const row of rows) callback(row);
         });
     }
@@ -137,15 +148,11 @@ describe('gameLog.getFriendshipMetrics', () => {
         });
 
         const [row] = await gameLog.getFriendshipMetrics();
-        expect(row).toEqual({
-            userId: 'usr_f1',
-            displayName: 'Friend One',
-            totalTime: 15 * 60 * 1000,
-            joinCount: 1,
-            firstSeen: '2026-10-01T10:00:00.000Z',
-            lastSeen: '2026-10-01T10:15:00.000Z',
-            distinctDays: 1
-        });
+        expect(row.totalTime).toBe(15 * 60 * 1000);
+        expect(row.joinCount).toBe(1);
+        expect(row.firstSeen).toBe('2026-10-01T10:00:00.000Z');
+        expect(row.lastSeen).toBe('2026-10-01T10:15:00.000Z');
+        expect(row.distinctDays).toBe(1);
     });
 
     test('keeps a game-log session even when I have no leave row for it', async () => {
@@ -194,6 +201,88 @@ describe('gameLog.getFriendshipMetrics', () => {
         const rows = await gameLog.getFriendshipMetrics();
         expect(rows.map((r) => r.userId)).toEqual(['usr_big', 'usr_small']);
         expect(rows[0].totalTime).toBeGreaterThan(rows[1].totalTime);
+    });
+
+    test('chains reconnect gaps under four minutes into one meeting', async () => {
+        mockSessionQueries({
+            mySessions: [[MY_LOC, '2026-10-01T12:00:00.000Z', 3600000]],
+            friendSessions: [
+                // 11:00 -> 11:10 and 11:12 -> 11:20: a 2-minute drop.
+                ['usr_f4', 'Friend Four', MY_LOC, '2026-10-01T11:10:00.000Z', 600000, 1],
+                ['usr_f4', 'Friend Four', MY_LOC, '2026-10-01T11:20:00.000Z', 480000, 1]
+            ]
+        });
+
+        const [row] = await gameLog.getFriendshipMetrics();
+        expect(row.joinCount).toBe(1);
+        // Real blocks sum; the 2-minute gap is never invented into total time.
+        expect(row.totalTime).toBe((600000 + 480000));
+    });
+
+    test('counts a gap over four minutes as a separate meeting', async () => {
+        mockSessionQueries({
+            mySessions: [[MY_LOC, '2026-10-01T12:00:00.000Z', 3600000]],
+            friendSessions: [
+                ['usr_f5', 'Friend Five', MY_LOC, '2026-10-01T11:10:00.000Z', 600000, 1],
+                // 11:10 end, next starts 11:20: a 10-minute gap.
+                ['usr_f5', 'Friend Five', MY_LOC, '2026-10-01T11:30:00.000Z', 600000, 1]
+            ]
+        });
+
+        const [row] = await gameLog.getFriendshipMetrics();
+        expect(row.joinCount).toBe(2);
+    });
+
+    test('reports trend windows, week coverage, friend number, and initiative', async () => {
+        const now = Date.now();
+        const day = 24 * 60 * 60 * 1000;
+        // Feed rows describe the friend's dwell: [leaveTime, durationMs].
+        // My session always ends at the same leave time.
+        // Friend start vs my start decides who showed up second.
+        const meeting = (offsetDays, { friendCameToMe, durationMs = 1800000 }) => {
+            const leave = new Date(now - offsetDays * day).toISOString();
+            const mine = friendCameToMe
+                ? // I was there an hour; they joined for the last 30 min.
+                  [leave, 3600000]
+                : // They were there an hour; I joined for the last 30 min.
+                  [leave, 1800000];
+            const theirs = friendCameToMe
+                ? [leave, durationMs]
+                : [leave, 3600000];
+            return { mine, theirs };
+        };
+        const m1 = meeting(1, { friendCameToMe: true });
+        const m10 = meeting(10, { friendCameToMe: false });
+        const m40 = meeting(40, { friendCameToMe: true });
+        const m80 = meeting(80, { friendCameToMe: false });
+
+        mockSessionQueries({
+            mySessions: [m1.mine, m10.mine, m40.mine, m80.mine].map(
+                ([leave, durationMs]) => [MY_LOC, leave, durationMs]
+            ),
+            friendSessions: [m1, m10, m40, m80].map((m) => [
+                'usr_f6',
+                'Friend Six',
+                MY_LOC,
+                m.theirs[0],
+                m.theirs[1],
+                2
+            ]),
+            friendNumbers: [['usr_f6', 7]]
+        });
+
+        const [row] = await gameLog.getFriendshipMetrics();
+        expect(row.friendNumber).toBe(7);
+        expect(row.friendInitiated).toBe(2);
+        expect(row.selfInitiated).toBe(2);
+        // Days 1 and 10 land in the last 30 days: 2 × 30 min.
+        expect(row.time30d).toBe(2 * 1800000);
+        // Day 40 lands in the previous 30-day window: 30 min.
+        expect(row.timePrev30d).toBe(1800000);
+        // The 90-day window covers everything here (all within 80 days).
+        expect(row.time90d).toBe(row.totalTime);
+        // Ends at days 1, 10, 40, 80: four distinct weeks.
+        expect(row.activeWeeks).toBe(4);
     });
 
     test('returns nothing without a user context', async () => {

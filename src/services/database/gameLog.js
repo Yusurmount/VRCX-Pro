@@ -60,6 +60,29 @@ function mergeIntervals(intervals) {
     return merged;
 }
 
+// Reconnects (network drops) split one hangout into several leave rows a
+// minute apart. Gap-chaining counts those as one meeting for frequency/depth
+// while total time still sums the real blocks and never invents the gap.
+const EPISODE_GAP_MS = 4 * 60 * 1000;
+
+function countEpisodes(merged) {
+    if (!merged.length) return 0;
+    let episodes = 1;
+    for (let i = 1; i < merged.length; i++) {
+        if (merged[i][0] - merged[i - 1][1] > EPISODE_GAP_MS) {
+            episodes++;
+        }
+    }
+    return episodes;
+}
+
+// Arriving after the other side by more than this counts as "they came to
+// me" / "I went to them"; near-simultaneous arrivals are left uncounted.
+const INITIATIVE_THRESHOLD_MS = 60 * 1000;
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
 const gameLog = {
     async getGamelogDatabase() {
         var gamelogDatabase = [];
@@ -2077,7 +2100,10 @@ const gameLog = {
      * logged sessions in the same location. Feed rows describe where the friend
      * was on their own, so without that clipping they measure how much the
      * friend plays, not how often we meet.
-     * @returns {Promise<Array<{userId: string, displayName: string, totalTime: number, joinCount: number, firstSeen: string, lastSeen: string, distinctDays: number}>>}
+     * joinCount is the meeting count after 4-minute gap-chaining so a network
+     * reconnect does not inflate frequency or flatten session depth.
+     * time90d feeds the recency dimension (rolling 90-day co-presence).
+     * @returns {Promise<Array<{userId: string, displayName: string, totalTime: number, joinCount: number, firstSeen: string, lastSeen: string, distinctDays: number, activeWeeks: number, time30d: number, timePrev30d: number, time90d: number, friendNumber: number, friendInitiated: number, selfInitiated: number}>>}
      */
     async getFriendshipMetrics() {
         if (!dbVars.userPrefix || !dbVars.userId) return [];
@@ -2098,6 +2124,15 @@ const gameLog = {
             { '@currentUserId': dbVars.userId }
         );
 
+        const friendNumbers = new Map();
+        await sqliteService.execute(
+            (row) => {
+                if (row[0]) friendNumbers.set(row[0], Number(row[1]) || 0);
+            },
+            `SELECT user_id, friend_number
+             FROM ${dbVars.userPrefix}_friend_log_current`
+        );
+
         const friends = new Map();
         await sqliteService.execute(
             (row) => {
@@ -2116,13 +2151,37 @@ const gameLog = {
                     }
                 }
                 if (!clipped.length) return;
+                // Arrival direction against my session at the same location:
+                // they showed up after I was already there = they came to me.
+                // Feed rows describe their dwell at a location they left, so the
+                // unclipped start is what tells who was there first. Duplicate
+                // rows for one meeting share a direction, so the ratio holds.
+                let arrivedAfterMe = 0;
+                for (const mine of mySessions.get(row[2]) || []) {
+                    const start = Math.max(interval[0], mine[0]);
+                    const end = Math.min(interval[1], mine[1]);
+                    if (end <= start) continue;
+                    if (interval[0] > mine[0] + INITIATIVE_THRESHOLD_MS) {
+                        arrivedAfterMe = 1;
+                    } else if (interval[0] < mine[0] - INITIATIVE_THRESHOLD_MS) {
+                        arrivedAfterMe = -1;
+                    }
+                    break;
+                }
                 let friend = friends.get(userId);
                 if (!friend) {
-                    friend = { displayName: row[1], intervals: [] };
+                    friend = {
+                        displayName: row[1],
+                        intervals: [],
+                        friendInitiated: 0,
+                        selfInitiated: 0
+                    };
                     friends.set(userId, friend);
                 }
                 friend.displayName = row[1];
                 friend.intervals.push(...clipped);
+                if (arrivedAfterMe > 0) friend.friendInitiated++;
+                else if (arrivedAfterMe < 0) friend.selfInitiated++;
             },
             `SELECT user_id, display_name, location, created_at, time, 1 AS src
              FROM gamelog_join_leave
@@ -2141,24 +2200,50 @@ const gameLog = {
             { '@currentUserId': dbVars.userId }
         );
 
+        const now = Date.now();
         const results = [];
         for (const [userId, friend] of friends) {
             const merged = mergeIntervals(friend.intervals);
             if (!merged.length) continue;
             let totalTime = 0;
+            let time30d = 0;
+            let timePrev30d = 0;
+            let time90d = 0;
             const days = new Set();
+            const weeks = new Set();
             for (const [start, end] of merged) {
                 totalTime += end - start;
                 days.add(new Date(end).toISOString().slice(0, 10));
+                weeks.add(Math.floor(end / WEEK_MS));
+                // Trend windows split each block on the 30-day boundary so a
+                // long session spanning it is attributed to both sides.
+                const w30Start = now - THIRTY_DAYS_MS;
+                const wPrevStart = now - 2 * THIRTY_DAYS_MS;
+                time30d += Math.max(0, end - Math.max(start, w30Start));
+                timePrev30d += Math.max(
+                    0,
+                    Math.min(end, w30Start) - Math.max(start, wPrevStart)
+                );
+                // Recency rolls on a full 90 days so a friend seen once a
+                // season still carries measurable recent volume.
+                const w90Start = now - 3 * THIRTY_DAYS_MS;
+                time90d += Math.max(0, end - Math.max(start, w90Start));
             }
             results.push({
                 userId,
                 displayName: friend.displayName,
                 totalTime,
-                joinCount: merged.length,
+                joinCount: countEpisodes(merged),
                 firstSeen: new Date(merged[0][0]).toISOString(),
                 lastSeen: new Date(merged[merged.length - 1][1]).toISOString(),
-                distinctDays: days.size
+                distinctDays: days.size,
+                activeWeeks: weeks.size,
+                time30d,
+                timePrev30d,
+                time90d,
+                friendNumber: friendNumbers.get(userId) || 0,
+                friendInitiated: friend.friendInitiated,
+                selfInitiated: friend.selfInitiated
             });
         }
         results.sort((a, b) => b.totalTime - a.totalTime);

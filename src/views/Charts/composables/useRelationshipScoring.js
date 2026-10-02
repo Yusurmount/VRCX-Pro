@@ -3,14 +3,36 @@ import { useUserStore } from '../../../stores';
 import { database } from '../../../services/database';
 import configRepository from '../../../services/config';
 
+// Five criteria: contact surface (volume+structure), regularity, recency,
+// trend, activity. Weight sliders feed a linear share; lambda drives a
+// Sugeno-measure Choquet integral so criteria can constrain or substitute
+// each other instead of a plain weighted sum.
+const CRITERIA = [
+    'contact',
+    'regularity',
+    'recency',
+    'trend',
+    'activity'
+];
+
 const DEFAULT_WEIGHTS = {
-    onlineOverlap: 40,
-    coWorldFrequency: 30,
+    contact: 35,
+    regularity: 15,
     recency: 20,
-    consistency: 10
+    trend: 12,
+    activity: 18
 };
 
+// lambda > 0: superadditive set measure -> a single weak criterion bites
+// harder (mutual constraint). lambda < 0: subadditive -> criteria substitute
+// each other (one strength can cover a gap). lambda = 0 falls back to a
+// plain weighted mean, continuously.
+const DEFAULT_LAMBDA = 0.5;
+const LAMBDA_MIN = -0.9;
+const LAMBDA_MAX = 2;
+
 const WEIGHTS_CONFIG_KEY = 'intimacyWeights';
+const LAMBDA_CONFIG_KEY = 'intimacyLambda';
 const EXCLUDED_CONFIG_KEY = 'intimacyExcludedFriends';
 const EXCLUDE_MODE_CONFIG_KEY = 'intimacyExcludeMode';
 const SCORE_MODE_CONFIG_KEY = 'intimacyScoreMode';
@@ -18,27 +40,64 @@ const SCORE_MODE_CONFIG_KEY = 'intimacyScoreMode';
 const RECENCY_FAST_DAYS = 14;
 const RECENCY_SLOW_DAYS = 120;
 const RECENCY_FAST_SHARE = 0.6;
-// Contact density (distinct days over relationship age) counts as fully
-// regular at one meeting every ~10 days; below that the dimension slides
-// toward the floor, so a one-off encounter can't read as a kept-up friendship.
-const RECENCY_DENSITY_REF = 0.1;
-const RECENCY_PERSISTENCE_FLOOR = 0.5;
+
+// Coherence gate: average session depth below D50 reads as fragmented
+// presence (reconnects, drop-bys) and freezes the structure factors at the
+// cohort mean instead of trusting noisy counts.
+const DEPTH_REF_MS = 18 * 60 * 1000;
+const DEPTH_HILL_N = 2.6;
+const SHRINK_EXP = 0.8;
+
+// Structure share inside the contact surface. Total time is the anchor
+// (blocks summed directly, never N×D), session depth is the quality trim.
+const STRUCTURE_FLOOR = 0.35;
+
+// Freshness: friend_number rank -> S-shaped discount in [0.6, 0.98].
+const FRESHNESS_FLOOR = 0.6;
+const FRESHNESS_K = 6;
+
+// Trend windows compare this 30 days against the previous one as a ratio;
+// the epsilon swamps sub-half-hour noise so a brand-new database does not
+// explode the ratio when the prior window is empty.
+const TREND_EPS_HOURS = 0.5;
+
+// Regularity counts accumulated active weeks — an unbounded physical
+// quantity. The old coverage/0.3 formula pinned everyone at 1000 whenever
+// the relationship was younger than ~3 weeks (coverage collapses to 1).
+// This anchor is "active for half a year", the standard-line for routine
+// contact. Trend and activity use ratio anchors of 1 (balanced = 1000).
+
 const MS_PER_HOUR = 60 * 60 * 1000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
 
-// 'percent' divides each dimension by the cohort's p90 reference and caps at
-// 1; 'absolute' uses fixed anchors instead (so a score never moves when
-// unrelated friends appear or grow) and stays uncapped, so a friend past an
-// anchor reads as more than the anchor rather than clamping to it. The scale
-// is the anchor's full-mark value, not a ceiling. Anchors are in each
-// dimension's own unit (totalTime is milliseconds, so overlap is converted to
-// hours first — log1p on raw milliseconds barely moves below the anchor).
+// 'percent' normalizes each physical quantity against the cohort's p90 and
+// caps at 1; 'absolute' uses fixed anchors instead (so a score never moves
+// when unrelated friends appear or grow) and stays UNCAPPED — every
+// dimension can exceed its anchor's 1000 points. Anchors are calibrated
+// against the real database: true co-presence p90 ≈ 1.1 h, so 1 h is the
+// contact/recency standard line and 26 active weeks the regularity one.
 const SCORE_SCALES = { percent: 100, absolute: 1000 };
 const ABSOLUTE_ANCHORS = {
-    onlineOverlap: 1000,
-    coWorldFrequency: 500,
-    consistency: 365
+    contactHours: 1,
+    depthHours: 2,
+    activeWeeks: 26,
+    recencyHours: 1
 };
+const RATIO_ANCHOR = 1;
+
+function clamp01(value) {
+    return Math.min(1, Math.max(0, value));
+}
+
+function sigmoid(x) {
+    return 1 / (1 + Math.exp(-x));
+}
+
+function hill(value, ref, n) {
+    const v = Math.max(0, value);
+    const vn = Math.pow(v, n);
+    return vn / (vn + Math.pow(ref, n));
+}
 
 // log1p + nearest-rank p90 keeps a single whale friend from flattening
 // everyone else the way max-normalization did.
@@ -61,7 +120,10 @@ function logRatio(value, reference) {
 
 // Two-term decay: the fast term (τ=14d) separates friends seen this week from
 // friends seen this month, the slow term (τ=120d) keeps a long-absent friend
-// from collapsing to zero the way a single 90-day curve did.
+// from collapsing to zero the way a single 90-day curve did. Here it only
+// modulates the rolling-window volume — it can never lift a dimension on its
+// own, so a friend with no recent co-presence scores zero regardless of how
+// the curve would decay.
 function recencyBase(daysSince) {
     return (
         RECENCY_FAST_SHARE * Math.exp(-daysSince / RECENCY_FAST_DAYS) +
@@ -69,35 +131,134 @@ function recencyBase(daysSince) {
     );
 }
 
-// Recent-contact regularity, derived from aggregates the metrics already carry:
-// distinct days over the age of the relationship. Missing or invalid firstSeen
-// (legacy rows) skips the penalty instead of guessing.
-function recencyPersistence(metric, now) {
-    if (!metric.firstSeen) return 1;
-    const firstSeen = new Date(metric.firstSeen).getTime();
-    if (!Number.isFinite(firstSeen)) return 1;
-    const ageDays = Math.max(1, (now - firstSeen) / MS_PER_DAY);
-    const density = Math.min(
-        1,
-        Math.max(0, metric.distinctDays || 0) / ageDays
-    );
-    const fidelity = Math.min(1, density / RECENCY_DENSITY_REF);
-    return (
-        RECENCY_PERSISTENCE_FLOOR +
-        (1 - RECENCY_PERSISTENCE_FLOOR) * fidelity
-    );
-}
-
-function recencyScore(metric, now) {
+function recencyModulation(metric, now) {
     if (!metric.lastSeen) return 0;
     const lastSeen = new Date(metric.lastSeen).getTime();
     if (!Number.isFinite(lastSeen)) return 0;
     // A future timestamp (clock skew) reads as "just seen", never above 1.
     const daysSince = Math.max(0, (now - lastSeen) / MS_PER_DAY);
-    return Math.min(
-        1,
-        recencyBase(daysSince) * recencyPersistence(metric, now)
+    return recencyBase(daysSince);
+}
+
+// Physical quantities feeding the shared log-ratio pipeline. Each one is an
+// unbounded real-world measurement; the log1p transform keeps them tame and
+// the anchor (absolute) or cohort p90 (percent) turns them into 0..1000.
+function contactHoursOf(metric) {
+    return Math.max(0, metric.totalTime || 0) / MS_PER_HOUR;
+}
+
+function recencyHoursOf(metric) {
+    // Rolling 90-day co-presence: zero beyond the window by construction, so
+    // a long-dormant friend bottoms out without an extra gate.
+    return Math.max(0, metric.time90d || 0) / MS_PER_HOUR;
+}
+
+function activeWeeksOf(metric) {
+    return Math.max(0, metric.activeWeeks || 0);
+}
+
+// (this window + eps) / (previous window + eps): 1 = flat, >1 warming,
+// <1 cooling. The epsilon both swamps sub-half-hour noise and keeps the
+// fresh-database case (prior = 0) from dividing by zero — it still reads as
+// warming, which is factually what a first month looks like.
+function trendRatio(metric) {
+    const recent = Math.max(0, metric.time30d || 0) / MS_PER_HOUR;
+    const prior = Math.max(0, metric.timePrev30d || 0) / MS_PER_HOUR;
+    return (recent + TREND_EPS_HOURS) / (prior + TREND_EPS_HOURS);
+}
+
+// Laplace-smoothed initiation ratio: 1 = balanced (1000 pts), >1 they come
+// to you, <1 you do all the travelling. The +1 priors keep an empty history
+// at neutral instead of dividing by zero.
+function activityRatio(metric) {
+    const theirs = Math.max(0, metric.friendInitiated || 0);
+    const mine = Math.max(0, metric.selfInitiated || 0);
+    return (theirs + 1) / (mine + 1);
+}
+
+function depthHoursOf(metric) {
+    return metric.joinCount > 0
+        ? Math.max(0, metric.totalTime || 0) / metric.joinCount / MS_PER_HOUR
+        : 0;
+}
+
+// friend_number rank -> seniority: 1 for the oldest slot, 0 for the newest,
+// 1 when the number is unknown. Missing numbers stay unpunished.
+function seniority(friendNumber, maxFriendNumber) {
+    if (!friendNumber || friendNumber <= 0) return 1;
+    if (!maxFriendNumber || maxFriendNumber <= 1) return 1;
+    return clamp01(1 - (friendNumber - 1) / (maxFriendNumber - 1));
+}
+
+function freshnessDiscount(s) {
+    // Rescaled sigmoid so s=1 lands exactly on the floor of the penalty
+    // band (no discount) and s=0 on a full one-third off.
+    const lo = sigmoid(-FRESHNESS_K * 0.5);
+    const hi = sigmoid(FRESHNESS_K * 0.5);
+    const t = (sigmoid(FRESHNESS_K * (s - 0.5)) - lo) / (hi - lo);
+    return FRESHNESS_FLOOR + (1 - FRESHNESS_FLOOR) * t;
+}
+
+// Soft-threshold membership for the percent scale: identity at the ends and
+// mid-point, S-shape in between, so middling factors neither dominate nor
+// vanish inside the integral.
+const MEMBERSHIP_KAPPA = 6;
+
+function membership(z) {
+    const lo = sigmoid(-MEMBERSHIP_KAPPA * 0.5);
+    const hi = sigmoid(MEMBERSHIP_KAPPA * 0.5);
+    return clamp01(
+        (sigmoid(MEMBERSHIP_KAPPA * (z - 0.5)) - lo) / (hi - lo)
     );
+}
+
+// Sugeno lambda-measure normalized to g(X)=1 so lambda can be dialled
+// freely. lambda=0 degrades to the additive share continuously.
+function sugenoMeasure(setIdx, densities, lambda) {
+    if (Math.abs(lambda) < 1e-9) {
+        let sum = 0;
+        for (const i of setIdx) sum += densities[i];
+        return sum;
+    }
+    let prod = 1;
+    for (const i of setIdx) prod *= 1 + lambda * densities[i];
+    let denom = 1;
+    for (let i = 0; i < densities.length; i++) {
+        denom *= 1 + lambda * densities[i];
+    }
+    return (prod - 1) / (denom - 1);
+}
+
+// Discrete Choquet integral over the fuzzy measure above: sort ascending and
+// accumulate each level gain against the measure of "everything at least
+// this good", which is exactly where the interaction lambda acts.
+function choquetIntegral(memberships, densities, lambda) {
+    const n = memberships.length;
+    const order = [...Array(n).keys()].sort(
+        (a, b) => memberships[a] - memberships[b]
+    );
+    let result = 0;
+    let prev = 0;
+    for (let k = 0; k < n; k++) {
+        const m = memberships[order[k]];
+        if (m > prev) {
+            result +=
+                (m - prev) * sugenoMeasure(order.slice(k), densities, lambda);
+            prev = m;
+        }
+    }
+    return result;
+}
+
+function weightDensities(weightMap) {
+    let sum = 0;
+    for (const key of CRITERIA) sum += Math.max(0, weightMap[key] || 0);
+    if (sum <= 0) return null;
+    const densities = [];
+    for (const key of CRITERIA) {
+        densities.push(Math.max(0, weightMap[key] || 0) / sum);
+    }
+    return densities;
 }
 
 export function useRelationshipScoring() {
@@ -106,6 +267,7 @@ export function useRelationshipScoring() {
     const isLoading = ref(false);
 
     const weights = ref({ ...DEFAULT_WEIGHTS });
+    const lambda = ref(DEFAULT_LAMBDA);
     const excludedUserIds = ref([]);
     // 'full': excluded friends leave the scoring set entirely;
     // 'hidden': they still affect normalization but never render.
@@ -117,12 +279,13 @@ export function useRelationshipScoring() {
         if (!preferencesPromise) {
             preferencesPromise = (async () => {
                 try {
-                    const [savedWeights, savedExcluded, savedMode, savedScoreMode] =
+                    const [savedWeights, savedLambda, savedExcluded, savedMode, savedScoreMode] =
                         await Promise.all([
                             configRepository.getObject(
                                 WEIGHTS_CONFIG_KEY,
                                 null
                             ),
+                            configRepository.getObject(LAMBDA_CONFIG_KEY, null),
                             configRepository.getArray(EXCLUDED_CONFIG_KEY, []),
                             configRepository.getString(
                                 EXCLUDE_MODE_CONFIG_KEY,
@@ -133,11 +296,24 @@ export function useRelationshipScoring() {
                                 'percent'
                             )
                         ]);
-                    if (savedWeights && typeof savedWeights === 'object') {
+                    if (
+                        savedWeights &&
+                        typeof savedWeights === 'object' &&
+                        CRITERIA.every((key) => key in savedWeights)
+                    ) {
                         weights.value = {
                             ...DEFAULT_WEIGHTS,
                             ...savedWeights
                         };
+                    }
+                    if (
+                        typeof savedLambda === 'number' &&
+                        Number.isFinite(savedLambda)
+                    ) {
+                        lambda.value = Math.min(
+                            LAMBDA_MAX,
+                            Math.max(LAMBDA_MIN, savedLambda)
+                        );
                     }
                     if (Array.isArray(savedExcluded)) {
                         excludedUserIds.value = savedExcluded.filter(
@@ -178,74 +354,144 @@ export function useRelationshipScoring() {
         const absolute = scoreMode.value === 'absolute';
         const scale = SCORE_SCALES[scoreMode.value];
 
-        const overlapRef = absolute
-            ? Math.log1p(ABSOLUTE_ANCHORS.onlineOverlap)
-            : logPercentileReference(
-                  scoredMetrics.map((m) => Math.log1p(m.totalTime))
-              );
-        const frequencyRef = absolute
-            ? Math.log1p(ABSOLUTE_ANCHORS.coWorldFrequency)
-            : logPercentileReference(
-                  scoredMetrics.map((m) => Math.log1p(m.joinCount))
-              );
-        const consistencyRef = absolute
-            ? Math.log1p(ABSOLUTE_ANCHORS.consistency)
-            : logPercentileReference(
-                  scoredMetrics.map((m) => Math.log1p(m.distinctDays))
-              );
-        const w = weights.value;
-        const weightSum =
-            w.onlineOverlap + w.coWorldFrequency + w.recency + w.consistency;
-        const norm = absolute ? logRatio : logNormalize;
-        const roundDimension = absolute
-            ? (value) => Math.round(value * scale * 10) / 10
-            : (value) => Math.round(value * scale);
+        // Reference = log1p(anchor) in absolute mode (fixed standard line),
+        // log1p(p90) of the cohort in percent mode (relative standing).
+        const refOf = (rawValues, anchor) =>
+            absolute
+                ? Math.log1p(anchor)
+                : logPercentileReference(rawValues.map((v) => Math.log1p(v)));
 
-        const scores = new Map();
+        const contactRaw = scoredMetrics.map(contactHoursOf);
+        const depthRaw = scoredMetrics.map(depthHoursOf);
+        const weeksRaw = scoredMetrics.map(activeWeeksOf);
+        const recencyRaw = scoredMetrics.map(recencyHoursOf);
+        const trendRaw = scoredMetrics.map(trendRatio);
+        const activityRaw = scoredMetrics.map(activityRatio);
+
+        const refs = {
+            contact: refOf(contactRaw, ABSOLUTE_ANCHORS.contactHours),
+            depth: refOf(depthRaw, ABSOLUTE_ANCHORS.depthHours),
+            regularity: refOf(weeksRaw, ABSOLUTE_ANCHORS.activeWeeks),
+            recency: refOf(recencyRaw, ABSOLUTE_ANCHORS.recencyHours),
+            trend: refOf(trendRaw, RATIO_ANCHOR),
+            activity: refOf(activityRaw, RATIO_ANCHOR)
+        };
+
+        const norm = absolute ? logRatio : logNormalize;
+        // Shrinkage target: the cohort mean on the relative scale (what a
+        // "typical" friend looks like), the anchor on the absolute one (so
+        // scores stay put when the cohort moves).
+        let depthTarget = 1;
+        if (!absolute) {
+            depthTarget =
+                depthRaw.reduce((s, v) => s + norm(v, refs.depth), 0) /
+                depthRaw.length;
+        }
+
+        let maxFriendNumber = 0;
+        for (const m of scoredMetrics) {
+            if ((m.friendNumber || 0) > maxFriendNumber) {
+                maxFriendNumber = m.friendNumber;
+            }
+        }
+
+        const densities = weightDensities(weights.value);
         const now = Date.now();
 
-        for (const metric of scoredMetrics) {
-            const overlapValue = absolute
-                ? metric.totalTime / MS_PER_HOUR
-                : metric.totalTime;
-            const onlineOverlap = norm(overlapValue, overlapRef);
-            const coWorldFrequency = norm(metric.joinCount, frequencyRef);
-            const recency = recencyScore(metric, now);
-            const consistency = norm(metric.distinctDays, consistencyRef);
+        const scores = new Map();
+        if (!densities) {
+            for (const metric of scoredMetrics) {
+                scores.set(metric.userId, {
+                    score: 0,
+                    dimensions: Object.fromEntries(
+                        CRITERIA.map((key) => [key, 0])
+                    ),
+                    raw: rawOf(metric),
+                    displayName: metric.displayName
+                });
+            }
+            return scores;
+        }
 
-            const dimensions = {
-                onlineOverlap: roundDimension(onlineOverlap),
-                coWorldFrequency: roundDimension(coWorldFrequency),
-                recency: roundDimension(recency),
-                consistency: roundDimension(consistency)
+        for (const metric of scoredMetrics) {
+            // Coherence: 0.5 at DEPTH_REF_MS, saturating slowly past it.
+            const coherence = hill(
+                metric.joinCount > 0 ? (metric.totalTime || 0) / metric.joinCount : 0,
+                DEPTH_REF_MS,
+                DEPTH_HILL_N
+            );
+
+            const vContact = norm(contactHoursOf(metric), refs.contact);
+            const vDepth = norm(depthHoursOf(metric), refs.depth);
+
+            // James-Stein style shrinkage: fragmented presence pulls its
+            // noisy depth estimate back toward typical instead of trusting a
+            // reconnect-shredded average. Depth alone carries the structure
+            // (count and depth are not independent: N = T / D).
+            const structure =
+                depthTarget +
+                (vDepth - depthTarget) * Math.pow(coherence, SHRINK_EXP);
+
+            const s = seniority(metric.friendNumber, maxFriendNumber);
+            const delta = freshnessDiscount(s);
+            const contact =
+                delta *
+                vContact *
+                (STRUCTURE_FLOOR + (1 - STRUCTURE_FLOOR) * structure);
+
+            const z = {
+                contact,
+                regularity: norm(activeWeeksOf(metric), refs.regularity),
+                recency:
+                    norm(recencyHoursOf(metric), refs.recency) *
+                    recencyModulation(metric, now),
+                trend: norm(trendRatio(metric), refs.trend),
+                activity: norm(activityRatio(metric), refs.activity)
             };
-            const totalScore =
-                weightSum > 0
-                    ? (w.onlineOverlap * dimensions.onlineOverlap +
-                          w.coWorldFrequency * dimensions.coWorldFrequency +
-                          w.recency * dimensions.recency +
-                          w.consistency * dimensions.consistency) /
-                      weightSum
-                    : 0;
+
+            // Percent scale feeds the integral soft memberships; the absolute
+            // scale passes the log-ratio scores through so they stay
+            // uncapped — a dimension can read past its 1000-point anchor.
+            const m = CRITERIA.map((key) =>
+                absolute ? z[key] : membership(z[key])
+            );
+            const integral = choquetIntegral(m, densities, lambda.value);
+            const dims = {};
+            for (const key of CRITERIA) {
+                dims[key] = absolute
+                    ? Math.round(z[key] * scale * 10) / 10
+                    : Math.round(clamp01(z[key]) * scale);
+            }
 
             scores.set(metric.userId, {
                 score: absolute
-                    ? Math.round(totalScore * 10) / 10
-                    : Math.round(totalScore),
-                dimensions,
-                raw: {
-                    totalTime: metric.totalTime,
-                    joinCount: metric.joinCount,
-                    firstSeen: metric.firstSeen,
-                    lastSeen: metric.lastSeen,
-                    distinctDays: metric.distinctDays
-                },
+                    ? Math.round(integral * scale * 10) / 10
+                    : Math.round(integral * scale),
+                dimensions: dims,
+                raw: rawOf(metric),
                 displayName: metric.displayName
             });
         }
 
         return scores;
     });
+
+    function rawOf(metric) {
+        return {
+            totalTime: metric.totalTime,
+            joinCount: metric.joinCount,
+            firstSeen: metric.firstSeen,
+            lastSeen: metric.lastSeen,
+            distinctDays: metric.distinctDays,
+            activeWeeks: metric.activeWeeks || 0,
+            time30d: metric.time30d || 0,
+            timePrev30d: metric.timePrev30d || 0,
+            time90d: metric.time90d || 0,
+            friendNumber: metric.friendNumber || 0,
+            friendInitiated: metric.friendInitiated || 0,
+            selfInitiated: metric.selfInitiated || 0
+        };
+    }
 
     const topFriends = computed(() => {
         const excluded = new Set(excludedUserIds.value);
@@ -334,7 +580,15 @@ export function useRelationshipScoring() {
 
     function resetWeights() {
         weights.value = { ...DEFAULT_WEIGHTS };
+        lambda.value = DEFAULT_LAMBDA;
         configRepository.setObject(WEIGHTS_CONFIG_KEY, { ...weights.value });
+        configRepository.setObject(LAMBDA_CONFIG_KEY, lambda.value);
+    }
+
+    function setLambda(value) {
+        if (!Number.isFinite(value)) return;
+        lambda.value = Math.min(LAMBDA_MAX, Math.max(LAMBDA_MIN, value));
+        configRepository.setObject(LAMBDA_CONFIG_KEY, lambda.value);
     }
 
     function excludeFriend(userId) {
@@ -376,11 +630,13 @@ export function useRelationshipScoring() {
         scoreMax,
         scoreMode,
         weights,
+        lambda,
         excludedUserIds,
         excludeMode,
         excludedFriends,
         setWeight,
         resetWeights,
+        setLambda,
         excludeFriend,
         includeFriend,
         includeAllFriends,

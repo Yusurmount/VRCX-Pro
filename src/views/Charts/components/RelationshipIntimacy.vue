@@ -124,6 +124,44 @@
                                             </div>
                                         </FieldContent>
                                     </Field>
+                                    <Field>
+                                        <div class="flex items-center gap-1">
+                                            <FieldLabel>{{ t('view.charts.intimacy.lambda.title') }}</FieldLabel>
+                                            <HoverCard>
+                                                <HoverCardTrigger as-child>
+                                                    <Info class="text-xs opacity-70" />
+                                                </HoverCardTrigger>
+                                                <HoverCardContent
+                                                    side="bottom"
+                                                    align="start"
+                                                    :collision-padding="8"
+                                                    class="w-64">
+                                                    <p class="text-xs text-muted-foreground">
+                                                        {{ t('view.charts.intimacy.lambda.explain') }}
+                                                    </p>
+                                                </HoverCardContent>
+                                            </HoverCard>
+                                        </div>
+                                        <FieldContent>
+                                            <div class="flex items-center gap-3">
+                                                <Slider
+                                                    class="flex-1"
+                                                    :model-value="[Math.round(lambda * 10)]"
+                                                    :min="-9"
+                                                    :max="20"
+                                                    :step="1"
+                                                    :aria-label="t('view.charts.intimacy.lambda.title')"
+                                                    @update:modelValue="(v) => setLambda(v[0] / 10)" />
+                                                <span
+                                                    class="min-w-12 text-right text-sm text-muted-foreground tabular-nums">
+                                                    {{ lambda.toFixed(1) }}
+                                                </span>
+                                            </div>
+                                            <p class="mt-1 text-xs text-muted-foreground">
+                                                {{ t('view.charts.intimacy.lambda.hint') }}
+                                            </p>
+                                        </FieldContent>
+                                    </Field>
                                 </FieldGroup>
 
                                 <FieldGroup class="gap-4 p-4">
@@ -367,10 +405,12 @@
         scoreMax,
         scoreMode,
         weights,
+        lambda,
         excludeMode,
         excludedFriends,
         setWeight,
         resetWeights,
+        setLambda,
         excludeFriend,
         includeFriend,
         includeAllFriends,
@@ -397,10 +437,11 @@
             return Math.min(100, Math.round((dims[dimKey] / (scoreMax.value || 1)) * 100));
         }
         const max = Math.max(
-            dims.onlineOverlap,
-            dims.coWorldFrequency,
+            dims.contact,
+            dims.regularity,
             dims.recency,
-            dims.consistency
+            dims.trend,
+            dims.activity
         );
         if (max <= 0) return 0;
         return Math.min(100, Math.round((dims[dimKey] / max) * 100));
@@ -416,15 +457,15 @@
 
     const dimensionList = [
         {
-            key: 'onlineOverlap',
-            explainKey: 'online_overlap',
-            label: t('view.charts.intimacy.dimension.online_overlap'),
+            key: 'contact',
+            explainKey: 'contact',
+            label: t('view.charts.intimacy.dimension.contact'),
             color: '#5470c6'
         },
         {
-            key: 'coWorldFrequency',
-            explainKey: 'co_world_frequency',
-            label: t('view.charts.intimacy.dimension.co_world_frequency'),
+            key: 'regularity',
+            explainKey: 'regularity',
+            label: t('view.charts.intimacy.dimension.regularity'),
             color: '#91cc75'
         },
         {
@@ -434,9 +475,15 @@
             color: '#fac858'
         },
         {
-            key: 'consistency',
-            explainKey: 'consistency',
-            label: t('view.charts.intimacy.dimension.consistency'),
+            key: 'trend',
+            explainKey: 'trend',
+            label: t('view.charts.intimacy.dimension.trend'),
+            color: '#ee6666'
+        },
+        {
+            key: 'activity',
+            explainKey: 'activity',
+            label: t('view.charts.intimacy.dimension.activity'),
             color: '#9a60b4'
         }
     ];

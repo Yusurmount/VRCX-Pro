@@ -10,6 +10,53 @@ commits: 493abb7e..2bfe43b8
 
 ## Report
 
+### 五维物理量重设计：绝对口径无上限（第二轮，续 `feature/intimacy-choquet`）
+
+**What was built** — 用户实测报告三现象：规律性全员 1000、各维挤在 900 附近、
+很少碰面的排很高。真实库分析（`VRCX.sqlite3`，40 好友）确认根因：真共位量级
+p90 ≈ 1.1h（旧接触面锚 500h 下全员 <170 分垫底）、关系龄全 ≤2 周（旧
+`coverage/0.3` 在 age≤1 周时 coverage≡1 必然顶格）、recency/trend/activity 是
+自带满分的有界量表（0.1h 的人四个非接触维可拿 ~3300/4000 分）。
+
+重设计为**统一物理量管线**：每维取无界物理量 → `log1p` → 除参考值 →
+百分制 P90 封顶 0–100 / 绝对锚点**不封顶**（1000 = 标准线而非上限）：
+
+| 维度 | 物理量 | 绝对锚点 |
+|---|---|---|
+| contact | 累计共处小时（×δ×深度结构） | 1h |
+| regularity | **累计活跃周数**（替代覆盖率，无界） | 26 周 |
+| recency | **近 90 天共处小时**（新增 `time90d`）× 双指数新近调制 | 1h |
+| trend | (近30+0.5h)/(前30+0.5h) 比值（替代 tanh 有界映射） | 1（持平） |
+| activity | (对方发起+1)/(我方发起+1)（替代有界占比） | 1（平衡） |
+
+结构封杀低频虚高：低频者 contact/recency → 0、regularity ≈ 210，λ>0 木桶
+效应下 trend/activity（权重合计 30%）补不上去——真实库验算末五分位全落
+32–39 名（旧模型挤进前半），规律性 ≥990 从 40/40 → 0/40，各维分布拉开
+（contact 2.8–1487、recency 2–1647、trend 1003–2740、activity 585–2807）。
+深度结构项、freshness、Choquet/λ、排除与持久化机制保持不变；数据层仅新增
+`time90d` 滚动窗。
+
+**Verification** — 定向 `npx vitest run` 两文件 44/44 PASS（recency/trend/
+activity/regularity 测试组按新语义重写：超窗归零、比值方向、绝对口径
+1000 中性、活跃周独立于 firstSeen）。oxlint + eslint 改动文件 0 问题。
+真实库 Python 复算脚本确认三现象修复（见上）。
+
+### λ-Choquet 五维重写（分支 `feature/intimacy-choquet`）
+
+**What was built** — 评分模型从「四维加权平均」重写为「五维 λ-Choquet」：
+
+1. **数据层**（`gameLog.getFriendshipMetrics`）：`totalTime` 改为分块求和（Σ exit−enter，重进房间不重复计）；`joinCount` 改为 4 分钟链结后的会话数（网络闪断不虚增次数、不压平深度）；新增 `activeWeeks`（周覆盖）、`time30d` / `timePrev30d`（趋势双窗）、`friendNumber`（join `friend_log_current`）、`friendInitiated` / `selfInitiated`（到达方向：谁后到谁发起，60s 内视为同时不计）。
+2. **五维**：`contact` 接触面 = 新鲜感折价 δ × 总时长 × 深度微调；`regularity` = 活跃周数 ÷ 关系周数（30% 满分）；`recency` 回归纯双指数衰减（密度折价移出）；`trend` = tanh(近30/前30 对数比)，最近度 <0.1 时强制中性防双罚；`activity` = 对方发起占比。
+3. **接触面**：会话深度走 James-Stein 收缩（碎片数据向队列均值收拢）——次数与深度共线（N=T/D），深度独立承担结构信号，单次深聊优于碎片串门但闪断不冤枉。`friend_number` S 型折价 δ∈[0.6,1]（加得越早越接近 1，编号缺失不罚）实现「加得早+玩得多 → 高；加得晚+玩得多 → 分少加；加得晚+玩得少 → 分也少」。
+4. **λ-Choquet 合成**：κ=6 logistic 隶属（绝对口径透传）→ 权重归一化密度 → Sugeno λ-测度（归一到 g(X)=1）→ Choquet 积分。λ>0 相互制约、λ<0 互相替代、λ=0 退化加权平均；范围 [-0.9,2]，默认 0.5。
+5. **配置**：`intimacyWeights` 键形状改为五维（旧四键回落默认 35/15/20/12/18）；新增 `intimacyLambda`；`resetWeights` 连 λ 一并重置。UI 维度条改五条、设置抽屉加 λ 滑杆；i18n 三语同步。
+
+**Verification** — `npx vitest run src/views/Charts/composables/__tests__/useRelationshipScoring.test.js src/services/database/__tests__/gameLog.test.js` → 44/44 PASS（评分 33 + gameLog 11，覆盖闪断链结、深度收缩、趋势防双罚、主动性方向、新鲜感折价、λ 制约/替代、双口径、排除与持久化）。全量 `npm test` → 37 files / 153 failed，stash 基线完全一致 → PRE-EXISTING。改动文件 eslint：gameLog.js 3 个 `no-redeclare` 与基线同源（未触碰区域）→ PRE-EXISTING；oxlint 0 问题。`npm run typecheck:js` 环境缺口（tsc 未安装）→ PRE-EXISTING。
+
+**Known semantics** — 关系时间线 `getRelationshipTimelineData()` 仍走未求交的 `buildPresenceSessionsQuery`，口径未同步。百分制下接触面仍受队列 P90 影响；绝对口径锚点为共处 500h / 深度 2h。
+
+### 原四维稳健归一化（已由上文取代，历史保留）
+
 **What was built** — 好友亲密度评分（`useRelationshipScoring`）的三个共位维度
 （`onlineOverlap` / `coWorldFrequency` / `consistency`）从「除以全体最大值」的线性
 归一化改为稳健归一化：先做 `ln(1+v)` 对数压缩，再除以全体好友对数值的最近秩 90

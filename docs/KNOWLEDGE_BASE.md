@@ -423,23 +423,29 @@ vue-i18n + 静态 JSON 文件，支持语言：
 
 [useRelationshipScoring.js](../src/views/Charts/composables/useRelationshipScoring.js) 是亲密度评分核心，消费方为 `/charts/intimacy` 路由的 [RelationshipIntimacy.vue](../src/views/Charts/components/RelationshipIntimacy.vue)。完整设计见 [feature spec](compose/spec/intimacy-scoring.md)。
 
-**评分模型（四个维度，各 0–100）：**
+**评分模型（五维 λ-Choquet，物理量统一管线）：**
 
-| 维度 | 含义 | 归一化方式 |
-|------|------|-----------|
-| `onlineOverlap` | 在线时间重叠 | `ln(1+v)` 对数压缩后 ÷ 全体 P90 对数值，封顶 1 |
-| `coWorldFrequency` | 共同世界频次 | 同上（稳健归一化） |
-| `consistency` | 共存一致性 | 同上（稳健归一化） |
-| `recency` | 最近接触度 | 双指数衰减 × 接触密度折价，不走归一化 |
+每个维度先取**无界物理量**，再 `log1p` 变换后除以参考值——百分制用队列 P90（相对位置，0–100 封顶），绝对口径用固定锚点（**1000 分 = 标准线而非上限**，数值可对数无限累积）：
 
-- **数据口径（真共存）**：四维原始指标来自 `gameLog.getFriendshipMetrics()`，只统计同一实例内的真共存——游戏日志（`gamelog_join_leave`）里出现过的好友会话直接计入；feed 来源（`_feed_gps` / `_feed_online_offline`，记录的是好友**自己**在某实例的停留时长）必须与我的游戏日志会话在同 `location` 上做时间求交后才计入，随后按好友合并重叠区间。因此 `totalTime` / `joinCount` / `distinctDays` / `lastSeen` 衡量的是「一起玩」而非「好友多活跃」，从未真正共存的好友不会出现在列表里（关系时间线 `getRelationshipTimelineData()` 仍走未求交的 `buildPresenceSessionsQuery`，口径未同步）
-- **权重可调**：四维权重 0–100 可调，按权重和归一化合成（键 `intimacyWeights`）；全零权重得 0
-- **最近度算法**：`0.6·e^(-d/14) + 0.4·e^(-d/120)` 双指数衰减（前两周快速拉开区分度、之后长尾不归零），再乘以接触密度折价 `0.5 + 0.5·min(1, (distinctDays ÷ 关系年龄天数) ÷ 0.1)`——同一时刻偶遇的低频好友明显低于规律联系者；`lastSeen` 非法记 0、未来时间戳按 0 天处理（不超过 100），`firstSeen` 缺失或非法不打折
-- **好友排除**：完全排除（移出归一化计算集）/ 仅隐藏显示（仍参与计算），名单与模式持久化（`intimacyExcludedFriends` / `intimacyExcludeMode`），支持一键恢复
-- **评分口径**（键 `intimacyScoreMode`）：百分制按全体好友 P90 归一化得 0–100；绝对评分按固定锚点换算（锚点 = 1000 分基准），不封顶、分值不随其他好友变化，进度条以榜内最高值为满格
-- **排行**：`topFriends` 展示全部参与评分的好友（无数量上限），`scoreMax` 为榜内最高分
-- **管理函数**：`setWeight` / `resetWeights`、`excludeFriend` / `includeFriend` / `includeAllFriends`、`setExcludeMode` / `setScoreMode` 等
-- 权重、评分口径与排除管理 UI 位于页头设置入口打开的右侧 Sheet 抽屉
+| 维度 | 物理量 | 绝对锚点（=1000 分） | 调制 |
+|------|--------|---------------------|------|
+| `contact` | 累计共处小时 | **1 小时** | × 新鲜感折价 δ × 深度结构项 |
+| `regularity` | 累计活跃周数 | **26 周（半年）** | — |
+| `recency` | 近 90 天共处小时 | **1 小时** | × 双指数新近调制（超窗归零） |
+| `trend` | (近30天+0.5h)/(前30天+0.5h) | **比值 1（持平）** | — |
+| `activity` | (对方发起+1)/(我方发起+1) | **比值 1（平衡）** | 拉普拉斯平滑防 0/0 |
+
+锚点由真实数据库分布校准（真共位 p90 ≈ 1.1h；旧锚 500h/覆盖率 0.3 在小时级数据上会让接触面垫底、规律性在关系龄 ≤3 周时全员顶格 1000——该两问题为本次重写动机）。规律性用**活跃周数积累**替代覆盖率：新关系天然低分、随周数对数增长不封顶；趋势/主动性用比值锚点，新库首月全员 >1000 是「升温期」的事实读数，数据成熟后回归双向分布。低频虚高由结构封杀：低频者 contact/recency 趋 0、regularity 仅 ~210，λ>0 木桶效应下 trend/activity（默认权重合计 30%）无法补位。
+
+- **数据口径（真共存）**：原始指标来自 `gameLog.getFriendshipMetrics()`，只统计同一实例内的真共存——游戏日志（`gamelog_join_leave`）里出现过的好友会话直接计入；feed 来源（`_feed_gps` / `_feed_online_offline`）必须与我的游戏日志会话在同 `location` 上做时间求交后才计入，随后按好友合并重叠区间。`totalTime` 是**分块求和**（Σ exit−enter，重进房间不重复计），`joinCount` 是 4 分钟链结后的会话数；一并返回 `activeWeeks` / `time30d` / `timePrev30d` / `time90d` / `friendNumber` / `friendInitiated` / `selfInitiated`
+- **接触面**：`δ(s)·v(T)·(0.35+0.65·structure)`，`structure` 为会话深度的 James-Stein 收缩（碎片化数据向队列均值收拢）；`δ` 为 `friend_number` 新鲜感 S 型折价 ∈ [0.6, 1]（编号缺失不罚）。次数与深度共线（N=T/D），深度独立承担结构信号
+- **λ-Choquet 合成**：五维先经 κ=6 的 logistic 隶属映射（绝对口径直接透传无界值），再对权重归一化密度做 Sugeno λ-测度的 Choquet 积分。λ>0 相互制约、λ<0 互相替代、λ=0 退化加权平均；λ ∈ [-0.9, 2]，默认 0.5（键 `intimacyLambda`）
+- **权重可调**：五维权重 0–100 可调（键 `intimacyWeights`，旧形状不匹配时回落默认 35/15/20/12/18）；全零权重得 0
+- **好友排除**：完全排除 / 仅隐藏显示（`intimacyExcludedFriends` / `intimacyExcludeMode`），支持一键恢复
+- **评分口径**（键 `intimacyScoreMode`）：百分制按 P90 归一得 0–100；绝对评分按上表固定锚点，**各维与总分均无 1000 上限**，进度条以榜内最高值为满格
+- **排行**：`topFriends` 全量展示，`scoreMax` 为榜内最高分
+- **管理函数**：`setWeight` / `resetWeights`（连 λ 一并重置）、`setLambda`、排除管理、`setExcludeMode` / `setScoreMode`
+- 权重、λ、评分口径与排除管理 UI 位于页头设置入口打开的右侧 Sheet 抽屉
 
 ### 6.12 数据库管理页面
 

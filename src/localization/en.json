@@ -849,26 +849,28 @@
                 "header": "Relationship Intimacy",
                 "refresh": "Refresh",
                 "tips": {
-                    "description": "Scores relationship intimacy based on online overlap time, co-world visitation frequency, recency of interactions, and consistency of daily engagement."
+                    "description": "Scores relationship intimacy from five dimensions — co-presence time, regularity, recency, trend, and initiative — combined through a λ-Choquet integral. Every dimension is an accumulating physical quantity: the absolute scale takes a log ratio against a fixed anchor with no 1000-point ceiling — 1 hour together / 26 active weeks / 1 hour in the last 90 days = the 1000-point standard line, and values keep growing logarithmically past it."
                 },
                 "distribution": "Score Distribution",
                 "top_friends": "Top Friends by Intimacy",
                 "detail_title": "Detailed Breakdown",
                 "dimension": {
-                    "online_overlap": "Online Overlap",
-                    "co_world_frequency": "Co-World Frequency",
+                    "contact": "Contact",
+                    "regularity": "Regularity",
                     "recency": "Recency",
-                    "consistency": "Consistency"
+                    "trend": "Trend",
+                    "activity": "Initiative"
                 },
                 "weights": {
                     "title": "Score Weights",
                     "reset": "Reset",
                     "explain": {
-                        "summary": "Each dimension is normalized first, then averaged by weight into the final score. Weights are relative shares and need not add up to 100; Reset restores the 40 / 30 / 20 / 10 defaults.",
-                        "online_overlap": "Cumulative time both of you were online together — how much time you actually share.",
-                        "co_world_frequency": "How often you both joined the same world — how often you run into each other.",
-                        "recency": "Time since your last interaction — quick decay over the first two weeks, then a long tail — discounted by how often you meet, so regular contact outscores a one-off.",
-                        "consistency": "Number of distinct days you appeared together — whether contact stays steady."
+                        "summary": "Each dimension is mapped through a nonlinear membership curve, then combined by a λ-Choquet integral — criteria constrain or substitute each other instead of a plain weighted average. Weights are relative shares and need not add up to 100; Reset restores the 35 / 15 / 20 / 12 / 18 defaults and λ=0.5.",
+                        "contact": "Total time in the same room (blocks summed, reconnects never double-counted), log-ratioed against the 1-hour standard line with no ceiling, then trimmed by freshness and session depth: deep hangs beat fragment drop-bys.",
+                        "regularity": "Accumulated active weeks — every routine week keeps counting, half a year = the 1000-point line and it grows logarithmically after that. Brand-new relationships start low instead of everyone pinning at full marks.",
+                        "recency": "Rolling 90-day co-presence log-ratioed against the 1-hour line, then modulated by time since you last met — past the window a dormant friend reads zero instead of coasting on old history.",
+                        "trend": "This 30 days versus the previous 30: flat = 1000, warming climbs above, cooling drops below — no ceiling and no floor squeeze.",
+                        "activity": "Initiation ratio (them+1)/(you+1): balanced = 1000, them always seeking you climbs above, one-way chasing drops below; neutral without direction data."
                     }
                 },
                 "settings": {
@@ -879,7 +881,7 @@
                     "percent": "Percent",
                     "absolute": "Absolute",
                     "percent_hint": "Each dimension is normalized against the cohort p90 to 0-100; the 0-100 total shows relative standing among friends.",
-                    "absolute_hint": "Each dimension is the log ratio against a fixed anchor (1000 h / 500 joins / 365 days) with no ceiling; totals keep one decimal and every bar fills against the current maximum."
+                    "absolute_hint": "Each dimension is the log ratio against a fixed anchor (1 h co-presence / 26 active weeks / 1 h in 90 days) — 1000 is the standard line, not a ceiling, so values accumulate without limit; totals keep one decimal and every bar fills against the current maximum."
                 },
                 "excluded": {
                     "title": "Excluded Friends",
@@ -891,6 +893,11 @@
                     "include_action": "Restore",
                     "restore_all": "Restore All",
                     "empty": "No excluded friends"
+                },
+                "lambda": {
+                    "title": "Constraint λ",
+                    "explain": "λ controls how the dimensions interact. λ>0: dimensions constrain each other — one strength cannot cover a shortfall and only a balanced profile scores high. λ<0: dimensions substitute each other — one strength can cover a weak side. λ=0 degrades to a plain weighted average.",
+                    "hint": "Positive favors balanced profiles, negative favors single-strength profiles"
                 }
             },
             "avatar_usage": {
