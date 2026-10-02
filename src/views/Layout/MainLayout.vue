@@ -99,7 +99,7 @@
 
         <WhatsNewDialog></WhatsNewDialog>
 
-        <SpotlightDialog></SpotlightDialog>
+        <WelcomeDialog></WelcomeDialog>
     </template>
 </template>
 
@@ -143,7 +143,7 @@
     const VRChatConfigDialog = defineAsyncComponent(() => import('../Settings/dialogs/VRChatConfigDialog.vue'));
     const WorldImportDialog = defineAsyncComponent(() => import('../Favorites/dialogs/WorldImportDialog.vue'));
     const WhatsNewDialog = defineAsyncComponent(() => import('../../components/onboarding/WhatsNewDialog.vue'));
-    const SpotlightDialog = defineAsyncComponent(() => import('../../components/onboarding/SpotlightDialog.vue'));
+    const WelcomeDialog = defineAsyncComponent(() => import('../../components/onboarding/WelcomeDialog.vue'));
 
     import { isAutoFollowDialogOpen } from '../../coordinators/autoFollowCoordinator';
 

@@ -1,7 +1,6 @@
 import configRepository from './config';
 
 const OOBE_COMPLETED_KEY = 'VRCX_OobeCompleted';
-const WELCOME_SEEN_KEY = 'VRCX_onboarding_welcome_seen';
 
 let completedCache = null;
 
@@ -17,16 +16,12 @@ export async function isOobeCompleted() {
 }
 
 /**
- * Mark the OOBE wizard as finished. Also marks the legacy welcome dialog as
- * seen so SpotlightDialog does not show a redundant welcome on first entry.
+ * Mark the OOBE wizard as finished.
  * @returns {Promise<void>}
  */
 export async function completeOobe() {
     completedCache = true;
-    await Promise.all([
-        configRepository.setBool(OOBE_COMPLETED_KEY, true),
-        configRepository.setBool(WELCOME_SEEN_KEY, true)
-    ]);
+    await configRepository.setBool(OOBE_COMPLETED_KEY, true);
 }
 
 /**

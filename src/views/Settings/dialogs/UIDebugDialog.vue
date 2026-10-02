@@ -599,10 +599,10 @@
     }
 
     /**
-     * Reset the welcome-dialog seen flag so SpotlightDialog shows again.
+     * Reset the personalized welcome-dialog seen flag so WelcomeDialog shows again.
      */
     async function showWelcomeDialog() {
-        await configRepository.setBool('VRCX_onboarding_welcome_seen', false);
+        await configRepository.setBool('VRCX_onboarding_personal_welcome_seen', false);
         router.push('/feed');
     }
 

@@ -4088,26 +4088,8 @@
     },
     "onboarding": {
         "welcome": {
-            "title": "欢迎使用 VRCX",
-            "subtitle": "这里有一些你可能没注意到的奇妙功能",
-            "features": {
-                "user_profiles": {
-                    "title": "玩家资料",
-                    "description": "点击任意玩家以查看共同好友、活动热力图和包含加入/离开详情的会话日志"
-                },
-                "right_click": {
-                    "title": "右键菜单",
-                    "description": "在关键元素上右键以快速操作并查看更多选项"
-                },
-                "dashboard": {
-                    "title": "自定义仪表板",
-                    "description": "通过组合适合你的面板来自定义工作区"
-                },
-                "quick_search": {
-                    "title": "快速搜索",
-                    "description": "按 Ctrl+K（Mac 上为 ⌘+K）可立即搜索玩家、世界和模型"
-                }
-            },
+            "title": "欢迎使用 VRCX-Pro",
+            "subtitle": "你好，{name}，很高兴见到你！",
             "cta": "开始使用"
         },
         "whatsnew": {

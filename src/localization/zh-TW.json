@@ -4087,27 +4087,9 @@
     },
     "onboarding": {
         "welcome": {
-            "title": "歡迎來到 VRCX",
-            "subtitle": "這裡有幾項你可能不會自己發現的功能。",
-            "features": {
-                "user_profiles": {
-                    "title": "用戶個人檔案",
-                    "description": "點擊任一用戶即可查看共同好友、活動熱度圖，以及包含加入／離開詳情的活動紀錄"
-                },
-                "right_click": {
-                    "title": "操作選單",
-                    "description": "在關鍵元素上按右鍵可進行快速操作與使用其他選項"
-                },
-                "dashboard": {
-                    "title": "自訂儀表板",
-                    "description": "透過組合符合需求的面板，打造你專屬的工作區"
-                },
-                "quick_search": {
-                    "title": "快速搜尋",
-                    "description": "按 Ctrl+K (在 Mac 上按 ⌘+K) 即時搜尋用戶、世界和角色"
-                }
-            },
-            "cta": "入門指南"
+            "title": "歡迎使用 VRCX-Pro",
+            "subtitle": "你好，{name}，很高興見到你！",
+            "cta": "開始使用"
         },
         "whatsnew": {
             "title": "VRCX 的新功能",

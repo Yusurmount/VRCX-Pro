@@ -159,7 +159,7 @@ vi.mock('../../../components/onboarding/WhatsNewDialog.vue', () => ({
     __esModule: true,
     default: { template: '<div />' }
 }));
-vi.mock('../../../components/onboarding/SpotlightDialog.vue', () => ({
+vi.mock('../../../components/onboarding/WelcomeDialog.vue', () => ({
     __esModule: true,
     default: { template: '<div />' }
 }));
