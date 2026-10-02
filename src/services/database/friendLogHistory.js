@@ -26,17 +26,22 @@ const friendLogHistory = {
     },
 
     addFriendLogHistory(entry) {
+        // The sidecar rejects a statement whose SQL declares a parameter that
+        // the args object does not carry, and each history entry type only
+        // populates the fields it actually has. Always send all eight; empty
+        // defaults also match the existing rows, because a SQL NULL would come
+        // back over IPC as an empty object and render as "[object Object]".
         sqliteService.executeNonQuery(
             `INSERT OR IGNORE INTO ${dbVars.userPrefix}_friend_log_history (created_at, type, user_id, display_name, previous_display_name, trust_level, previous_trust_level, friend_number) VALUES (@created_at, @type, @user_id, @display_name, @previous_display_name, @trust_level, @previous_trust_level, @friend_number)`,
             {
-                '@created_at': entry.created_at,
-                '@type': entry.type,
-                '@user_id': entry.userId,
-                '@display_name': entry.displayName,
-                '@previous_display_name': entry.previousDisplayName,
-                '@trust_level': entry.trustLevel,
-                '@previous_trust_level': entry.previousTrustLevel,
-                '@friend_number': entry.friendNumber
+                '@created_at': entry.created_at ?? '',
+                '@type': entry.type ?? '',
+                '@user_id': entry.userId ?? '',
+                '@display_name': entry.displayName ?? '',
+                '@previous_display_name': entry.previousDisplayName ?? '',
+                '@trust_level': entry.trustLevel ?? '',
+                '@previous_trust_level': entry.previousTrustLevel ?? '',
+                '@friend_number': entry.friendNumber ?? 0
             }
         );
     },

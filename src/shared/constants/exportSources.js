@@ -152,7 +152,14 @@ const exportSources = {
         titleKey: 'view.friend_log.header',
         sheetNameKey: 'view.friend_log.header',
         defaultFileName: 'friend-log',
-        getData: () => useFriendStore().friendLogTable?.data ?? []
+        // The friend store drops its table data whenever the route is not the
+        // friend log, and the export lives on the Tools page — so read the
+        // history back from SQLite instead of the (empty) in-memory table.
+        getData: async () => {
+            const friendStore = useFriendStore();
+            await friendStore.initFriendLogHistoryTable();
+            return friendStore.friendLogTable?.data ?? [];
+        }
     },
     'friend-list': {
         key: 'friend-list',
