@@ -66,9 +66,7 @@
                     <CardDescription>Card description text goes here.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p class="text-sm text-muted-foreground">
-                        This is the card content area.
-                    </p>
+                    <p class="text-sm text-muted-foreground">This is the card content area.</p>
                 </CardContent>
                 <CardFooter class="gap-2">
                     <Button variant="outline" size="sm">Cancel</Button>
@@ -220,694 +218,700 @@
                 <Kbd>Ctrl</Kbd> + <Kbd>V</Kbd>
             </div>
         </section>
-    <Separator />
+        <Separator />
 
-    <!-- Alert Dialog -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">AlertDialog</h3>
-        <AlertDialog>
-            <AlertDialogTrigger as-child>
-                <Button variant="outline">Delete item</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This action cannot be undone. The item will be removed permanently.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction>Continue</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-    </section>
+        <!-- Alert Dialog -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">AlertDialog</h3>
+            <AlertDialog>
+                <AlertDialogTrigger as-child>
+                    <Button variant="outline">Delete item</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. The item will be removed permanently.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Avatar -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Avatar</h3>
-        <div class="flex items-center gap-4">
-            <Avatar class="size-10">
-                <AvatarFallback>VX</AvatarFallback>
-            </Avatar>
-            <Avatar class="size-10">
-                <AvatarFallback><User class="size-5 text-muted-foreground" /></AvatarFallback>
-            </Avatar>
-            <Avatar class="size-12">
-                <AvatarFallback class="text-sm">LG</AvatarFallback>
-            </Avatar>
-        </div>
-    </section>
-
-    <Separator />
-
-    <!-- Breadcrumb -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Breadcrumb</h3>
-        <Breadcrumb>
-            <BreadcrumbList>
-                <BreadcrumbItem>
-                    <BreadcrumbLink as-child>
-                        <Button variant="ghost" size="sm">Home</Button>
-                    </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                    <BreadcrumbLink as-child>
-                        <Button variant="ghost" size="sm">Settings</Button>
-                    </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                    <BreadcrumbPage>UI Gallery</BreadcrumbPage>
-                </BreadcrumbItem>
-            </BreadcrumbList>
-        </Breadcrumb>
-    </section>
-
-    <Separator />
-
-    <!-- Button Group -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">ButtonGroup</h3>
-        <div class="flex flex-wrap items-start gap-4">
-            <ButtonGroup>
-                <Button variant="outline">Left</Button>
-                <Button variant="outline">Middle</Button>
-                <Button variant="outline">Right</Button>
-            </ButtonGroup>
-            <ButtonGroup orientation="vertical">
-                <Button variant="outline">Up</Button>
-                <Button variant="outline">Down</Button>
-            </ButtonGroup>
-        </div>
-    </section>
-
-    <Separator />
-
-    <!-- Calendar -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Calendar</h3>
-        <Calendar class="w-fit" />
-    </section>
-
-    <Separator />
-
-    <!-- Carousel -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Carousel</h3>
-        <div class="relative w-full max-w-md">
-            <Carousel>
-                <CarouselContent class="h-32">
-                    <CarouselItem v-for="n in 4" :key="n">
-                        <div
-                            class="flex h-32 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
-                            Slide {{ n }}
-                        </div>
-                    </CarouselItem>
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-            </Carousel>
-        </div>
-    </section>
-
-    <Separator />
-
-    <!-- Collapsible -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Collapsible</h3>
-        <Collapsible v-slot="{ open }" class="w-full max-w-sm space-y-2">
-            <div class="flex items-center justify-between rounded-md border px-3 py-2 text-sm font-medium">
-                <span>@vrcx starred 3 repositories</span>
-                <CollapsibleTrigger as-child>
-                    <Button variant="ghost" size="sm">{{ open ? 'Hide' : 'Show' }}</Button>
-                </CollapsibleTrigger>
+        <!-- Avatar -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Avatar</h3>
+            <div class="flex items-center gap-4">
+                <Avatar class="size-10">
+                    <AvatarFallback>VX</AvatarFallback>
+                </Avatar>
+                <Avatar class="size-10">
+                    <AvatarFallback><User class="size-5 text-muted-foreground" /></AvatarFallback>
+                </Avatar>
+                <Avatar class="size-12">
+                    <AvatarFallback class="text-sm">LG</AvatarFallback>
+                </Avatar>
             </div>
-            <CollapsibleContent class="rounded-md border px-3 py-2 text-sm text-muted-foreground">
-                vrcx-pro / vrcx-pro — friendship management tool for VRChat.
-            </CollapsibleContent>
-        </Collapsible>
-    </section>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Command -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Command</h3>
-        <Command class="w-full max-w-sm rounded-lg border">
-            <CommandInput placeholder="Type a command…" />
-            <CommandList>
-                <CommandEmpty>No results found.</CommandEmpty>
-                <CommandGroup heading="Suggestions">
-                    <CommandItem value="calendar">Calendar</CommandItem>
-                    <CommandItem value="search">Search</CommandItem>
-                    <CommandItem value="settings">Settings</CommandItem>
-                </CommandGroup>
-                <CommandSeparator />
-                <CommandGroup heading="History">
-                    <CommandItem value="import">Import</CommandItem>
-                    <CommandItem value="export">Export</CommandItem>
-                </CommandGroup>
-            </CommandList>
-        </Command>
-    </section>
+        <!-- Breadcrumb -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Breadcrumb</h3>
+            <Breadcrumb>
+                <BreadcrumbList>
+                    <BreadcrumbItem>
+                        <BreadcrumbLink as-child>
+                            <Button variant="ghost" size="sm">Home</Button>
+                        </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbLink as-child>
+                            <Button variant="ghost" size="sm">Settings</Button>
+                        </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbPage>UI Gallery</BreadcrumbPage>
+                    </BreadcrumbItem>
+                </BreadcrumbList>
+            </Breadcrumb>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Context Menu -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">ContextMenu</h3>
-        <ContextMenu>
-            <ContextMenuTrigger as-child>
-                <div
-                    class="flex h-28 w-full max-w-sm items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
-                    Right-click me
+        <!-- Button Group -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">ButtonGroup</h3>
+            <div class="flex flex-wrap items-start gap-4">
+                <ButtonGroup>
+                    <Button variant="outline">Left</Button>
+                    <Button variant="outline">Middle</Button>
+                    <Button variant="outline">Right</Button>
+                </ButtonGroup>
+                <ButtonGroup orientation="vertical">
+                    <Button variant="outline">Up</Button>
+                    <Button variant="outline">Down</Button>
+                </ButtonGroup>
+            </div>
+        </section>
+
+        <Separator />
+
+        <!-- Calendar -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Calendar</h3>
+            <Calendar class="w-fit" />
+        </section>
+
+        <Separator />
+
+        <!-- Carousel -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Carousel</h3>
+            <div class="relative w-full max-w-md">
+                <Carousel>
+                    <CarouselContent class="h-32">
+                        <CarouselItem v-for="n in 4" :key="n">
+                            <div
+                                class="flex h-32 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
+                                Slide {{ n }}
+                            </div>
+                        </CarouselItem>
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                </Carousel>
+            </div>
+        </section>
+
+        <Separator />
+
+        <!-- Collapsible -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Collapsible</h3>
+            <Collapsible v-slot="{ open }" class="w-full max-w-sm space-y-2">
+                <div class="flex items-center justify-between rounded-md border px-3 py-2 text-sm font-medium">
+                    <span>@vrcx starred 3 repositories</span>
+                    <CollapsibleTrigger as-child>
+                        <Button variant="ghost" size="sm">{{ open ? 'Hide' : 'Show' }}</Button>
+                    </CollapsibleTrigger>
                 </div>
-            </ContextMenuTrigger>
-            <ContextMenuContent>
-                <ContextMenuLabel>Actions</ContextMenuLabel>
-                <ContextMenuItem>Open</ContextMenuItem>
-                <ContextMenuItem inset>
-                    Save
-                    <ContextMenuShortcut>⌘S</ContextMenuShortcut>
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem variant="destructive">Delete</ContextMenuItem>
-            </ContextMenuContent>
-        </ContextMenu>
-    </section>
+                <CollapsibleContent class="rounded-md border px-3 py-2 text-sm text-muted-foreground">
+                    vrcx-pro / vrcx-pro — friendship management tool for VRChat.
+                </CollapsibleContent>
+            </Collapsible>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Data Table -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">DataTable</h3>
-        <DataTableEmpty type="nomatch" class="max-w-md" />
-    </section>
+        <!-- Command -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Command</h3>
+            <Command class="w-full max-w-sm rounded-lg border">
+                <CommandInput placeholder="Type a command…" />
+                <CommandList>
+                    <CommandEmpty>No results found.</CommandEmpty>
+                    <CommandGroup heading="Suggestions">
+                        <CommandItem value="calendar">Calendar</CommandItem>
+                        <CommandItem value="search">Search</CommandItem>
+                        <CommandItem value="settings">Settings</CommandItem>
+                    </CommandGroup>
+                    <CommandSeparator />
+                    <CommandGroup heading="History">
+                        <CommandItem value="import">Import</CommandItem>
+                        <CommandItem value="export">Export</CommandItem>
+                    </CommandGroup>
+                </CommandList>
+            </Command>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Dialog -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Dialog</h3>
-        <Dialog>
-            <DialogTrigger as-child>
-                <Button variant="outline">Open dialog</Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Edit profile</DialogTitle>
-                    <DialogDescription>Make changes to your profile here.</DialogDescription>
-                </DialogHeader>
-                <div class="space-y-2">
-                    <Label for="gallery-dialog-name">Name</Label>
-                    <Input id="gallery-dialog-name" placeholder="Name" />
-                </div>
-                <DialogFooter>
-                    <Button variant="outline">Cancel</Button>
-                    <Button>Save</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    </section>
+        <!-- Context Menu -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">ContextMenu</h3>
+            <ContextMenu>
+                <ContextMenuTrigger as-child>
+                    <div
+                        class="flex h-28 w-full max-w-sm items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
+                        Right-click me
+                    </div>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                    <ContextMenuLabel>Actions</ContextMenuLabel>
+                    <ContextMenuItem>Open</ContextMenuItem>
+                    <ContextMenuItem inset>
+                        Save
+                        <ContextMenuShortcut>⌘S</ContextMenuShortcut>
+                    </ContextMenuItem>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem variant="destructive">Delete</ContextMenuItem>
+                </ContextMenuContent>
+            </ContextMenu>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Dropdown Menu -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">DropdownMenu</h3>
-        <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-                <Button variant="outline">Options</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuItem inset>Profile</DropdownMenuItem>
-                <DropdownMenuItem inset>Billing</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive">Log out</DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-    </section>
+        <!-- Data Table -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">DataTable</h3>
+            <DataTableEmpty type="nomatch" class="max-w-md" />
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Empty -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Empty</h3>
-        <Empty class="max-w-md">
-            <EmptyHeader>
-                <EmptyMedia variant="icon"><Inbox /></EmptyMedia>
-                <EmptyTitle>No results</EmptyTitle>
-                <EmptyDescription>Try adjusting your search or filters.</EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-                <Button variant="outline" size="sm">Reset filters</Button>
-            </EmptyContent>
-        </Empty>
-    </section>
+        <!-- Dialog -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Dialog</h3>
+            <Dialog>
+                <DialogTrigger as-child>
+                    <Button variant="outline">Open dialog</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit profile</DialogTitle>
+                        <DialogDescription>Make changes to your profile here.</DialogDescription>
+                    </DialogHeader>
+                    <div class="space-y-2">
+                        <Label for="gallery-dialog-name">Name</Label>
+                        <Input id="gallery-dialog-name" placeholder="Name" />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline">Cancel</Button>
+                        <Button>Save</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Field -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Field</h3>
-        <div class="max-w-md space-y-4">
-            <Field orientation="horizontal">
-                <FieldLabel class="w-24">Email</FieldLabel>
-                <FieldContent>
-                    <Input type="email" placeholder="you@example.com" />
-                    <FieldDescription>We'll never share your email.</FieldDescription>
-                </FieldContent>
-            </Field>
-            <Field>
-                <FieldLabel>Name</FieldLabel>
-                <FieldContent>
-                    <Input placeholder="Display name" />
-                </FieldContent>
-            </Field>
-        </div>
-    </section>
+        <!-- Dropdown Menu -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">DropdownMenu</h3>
+            <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                    <Button variant="outline">Options</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuItem inset>Profile</DropdownMenuItem>
+                    <DropdownMenuItem inset>Billing</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem variant="destructive">Log out</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Form -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Form</h3>
-        <div class="max-w-md">
-            <Form class="space-y-4" @submit="onFormSubmit">
-                <FormField v-slot="{ componentField }" name="email" :rules="validateEmail">
-                    <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                            <Input type="email" placeholder="you@example.com" v-bind="componentField" />
-                        </FormControl>
-                        <FormDescription>We'll never share your email.</FormDescription>
-                        <FormMessage />
-                    </FormItem>
-                </FormField>
-                <div class="flex items-center gap-3">
-                    <Button type="submit">Submit</Button>
-                    <span v-if="formSubmitted" class="text-sm text-muted-foreground"> Submitted. </span>
-                </div>
-            </Form>
-        </div>
-    </section>
+        <!-- Empty -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Empty</h3>
+            <Empty class="max-w-md">
+                <EmptyHeader>
+                    <EmptyMedia variant="icon"><Inbox /></EmptyMedia>
+                    <EmptyTitle>No results</EmptyTitle>
+                    <EmptyDescription>Try adjusting your search or filters.</EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                    <Button variant="outline" size="sm">Reset filters</Button>
+                </EmptyContent>
+            </Empty>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Hover Card -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">HoverCard</h3>
-        <HoverCard>
-            <HoverCardTrigger as-child>
-                <Button variant="link">@vrcx</Button>
-            </HoverCardTrigger>
-            <HoverCardContent>
-                <div class="text-sm font-semibold">VRCX</div>
-                <p class="text-sm text-muted-foreground">A desktop client for VRChat.</p>
-            </HoverCardContent>
-        </HoverCard>
-    </section>
+        <!-- Field -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Field</h3>
+            <div class="max-w-md space-y-4">
+                <Field orientation="horizontal">
+                    <FieldLabel class="w-24">Email</FieldLabel>
+                    <FieldContent>
+                        <Input type="email" placeholder="you@example.com" />
+                        <FieldDescription>We'll never share your email.</FieldDescription>
+                    </FieldContent>
+                </Field>
+                <Field>
+                    <FieldLabel>Name</FieldLabel>
+                    <FieldContent>
+                        <Input placeholder="Display name" />
+                    </FieldContent>
+                </Field>
+            </div>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Input Group -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">InputGroup</h3>
-        <div class="max-w-sm space-y-3">
-            <InputGroup>
-                <InputGroupAddon align="inline-start"><AtSign /></InputGroupAddon>
-                <InputGroupInput placeholder="username" />
-                <InputGroupButton size="icon-sm" variant="ghost"><X /></InputGroupButton>
-            </InputGroup>
-            <InputGroupSearch v-model="inputGroupQuery" placeholder="Search…" />
-        </div>
-    </section>
+        <!-- Form -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Form</h3>
+            <div class="max-w-md">
+                <Form class="space-y-4" @submit="onFormSubmit">
+                    <FormField v-slot="{ componentField }" name="email" :rules="validateEmail">
+                        <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                                <Input type="email" placeholder="you@example.com" v-bind="componentField" />
+                            </FormControl>
+                            <FormDescription>We'll never share your email.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    </FormField>
+                    <div class="flex items-center gap-3">
+                        <Button type="submit">Submit</Button>
+                        <span v-if="formSubmitted" class="text-sm text-muted-foreground"> Submitted. </span>
+                    </div>
+                </Form>
+            </div>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Input OTP -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">InputOTP</h3>
-        <InputOTP v-model="otpValue" :maxlength="6" inputmode="numeric">
-            <InputOTPGroup>
-                <InputOTPSlot v-for="i in 6" :key="i - 1" :index="i - 1" />
-            </InputOTPGroup>
-        </InputOTP>
-    </section>
+        <!-- Hover Card -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">HoverCard</h3>
+            <HoverCard>
+                <HoverCardTrigger as-child>
+                    <Button variant="link">@vrcx</Button>
+                </HoverCardTrigger>
+                <HoverCardContent>
+                    <div class="text-sm font-semibold">VRCX</div>
+                    <p class="text-sm text-muted-foreground">A desktop client for VRChat.</p>
+                </HoverCardContent>
+            </HoverCard>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Item -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Item</h3>
-        <ItemGroup class="max-w-md">
-            <Item variant="outline">
-                <ItemMedia variant="icon"><Folder /></ItemMedia>
-                <ItemContent>
-                    <ItemTitle>Project proposal</ItemTitle>
-                    <ItemDescription>Edited 2 hours ago</ItemDescription>
-                </ItemContent>
-                <ItemActions>
-                    <Button size="icon-sm" variant="ghost"><Ellipsis /></Button>
-                </ItemActions>
-            </Item>
-            <ItemSeparator />
-            <Item variant="muted" size="sm">
-                <ItemMedia variant="icon"><Folder /></ItemMedia>
-                <ItemContent>
-                    <ItemTitle>Design assets</ItemTitle>
-                    <ItemDescription>Edited yesterday</ItemDescription>
-                </ItemContent>
-            </Item>
-        </ItemGroup>
-    </section>
+        <!-- Input Group -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">InputGroup</h3>
+            <div class="max-w-sm space-y-3">
+                <InputGroup>
+                    <InputGroupAddon align="inline-start"><AtSign /></InputGroupAddon>
+                    <InputGroupInput placeholder="username" />
+                    <InputGroupButton size="icon-sm" variant="ghost"><X /></InputGroupButton>
+                </InputGroup>
+                <InputGroupSearch v-model="inputGroupQuery" placeholder="Search…" />
+            </div>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Label -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Label</h3>
-        <div class="flex items-center gap-2">
-            <Label for="gallery-label-input">Label</Label>
-            <Input id="gallery-label-input" placeholder="Paired input" class="w-48" />
-        </div>
-    </section>
+        <!-- Input OTP -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">InputOTP</h3>
+            <InputOTP v-model="otpValue" :maxlength="6" inputmode="numeric">
+                <InputOTPGroup>
+                    <InputOTPSlot v-for="i in 6" :key="i - 1" :index="i - 1" />
+                </InputOTPGroup>
+            </InputOTP>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Native Select -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">NativeSelect</h3>
-        <NativeSelect v-model="nativeSelectValue" class="w-52">
-            <NativeSelectOption value="apple">Apple</NativeSelectOption>
-            <NativeSelectOption value="banana">Banana</NativeSelectOption>
-            <NativeSelectOption value="blueberry">Blueberry</NativeSelectOption>
-        </NativeSelect>
-    </section>
+        <!-- Item -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Item</h3>
+            <ItemGroup class="max-w-md">
+                <Item variant="outline">
+                    <ItemMedia variant="icon"><Folder /></ItemMedia>
+                    <ItemContent>
+                        <ItemTitle>Project proposal</ItemTitle>
+                        <ItemDescription>Edited 2 hours ago</ItemDescription>
+                    </ItemContent>
+                    <ItemActions>
+                        <Button size="icon-sm" variant="ghost"><Ellipsis /></Button>
+                    </ItemActions>
+                </Item>
+                <ItemSeparator />
+                <Item variant="muted" size="sm">
+                    <ItemMedia variant="icon"><Folder /></ItemMedia>
+                    <ItemContent>
+                        <ItemTitle>Design assets</ItemTitle>
+                        <ItemDescription>Edited yesterday</ItemDescription>
+                    </ItemContent>
+                </Item>
+            </ItemGroup>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Number Field -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">NumberField</h3>
-        <NumberField v-model="numberValue" :min="0" :max="10" :step="1" class="w-40">
-            <NumberFieldContent>
-                <NumberFieldDecrement />
-                <NumberFieldInput />
-                <NumberFieldIncrement />
-            </NumberFieldContent>
-        </NumberField>
-    </section>
+        <!-- Label -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Label</h3>
+            <div class="flex items-center gap-2">
+                <Label for="gallery-label-input">Label</Label>
+                <Input id="gallery-label-input" placeholder="Paired input" class="w-48" />
+            </div>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Pagination -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Pagination</h3>
-        <Pagination v-model:page="paginationPage" :total="100" :items-per-page="10" :sibling-count="1" show-edges>
-            <PaginationContent v-slot="{ items }">
-                <PaginationPrevious />
-                <template v-for="(item, index) in items" :key="index">
-                    <PaginationItem
-                        v-if="item.type === 'page'"
-                        :value="item.value"
-                        :is-active="item.value === paginationPage">
-                        {{ item.value }}
-                    </PaginationItem>
-                    <PaginationEllipsis v-else />
+        <!-- Native Select -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">NativeSelect</h3>
+            <NativeSelect v-model="nativeSelectValue" class="w-52">
+                <NativeSelectOption value="apple">Apple</NativeSelectOption>
+                <NativeSelectOption value="banana">Banana</NativeSelectOption>
+                <NativeSelectOption value="blueberry">Blueberry</NativeSelectOption>
+            </NativeSelect>
+        </section>
+
+        <Separator />
+
+        <!-- Number Field -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">NumberField</h3>
+            <NumberField v-model="numberValue" :min="0" :max="10" :step="1" class="w-40">
+                <NumberFieldContent>
+                    <NumberFieldDecrement />
+                    <NumberFieldInput />
+                    <NumberFieldIncrement />
+                </NumberFieldContent>
+            </NumberField>
+        </section>
+
+        <Separator />
+
+        <!-- Pagination -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Pagination</h3>
+            <Pagination v-model:page="paginationPage" :total="100" :items-per-page="10" :sibling-count="1" show-edges>
+                <PaginationContent v-slot="{ items }">
+                    <PaginationPrevious />
+                    <template v-for="(item, index) in items" :key="index">
+                        <PaginationItem
+                            v-if="item.type === 'page'"
+                            :value="item.value"
+                            :is-active="item.value === paginationPage">
+                            {{ item.value }}
+                        </PaginationItem>
+                        <PaginationEllipsis v-else />
+                    </template>
+                    <PaginationNext />
+                </PaginationContent>
+            </Pagination>
+        </section>
+
+        <Separator />
+
+        <!-- Popover -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Popover</h3>
+            <Popover>
+                <PopoverTrigger as-child>
+                    <Button variant="outline">Open popover</Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-64 p-4">
+                    <p class="text-sm">Popover content goes here.</p>
+                </PopoverContent>
+            </Popover>
+        </section>
+
+        <Separator />
+
+        <!-- Range Calendar -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">RangeCalendar</h3>
+            <RangeCalendar class="w-fit" />
+        </section>
+
+        <Separator />
+
+        <!-- Resizable -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Resizable</h3>
+            <div class="h-40 w-full max-w-md rounded-md border">
+                <ResizablePanelGroup direction="horizontal" class="h-full">
+                    <ResizablePanel :default-size="50" :min-size="20">
+                        <div class="flex h-full items-center justify-center text-sm text-muted-foreground">Panel A</div>
+                    </ResizablePanel>
+                    <ResizableHandle />
+                    <ResizablePanel :default-size="50" :min-size="20">
+                        <div class="flex h-full items-center justify-center text-sm text-muted-foreground">Panel B</div>
+                    </ResizablePanel>
+                </ResizablePanelGroup>
+            </div>
+        </section>
+
+        <Separator />
+
+        <!-- Scroll Area -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">ScrollArea</h3>
+            <ScrollArea class="h-40 w-72 rounded-md border p-4">
+                <p v-for="n in 20" :key="n" class="text-sm text-muted-foreground">
+                    Line {{ n }} of scrollable content.
+                </p>
+            </ScrollArea>
+        </section>
+
+        <Separator />
+
+        <!-- Select -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Select</h3>
+            <Select v-model="selectValue">
+                <SelectTrigger class="w-48">
+                    <SelectValue placeholder="Select a fruit" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                        <SelectLabel>Fruits</SelectLabel>
+                        <SelectItem value="apple">Apple</SelectItem>
+                        <SelectItem value="banana">Banana</SelectItem>
+                        <SelectItem value="blueberry">Blueberry</SelectItem>
+                    </SelectGroup>
+                </SelectContent>
+            </Select>
+        </section>
+
+        <Separator />
+
+        <!-- Sheet -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Sheet</h3>
+            <Sheet>
+                <SheetTrigger as-child>
+                    <Button variant="outline">Open sheet</Button>
+                </SheetTrigger>
+                <SheetContent>
+                    <SheetHeader>
+                        <SheetTitle>Edit profile</SheetTitle>
+                        <SheetDescription>Make changes to your profile here.</SheetDescription>
+                    </SheetHeader>
+                    <div class="px-4">
+                        <Input placeholder="Name" />
+                    </div>
+                </SheetContent>
+            </Sheet>
+        </section>
+
+        <Separator />
+
+        <!-- Sidebar -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Sidebar</h3>
+            <div class="h-56 w-full max-w-md overflow-hidden rounded-md border">
+                <SidebarProvider :open="true" class="h-full">
+                    <Sidebar collapsible="none" class="w-48">
+                        <SidebarHeader class="border-b p-2">
+                            <SidebarGroup>
+                                <SidebarGroupLabel>Menu</SidebarGroupLabel>
+                            </SidebarGroup>
+                        </SidebarHeader>
+                        <SidebarContent>
+                            <SidebarGroup>
+                                <SidebarMenu>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton is-active>
+                                            <Home />
+                                            <span>Home</span>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton>
+                                            <Settings />
+                                            <span>Settings</span>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                </SidebarMenu>
+                            </SidebarGroup>
+                        </SidebarContent>
+                    </Sidebar>
+                    <SidebarInset class="p-4 text-sm text-muted-foreground">
+                        <SidebarTrigger class="mb-2" />
+                        Main content area
+                    </SidebarInset>
+                </SidebarProvider>
+            </div>
+        </section>
+
+        <Separator />
+
+        <!-- Slider -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Slider</h3>
+            <div class="max-w-sm space-y-4">
+                <Slider v-model="sliderValue" :min="0" :max="100" :step="1" />
+                <Slider v-model="rangeSliderValue" :min="0" :max="100" :step="10" />
+            </div>
+        </section>
+
+        <Separator />
+
+        <!-- Sonner -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Sonner</h3>
+            <div class="flex flex-wrap gap-2">
+                <Button variant="outline" @click="toast('Plain notification')">Default</Button>
+                <Button variant="outline" @click="toast.success('Saved!')">Success</Button>
+                <Button variant="outline" @click="toast.error('Something went wrong')"> Error </Button>
+            </div>
+        </section>
+
+        <Separator />
+
+        <!-- Table -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Table</h3>
+            <Table class="max-w-md">
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead class="text-right">Count</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow v-for="row in tableRows" :key="row.name">
+                        <TableCell>{{ row.name }}</TableCell>
+                        <TableCell>
+                            <Badge variant="secondary">{{ row.status }}</Badge>
+                        </TableCell>
+                        <TableCell class="text-right tabular-nums">{{ row.count }}</TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+        </section>
+
+        <Separator />
+
+        <!-- Tags Input -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">TagsInput</h3>
+            <TagsInput v-model="tagsValue" :max="6" class="max-w-sm">
+                <TagsInputItem v-for="tag in tagsValue" :key="tag" :value="tag">
+                    <TagsInputItemText />
+                    <TagsInputItemDelete />
+                </TagsInputItem>
+                <TagsInputInput placeholder="Add tag…" />
+            </TagsInput>
+        </section>
+
+        <Separator />
+
+        <!-- Toggle Group -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">ToggleGroup</h3>
+            <div class="flex flex-wrap items-center gap-4">
+                <ToggleGroup v-model="toggleGroupValue" type="single" variant="outline">
+                    <ToggleGroupItem value="7">7 days</ToggleGroupItem>
+                    <ToggleGroupItem value="30">30 days</ToggleGroupItem>
+                    <ToggleGroupItem value="90">90 days</ToggleGroupItem>
+                </ToggleGroup>
+                <ToggleGroup type="multiple" variant="outline">
+                    <ToggleGroupItem value="bold">Bold</ToggleGroupItem>
+                    <ToggleGroupItem value="italic">Italic</ToggleGroupItem>
+                    <ToggleGroupItem value="underline">Underline</ToggleGroupItem>
+                </ToggleGroup>
+            </div>
+        </section>
+
+        <Separator />
+
+        <!-- Tooltip -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Tooltip</h3>
+            <div class="flex flex-wrap items-center gap-3">
+                <TooltipWrapper side="top" content="Top tooltip">
+                    <Button variant="outline">Hover me</Button>
+                </TooltipWrapper>
+                <TooltipWrapper side="right" content="Right tooltip">
+                    <Badge variant="outline">Badge</Badge>
+                </TooltipWrapper>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <Button variant="ghost">Low-level</Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Low-level tooltip</TooltipContent>
+                </Tooltip>
+            </div>
+        </section>
+
+        <Separator />
+
+        <!-- Tree -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">Tree</h3>
+            <Tree
+                :items="treeItems"
+                :get-key="(item) => item.id"
+                :get-children="(item) => item.children"
+                :default-expanded="[1]"
+                class="w-64 gap-0.5">
+                <template #default="{ flattenItems }">
+                    <TreeItem v-for="item in flattenItems" :key="item._id" :value="item.value" :level="item.level">
+                        {{ item.value.label }}
+                    </TreeItem>
                 </template>
-                <PaginationNext />
-            </PaginationContent>
-        </Pagination>
-    </section>
+            </Tree>
+        </section>
 
-    <Separator />
+        <Separator />
 
-    <!-- Popover -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Popover</h3>
-        <Popover>
-            <PopoverTrigger as-child>
-                <Button variant="outline">Open popover</Button>
-            </PopoverTrigger>
-            <PopoverContent class="w-64 p-4">
-                <p class="text-sm">Popover content goes here.</p>
-            </PopoverContent>
-        </Popover>
-    </section>
-
-    <Separator />
-
-    <!-- Range Calendar -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">RangeCalendar</h3>
-        <RangeCalendar class="w-fit" />
-    </section>
-
-    <Separator />
-
-    <!-- Resizable -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Resizable</h3>
-        <div class="h-40 w-full max-w-md rounded-md border">
-            <ResizablePanelGroup direction="horizontal" class="h-full">
-                <ResizablePanel :default-size="50" :min-size="20">
-                    <div class="flex h-full items-center justify-center text-sm text-muted-foreground">Panel A</div>
-                </ResizablePanel>
-                <ResizableHandle />
-                <ResizablePanel :default-size="50" :min-size="20">
-                    <div class="flex h-full items-center justify-center text-sm text-muted-foreground">Panel B</div>
-                </ResizablePanel>
-            </ResizablePanelGroup>
-        </div>
-    </section>
-
-    <Separator />
-
-    <!-- Scroll Area -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">ScrollArea</h3>
-        <ScrollArea class="h-40 w-72 rounded-md border p-4">
-            <p v-for="n in 20" :key="n" class="text-sm text-muted-foreground">Line {{ n }} of scrollable content.</p>
-        </ScrollArea>
-    </section>
-
-    <Separator />
-
-    <!-- Select -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Select</h3>
-        <Select v-model="selectValue">
-            <SelectTrigger class="w-48">
-                <SelectValue placeholder="Select a fruit" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectGroup>
-                    <SelectLabel>Fruits</SelectLabel>
-                    <SelectItem value="apple">Apple</SelectItem>
-                    <SelectItem value="banana">Banana</SelectItem>
-                    <SelectItem value="blueberry">Blueberry</SelectItem>
-                </SelectGroup>
-            </SelectContent>
-        </Select>
-    </section>
-
-    <Separator />
-
-    <!-- Sheet -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Sheet</h3>
-        <Sheet>
-            <SheetTrigger as-child>
-                <Button variant="outline">Open sheet</Button>
-            </SheetTrigger>
-            <SheetContent>
-                <SheetHeader>
-                    <SheetTitle>Edit profile</SheetTitle>
-                    <SheetDescription>Make changes to your profile here.</SheetDescription>
-                </SheetHeader>
-                <div class="px-4">
-                    <Input placeholder="Name" />
-                </div>
-            </SheetContent>
-        </Sheet>
-    </section>
-
-    <Separator />
-
-    <!-- Sidebar -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Sidebar</h3>
-        <div class="h-56 w-full max-w-md overflow-hidden rounded-md border">
-            <SidebarProvider :open="true" class="h-full">
-                <Sidebar collapsible="none" class="w-48">
-                    <SidebarHeader class="border-b p-2">
-                        <SidebarGroup>
-                            <SidebarGroupLabel>Menu</SidebarGroupLabel>
-                        </SidebarGroup>
-                    </SidebarHeader>
-                    <SidebarContent>
-                        <SidebarGroup>
-                            <SidebarMenu>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton is-active>
-                                        <Home />
-                                        <span>Home</span>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton>
-                                        <Settings />
-                                        <span>Settings</span>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            </SidebarMenu>
-                        </SidebarGroup>
-                    </SidebarContent>
-                </Sidebar>
-                <SidebarInset class="p-4 text-sm text-muted-foreground">
-                    <SidebarTrigger class="mb-2" />
-                    Main content area
-                </SidebarInset>
-            </SidebarProvider>
-        </div>
-    </section>
-
-    <Separator />
-
-    <!-- Slider -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Slider</h3>
-        <div class="max-w-sm space-y-4">
-            <Slider v-model="sliderValue" :min="0" :max="100" :step="1" />
-            <Slider v-model="rangeSliderValue" :min="0" :max="100" :step="10" />
-        </div>
-    </section>
-
-    <Separator />
-
-    <!-- Sonner -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Sonner</h3>
-        <div class="flex flex-wrap gap-2">
-            <Button variant="outline" @click="toast('Plain notification')">Default</Button>
-            <Button variant="outline" @click="toast.success('Saved!')">Success</Button>
-            <Button variant="outline" @click="toast.error('Something went wrong')"> Error </Button>
-        </div>
-    </section>
-
-    <Separator />
-
-    <!-- Table -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Table</h3>
-        <Table class="max-w-md">
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead class="text-right">Count</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                <TableRow v-for="row in tableRows" :key="row.name">
-                    <TableCell>{{ row.name }}</TableCell>
-                    <TableCell>
-                        <Badge variant="secondary">{{ row.status }}</Badge>
-                    </TableCell>
-                    <TableCell class="text-right tabular-nums">{{ row.count }}</TableCell>
-                </TableRow>
-            </TableBody>
-        </Table>
-    </section>
-
-    <Separator />
-
-    <!-- Tags Input -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">TagsInput</h3>
-        <TagsInput v-model="tagsValue" :max="6" class="max-w-sm">
-            <TagsInputItem v-for="tag in tagsValue" :key="tag" :value="tag">
-                <TagsInputItemText />
-                <TagsInputItemDelete />
-            </TagsInputItem>
-            <TagsInputInput placeholder="Add tag…" />
-        </TagsInput>
-    </section>
-
-    <Separator />
-
-    <!-- Toggle Group -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">ToggleGroup</h3>
-        <div class="flex flex-wrap items-center gap-4">
-            <ToggleGroup v-model="toggleGroupValue" type="single" variant="outline">
-                <ToggleGroupItem value="7">7 days</ToggleGroupItem>
-                <ToggleGroupItem value="30">30 days</ToggleGroupItem>
-                <ToggleGroupItem value="90">90 days</ToggleGroupItem>
-            </ToggleGroup>
-            <ToggleGroup type="multiple" variant="outline">
-                <ToggleGroupItem value="bold">Bold</ToggleGroupItem>
-                <ToggleGroupItem value="italic">Italic</ToggleGroupItem>
-                <ToggleGroupItem value="underline">Underline</ToggleGroupItem>
-            </ToggleGroup>
-        </div>
-    </section>
-
-    <Separator />
-
-    <!-- Tooltip -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Tooltip</h3>
-        <div class="flex flex-wrap items-center gap-3">
-            <TooltipWrapper side="top" content="Top tooltip">
-                <Button variant="outline">Hover me</Button>
-            </TooltipWrapper>
-            <TooltipWrapper side="right" content="Right tooltip">
-                <Badge variant="outline">Badge</Badge>
-            </TooltipWrapper>
-            <Tooltip>
-                <TooltipTrigger as-child>
-                    <Button variant="ghost">Low-level</Button>
-                </TooltipTrigger>
-                <TooltipContent>Low-level tooltip</TooltipContent>
-            </Tooltip>
-        </div>
-    </section>
-
-    <Separator />
-
-    <!-- Tree -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">Tree</h3>
-        <Tree
-            :items="treeItems"
-            :get-key="(item) => item.id"
-            :get-children="(item) => item.children"
-            :default-expanded="[1]"
-            class="w-64 gap-0.5">
-            <template #default="{ flattenItems }">
-                <TreeItem v-for="item in flattenItems" :key="item._id" :value="item.value" :level="item.level">
-                    {{ item.value.label }}
-                </TreeItem>
-            </template>
-        </Tree>
-    </section>
-
-    <Separator />
-
-    <!-- Virtual Combobox -->
-    <section>
-        <h3 class="text-sm font-semibold text-foreground mb-3">VirtualCombobox</h3>
-        <VirtualCombobox v-model="comboboxValue" :groups="comboboxGroups" placeholder="Select a fruit" class="w-72" />
-    </section>
-</div>
+        <!-- Virtual Combobox -->
+        <section>
+            <h3 class="text-sm font-semibold text-foreground mb-3">VirtualCombobox</h3>
+            <VirtualCombobox
+                v-model="comboboxValue"
+                :groups="comboboxGroups"
+                placeholder="Select a fruit"
+                class="w-72" />
+        </section>
+    </div>
 </template>
 
 <script setup>
