@@ -192,17 +192,24 @@ fn start_dotnet_sidecar(app: tauri::AppHandle, state: State<'_, DotnetSidecar>) 
         "VRCX-Pro.Backend"
     };
     let resource_dir = app.path().resource_dir().map_err(|error| error.to_string())?;
-    // `CARGO_MANIFEST_DIR` points at src-tauri.
-    let dev_backend = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../build/TauriBackend")
-        .join(sidecar_name);
-    // Prefer the freshly published backend in dev: `build:tauri-backend:dev`
-    // produces a framework-dependent build that runs with the system-installed
-    // .NET. The bundled `resource_dir/dotnet-runtime` only gets refreshed on a
-    // full `tauri build`, so an earlier self-contained publish there is stale
-    // and may fail even when .NET is installed. In packaged builds this dev
-    // path does not exist, so it falls back to the bundled runtime.
-    let candidates = [dev_backend, resource_dir.join("dotnet-runtime").join(sidecar_name)];
+    let bundled = resource_dir.join("dotnet-runtime").join(sidecar_name);
+    // In dev builds, prefer the freshly published backend:
+    // `build:tauri-backend:dev` produces a framework-dependent build that runs
+    // with the system-installed .NET. The bundled `resource_dir/dotnet-runtime`
+    // only gets refreshed on a full `tauri build`, so an earlier self-contained
+    // publish there is stale and may fail even when .NET is installed.
+    // Release builds must not consider this path: `CARGO_MANIFEST_DIR` is
+    // compiled in as an absolute path, so on the build machine it would exist
+    // and hijack an installed app's sidecar with the repo's latest build.
+    #[cfg(debug_assertions)]
+    let candidates = {
+        let dev_backend = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../build/TauriBackend")
+            .join(sidecar_name);
+        [dev_backend, bundled]
+    };
+    #[cfg(not(debug_assertions))]
+    let candidates = [bundled];
     let Some(sidecar) = candidates.into_iter().find(|path| path.exists()) else {
         // Development builds can run without the backend; the frontend remains usable.
         return Ok(false);
