@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
     modalConfirm: vi.fn().mockResolvedValue({ ok: true }),
     modalAlert: vi.fn(),
     userGetUser: vi.fn().mockResolvedValue({}),
+    userFetch: vi.fn().mockResolvedValue({}),
     friendDeleteFriend: vi.fn().mockResolvedValue({}),
     toastSuccess: vi.fn(),
     setOptions: vi.fn(),
@@ -117,6 +118,9 @@ vi.mock('../../../api', () => ({
     },
     friendRequest: {
         deleteFriend: (...args) => mocks.friendDeleteFriend(...args)
+    },
+    queryRequest: {
+        fetch: (...args) => mocks.userFetch(...args)
     }
 }));
 
@@ -295,6 +299,7 @@ describe('FriendList.vue', () => {
         mocks.modalConfirm.mockClear();
         mocks.modalAlert.mockReset();
         mocks.userGetUser.mockReset();
+        mocks.userFetch.mockReset();
         mocks.friendDeleteFriend.mockReset();
         mocks.toastSuccess.mockReset();
         mocks.setOptions.mockReset();
@@ -465,8 +470,10 @@ describe('FriendList.vue', () => {
         await clickButtonByText(wrapper, 'view.friend_list.load');
         await flushAsync();
 
-        expect(mocks.userGetUser).toHaveBeenCalledTimes(1);
-        expect(mocks.userGetUser).toHaveBeenCalledWith({ userId: 'usr_1' });
+        expect(mocks.userFetch).toHaveBeenCalledTimes(1);
+        expect(mocks.userFetch).toHaveBeenCalledWith('user.force', {
+            userId: 'usr_1'
+        });
         expect(mocks.toastSuccess).toHaveBeenCalledWith(
             'view.friend_list.load_complete'
         );
