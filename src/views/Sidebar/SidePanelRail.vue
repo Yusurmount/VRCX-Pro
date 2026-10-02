@@ -30,16 +30,6 @@
                 <UsersRound />
             </Button>
         </TooltipWrapper>
-        <TooltipWrapper side="left" :content="t('side_panel.tracked_nonfriends.tab_label')">
-            <Button
-                class="rounded-full"
-                variant="ghost"
-                size="icon-sm"
-                :ariaLabel="t('side_panel.tracked_nonfriends.tab_label')"
-                @click="handleTab('tracked')">
-                <Radar />
-            </Button>
-        </TooltipWrapper>
         <TooltipWrapper
             v-if="notificationLayout !== 'table'"
             side="left"
@@ -62,7 +52,7 @@
 <script setup>
     import { computed } from 'vue';
     import { storeToRefs } from 'pinia';
-    import { Bell, Radar, Search, Users, UsersRound } from 'lucide-vue-next';
+    import { Bell, Search, Users, UsersRound } from 'lucide-vue-next';
     import { useI18n } from 'vue-i18n';
 
     import { Button } from '@/components/ui/button';
@@ -102,7 +92,6 @@
      *
      */
     function handleSearch() {
-        expand();
         quickSearchStore.open();
     }
 
@@ -110,7 +99,6 @@
      *
      */
     function handleNotifications() {
-        expand();
         isNotificationCenterOpen.value = true;
     }
 </script>

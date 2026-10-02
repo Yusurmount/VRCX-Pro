@@ -41,7 +41,6 @@ vi.mock('@/components/ui/tooltip', () => ({
 }));
 vi.mock('lucide-vue-next', () => ({
     Bell: { template: '<i />' },
-    Radar: { template: '<i />' },
     Search: { template: '<i />' },
     Users: { template: '<i />' },
     UsersRound: { template: '<i />' }
@@ -72,26 +71,35 @@ describe('SidePanelRail.vue', () => {
         expect(activeSidePanelTab.value).toBe('friends');
     });
 
-    it('expands the side panel and opens quick search when the search icon is clicked', async () => {
+    it('opens quick search without expanding when the search icon is clicked', async () => {
         const wrapper = mount(SidePanelRail);
 
         await wrapper
             .find('[aria-label="side_panel.search_placeholder"]')
             .trigger('click');
 
-        expect(mocks.setSidePanelCollapsed).toHaveBeenCalledWith(false);
         expect(mocks.openSearch).toHaveBeenCalled();
+        expect(mocks.setSidePanelCollapsed).not.toHaveBeenCalled();
     });
 
-    it('expands the side panel and opens the notification center when the bell icon is clicked', async () => {
+    it('opens the notification center without expanding when the bell icon is clicked', async () => {
         const wrapper = mount(SidePanelRail);
 
         await wrapper
             .find('[aria-label="side_panel.notification_center.title"]')
             .trigger('click');
 
-        expect(mocks.setSidePanelCollapsed).toHaveBeenCalledWith(false);
         expect(mocks.centerOpen.value).toBe(true);
+        expect(mocks.setSidePanelCollapsed).not.toHaveBeenCalled();
+    });
+
+    it('does not show the tracked non-friends icon', () => {
+        const wrapper = mount(SidePanelRail);
+        expect(
+            wrapper
+                .find('[aria-label="side_panel.tracked_nonfriends.tab_label"]')
+                .exists()
+        ).toBe(false);
     });
 
     it('shows the groups icon only when group instances exist', () => {

@@ -5,7 +5,8 @@ import { useAppearanceSettingsStore } from '../stores';
 
 export function useMainLayoutResizable() {
     const appearanceStore = useAppearanceSettingsStore();
-    const { isSideBarTabShow } = storeToRefs(appearanceStore);
+    const { isSideBarTabShow, isSidePanelCollapsed } =
+        storeToRefs(appearanceStore);
 
     const asideDefaultSize = 25;
     const mainDefaultSize = 75;
@@ -24,6 +25,15 @@ export function useMainLayoutResizable() {
             return;
         }
         isAsideCollapsedState.value = isAsideCollapsed(sizes);
+        // 拖拽越过吸附阈值会直接缩到 0（表现为整块隐藏），同步为图标栏收起态；
+        // 路由隐藏侧栏的场景不落库，避免污染用户手动设置的收起状态
+        if (
+            isAsideCollapsedState.value &&
+            isSideBarTabShow.value &&
+            !isSidePanelCollapsed.value
+        ) {
+            appearanceStore.setSidePanelCollapsed(true);
+        }
     };
 
     const isAsideCollapsedStatic = computed(
