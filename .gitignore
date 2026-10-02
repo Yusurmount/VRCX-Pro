@@ -28,3 +28,4 @@ AGENTS.md
 film/
 .worktrees/
 .tmp_*
+.playwright-cli/
