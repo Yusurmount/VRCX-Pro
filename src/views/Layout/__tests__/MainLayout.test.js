@@ -205,13 +205,12 @@ describe('MainLayout.vue', () => {
         );
     });
 
-    it('hides the side panel rail when the route hides the side panel', () => {
+    it('shows the side panel rail when the route forces the panel to collapse', () => {
         mocks.isLoggedIn = true;
-        mocks.sidePanelCollapsed.value = true;
         mocks.sideBarTabShow.value = false;
         const wrapper = mountLayout();
         expect(wrapper.find('[data-testid="side-panel-rail"]').exists()).toBe(
-            false
+            true
         );
     });
 });

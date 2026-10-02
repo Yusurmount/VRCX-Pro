@@ -156,8 +156,6 @@
 
     const sidebarOpen = computed(() => !isNavCollapsed.value);
 
-    const showSidePanelRail = computed(() => isSideBarTabShow.value && isSidePanelCollapsed.value);
-
     const handleSidebarOpenChange = (open) => {
         appearanceSettingsStore.setNavCollapsed(!open);
     };
@@ -216,11 +214,28 @@
 
     const asidePanelRef = ref(null);
 
+    // 特定路由（好友位置、图表等）进入时收起侧栏并显示图标竖条，替代原先的整块隐藏；
+    // 在该路由上手动展开会取消强制收起，离开路由后回到用户偏好状态
+    const routeCollapsed = ref(!isSideBarTabShow.value);
+
+    watch(isSideBarTabShow, (show) => {
+        routeCollapsed.value = !show;
+    });
+
+    watch(isSidePanelCollapsed, (collapsed) => {
+        if (!collapsed) {
+            routeCollapsed.value = false;
+        }
+    });
+
+    const effectiveCollapsed = computed(() => routeCollapsed.value || isSidePanelCollapsed.value);
+    const showSidePanelRail = computed(() => effectiveCollapsed.value);
+
     watch(
-        [isSideBarTabShow, isSidePanelCollapsed],
-        async ([show, collapsed]) => {
+        effectiveCollapsed,
+        async (collapsed) => {
             await nextTick();
-            if (!show || collapsed) {
+            if (collapsed) {
                 asidePanelRef.value?.collapse();
             } else {
                 asidePanelRef.value?.expand();
