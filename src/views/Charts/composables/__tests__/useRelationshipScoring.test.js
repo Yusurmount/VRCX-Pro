@@ -158,8 +158,9 @@ describe('useRelationshipScoring', () => {
             metric({ userId: 'stale', totalTime: 1, lastSeen })
         ]);
         const entry = scoring.friendScores.value.get('stale');
-        expect(entry.dimensions.recency).toBeGreaterThanOrEqual(36);
-        expect(entry.dimensions.recency).toBeLessThanOrEqual(38);
+        // Two-term decay: 0.6·e^(-90/14) + 0.4·e^(-90/120) ≈ 19.
+        expect(entry.dimensions.recency).toBeGreaterThanOrEqual(18);
+        expect(entry.dimensions.recency).toBeLessThanOrEqual(20);
     });
 
     it('returns every non-excluded friend instead of capping the list', async () => {
@@ -179,6 +180,96 @@ describe('useRelationshipScoring', () => {
         for (let i = 1; i < scores.length; i++) {
             expect(scores[i]).toBeLessThanOrEqual(scores[i - 1]);
         }
+    });
+});
+
+describe('useRelationshipScoring recency', () => {
+    const DAY = 24 * 60 * 60 * 1000;
+    const daysAgo = (days) =>
+        new Date(Date.now() - days * DAY).toISOString();
+
+    it('separates a week from a month far more than the old curve did', async () => {
+        const scoring = await loadWith([
+            metric({ userId: 'week', lastSeen: daysAgo(7) }),
+            metric({ userId: 'month', lastSeen: daysAgo(30) })
+        ]);
+        const week = scoring.friendScores.value.get('week').dimensions.recency;
+        const month = scoring.friendScores.value.get('month').dimensions.recency;
+        // Old curve: 92 vs 72 (gap of 20). New: ~74 vs ~38.
+        expect(week).toBeGreaterThanOrEqual(70);
+        expect(week).toBeLessThanOrEqual(77);
+        expect(month).toBeGreaterThanOrEqual(35);
+        expect(month).toBeLessThanOrEqual(41);
+        expect(week - month).toBeGreaterThanOrEqual(30);
+    });
+
+    it('scores a regular contact above a one-off encounter seen just as recently', async () => {
+        const scoring = await loadWith([
+            metric({
+                userId: 'regular',
+                lastSeen: daysAgo(7),
+                firstSeen: daysAgo(60),
+                distinctDays: 20
+            }),
+            metric({
+                userId: 'oneoff',
+                lastSeen: daysAgo(7),
+                firstSeen: daysAgo(60),
+                distinctDays: 1
+            })
+        ]);
+        const regular =
+            scoring.friendScores.value.get('regular').dimensions.recency;
+        const oneoff =
+            scoring.friendScores.value.get('oneoff').dimensions.recency;
+        expect(regular).toBeGreaterThanOrEqual(70);
+        expect(oneoff).toBeLessThanOrEqual(48);
+        expect(regular - oneoff).toBeGreaterThanOrEqual(25);
+    });
+
+    it('stops discounting once contact density reaches the reference', async () => {
+        const scoring = await loadWith([
+            metric({
+                userId: 'dense',
+                lastSeen: new Date().toISOString(),
+                firstSeen: daysAgo(30),
+                distinctDays: 4
+            })
+        ]);
+        expect(
+            scoring.friendScores.value.get('dense').dimensions.recency
+        ).toBe(100);
+    });
+
+    it('keeps a missing firstSeen unpunished', async () => {
+        const scoring = await loadWith([
+            metric({ userId: 'legacy', lastSeen: new Date().toISOString() })
+        ]);
+        expect(
+            scoring.friendScores.value.get('legacy').dimensions.recency
+        ).toBe(100);
+    });
+
+    it('clamps a future lastSeen to full marks instead of exceeding 100', async () => {
+        const scoring = await loadWith([
+            metric({ userId: 'clock-skew', lastSeen: daysAgo(-10) })
+        ]);
+        const entry = scoring.friendScores.value.get('clock-skew');
+        expect(entry.dimensions.recency).toBe(100);
+        expect(entry.score).toBeLessThanOrEqual(100);
+    });
+
+    it('scores an unparsable lastSeen as zero without leaking NaN', async () => {
+        const scoring = await loadWith([
+            metric({ userId: 'broken', lastSeen: 'not-a-timestamp' }),
+            metric({ userId: 'fine', lastSeen: new Date().toISOString() })
+        ]);
+        const broken = scoring.friendScores.value.get('broken');
+        expect(broken.dimensions.recency).toBe(0);
+        expect(Number.isFinite(broken.score)).toBe(true);
+        expect(Number.isFinite(scoring.friendScores.value.get('fine').score)).toBe(
+            true
+        );
     });
 });
 

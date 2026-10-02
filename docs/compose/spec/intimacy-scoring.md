@@ -41,6 +41,15 @@ commits: 493abb7e..2bfe43b8
 7. **配套修复**：评分设置抽屉内容溢出无法滚动（`c71ced98`）、评分权重提示
    补齐缺失译文并收窄布局避免顶出窗口（`d97e5164`）、权重标题旁新增提示
    解释各维度含义（`8379bcc9`）。
+8. **最近度算法重做**（分支 `optimize/intimacy-recency`）：`recency` 由单一
+   90 天指数衰减改为「双指数衰减 × 接触密度折价」——
+   `0.6·e^(-d/14) + 0.4·e^(-d/120)`，前两周快速拉开区分度（7 天 ≈74、
+   30 天 ≈38、90 天 ≈19，旧曲线为 92 / 72 / 37），后段保留长尾不再趋零；
+   再乘接触密度折价 `0.5 + 0.5·min(1, (distinctDays ÷ 关系年龄天数) ÷ 0.1)`，
+   使同一时刻的一次偶遇明显低于规律联系者（7 天前偶遇 ≈43 vs 规律 ≈74）。
+   健壮性一并修复：非法 `lastSeen` 记 0（不再产生 NaN）、未来时间戳钳为 0 天
+   （不再 >100）、`firstSeen` 缺失或非法不打折。仅动 composable，数据层与
+   条目形状不变；测试 18→25，三语 `weights.explain.recency` 文案同步。
 
 **Verification** — `npx vitest run src/views/Charts/composables/__tests__/` → PASS
 （48 tests / 5 files，含新增 5 个用例：空数据、单好友=100、全零=0、离群不压扁
@@ -83,7 +92,7 @@ critical。
 - 权重 `0.4 / 0.3 / 0.2 / 0.1`、`recency` 的 90 天指数衰减、`topFriends` 前 20 排序、
   `scoreDistribution` 十桶直方图、`loadScores` 的 `ensureUserContext` 流程均不变。
   （后续变更：权重改为 0–100 可调、`topFriends` 移除前 20 上限、新增评分口径
-  与排除机制，以 Report 的交付后清单为准。）
+  与排除机制、`recency` 衰减模型重做，以 Report 的交付后清单为准。）
 - 无新增 UI、无新增 i18n 文案。
 
 **新归一化算法**（仅替换三个共位维度的 `normalizeValue`，`recency` 不走归一化）：

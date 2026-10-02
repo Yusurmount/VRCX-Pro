@@ -15,8 +15,16 @@ const EXCLUDED_CONFIG_KEY = 'intimacyExcludedFriends';
 const EXCLUDE_MODE_CONFIG_KEY = 'intimacyExcludeMode';
 const SCORE_MODE_CONFIG_KEY = 'intimacyScoreMode';
 
-const RECENCY_DECAY_DAYS = 90;
+const RECENCY_FAST_DAYS = 14;
+const RECENCY_SLOW_DAYS = 120;
+const RECENCY_FAST_SHARE = 0.6;
+// Contact density (distinct days over relationship age) counts as fully
+// regular at one meeting every ~10 days; below that the dimension slides
+// toward the floor, so a one-off encounter can't read as a kept-up friendship.
+const RECENCY_DENSITY_REF = 0.1;
+const RECENCY_PERSISTENCE_FLOOR = 0.5;
 const MS_PER_HOUR = 60 * 60 * 1000;
+const MS_PER_DAY = 24 * MS_PER_HOUR;
 
 // 'percent' divides each dimension by the cohort's p90 reference and caps at
 // 1; 'absolute' uses fixed anchors instead (so a score never moves when
@@ -51,12 +59,45 @@ function logRatio(value, reference) {
     return Math.log1p(value) / reference;
 }
 
-function recencyScore(lastSeenTimestamp) {
-    if (!lastSeenTimestamp) return 0;
-    const now = Date.now();
-    const lastSeen = new Date(lastSeenTimestamp).getTime();
-    const daysSince = (now - lastSeen) / (1000 * 60 * 60 * 24);
-    return Math.max(0, Math.exp(-daysSince / RECENCY_DECAY_DAYS));
+// Two-term decay: the fast term (τ=14d) separates friends seen this week from
+// friends seen this month, the slow term (τ=120d) keeps a long-absent friend
+// from collapsing to zero the way a single 90-day curve did.
+function recencyBase(daysSince) {
+    return (
+        RECENCY_FAST_SHARE * Math.exp(-daysSince / RECENCY_FAST_DAYS) +
+        (1 - RECENCY_FAST_SHARE) * Math.exp(-daysSince / RECENCY_SLOW_DAYS)
+    );
+}
+
+// Recent-contact regularity, derived from aggregates the metrics already carry:
+// distinct days over the age of the relationship. Missing or invalid firstSeen
+// (legacy rows) skips the penalty instead of guessing.
+function recencyPersistence(metric, now) {
+    if (!metric.firstSeen) return 1;
+    const firstSeen = new Date(metric.firstSeen).getTime();
+    if (!Number.isFinite(firstSeen)) return 1;
+    const ageDays = Math.max(1, (now - firstSeen) / MS_PER_DAY);
+    const density = Math.min(
+        1,
+        Math.max(0, metric.distinctDays || 0) / ageDays
+    );
+    const fidelity = Math.min(1, density / RECENCY_DENSITY_REF);
+    return (
+        RECENCY_PERSISTENCE_FLOOR +
+        (1 - RECENCY_PERSISTENCE_FLOOR) * fidelity
+    );
+}
+
+function recencyScore(metric, now) {
+    if (!metric.lastSeen) return 0;
+    const lastSeen = new Date(metric.lastSeen).getTime();
+    if (!Number.isFinite(lastSeen)) return 0;
+    // A future timestamp (clock skew) reads as "just seen", never above 1.
+    const daysSince = Math.max(0, (now - lastSeen) / MS_PER_DAY);
+    return Math.min(
+        1,
+        recencyBase(daysSince) * recencyPersistence(metric, now)
+    );
 }
 
 export function useRelationshipScoring() {
@@ -161,6 +202,7 @@ export function useRelationshipScoring() {
             : (value) => Math.round(value * scale);
 
         const scores = new Map();
+        const now = Date.now();
 
         for (const metric of scoredMetrics) {
             const overlapValue = absolute
@@ -168,7 +210,7 @@ export function useRelationshipScoring() {
                 : metric.totalTime;
             const onlineOverlap = norm(overlapValue, overlapRef);
             const coWorldFrequency = norm(metric.joinCount, frequencyRef);
-            const recency = recencyScore(metric.lastSeen);
+            const recency = recencyScore(metric, now);
             const consistency = norm(metric.distinctDays, consistencyRef);
 
             const dimensions = {
