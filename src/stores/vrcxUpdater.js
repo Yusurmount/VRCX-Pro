@@ -594,17 +594,19 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
     async function restartVRCX(isUpgrade) {
         updateError.value = '';
         try {
-            if (!LINUX) {
-                const started = await AppApi.RestartApplication(isUpgrade);
-                if (!started) {
-                    throw new Error(
-                        t('message.vrcx_updater.install_start_failed')
-                    );
-                }
-                window.platform.quitApplication();
-            } else {
+            // A plain restart (settings change, restore wizard, …) must relaunch
+            // the app itself; only an upgrade has a staged installer to run.
+            if (!isUpgrade || LINUX) {
                 await window.platform.restartApp();
+                return;
             }
+            const started = await AppApi.RestartApplication(true);
+            if (!started) {
+                throw new Error(
+                    t('message.vrcx_updater.install_start_failed')
+                );
+            }
+            window.platform.quitApplication();
         } catch (err) {
             const message = t('message.vrcx_updater.install_failed', {
                 message: getErrorMessage(err)
