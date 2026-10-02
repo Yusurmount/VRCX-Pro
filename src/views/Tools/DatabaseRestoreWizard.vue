@@ -1,300 +1,301 @@
 <template>
-    <WizardShell
-        v-if="visible"
-        ref="shellRef"
-        :current-step="step"
-        :total-steps="TOTAL_STEPS"
-        :icons="stepIcons"
-        role="dialog"
-        aria-modal="true">
-        <!-- Step 1: restore mode -->
-        <div v-if="step === 1" class="wiz-panel">
-            <h2 class="wiz-title text-foreground">
-                {{ t('view.settings.advanced.advanced.db_import.wizard_mode_title') }}
-            </h2>
-            <p class="wiz-desc text-muted-foreground">
-                {{ t('view.settings.advanced.advanced.db_import.wizard_mode_desc') }}
-            </p>
-            <RadioGroup v-model="restoreMode" class="grid gap-2">
-                <div
-                    class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                    :class="restoreMode === 'incremental' ? 'border-primary' : ''">
-                    <RadioGroupItem id="rw-mode-incremental" value="incremental" />
-                    <div class="flex flex-col gap-1">
-                        <Label for="rw-mode-incremental" class="text-sm font-medium cursor-pointer">
-                            {{ t('view.settings.advanced.advanced.db_import.mode_incremental') }}
-                        </Label>
-                        <p class="text-xs text-muted-foreground">
-                            {{ t('view.settings.advanced.advanced.db_import.mode_incremental_desc') }}
-                        </p>
-                    </div>
-                </div>
-                <div
-                    class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                    :class="restoreMode === 'full' ? 'border-primary' : ''">
-                    <RadioGroupItem id="rw-mode-full" value="full" />
-                    <div class="flex flex-col gap-1">
-                        <Label for="rw-mode-full" class="text-sm font-medium cursor-pointer">
-                            {{ t('view.settings.advanced.advanced.db_import.mode_full') }}
-                        </Label>
-                        <p class="text-xs text-muted-foreground">
-                            {{ t('view.settings.advanced.advanced.db_import.mode_full_desc') }}
-                        </p>
-                    </div>
-                </div>
-            </RadioGroup>
-            <div class="wiz-actions">
-                <Button size="lg" @click="step = 2">
-                    {{ t('view.settings.advanced.advanced.db_import.wizard_next') }}
-                </Button>
-                <Button variant="ghost" @click="requestClose">
-                    {{ t('confirm.cancel_button') }}
-                </Button>
-            </div>
-        </div>
-
-        <!-- Step 2: mode options -->
-        <div v-else-if="step === 2" class="wiz-panel">
-            <h2 class="wiz-title text-foreground">
-                {{ t('view.settings.advanced.advanced.db_import.wizard_options_title') }}
-            </h2>
-
-            <template v-if="restoreMode === 'incremental'">
+    <div v-if="visible" class="restore-wizard-overlay">
+        <WizardShell
+            ref="shellRef"
+            :current-step="step"
+            :total-steps="TOTAL_STEPS"
+            :icons="stepIcons"
+            role="dialog"
+            aria-modal="true">
+            <!-- Step 1: restore mode -->
+            <div v-if="step === 1" class="wiz-panel">
+                <h2 class="wiz-title text-foreground">
+                    {{ t('view.settings.advanced.advanced.db_import.wizard_mode_title') }}
+                </h2>
                 <p class="wiz-desc text-muted-foreground">
-                    {{ t('view.settings.advanced.advanced.db_import.strategy_description') }}
+                    {{ t('view.settings.advanced.advanced.db_import.wizard_mode_desc') }}
                 </p>
-                <div class="space-y-2">
-                    <Label class="text-sm font-medium">
-                        {{ t('view.settings.advanced.advanced.db_import.strategy_conflict_label') }}
-                    </Label>
-                    <RadioGroup v-model="conflictStrategy" class="grid gap-2">
-                        <div
-                            class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                            :class="conflictStrategy === 'overwrite' ? 'border-primary' : ''">
-                            <RadioGroupItem id="rw-conflict-overwrite" value="overwrite" />
-                            <div class="flex flex-col gap-1">
-                                <Label for="rw-conflict-overwrite" class="text-sm font-medium cursor-pointer">
-                                    {{ t('view.settings.advanced.advanced.db_import.strategy_overwrite') }}
-                                </Label>
-                                <p class="text-xs text-muted-foreground">
-                                    {{ t('view.settings.advanced.advanced.db_import.strategy_overwrite_desc') }}
-                                </p>
-                            </div>
-                        </div>
-                        <div
-                            class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                            :class="conflictStrategy === 'skip' ? 'border-primary' : ''">
-                            <RadioGroupItem id="rw-conflict-skip" value="skip" />
-                            <div class="flex flex-col gap-1">
-                                <Label for="rw-conflict-skip" class="text-sm font-medium cursor-pointer">
-                                    {{ t('view.settings.advanced.advanced.db_import.strategy_skip_existing') }}
-                                </Label>
-                                <p class="text-xs text-muted-foreground">
-                                    {{ t('view.settings.advanced.advanced.db_import.strategy_skip_existing_desc') }}
-                                </p>
-                            </div>
-                        </div>
-                    </RadioGroup>
-                </div>
-                <div class="space-y-2">
-                    <Label class="text-sm font-medium">
-                        {{ t('view.settings.advanced.advanced.db_import.strategy_new_label') }}
-                    </Label>
-                    <RadioGroup v-model="newDataStrategy" class="grid gap-2">
-                        <div
-                            class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                            :class="newDataStrategy === 'add' ? 'border-primary' : ''">
-                            <RadioGroupItem id="rw-new-add" value="add" />
-                            <div class="flex flex-col gap-1">
-                                <Label for="rw-new-add" class="text-sm font-medium cursor-pointer">
-                                    {{ t('view.settings.advanced.advanced.db_import.strategy_add') }}
-                                </Label>
-                                <p class="text-xs text-muted-foreground">
-                                    {{ t('view.settings.advanced.advanced.db_import.strategy_add_desc') }}
-                                </p>
-                            </div>
-                        </div>
-                        <div
-                            class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
-                            :class="newDataStrategy === 'skip' ? 'border-primary' : ''">
-                            <RadioGroupItem id="rw-new-skip" value="skip" />
-                            <div class="flex flex-col gap-1">
-                                <Label for="rw-new-skip" class="text-sm font-medium cursor-pointer">
-                                    {{ t('view.settings.advanced.advanced.db_import.strategy_skip_new') }}
-                                </Label>
-                                <p class="text-xs text-muted-foreground">
-                                    {{ t('view.settings.advanced.advanced.db_import.strategy_skip_new_desc') }}
-                                </p>
-                            </div>
-                        </div>
-                    </RadioGroup>
-                </div>
-            </template>
-
-            <Alert v-else variant="warning">
-                <TriangleAlert class="h-4 w-4" />
-                <AlertDescription class="text-sm">
-                    {{ t('view.settings.advanced.advanced.db_import.confirm_full_warning') }}
-                </AlertDescription>
-            </Alert>
-
-            <div class="flex items-center justify-between rounded-md border p-3">
-                <div class="flex flex-col gap-1">
-                    <Label for="rw-allow-mismatch" class="text-sm font-medium cursor-pointer">
-                        {{ t('view.settings.advanced.advanced.db_import.strategy_allow_user_mismatch') }}
-                    </Label>
-                    <p class="text-xs text-muted-foreground">
-                        {{ t('view.settings.advanced.advanced.db_import.strategy_allow_user_mismatch_desc') }}
-                    </p>
-                </div>
-                <Switch id="rw-allow-mismatch" v-model="allowUserMismatch" />
-            </div>
-
-            <div class="wiz-actions">
-                <Button size="lg" @click="step = 3">
-                    {{ t('view.settings.advanced.advanced.db_import.wizard_next') }}
-                </Button>
-                <Button variant="ghost" @click="step = 1">{{ t('common.actions.back') }}</Button>
-                <Button variant="ghost" @click="requestClose">{{ t('confirm.cancel_button') }}</Button>
-            </div>
-        </div>
-
-        <!-- Step 3: backup file -->
-        <div v-else-if="step === 3" class="wiz-panel">
-            <h2 class="wiz-title text-foreground">
-                {{ t('view.settings.advanced.advanced.db_import.wizard_file_title') }}
-            </h2>
-
-            <div v-if="importFileSummary" class="rounded-md border p-3 space-y-2 text-sm">
-                <div class="flex justify-between">
-                    <span class="text-muted-foreground">
-                        {{ t('view.settings.advanced.advanced.db_import.summary_tables') }}
-                    </span>
-                    <span class="font-medium">{{ importFileSummary.tableCount }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-muted-foreground">
-                        {{ t('view.settings.advanced.advanced.db_import.summary_records') }}
-                    </span>
-                    <span class="font-medium">{{ importFileSummary.totalRecords }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-muted-foreground">
-                        {{ t('view.settings.advanced.advanced.db_import.mode_label') }}
-                    </span>
-                    <span class="font-medium">
-                        {{
-                            restoreMode === 'full'
-                                ? t('view.settings.advanced.advanced.db_import.mode_full')
-                                : t('view.settings.advanced.advanced.db_import.mode_incremental')
-                        }}
-                    </span>
-                </div>
-            </div>
-
-            <Alert v-if="importDiagnostics?.userMismatch" variant="warning">
-                <TriangleAlert class="h-4 w-4" />
-                <AlertDescription class="text-sm">
-                    {{ t('view.settings.advanced.advanced.db_import.confirm_user_mismatch_notice') }}
-                </AlertDescription>
-            </Alert>
-
-            <Alert v-if="fileError" variant="destructive">
-                <AlertDescription class="text-sm">
-                    {{ t('view.settings.advanced.advanced.db_import.error', { error: fileError }) }}
-                </AlertDescription>
-            </Alert>
-            <Alert v-if="fileErrorCode === 'user_mismatch'" variant="warning">
-                <TriangleAlert class="h-4 w-4" />
-                <AlertDescription class="text-sm">
-                    {{ t('view.settings.advanced.advanced.db_import.error_user_mismatch_hint') }}
-                </AlertDescription>
-            </Alert>
-
-            <div class="wiz-actions">
-                <Button size="lg" :disabled="!importDataCache || reading" @click="handleStart">
-                    <Upload class="h-4 w-4 mr-1" />
-                    {{ t('view.settings.advanced.advanced.db_import.button') }}
-                </Button>
-                <Button variant="outline" :disabled="reading" @click="handleSelectFile">
-                    <Loader2 v-if="reading" class="h-4 w-4 animate-spin mr-1" />
-                    {{ t('view.settings.advanced.advanced.db_import.select_file') }}
-                </Button>
-                <Button variant="ghost" @click="step = 2">{{ t('common.actions.back') }}</Button>
-                <Button variant="ghost" @click="requestClose">{{ t('confirm.cancel_button') }}</Button>
-            </div>
-        </div>
-
-        <!-- Step 4: restore progress -->
-        <div v-else-if="step === 4" class="wiz-panel">
-            <h2 class="wiz-title text-foreground">
-                {{ t('view.settings.advanced.advanced.db_import.progress_title') }}
-            </h2>
-            <template v-if="!importError">
-                <p class="wiz-desc text-muted-foreground">{{ importProgressText }}</p>
-                <div class="w-full bg-secondary rounded-full h-2">
+                <RadioGroup v-model="restoreMode" class="grid gap-2">
                     <div
-                        class="bg-primary h-2 rounded-full transition-all"
-                        :style="{ width: importProgressPercent + '%' }"></div>
+                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                        :class="restoreMode === 'incremental' ? 'border-primary' : ''">
+                        <RadioGroupItem id="rw-mode-incremental" value="incremental" />
+                        <div class="flex flex-col gap-1">
+                            <Label for="rw-mode-incremental" class="text-sm font-medium cursor-pointer">
+                                {{ t('view.settings.advanced.advanced.db_import.mode_incremental') }}
+                            </Label>
+                            <p class="text-xs text-muted-foreground">
+                                {{ t('view.settings.advanced.advanced.db_import.mode_incremental_desc') }}
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                        :class="restoreMode === 'full' ? 'border-primary' : ''">
+                        <RadioGroupItem id="rw-mode-full" value="full" />
+                        <div class="flex flex-col gap-1">
+                            <Label for="rw-mode-full" class="text-sm font-medium cursor-pointer">
+                                {{ t('view.settings.advanced.advanced.db_import.mode_full') }}
+                            </Label>
+                            <p class="text-xs text-muted-foreground">
+                                {{ t('view.settings.advanced.advanced.db_import.mode_full_desc') }}
+                            </p>
+                        </div>
+                    </div>
+                </RadioGroup>
+                <div class="wiz-actions">
+                    <Button size="lg" @click="step = 2">
+                        {{ t('view.settings.advanced.advanced.db_import.wizard_next') }}
+                    </Button>
+                    <Button variant="ghost" @click="requestClose">
+                        {{ t('confirm.cancel_button') }}
+                    </Button>
                 </div>
-            </template>
-            <template v-else>
-                <Alert variant="destructive">
+            </div>
+
+            <!-- Step 2: mode options -->
+            <div v-else-if="step === 2" class="wiz-panel">
+                <h2 class="wiz-title text-foreground">
+                    {{ t('view.settings.advanced.advanced.db_import.wizard_options_title') }}
+                </h2>
+
+                <template v-if="restoreMode === 'incremental'">
+                    <p class="wiz-desc text-muted-foreground">
+                        {{ t('view.settings.advanced.advanced.db_import.strategy_description') }}
+                    </p>
+                    <div class="space-y-2">
+                        <Label class="text-sm font-medium">
+                            {{ t('view.settings.advanced.advanced.db_import.strategy_conflict_label') }}
+                        </Label>
+                        <RadioGroup v-model="conflictStrategy" class="grid gap-2">
+                            <div
+                                class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                                :class="conflictStrategy === 'overwrite' ? 'border-primary' : ''">
+                                <RadioGroupItem id="rw-conflict-overwrite" value="overwrite" />
+                                <div class="flex flex-col gap-1">
+                                    <Label for="rw-conflict-overwrite" class="text-sm font-medium cursor-pointer">
+                                        {{ t('view.settings.advanced.advanced.db_import.strategy_overwrite') }}
+                                    </Label>
+                                    <p class="text-xs text-muted-foreground">
+                                        {{ t('view.settings.advanced.advanced.db_import.strategy_overwrite_desc') }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                                :class="conflictStrategy === 'skip' ? 'border-primary' : ''">
+                                <RadioGroupItem id="rw-conflict-skip" value="skip" />
+                                <div class="flex flex-col gap-1">
+                                    <Label for="rw-conflict-skip" class="text-sm font-medium cursor-pointer">
+                                        {{ t('view.settings.advanced.advanced.db_import.strategy_skip_existing') }}
+                                    </Label>
+                                    <p class="text-xs text-muted-foreground">
+                                        {{ t('view.settings.advanced.advanced.db_import.strategy_skip_existing_desc') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </RadioGroup>
+                    </div>
+                    <div class="space-y-2">
+                        <Label class="text-sm font-medium">
+                            {{ t('view.settings.advanced.advanced.db_import.strategy_new_label') }}
+                        </Label>
+                        <RadioGroup v-model="newDataStrategy" class="grid gap-2">
+                            <div
+                                class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                                :class="newDataStrategy === 'add' ? 'border-primary' : ''">
+                                <RadioGroupItem id="rw-new-add" value="add" />
+                                <div class="flex flex-col gap-1">
+                                    <Label for="rw-new-add" class="text-sm font-medium cursor-pointer">
+                                        {{ t('view.settings.advanced.advanced.db_import.strategy_add') }}
+                                    </Label>
+                                    <p class="text-xs text-muted-foreground">
+                                        {{ t('view.settings.advanced.advanced.db_import.strategy_add_desc') }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                class="flex items-start gap-3 rounded-md border p-3 cursor-pointer"
+                                :class="newDataStrategy === 'skip' ? 'border-primary' : ''">
+                                <RadioGroupItem id="rw-new-skip" value="skip" />
+                                <div class="flex flex-col gap-1">
+                                    <Label for="rw-new-skip" class="text-sm font-medium cursor-pointer">
+                                        {{ t('view.settings.advanced.advanced.db_import.strategy_skip_new') }}
+                                    </Label>
+                                    <p class="text-xs text-muted-foreground">
+                                        {{ t('view.settings.advanced.advanced.db_import.strategy_skip_new_desc') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </RadioGroup>
+                    </div>
+                </template>
+
+                <Alert v-else variant="warning">
+                    <TriangleAlert class="h-4 w-4" />
                     <AlertDescription class="text-sm">
-                        {{ t('view.settings.advanced.advanced.db_import.error', { error: importError }) }}
+                        {{ t('view.settings.advanced.advanced.db_import.confirm_full_warning') }}
+                    </AlertDescription>
+                </Alert>
+
+                <div class="flex items-center justify-between rounded-md border p-3">
+                    <div class="flex flex-col gap-1">
+                        <Label for="rw-allow-mismatch" class="text-sm font-medium cursor-pointer">
+                            {{ t('view.settings.advanced.advanced.db_import.strategy_allow_user_mismatch') }}
+                        </Label>
+                        <p class="text-xs text-muted-foreground">
+                            {{ t('view.settings.advanced.advanced.db_import.strategy_allow_user_mismatch_desc') }}
+                        </p>
+                    </div>
+                    <Switch id="rw-allow-mismatch" v-model="allowUserMismatch" />
+                </div>
+
+                <div class="wiz-actions">
+                    <Button size="lg" @click="step = 3">
+                        {{ t('view.settings.advanced.advanced.db_import.wizard_next') }}
+                    </Button>
+                    <Button variant="ghost" @click="step = 1">{{ t('common.actions.back') }}</Button>
+                    <Button variant="ghost" @click="requestClose">{{ t('confirm.cancel_button') }}</Button>
+                </div>
+            </div>
+
+            <!-- Step 3: backup file -->
+            <div v-else-if="step === 3" class="wiz-panel">
+                <h2 class="wiz-title text-foreground">
+                    {{ t('view.settings.advanced.advanced.db_import.wizard_file_title') }}
+                </h2>
+
+                <div v-if="importFileSummary" class="rounded-md border p-3 space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">
+                            {{ t('view.settings.advanced.advanced.db_import.summary_tables') }}
+                        </span>
+                        <span class="font-medium">{{ importFileSummary.tableCount }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">
+                            {{ t('view.settings.advanced.advanced.db_import.summary_records') }}
+                        </span>
+                        <span class="font-medium">{{ importFileSummary.totalRecords }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">
+                            {{ t('view.settings.advanced.advanced.db_import.mode_label') }}
+                        </span>
+                        <span class="font-medium">
+                            {{
+                                restoreMode === 'full'
+                                    ? t('view.settings.advanced.advanced.db_import.mode_full')
+                                    : t('view.settings.advanced.advanced.db_import.mode_incremental')
+                            }}
+                        </span>
+                    </div>
+                </div>
+
+                <Alert v-if="importDiagnostics?.userMismatch" variant="warning">
+                    <TriangleAlert class="h-4 w-4" />
+                    <AlertDescription class="text-sm">
+                        {{ t('view.settings.advanced.advanced.db_import.confirm_user_mismatch_notice') }}
+                    </AlertDescription>
+                </Alert>
+
+                <Alert v-if="fileError" variant="destructive">
+                    <AlertDescription class="text-sm">
+                        {{ t('view.settings.advanced.advanced.db_import.error', { error: fileError }) }}
+                    </AlertDescription>
+                </Alert>
+                <Alert v-if="fileErrorCode === 'user_mismatch'" variant="warning">
+                    <TriangleAlert class="h-4 w-4" />
+                    <AlertDescription class="text-sm">
+                        {{ t('view.settings.advanced.advanced.db_import.error_user_mismatch_hint') }}
+                    </AlertDescription>
+                </Alert>
+
+                <div class="wiz-actions">
+                    <Button size="lg" :disabled="!importDataCache || reading" @click="handleStart">
+                        <Upload class="h-4 w-4 mr-1" />
+                        {{ t('view.settings.advanced.advanced.db_import.button') }}
+                    </Button>
+                    <Button variant="outline" :disabled="reading" @click="handleSelectFile">
+                        <Loader2 v-if="reading" class="h-4 w-4 animate-spin mr-1" />
+                        {{ t('view.settings.advanced.advanced.db_import.select_file') }}
+                    </Button>
+                    <Button variant="ghost" @click="step = 2">{{ t('common.actions.back') }}</Button>
+                    <Button variant="ghost" @click="requestClose">{{ t('confirm.cancel_button') }}</Button>
+                </div>
+            </div>
+
+            <!-- Step 4: restore progress -->
+            <div v-else-if="step === 4" class="wiz-panel">
+                <h2 class="wiz-title text-foreground">
+                    {{ t('view.settings.advanced.advanced.db_import.progress_title') }}
+                </h2>
+                <template v-if="!importError">
+                    <p class="wiz-desc text-muted-foreground">{{ importProgressText }}</p>
+                    <div class="w-full bg-secondary rounded-full h-2">
+                        <div
+                            class="bg-primary h-2 rounded-full transition-all"
+                            :style="{ width: importProgressPercent + '%' }"></div>
+                    </div>
+                </template>
+                <template v-else>
+                    <Alert variant="destructive">
+                        <AlertDescription class="text-sm">
+                            {{ t('view.settings.advanced.advanced.db_import.error', { error: importError }) }}
+                        </AlertDescription>
+                    </Alert>
+                    <div class="wiz-actions">
+                        <Button @click="backToOptions">{{ t('common.actions.back') }}</Button>
+                        <Button variant="ghost" @click="requestClose">{{ t('confirm.cancel_button') }}</Button>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Step 5: done, restart required -->
+            <div v-else class="wiz-panel">
+                <h2 class="wiz-title text-foreground">
+                    {{ t('view.settings.advanced.advanced.db_import.wizard_done_title') }}
+                </h2>
+                <p class="wiz-desc text-muted-foreground">
+                    {{ t('view.settings.advanced.advanced.db_import.wizard_done_desc') }}
+                </p>
+                <div class="rounded-md border p-3 space-y-2 text-sm">
+                    <div class="flex justify-between text-green-600 dark:text-green-400">
+                        <span>{{ t('view.settings.advanced.advanced.db_import.report_overwritten') }}</span>
+                        <span class="font-medium">{{ report.overwritten }}</span>
+                    </div>
+                    <div class="flex justify-between text-blue-600 dark:text-blue-400">
+                        <span>{{ t('view.settings.advanced.advanced.db_import.report_added') }}</span>
+                        <span class="font-medium">{{ report.added }}</span>
+                    </div>
+                    <div class="border-t pt-2 flex justify-between font-medium">
+                        <span>{{ t('view.settings.advanced.advanced.db_import.report_total') }}</span>
+                        <span class="font-medium">{{ report.totalProcessed }}</span>
+                    </div>
+                </div>
+                <Alert v-if="report.skippedTables.length > 0" variant="warning">
+                    <TriangleAlert class="h-4 w-4" />
+                    <AlertDescription class="text-sm space-y-1">
+                        <p>{{ t('view.settings.advanced.advanced.db_import.report_skipped_tables') }}</p>
+                        <ul class="list-disc pl-4">
+                            <li v-for="name in report.skippedTables" :key="name" class="break-all">
+                                {{ name }}
+                            </li>
+                        </ul>
                     </AlertDescription>
                 </Alert>
                 <div class="wiz-actions">
-                    <Button @click="backToOptions">{{ t('common.actions.back') }}</Button>
-                    <Button variant="ghost" @click="requestClose">{{ t('confirm.cancel_button') }}</Button>
-                </div>
-            </template>
-        </div>
-
-        <!-- Step 5: done, restart required -->
-        <div v-else class="wiz-panel">
-            <h2 class="wiz-title text-foreground">
-                {{ t('view.settings.advanced.advanced.db_import.wizard_done_title') }}
-            </h2>
-            <p class="wiz-desc text-muted-foreground">
-                {{ t('view.settings.advanced.advanced.db_import.wizard_done_desc') }}
-            </p>
-            <div class="rounded-md border p-3 space-y-2 text-sm">
-                <div class="flex justify-between text-green-600 dark:text-green-400">
-                    <span>{{ t('view.settings.advanced.advanced.db_import.report_overwritten') }}</span>
-                    <span class="font-medium">{{ report.overwritten }}</span>
-                </div>
-                <div class="flex justify-between text-blue-600 dark:text-blue-400">
-                    <span>{{ t('view.settings.advanced.advanced.db_import.report_added') }}</span>
-                    <span class="font-medium">{{ report.added }}</span>
-                </div>
-                <div class="border-t pt-2 flex justify-between font-medium">
-                    <span>{{ t('view.settings.advanced.advanced.db_import.report_total') }}</span>
-                    <span class="font-medium">{{ report.totalProcessed }}</span>
+                    <Button size="lg" @click="handleRestart">
+                        <RefreshCw class="h-4 w-4 mr-1" />
+                        {{ t('confirm.restart_now') }}
+                    </Button>
+                    <Button variant="ghost" @click="requestClose">
+                        {{ t('confirm.restart_later') }}
+                    </Button>
                 </div>
             </div>
-            <Alert v-if="report.skippedTables.length > 0" variant="warning">
-                <TriangleAlert class="h-4 w-4" />
-                <AlertDescription class="text-sm space-y-1">
-                    <p>{{ t('view.settings.advanced.advanced.db_import.report_skipped_tables') }}</p>
-                    <ul class="list-disc pl-4">
-                        <li v-for="name in report.skippedTables" :key="name" class="break-all">
-                            {{ name }}
-                        </li>
-                    </ul>
-                </AlertDescription>
-            </Alert>
-            <div class="wiz-actions">
-                <Button size="lg" @click="handleRestart">
-                    <RefreshCw class="h-4 w-4 mr-1" />
-                    {{ t('confirm.restart_now') }}
-                </Button>
-                <Button variant="ghost" @click="requestClose">
-                    {{ t('confirm.restart_later') }}
-                </Button>
-            </div>
-        </div>
-    </WizardShell>
+        </WizardShell>
+    </div>
 </template>
 
 <script setup>
@@ -521,3 +522,11 @@
         vrcxUpdaterStore.restartVRCX(false);
     }
 </script>
+
+<style scoped>
+    .restore-wizard-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+    }
+</style>
