@@ -1,14 +1,16 @@
 <template>
     <div class="oobe bg-background">
-        <!-- Top bar: step counter -->
-        <header class="oobe-header">
-            <span class="oobe-step-counter text-muted-foreground">
-                {{ t('oobe.step_of', { current: currentStep, total: 7 }) }}
-            </span>
-        </header>
-        <!-- Right edge: vertical dot progress, filling bottom-to-top with the step transitions -->
-        <div class="oobe-progress" role="progressbar" :aria-valuenow="currentStep" aria-valuemin="1" aria-valuemax="7">
-            <div v-for="step in 7" :key="step" class="oobe-progress-dot" :class="{ active: step <= currentStep }" />
+        <!-- Right edge: vertical dot progress (step 1 at top) with step counter below -->
+        <div class="oobe-progress-rail">
+            <div
+                class="oobe-progress"
+                role="progressbar"
+                :aria-valuenow="currentStep"
+                aria-valuemin="1"
+                aria-valuemax="7">
+                <div v-for="step in 7" :key="step" class="oobe-progress-dot" :class="{ active: step <= currentStep }" />
+            </div>
+            <span class="oobe-step-counter text-muted-foreground">{{ currentStep }} / 7</span>
         </div>
 
         <!-- Left: centered icon with SVG stroke animation -->
@@ -762,15 +764,16 @@
         background-color: var(--background);
     }
 
-    /* ---- Top bar ---- */
-    .oobe-header {
+    /* ---- Right progress rail: dots + step counter ---- */
+    .oobe-progress-rail {
         position: absolute;
-        top: 24px;
-        left: 36px;
         right: 36px;
+        top: 50%;
+        transform: translateY(-50%);
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: flex-end;
+        gap: 12px;
     }
 
     .oobe-step-counter {
@@ -779,13 +782,8 @@
     }
 
     .oobe-progress {
-        position: absolute;
-        right: 36px;
-        top: 50%;
-        transform: translateY(-50%);
         display: flex;
-        /* step 1 at the bottom so progress fills upward with the step transitions */
-        flex-direction: column-reverse;
+        flex-direction: column;
         gap: 8px;
     }
 
@@ -992,7 +990,7 @@
             width: min(440px, calc(100vw - 200px));
         }
 
-        .oobe-progress {
+        .oobe-progress-rail {
             right: 12px;
         }
     }
