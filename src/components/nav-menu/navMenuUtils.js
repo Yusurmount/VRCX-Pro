@@ -52,7 +52,6 @@ export function sanitizeLayout(
         'charts-avatar-usage',
         'charts-timeline',
         'charts-intimacy',
-        'charts-timeline-comparison',
         'charts-report-export'
     ];
 

@@ -149,13 +149,6 @@ const navDefinitions = [
         routeName: 'charts-intimacy'
     },
     {
-        key: 'charts-timeline-comparison',
-        icon: 'ri-line-chart-line',
-        tooltip: 'view.charts.timeline_comparison.header',
-        labelKey: 'view.charts.timeline_comparison.header',
-        routeName: 'charts-timeline-comparison'
-    },
-    {
         key: 'tools',
         icon: 'ri-tools-line',
         tooltip: 'nav_tooltip.tools',

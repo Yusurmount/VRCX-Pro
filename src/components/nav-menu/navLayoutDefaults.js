@@ -39,7 +39,6 @@ export function createBaseDefaultNavLayout(t) {
                 'charts-avatar-usage',
                 'charts-timeline',
                 'charts-intimacy',
-                'charts-timeline-comparison',
                 'charts-report-export'
             ]
         },

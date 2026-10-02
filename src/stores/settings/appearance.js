@@ -120,8 +120,7 @@ export const useAppearanceSettingsStore = defineStore(
                 'charts-mutual',
                 'charts-hot-worlds',
                 'charts-two-person',
-                'charts-intimacy',
-                'charts-timeline-comparison'
+                'charts-intimacy'
             ].includes(currentRouteName);
         });
 

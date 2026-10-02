@@ -127,12 +127,6 @@ const routes = [
                     import('./../views/Charts/components/RelationshipIntimacy.vue')
             },
             {
-                path: 'charts/timeline-comparison',
-                name: 'charts-timeline-comparison',
-                component: () =>
-                    import('./../views/Charts/components/TimelineComparison.vue')
-            },
-            {
                 path: 'charts/avatar-usage',
                 name: 'charts-avatar-usage',
                 component: () =>
