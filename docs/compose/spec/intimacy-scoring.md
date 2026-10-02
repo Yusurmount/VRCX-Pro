@@ -50,6 +50,17 @@ commits: 493abb7e..2bfe43b8
    健壮性一并修复：非法 `lastSeen` 记 0（不再产生 NaN）、未来时间戳钳为 0 天
    （不再 >100）、`firstSeen` 缺失或非法不打折。仅动 composable，数据层与
    条目形状不变；测试 18→25，三语 `weights.explain.recency` 文案同步。
+9. **数据层改真共存**（分支 `fix/intimacy-co-presence-metrics`）：四维原始指标
+   此前来自 `buildPresenceSessionsQuery`（仅 `_feed_gps` + `_feed_online_offline`），
+   记录的是**好友自己**的停留时长与换世界次数，与「是否和我在一起」无关——
+   实测某好友被算作 28.2h / 212 次共存，实际从未共存；`joinCount=212` 在绝对
+   口径下得 862 分，而常玩的好友 31 次只得 558 分（分数与是否一起玩无关）。
+   `getFriendshipMetrics` 改为真共存：游戏日志中出现的好友会话直接计入，feed
+   会话与我的游戏日志会话在同 `location` 上求交后计入，再按好友合并重叠区间
+   得到 `totalTime` / `joinCount` / `distinctDays` / `firstSeen` / `lastSeen`。
+   真实库复算：总重叠 211.3h → 19.2h，前 15 名中 10 位从未共存者归零并移出
+   列表（44 → 40 位）。仅改该方法，`getRelationshipTimelineData` 的旧口径
+   未动；新增 6 个数据层用例。
 
 **Verification** — `npx vitest run src/views/Charts/composables/__tests__/` → PASS
 （48 tests / 5 files，含新增 5 个用例：空数据、单好友=100、全零=0、离群不压扁

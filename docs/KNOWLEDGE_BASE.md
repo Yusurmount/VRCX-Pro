@@ -432,6 +432,7 @@ vue-i18n + 静态 JSON 文件，支持语言：
 | `consistency` | 共存一致性 | 同上（稳健归一化） |
 | `recency` | 最近接触度 | 双指数衰减 × 接触密度折价，不走归一化 |
 
+- **数据口径（真共存）**：四维原始指标来自 `gameLog.getFriendshipMetrics()`，只统计同一实例内的真共存——游戏日志（`gamelog_join_leave`）里出现过的好友会话直接计入；feed 来源（`_feed_gps` / `_feed_online_offline`，记录的是好友**自己**在某实例的停留时长）必须与我的游戏日志会话在同 `location` 上做时间求交后才计入，随后按好友合并重叠区间。因此 `totalTime` / `joinCount` / `distinctDays` / `lastSeen` 衡量的是「一起玩」而非「好友多活跃」，从未真正共存的好友不会出现在列表里（关系时间线 `getRelationshipTimelineData()` 仍走未求交的 `buildPresenceSessionsQuery`，口径未同步）
 - **权重可调**：四维权重 0–100 可调，按权重和归一化合成（键 `intimacyWeights`）；全零权重得 0
 - **最近度算法**：`0.6·e^(-d/14) + 0.4·e^(-d/120)` 双指数衰减（前两周快速拉开区分度、之后长尾不归零），再乘以接触密度折价 `0.5 + 0.5·min(1, (distinctDays ÷ 关系年龄天数) ÷ 0.1)`——同一时刻偶遇的低频好友明显低于规律联系者；`lastSeen` 非法记 0、未来时间戳按 0 天处理（不超过 100），`firstSeen` 缺失或非法不打折
 - **好友排除**：完全排除（移出归一化计算集）/ 仅隐藏显示（仍参与计算），名单与模式持久化（`intimacyExcludedFriends` / `intimacyExcludeMode`），支持一键恢复

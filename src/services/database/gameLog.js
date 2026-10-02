@@ -31,6 +31,35 @@ function buildPresenceSessionsQuery(userPrefix) {
     ].join('\n');
 }
 
+const INVALID_LOCATIONS =
+    "('', 'offline', 'traveling', 'private', 'private:private')";
+
+// Feed and game-log sessions both store the leave timestamp plus the dwell
+// duration, never an explicit start.
+function parseSessionInterval(createdAt, time) {
+    const end = new Date(createdAt).getTime();
+    const start = end - Number(time);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+        return null;
+    }
+    return [start, end];
+}
+
+function mergeIntervals(intervals) {
+    if (!intervals.length) return [];
+    const sorted = [...intervals].sort((a, b) => a[0] - b[0]);
+    const merged = [sorted[0]];
+    for (let i = 1; i < sorted.length; i++) {
+        const last = merged[merged.length - 1];
+        if (sorted[i][0] <= last[1]) {
+            last[1] = Math.max(last[1], sorted[i][1]);
+        } else {
+            merged.push(sorted[i]);
+        }
+    }
+    return merged;
+}
+
 const gameLog = {
     async getGamelogDatabase() {
         var gamelogDatabase = [];
@@ -2043,35 +2072,96 @@ const gameLog = {
      */
     /**
      * Get aggregated friendship metrics for all friends.
-     * Returns per-friend total online time, join count, first/last seen, and distinct days.
+     * Counts only true co-presence: a friend session is included when it is in
+     * my game log (they were in my instance) or when it overlaps one of my own
+     * logged sessions in the same location. Feed rows describe where the friend
+     * was on their own, so without that clipping they measure how much the
+     * friend plays, not how often we meet.
      * @returns {Promise<Array<{userId: string, displayName: string, totalTime: number, joinCount: number, firstSeen: string, lastSeen: string, distinctDays: number}>>}
      */
     async getFriendshipMetrics() {
-        if (!dbVars.userPrefix) return [];
-        const results = [];
-        const query =
-            'SELECT user_id, display_name, SUM(time) AS total_time, ' +
-            'COUNT(*) AS join_count, MIN(created_at) AS first_seen, ' +
-            'MAX(created_at) AS last_seen, ' +
-            'COUNT(DISTINCT date(created_at)) AS distinct_days ' +
-            'FROM (' + buildPresenceSessionsQuery(dbVars.userPrefix) + ') sessions ' +
-            "WHERE user_id != '' AND user_id != @currentUserId " +
-            'GROUP BY user_id ORDER BY total_time DESC';
+        if (!dbVars.userPrefix || !dbVars.userId) return [];
+
+        const mySessions = new Map();
         await sqliteService.execute(
             (row) => {
-                results.push({
-                    userId: row[0],
-                    displayName: row[1],
-                    totalTime: row[2],
-                    joinCount: row[3],
-                    firstSeen: row[4],
-                    lastSeen: row[5],
-                    distinctDays: row[6]
-                });
+                const interval = parseSessionInterval(row[1], row[2]);
+                if (!interval) return;
+                const location = row[0];
+                if (!mySessions.has(location)) mySessions.set(location, []);
+                mySessions.get(location).push(interval);
             },
-            query,
+            `SELECT location, created_at, time
+             FROM gamelog_join_leave
+             WHERE user_id = @currentUserId AND type = 'OnPlayerLeft' AND time > 0
+               AND location NOT IN ${INVALID_LOCATIONS}`,
             { '@currentUserId': dbVars.userId }
         );
+
+        const friends = new Map();
+        await sqliteService.execute(
+            (row) => {
+                const userId = row[0];
+                if (!userId || userId === dbVars.userId) return;
+                const interval = parseSessionInterval(row[3], row[4]);
+                if (!interval) return;
+                const clipped = [];
+                if (row[5] === 1) {
+                    clipped.push(interval);
+                } else {
+                    for (const mine of mySessions.get(row[2]) || []) {
+                        const start = Math.max(interval[0], mine[0]);
+                        const end = Math.min(interval[1], mine[1]);
+                        if (end > start) clipped.push([start, end]);
+                    }
+                }
+                if (!clipped.length) return;
+                let friend = friends.get(userId);
+                if (!friend) {
+                    friend = { displayName: row[1], intervals: [] };
+                    friends.set(userId, friend);
+                }
+                friend.displayName = row[1];
+                friend.intervals.push(...clipped);
+            },
+            `SELECT user_id, display_name, location, created_at, time, 1 AS src
+             FROM gamelog_join_leave
+             WHERE user_id != @currentUserId AND user_id != '' AND type = 'OnPlayerLeft' AND time > 0
+               AND location NOT IN ${INVALID_LOCATIONS}
+             UNION ALL
+             SELECT user_id, display_name, previous_location, created_at, time, 2 AS src
+             FROM ${dbVars.userPrefix}_feed_gps
+             WHERE user_id != '' AND time > 0
+               AND previous_location NOT IN ${INVALID_LOCATIONS}
+             UNION ALL
+             SELECT user_id, display_name, location, created_at, time, 3 AS src
+             FROM ${dbVars.userPrefix}_feed_online_offline
+             WHERE user_id != '' AND type = 'Offline' AND time > 0
+               AND location NOT IN ${INVALID_LOCATIONS}`,
+            { '@currentUserId': dbVars.userId }
+        );
+
+        const results = [];
+        for (const [userId, friend] of friends) {
+            const merged = mergeIntervals(friend.intervals);
+            if (!merged.length) continue;
+            let totalTime = 0;
+            const days = new Set();
+            for (const [start, end] of merged) {
+                totalTime += end - start;
+                days.add(new Date(end).toISOString().slice(0, 10));
+            }
+            results.push({
+                userId,
+                displayName: friend.displayName,
+                totalTime,
+                joinCount: merged.length,
+                firstSeen: new Date(merged[0][0]).toISOString(),
+                lastSeen: new Date(merged[merged.length - 1][1]).toISOString(),
+                distinctDays: days.size
+            });
+        }
+        results.sort((a, b) => b.totalTime - a.totalTime);
         return results;
     },
 
