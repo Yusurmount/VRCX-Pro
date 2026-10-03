@@ -245,6 +245,8 @@ Entity Cache (LRU) 维护本地实体缓存：
 
 **登录状态反馈**：登录过程中登录页（及 OOBE）显示页内遮罩层（全局 AlertDialog 样式），主按钮显示 Loader2 旋转动画并禁用所有登录相关按钮；遮罩持续到应用就绪，登录结束（成功或失败）后状态与动画复位。实现时先置 `loginBusy=true` 再 `await nextTick()`，确保加载动画被强制渲染。
 
+**欢迎与新功能对话框（合并）**：`components/onboarding/WelcomeDialog.vue` 是唯一的引导对话框——顶部为个性化欢迎语（头像 + 称呼），下方在有版本公告时展示 What's New 特性卡片（数据来自 `vrcxUpdater` store 的 `whatsNewDialog`）。打开条件为「个性化欢迎未看过」或 `whatsNewDialog.visible`；关闭时同时写入 `VRCX_onboarding_personal_welcome_seen` 并调用 `closeWhatsNewDialog()`。独立的 `WhatsNewDialog.vue` 已删除；设置 > 界面调试工具的「欢迎引导」与「新功能」两个入口打开的都是这同一个对话框。
+
 ### 6.2 Pinia Stores
 
 Store 按职责分为四类；数量以 `src/stores/index.js` 的实际导出为准：

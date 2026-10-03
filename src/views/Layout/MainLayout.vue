@@ -97,8 +97,6 @@
 
         <ChangelogDialog></ChangelogDialog>
 
-        <WhatsNewDialog></WhatsNewDialog>
-
         <WelcomeDialog></WelcomeDialog>
     </template>
 </template>
@@ -142,7 +140,6 @@
     import StatusBar from '../../components/StatusBar.vue';
     const VRChatConfigDialog = defineAsyncComponent(() => import('../Settings/dialogs/VRChatConfigDialog.vue'));
     const WorldImportDialog = defineAsyncComponent(() => import('../Favorites/dialogs/WorldImportDialog.vue'));
-    const WhatsNewDialog = defineAsyncComponent(() => import('../../components/onboarding/WhatsNewDialog.vue'));
     const WelcomeDialog = defineAsyncComponent(() => import('../../components/onboarding/WelcomeDialog.vue'));
 
     import { isAutoFollowDialogOpen } from '../../coordinators/autoFollowCoordinator';
