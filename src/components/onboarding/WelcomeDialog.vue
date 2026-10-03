@@ -101,7 +101,7 @@
 
     const vrcxUpdaterStore = useVRCXUpdaterStore();
     const { whatsNewDialog } = storeToRefs(vrcxUpdaterStore);
-    const { closeWhatsNewDialog, openChangeLogDialogOnly } = vrcxUpdaterStore;
+    const { closeWhatsNewDialog, openChangeLogDialogOnly, showLatestWhatsNewDialog } = vrcxUpdaterStore;
 
     const displayName = computed(() => userStore.currentUser?.displayName ?? '');
     const avatarUrl = computed(() => userImage(userStore.currentUser, true));
@@ -161,7 +161,9 @@
     /**
      * Open the dialog after a short delay unless the personalized welcome
      * has already been seen — the single gate for this dialog, whether or
-     * not What's New content accompanies it.
+     * not What's New content accompanies it. When no release content is
+     * loaded yet (fresh install, UI debug re-show), fill it with the latest
+     * release so the dialog always renders the merged style.
      * @returns {Promise<void>}
      */
     async function maybeOpen() {
@@ -176,6 +178,9 @@
             openTimer = null;
             isOpen.value = true;
         }, OPEN_DELAY_MS);
+        if (!hasFeatures.value) {
+            await showLatestWhatsNewDialog();
+        }
     }
 
     /**

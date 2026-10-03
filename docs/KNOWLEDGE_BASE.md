@@ -245,7 +245,7 @@ Entity Cache (LRU) 维护本地实体缓存：
 
 **登录状态反馈**：登录过程中登录页（及 OOBE）显示页内遮罩层（全局 AlertDialog 样式），主按钮显示 Loader2 旋转动画并禁用所有登录相关按钮；遮罩持续到应用就绪，登录结束（成功或失败）后状态与动画复位。实现时先置 `loginBusy=true` 再 `await nextTick()`，确保加载动画被强制渲染。
 
-**欢迎与新功能对话框（合并）**：`components/onboarding/WelcomeDialog.vue` 是唯一的引导对话框——顶部为个性化欢迎语（头像 + 称呼），下方在有版本公告时展示 What's New 特性卡片（数据来自 `vrcxUpdater` store 的 `whatsNewDialog`）。打开条件**仅**由 `VRCX_onboarding_personal_welcome_seen` 标记驱动（与原欢迎对话框完全一致，800ms 延迟、关闭即标记看过）；CTA 恒为「开始使用」。升级公告通过 `vrcxUpdater` 的 `presentWhatsNewRelease()`（`showWhatsNewDialog` / `showLatestWhatsNewDialog` 共用）先清除该标记再发布内容，使合并对话框按欢迎语义到期；关闭时写标记并调用 `closeWhatsNewDialog()`。独立的 `WhatsNewDialog.vue` 已删除；设置 > 界面调试工具的「欢迎引导」与「新功能」两个入口打开的都是这同一个对话框。
+**欢迎与新功能对话框（合并）**：`components/onboarding/WelcomeDialog.vue` 是唯一的引导对话框——顶部为个性化欢迎语（头像 + 称呼），下方展示 What's New 特性卡片（数据来自 `vrcxUpdater` store 的 `whatsNewDialog`），**始终以合并后的新样式呈现**：`maybeOpen()` 通过打开门禁后，若 `whatsNewDialog` 尚无公告内容（全新安装无升级公告、界面调试「欢迎引导」重开等），会先调用 `showLatestWhatsNewDialog()` 填入最新版本内容再打开；仅当 `whatsNewReleases` 无任何版本数据时才回落为纯欢迎头。打开条件**仅**由 `VRCX_onboarding_personal_welcome_seen` 标记驱动（与原欢迎对话框完全一致，800ms 延迟、关闭即标记看过）；CTA 恒为「开始使用」。升级公告通过 `vrcxUpdater` 的 `presentWhatsNewRelease()`（`showWhatsNewDialog` / `showLatestWhatsNewDialog` 共用）先清除该标记再发布内容，使合并对话框按欢迎语义到期；已有公告内容时打开不会被覆盖；关闭时写标记并调用 `closeWhatsNewDialog()`。独立的 `WhatsNewDialog.vue` 已删除；设置 > 界面调试工具的「欢迎引导」与「新功能」两个入口打开的都是这同一个对话框、呈现同一新样式。
 
 ### 6.2 Pinia Stores
 
