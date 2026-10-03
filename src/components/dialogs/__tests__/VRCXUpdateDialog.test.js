@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => {
     return {
         state: {
             appVersion: ref('VRCX-Pro 3.3.0'),
+            acceptBeta: ref(false),
+            autoUpdateVRCX: ref('Notify'),
             checkingForVRCXUpdate: ref(false),
             VRCXUpdateDialog: ref({
                 visible: true,
@@ -32,6 +34,8 @@ const mocks = vi.hoisted(() => {
             restartVRCX: vi.fn(),
             updateProgressText: vi.fn(() => '42%'),
             cancelUpdate: vi.fn(),
+            setAcceptBeta: vi.fn(),
+            setAutoUpdateVRCX: vi.fn(),
             setUpdateRoute: vi.fn(),
             openExternalLink: vi.fn()
         }
@@ -86,30 +90,42 @@ function mountComponent() {
                 DialogFooter: slotStub,
                 Button: {
                     props: ['variant', 'disabled'],
+                    inheritAttrs: false,
                     emits: ['click'],
                     template:
-                        '<button data-testid="action-button" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>'
+                        '<button :data-testid="$attrs[\'data-testid\'] || \'action-button\'" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>'
                 },
                 Progress: {
                     props: ['modelValue'],
                     template:
                         '<div data-testid="progress" :data-value="modelValue" />'
                 },
-                Select: {
+                DropdownMenu: slotStub,
+                DropdownMenuTrigger: {
+                    props: ['asChild'],
+                    template:
+                        '<div data-slot="dropdown-menu-trigger"><slot /></div>'
+                },
+                DropdownMenuContent: {
+                    inheritAttrs: false,
+                    template:
+                        "<div :data-testid=\"$attrs['data-testid'] || 'dropdown-content'\"><slot /></div>"
+                },
+                DropdownMenuItem: {
+                    props: ['variant', 'disabled'],
+                    inheritAttrs: false,
+                    emits: ['click'],
+                    template:
+                        "<button :data-testid=\"$attrs['data-testid'] || 'action-button'\" @click=\"$emit('click')\"><slot /></button>"
+                },
+                DropdownMenuCheckboxItem: {
                     props: ['modelValue', 'disabled'],
-                    template: '<div data-testid="route-select"><slot /></div>'
+                    inheritAttrs: false,
+                    emits: ['select'],
+                    template:
+                        "<div :data-testid=\"$attrs['data-testid'] || 'check-item'\" @click=\"$emit('select')\"><slot /></div>"
                 },
-                SelectTrigger: {
-                    template: '<div data-testid="route-trigger"><slot /></div>'
-                },
-                SelectValue: { template: '<span />' },
-                SelectContent: {
-                    template: '<div data-testid="route-options"><slot /></div>'
-                },
-                SelectItem: {
-                    props: ['value'],
-                    template: '<div data-testid="route-option"><slot /></div>'
-                }
+                DropdownMenuSeparator: { template: '<div />' }
             }
         }
     });
@@ -118,6 +134,8 @@ function mountComponent() {
 describe('VRCXUpdateDialog.vue', () => {
     beforeEach(() => {
         mocks.state.appVersion.value = 'VRCX-Pro 3.3.0';
+        mocks.state.acceptBeta.value = false;
+        mocks.state.autoUpdateVRCX.value = 'Notify';
         mocks.state.checkingForVRCXUpdate.value = false;
         mocks.state.VRCXUpdateDialog.value = {
             visible: true,
@@ -140,23 +158,40 @@ describe('VRCXUpdateDialog.vue', () => {
         vi.clearAllMocks();
     });
 
-    test('shows the up-to-date state with a change-version action', async () => {
+    test('shows the up-to-date state with a change-version menu action', async () => {
         mocks.state.VRCXUpdateDialog.value.release = 'v3.3.0';
         const wrapper = mountComponent();
-        const changeVersionButton = wrapper
-            .findAll('[data-testid="action-button"]')
-            .find((button) =>
-                button.text().includes('dialog.vrcx_updater.change_version')
-            );
+        const changeVersionButton = wrapper.find(
+            '[data-testid="change-version-item"]'
+        );
 
         expect(wrapper.text()).toContain('dialog.vrcx_updater.latest_version');
         expect(wrapper.text()).toContain('dialog.vrcx_updater.current_version');
-        expect(changeVersionButton).toBeTruthy();
+        expect(changeVersionButton.exists()).toBe(true);
 
         await changeVersionButton.trigger('click');
         expect(mocks.actions.openExternalLink).toHaveBeenCalledWith(
             'https://github.com/Yusurmount/VRCX-Pro/releases'
         );
+    });
+
+    test('offers beta opt-in and update notify toggles in the header menu', async () => {
+        const wrapper = mountComponent();
+        const betaItem = wrapper.find('[data-testid="accept-beta-item"]');
+        const notifyItem = wrapper.find('[data-testid="notify-update-item"]');
+
+        expect(betaItem.exists()).toBe(true);
+        expect(notifyItem.exists()).toBe(true);
+        expect(betaItem.text()).toContain('dialog.vrcx_updater.accept_beta');
+        expect(notifyItem.text()).toContain(
+            'dialog.vrcx_updater.notify_update'
+        );
+
+        await betaItem.trigger('click');
+        expect(mocks.actions.setAcceptBeta).toHaveBeenCalledWith(true);
+
+        await notifyItem.trigger('click');
+        expect(mocks.actions.setAutoUpdateVRCX).toHaveBeenCalledWith('Off');
     });
 
     test('renders GitHub release notes inline without opening another dialog', async () => {
@@ -232,11 +267,21 @@ describe('VRCXUpdateDialog.vue', () => {
 
         await downloadButton.trigger('click');
         expect(mocks.actions.downloadSelectedVRCXUpdate).toHaveBeenCalledOnce();
-        expect(wrapper.find('[data-testid="route-select"]').exists()).toBe(
+        expect(wrapper.find('[data-testid="route-trigger"]').exists()).toBe(
             true
         );
-        expect(wrapper.text()).toContain('dialog.vrcx_updater.route_official');
-        expect(wrapper.text()).toContain('dialog.vrcx_updater.route_mirror');
+        const routeOptions = wrapper.find('[data-testid="route-options"]');
+        expect(routeOptions.text()).toContain(
+            'dialog.vrcx_updater.route_official'
+        );
+        expect(routeOptions.text()).toContain(
+            'dialog.vrcx_updater.route_mirror'
+        );
+
+        await routeOptions
+            .findAll('[data-testid="check-item"]')[1]
+            .trigger('click');
+        expect(mocks.actions.setUpdateRoute).toHaveBeenCalledWith('mirror');
     });
 
     test('shows the ready state with an install action', async () => {
