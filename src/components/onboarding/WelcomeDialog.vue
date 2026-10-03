@@ -22,8 +22,7 @@
             <!-- What's New features, below the welcome message -->
             <template v-if="hasFeatures">
                 <div class="mt-2 text-center">
-                    <div class="text-sm font-semibold">{{ t(releaseTitleKey) }}</div>
-                    <div class="mt-0.5 text-[13px] text-muted-foreground">{{ t(releaseSubtitleKey) }}</div>
+                    <div class="text-[13px] text-muted-foreground">{{ t(releaseSubtitleKey) }}</div>
                 </div>
 
                 <div class="my-2 grid auto-rows-fr grid-cols-4 gap-2.5">
@@ -111,9 +110,6 @@
 
     const hasFeatures = computed(
         () => whatsNewDialog.value.visible && whatsNewDialog.value.items.length > 0
-    );
-    const releaseTitleKey = computed(
-        () => whatsNewDialog.value.titleKey || 'onboarding.whatsnew.title'
     );
     const releaseSubtitleKey = computed(
         () => whatsNewDialog.value.subtitleKey || 'onboarding.whatsnew.subtitle'
