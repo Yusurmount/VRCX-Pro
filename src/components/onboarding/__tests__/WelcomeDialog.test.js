@@ -7,7 +7,10 @@ import en from '../../../localization/en.json';
 
 const mocks = vi.hoisted(() => ({
     getBool: vi.fn(),
-    setBool: vi.fn()
+    setBool: vi.fn(),
+    closeWhatsNewDialog: vi.fn(),
+    openChangeLogDialogOnly: vi.fn(),
+    whatsNewDialog: null
 }));
 
 vi.mock('../../../services/config', () => ({
@@ -23,9 +26,19 @@ const currentUser = ref({
     thumbnailUrl: 'https://example.com/thumb.png'
 });
 
-vi.mock('../../../stores', () => ({
-    useUserStore: () => ({ currentUser: currentUser.value })
-}));
+vi.mock('../../../stores', async () => {
+    const { ref } = await import('vue');
+    const whatsNewDialog = ref({ visible: false, titleKey: '', subtitleKey: '', items: [] });
+    mocks.whatsNewDialog = whatsNewDialog;
+    return {
+        useUserStore: () => ({ currentUser: currentUser.value }),
+        useVRCXUpdaterStore: () => ({
+            whatsNewDialog,
+            closeWhatsNewDialog: (...a) => mocks.closeWhatsNewDialog(...a),
+            openChangeLogDialogOnly: (...a) => mocks.openChangeLogDialogOnly(...a)
+        })
+    };
+});
 
 import WelcomeDialog from '../WelcomeDialog.vue';
 import {
@@ -85,6 +98,7 @@ describe('WelcomeDialog.vue', () => {
         vi.clearAllMocks();
         vi.useFakeTimers();
         welcomeDialogShowRequest.value = 0;
+        mocks.whatsNewDialog.value = { visible: false, titleKey: '', subtitleKey: '', items: [] };
         currentUser.value = {
             id: 'usr_123',
             displayName: 'TestUser',
@@ -140,6 +154,7 @@ describe('WelcomeDialog.vue', () => {
             'VRCX_onboarding_personal_welcome_seen',
             true
         );
+        expect(mocks.closeWhatsNewDialog).toHaveBeenCalled();
         expect(wrapper.find('.dialog-stub').exists()).toBe(false);
     });
 
@@ -163,5 +178,64 @@ describe('WelcomeDialog.vue', () => {
         await passOpenDelay(wrapper);
 
         expect(wrapper.find('.dialog-stub').exists()).toBe(true);
+    });
+
+    test('shows release features below the welcome message', async () => {
+        mocks.getBool.mockResolvedValue(false);
+        mocks.whatsNewDialog.value = {
+            visible: true,
+            titleKey: 'onboarding.whatsnew.releases.2026_05_03.title',
+            subtitleKey: 'onboarding.whatsnew.releases.2026_05_03.subtitle',
+            items: [
+                {
+                    key: 'chart_analysis',
+                    icon: 'chart-no-axes-combined',
+                    titleKey: 'onboarding.whatsnew.releases.2026_05_03.items.chart_analysis.title',
+                    descriptionKey:
+                        'onboarding.whatsnew.releases.2026_05_03.items.chart_analysis.description'
+                }
+            ]
+        };
+
+        const wrapper = mountDialog();
+        await passOpenDelay(wrapper);
+
+        const text = wrapper.text();
+        const featureTitle =
+            en.onboarding.whatsnew.releases['2026_05_03'].items.chart_analysis.title;
+        expect(text).toContain(en.onboarding.welcome.title);
+        expect(text).toContain(featureTitle);
+        expect(text.indexOf(en.onboarding.welcome.title)).toBeLessThan(
+            text.indexOf(featureTitle)
+        );
+        expect(text).toContain(en.onboarding.welcome.cta);
+    });
+
+    test("opens for What's New even when the welcome has already been seen", async () => {
+        mocks.getBool.mockResolvedValue(true);
+        mocks.whatsNewDialog.value = {
+            visible: true,
+            titleKey: 'onboarding.whatsnew.releases.2026_05_03.title',
+            subtitleKey: 'onboarding.whatsnew.releases.2026_05_03.subtitle',
+            items: [
+                {
+                    key: 'chart_analysis',
+                    icon: 'chart-no-axes-combined',
+                    titleKey: 'onboarding.whatsnew.releases.2026_05_03.items.chart_analysis.title',
+                    descriptionKey:
+                        'onboarding.whatsnew.releases.2026_05_03.items.chart_analysis.description'
+                }
+            ]
+        };
+
+        const wrapper = mountDialog();
+        await passOpenDelay(wrapper);
+
+        expect(wrapper.find('.dialog-stub').exists()).toBe(true);
+        expect(wrapper.text()).toContain(en.onboarding.welcome.title);
+        const cta = wrapper
+            .findAll('button')
+            .find((b) => b.text() === en.onboarding.whatsnew.common.got_it);
+        expect(cta).toBeTruthy();
     });
 });
