@@ -218,6 +218,51 @@ describe('useRelationshipScoring', () => {
             choppy.dimensions.contact
         );
     });
+
+    it('separates a barely-different cohort on the percent scale', async () => {
+        // Nine friends at 1 active week and one at 2: p90 log-normalization
+        // pinned everyone at 100 because the reference landed on the mode.
+        const now = new Date().toISOString();
+        const metrics = Array.from({ length: 9 }, (_, i) =>
+            metric({ userId: `w1-${i}`, activeWeeks: 1, lastSeen: now })
+        );
+        metrics.push(metric({ userId: 'w2', activeWeeks: 2, lastSeen: now }));
+        const scoring = await loadWith(metrics);
+        expect(
+            scoring.friendScores.value.get('w1-0').dimensions.regularity
+        ).toBeLessThan(100);
+        expect(scoring.friendScores.value.get('w1-0').dimensions.regularity).toBe(90);
+        expect(
+            scoring.friendScores.value.get('w2').dimensions.regularity
+        ).toBe(100);
+    });
+
+    it('reads a perfectly homogeneous cohort as full marks', async () => {
+        const now = new Date().toISOString();
+        const metrics = Array.from({ length: 5 }, (_, i) =>
+            metric({ userId: `same-${i}`, activeWeeks: 3, lastSeen: now })
+        );
+        const scoring = await loadWith(metrics);
+        for (const id of ['same-0', 'same-4']) {
+            expect(
+                scoring.friendScores.value.get(id).dimensions.regularity
+            ).toBe(100);
+        }
+    });
+
+    it('keeps a zero observation at zero instead of riding a tie upward', async () => {
+        const now = new Date().toISOString();
+        const scoring = await loadWith([
+            metric({ userId: 'none', activeWeeks: 0, lastSeen: now }),
+            metric({ userId: 'some', activeWeeks: 5, lastSeen: now })
+        ]);
+        expect(
+            scoring.friendScores.value.get('none').dimensions.regularity
+        ).toBe(0);
+        expect(
+            scoring.friendScores.value.get('some').dimensions.regularity
+        ).toBe(100);
+    });
 });
 
 describe('useRelationshipScoring recency and regularity', () => {
