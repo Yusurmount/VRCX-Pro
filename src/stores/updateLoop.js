@@ -57,9 +57,49 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
     );
 
     /**
+     * 日志轮询跑在独立循环里，不与 updateLoop 共用 await 链：
+     * 后者可能被慢的 VRChat API（getUsersGroupInstances，最长 60s）或游戏状态
+     * 检测拖住一整轮，导致 LogWatcher.Get() 迟迟不执行、房间/玩家列表延迟。
+     * 上游 VRCX 的 LogWatcher 同样是独立线程轮询，与其它 IPC 互不阻塞。
+     */
+    let gameLogLoopStarted = false;
+
+    /**
+     *
+     */
+    function startGameLogPolling() {
+        if (gameLogLoopStarted) {
+            return;
+        }
+        gameLogLoopStarted = true;
+        pollGameLog();
+    }
+
+    /**
+     *
+     */
+    async function pollGameLog() {
+        try {
+            if (watchState.isLoggedIn && --state.nextGetLogCheck <= 0) {
+                state.nextGetLogCheck = 0.5;
+                const rawLogs = await LogWatcher.Get();
+                if (rawLogs) {
+                    rawLogs.forEach((rawLog) => {
+                        addGameLogEvent(JSON.stringify(rawLog));
+                    });
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+        workerTimers.setTimeout(() => pollGameLog(), 1000);
+    }
+
+    /**
      *
      */
     async function updateLoop() {
+        startGameLogPolling();
         try {
             if (watchState.isLoggedIn) {
                 if (--state.nextCurrentUserRefresh <= 0) {
@@ -81,9 +121,18 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
                 if (--state.nextGroupInstanceRefresh <= 0) {
                     if (watchState.isFriendsLoaded) {
                         state.nextGroupInstanceRefresh = 300; // 5min
-                        const args =
-                            await groupRequest.getUsersGroupInstances();
-                        handleGroupUserInstances(args);
+                        // 不 await：VRChat API 单次可挂 60s，若阻塞本轮循环，
+                        // 后面每秒一次的游戏运行状态检测会被一起拖住——漏检一次
+                        // 开始/结束，玩家列表回放就会用到过期的上一次房间。
+                        groupRequest
+                            .getUsersGroupInstances()
+                            .then(handleGroupUserInstances)
+                            .catch((err) => {
+                                console.error(
+                                    'Failed to refresh group instances',
+                                    err
+                                );
+                            });
                     }
                     AppApi.CheckGameRunning();
                 }
@@ -122,15 +171,6 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
                         await AppApi.IsSteamVRRunning()
                     );
                     vrStore.vrInit(); // TODO: make this event based
-                }
-                if (--state.nextGetLogCheck <= 0) {
-                    state.nextGetLogCheck = 0.5;
-                    const rawLogs = await LogWatcher.Get();
-                    if (rawLogs) {
-                        rawLogs.forEach((rawLog) => {
-                            addGameLogEvent(JSON.stringify(rawLog));
-                        });
-                    }
                 }
                 if (--state.nextDatabaseOptimize <= 0) {
                     state.nextDatabaseOptimize = 86400; // 1 day

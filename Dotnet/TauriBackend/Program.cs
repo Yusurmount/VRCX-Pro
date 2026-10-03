@@ -64,21 +64,40 @@ internal static class Program
 
         using var reader = new StreamReader(Console.OpenStandardInput());
         await using var writer = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
-        // Concurrent dispatch: requests are handled as parallel tasks so a slow
-        // WebApi HTTP call no longer blocks local SQLite/KV traffic behind it.
-        // The semaphore is acquired in the read loop, so overload backpressures
-        // into the stdin pipe instead of piling up unbounded tasks.
+        // Concurrent dispatch with two lanes:
+        //   - local short calls (SQLite / KV / LogWatcher / AppApi) take
+        //     dispatchGate in the read loop, so overload still backpressures
+        //     into the stdin pipe instead of piling up unbounded tasks;
+        //   - WebApi HTTP (VRChat API, up to 60s per request) takes httpGate
+        //     *inside* the task, so the read loop keeps draining stdin while
+        //     HTTP is slow. Otherwise a burst of slow requests fills the single
+        //     gate, the read loop stops reading stdin, and every local call
+        //     behind it — including LogWatcher.Get() that drives the room /
+        //     player list — queues for the whole HTTP timeout.
         var dispatchGate = new SemaphoreSlim(32);
+        var httpGate = new SemaphoreSlim(32);
         var writerLock = new object();
+        var inFlight = 0;
         while (await reader.ReadLineAsync() is { } line)
         {
             if (string.IsNullOrWhiteSpace(line))
                 continue;
-            await dispatchGate.WaitAsync();
+            var isWebApi = IsWebApiRequest(line);
+            var gate = isWebApi ? httpGate : dispatchGate;
+            var held = !isWebApi;
+            if (held)
+                await dispatchGate.WaitAsync();
+            Interlocked.Increment(ref inFlight);
             _ = Task.Run(async () =>
             {
+                var acquired = held;
                 try
                 {
+                    if (!acquired)
+                    {
+                        await gate.WaitAsync();
+                        acquired = true;
+                    }
                     var response = JsonSerializer.Serialize(await Handle(line), JsonOptions);
                     lock (writerLock)
                         writer.WriteLine(response);
@@ -97,14 +116,38 @@ internal static class Program
                 }
                 finally
                 {
-                    dispatchGate.Release();
+                    if (acquired)
+                        gate.Release();
+                    Interlocked.Decrement(ref inFlight);
                 }
             });
         }
         // EOF reached: hold the process open until every in-flight response has
-        // been written, otherwise stdout closes before the tasks flush.
-        for (var i = 0; i < 32; i++)
-            await dispatchGate.WaitAsync();
+        // been written, otherwise stdout closes before the tasks flush. Counted
+        // instead of re-acquiring the gates so HTTP tasks that have not reached
+        // their WaitAsync yet are still waited for.
+        while (Volatile.Read(ref inFlight) > 0)
+            await Task.Delay(50);
+    }
+
+    /// <summary>
+    /// True when the request targets the WebApi class (VRChat HTTP), so it can be
+    /// gated on httpGate inside the task instead of the read loop. Parsed rather
+    /// than substring-matched so key spacing/casing from any producer is handled;
+    /// an unparsable line returns false and falls through to Handle(), which
+    /// reports the error with id 0 as before.
+    /// </summary>
+    private static bool IsWebApiRequest(string line)
+    {
+        try
+        {
+            var request = JsonSerializer.Deserialize<RpcRequest>(line, JsonOptions);
+            return string.Equals(request?.ClassName, "WebApi", StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     private static async Task<object> Handle(string line)

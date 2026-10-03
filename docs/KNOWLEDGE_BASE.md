@@ -481,7 +481,9 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
     → .NET Sidecar (stdin/stdout JSON-RPC)
 ```
 
-**并发模型（按 id 多路复用）：** `dotnet_call` 在 Rust 侧为每个请求分配自增 id，写入 stdin 后即释放锁并等待对应响应；独立读线程按响应 id 将结果路由回等待方（错误响应回显原请求 id）。.NET 侧主循环经 `SemaphoreSlim(32)` 背压后并发执行请求，响应加锁逐行写出。慢 WebApi HTTP 不再阻塞本地 SQLite/KV 请求（关键实验：慢请求期间本地读从 ~4.9s 降为亚毫秒）。SQLite 仍为单连接 + `ReaderWriterLockSlim`（前端事务跨多次 RPC，BEGIN/COMMIT 分行发送，单连接是事务语义基础）。
+**并发模型（按 id 多路复用）：** `dotnet_call` 在 Rust 侧为每个请求分配自增 id，写入 stdin 后即释放锁并等待对应响应；独立读线程按响应 id 将结果路由回等待方（错误响应回显原请求 id）。.NET 侧读循环按类别分流：本地短请求（SQLite/KV/LogWatcher/AppApi）在读循环处取 `SemaphoreSlim(32)` 背压，WebApi HTTP（VRChat API，单请求最长 60s）改在任务内部取独立 `SemaphoreSlim(32)`，**读循环不等待 HTTP**——否则慢 HTTP 占满共享闸门后读循环停止读取 stdin，排在后面的 `LogWatcher.Get()`/SQLite 会被拖到 HTTP 超时（回归实验：40 个慢 HTTP 下 `LogWatcher.Get` 旧实现阻塞 ~15s、分流后 20ms；复现脚本思路：向不可路由地址连发 40 个 `WebApi.ExecuteJson`，再测 `LogWatcher.Get` 延迟）。EOF 按在途计数排空响应。SQLite 仍为单连接 + `ReaderWriterLockSlim`（前端事务跨多次 RPC，BEGIN/COMMIT 分行发送，单连接是事务语义基础）。
+
+**游戏日志轮询独立于 updateLoop：** `LogWatcher.Get()` 在 `updateLoop` 内的独立循环（`startGameLogPolling`/`pollGameLog`）中轮询，不与其它轮询共用同一条 `await` 链——否则 `getUsersGroupInstances()`（VRChat API，最长 60s）或游戏状态检测会把整轮拖住，表现为换房后房间信息/玩家列表/好友栏长时间不刷新。上游 VRCX 的 LogWatcher 同样是独立线程轮询。
 
 全局绑定通过 [plugins/interopApi.js](../src/plugins/interopApi.js) 初始化：
 - `window.WebApi` — HTTP 请求代理

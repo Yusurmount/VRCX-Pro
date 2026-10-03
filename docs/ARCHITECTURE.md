@@ -123,7 +123,7 @@ ClassName.Method(...args)
 
 新增原生方法时，前端调用、Rust 注册和 .NET 分发必须同时存在。
 
-并发模型：Rust 为每个请求分配 sidecar id，写入后即释放锁并按响应 id 路由回等待方（响应可能乱序完成，id 会被改写回调用方原值）；.NET 在读循环处以信号量（32 并发上限）背压并发调度，EOF 时排空全部在途响应。跨请求**没有 FIFO 保证**——依赖顺序的调用方必须真正 `await` 前序 promise（例如 `database.begin()/commit()` 返回 promise 而非 fire-and-forget）。SQLite 保持单连接：前端事务以独立 RPC 行发送 `BEGIN`/`COMMIT`，单连接是事务语义的基础。
+并发模型：Rust 为每个请求分配 sidecar id，写入后即释放锁并按响应 id 路由回等待方（响应可能乱序完成，id 会被改写回调用方原值）；.NET 读循环按请求类别分流——本地短请求（SQLite/KV/LogWatcher/AppApi）在读循环处以信号量（32 并发上限）背压调度，WebApi HTTP（VRChat API，单请求最长 60s）改在任务内部取独立信号量，读循环不等待它，否则慢 HTTP 会占满闸门、停止读取 stdin，让排在后面的 `LogWatcher.Get()` 等本地调用一起排队到超时（实测：40 个慢 HTTP 下 `LogWatcher.Get` 旧版阻塞 ~15s，分流后 20ms）；EOF 时按在途计数排空全部响应。跨请求**没有 FIFO 保证**——依赖顺序的调用方必须真正 `await` 前序 promise（例如 `database.begin()/commit()` 返回 promise 而非 fire-and-forget）。SQLite 保持单连接：前端事务以独立 RPC 行发送 `BEGIN`/`COMMIT`，单连接是事务语义的基础。
 
 ### window.platform
 
