@@ -9,6 +9,7 @@ VRCX-Pro 的业务 UI 以 `src/components/ui/` 为组件库。页面和业务组
 3. 组件使用 `class-variance-authority` 表达变体，使用 `data-slot` 暴露稳定测试和样式钩子。
 4. 业务组件可以传布局类（宽度、间距、响应式轨道），但不能重新定义按钮、输入框、面板和色块的基础外观。
 5. 用户可见文字必须来自 Vue I18n。
+6. 用户可见文案中的产品名统一写 **VRCX-Pro**（三语 locale、硬编码弹窗/toast/对话框标题、导出报告均适用）。保留 `VRCX` 原样的例外：协议与标识（`VRCX-ID` 请求头、Sentry DSN）、文件/路径名（`VRCX.png`、`VRCX.desktop`、`%AppData%\VRCX`）、配置键与表前缀（`VRCX_*`）；README/docs 中指向上游项目的链接与对照说明也不改。
 
 ## 常用组合
 

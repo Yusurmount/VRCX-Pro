@@ -263,7 +263,7 @@ export async function runCheckVRChatDebugLoggingFlow() {
             // failed to set key
             modalStore.alert({
                 description:
-                    'VRCX has noticed VRChat debug logging is disabled. VRCX requires debug logging in order to function correctly. Please enable debug logging in VRChat quick menu settings > debug > enable debug logging, then rejoin the instance or restart VRChat.',
+                    'VRCX-Pro has noticed VRChat debug logging is disabled. VRCX-Pro requires debug logging in order to function correctly. Please enable debug logging in VRChat quick menu settings > debug > enable debug logging, then rejoin the instance or restart VRChat.',
                 title: 'Enable debug logging'
             });
             console.error('Failed to enable debug logging', result);
@@ -271,7 +271,7 @@ export async function runCheckVRChatDebugLoggingFlow() {
         }
         modalStore.alert({
             description:
-                'VRCX has noticed VRChat debug logging is disabled and automatically re-enabled it. VRCX requires debug logging in order to function correctly.',
+                'VRCX-Pro has noticed VRChat debug logging is disabled and automatically re-enabled it. VRCX-Pro requires debug logging in order to function correctly.',
             title: 'Enabled debug logging'
         });
         console.log('Enabled debug logging');

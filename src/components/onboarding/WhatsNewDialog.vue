@@ -9,7 +9,7 @@
             <!-- Title -->
             <div class="pt-1 text-center">
                 <div class="mb-2 flex justify-center">
-                    <img :src="vrcxLogo" alt="VRCX" class="size-12 rounded-xl" />
+                    <img :src="vrcxLogo" alt="VRCX-Pro" class="size-12 rounded-xl" />
                 </div>
 
                 <h2 class="m-0 text-[23px] font-bold tracking-tight">

@@ -35,14 +35,14 @@
                             <img
                                 class="h-6 w-6 cursor-pointer"
                                 :src="vrcxLogo"
-                                alt="VRCX"
+                                alt="VRCX-Pro"
                                 @click="emit('open-github')" />
                             <div class="flex min-w-0 flex-col">
                                 <Button
                                     variant="link"
                                     class="h-auto max-w-full justify-start gap-1 truncate p-0 text-left text-sm font-medium text-foreground"
                                     @click="emit('open-github')">
-                                    VRCX
+                                    VRCX-Pro
                                     <Heart class="text-primary fill-current stroke-none" />
                                 </Button>
                                 <span class="text-xs text-muted-foreground">{{ version }}</span>
