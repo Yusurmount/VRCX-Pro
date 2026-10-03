@@ -98,6 +98,8 @@
         <ChangelogDialog></ChangelogDialog>
 
         <WelcomeDialog></WelcomeDialog>
+
+        <DevFriendDialog></DevFriendDialog>
     </template>
 </template>
 
@@ -141,6 +143,7 @@
     const VRChatConfigDialog = defineAsyncComponent(() => import('../Settings/dialogs/VRChatConfigDialog.vue'));
     const WorldImportDialog = defineAsyncComponent(() => import('../Favorites/dialogs/WorldImportDialog.vue'));
     const WelcomeDialog = defineAsyncComponent(() => import('../../components/onboarding/WelcomeDialog.vue'));
+    const DevFriendDialog = defineAsyncComponent(() => import('../../components/onboarding/DevFriendDialog.vue'));
 
     import { isAutoFollowDialogOpen } from '../../coordinators/autoFollowCoordinator';
 

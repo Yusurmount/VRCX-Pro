@@ -247,6 +247,8 @@ Entity Cache (LRU) 维护本地实体缓存：
 
 **欢迎与新功能对话框（合并）**：`components/onboarding/WelcomeDialog.vue` 是唯一的引导对话框——顶部为个性化欢迎语（头像 + 称呼），下方展示 What's New 特性卡片（数据来自 `vrcxUpdater` store 的 `whatsNewDialog`），**始终以合并后的新样式呈现**：`maybeOpen()` 通过打开门禁后，若 `whatsNewDialog` 尚无公告内容（全新安装无升级公告、界面调试「欢迎引导」重开等），会先调用 `showLatestWhatsNewDialog()` 填入最新版本内容再打开；仅当 `whatsNewReleases` 无任何版本数据时才回落为纯欢迎头。打开条件**仅**由 `VRCX_onboarding_personal_welcome_seen` 标记驱动（与原欢迎对话框完全一致，800ms 延迟、关闭即标记看过）；CTA 恒为「开始使用」。升级公告通过 `vrcxUpdater` 的 `presentWhatsNewRelease()`（`showWhatsNewDialog` / `showLatestWhatsNewDialog` 共用）先清除该标记再发布内容，使合并对话框按欢迎语义到期；已有公告内容时打开不会被覆盖；关闭时写标记并调用 `closeWhatsNewDialog()`。独立的 `WhatsNewDialog.vue` 已删除；设置 > 界面调试工具的「欢迎引导」与「新功能」两个入口打开的都是这同一个对话框、呈现同一新样式。
 
+**开发者好友提示对话框**：`components/onboarding/DevFriendDialog.vue` 在欢迎对话框关闭（`handleDismiss` → `requestDevFriendDialogShow()`）后条件弹出，500ms 延迟。展示内容：开发者的头像/昵称（取自 `friendStore.friends` 中 `usr_166e8c0b-cfe1-47c3-ab7e-9d14874be6ae` 条目的 `ref`）+ 标题/正文 + 联系方式表格（游戏内 / QQ / 其他联系方式外链 `https://yusurmount.github.io/about/`）。条件：`VRCX_onboarding_dev_friend_seen` 未置位 **且** 该用户在好友列表中——好友列表未加载完时会等待 `watchState.isFriendsLoaded`（15s 超时兜底），避免欢迎框先于好友数据关闭时漏判；关闭即标记看过。触发状态在 `components/onboarding/devFriendDialogState.js`（含 force 标志）；界面调试工具「开发者好友提示对话框」入口重置标记并以 `force` 跳过好友条件直接预览。测试在 `src/components/onboarding/__tests__/DevFriendDialog.test.js`。
+
 ### 6.2 Pinia Stores
 
 Store 按职责分为四类；数量以 `src/stores/index.js` 的实际导出为准：

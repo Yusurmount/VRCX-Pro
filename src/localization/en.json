@@ -1768,6 +1768,10 @@
                                 "label": "Welcome Dialog",
                                 "desc": "Reset the seen flag, then show the welcome dialog again immediately."
                             },
+                            "dev_friend": {
+                                "label": "Developer Friend Dialog",
+                                "desc": "Reset the seen flag, then show the developer-friend dialog immediately (bypasses the friend check)."
+                            },
                             "whats_new": {
                                 "label": "What's New Dialog",
                                 "desc": "Open the What's New dialog for the latest release."
@@ -4088,6 +4092,18 @@
             "title": "Welcome to VRCX-Pro",
             "subtitle": "Hi {name}, great to see you!",
             "cta": "Get Started"
+        },
+        "devFriend": {
+            "title": "You're Friends with the Developer?",
+            "body": "As 雨小凌's friend, you can contact him directly to report bugs and grab the latest internal test (IT) builds — and help him hunt down bugs and issues.",
+            "contact_title": "Contact",
+            "ingame_label": "In-game",
+            "ingame_value": "Wait for 雨小凌 to come online",
+            "qq_label": "QQ",
+            "qq_value": "1261914215 (mention where you found him)",
+            "other_label": "Other channels",
+            "other_value": "yusurmount.github.io/about",
+            "cta": "Got It"
         },
         "whatsnew": {
             "title": "What's New in VRCX-Pro",

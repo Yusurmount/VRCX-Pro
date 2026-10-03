@@ -159,6 +159,10 @@ vi.mock('../../../components/onboarding/WelcomeDialog.vue', () => ({
     __esModule: true,
     default: { template: '<div />' }
 }));
+vi.mock('../../../components/onboarding/DevFriendDialog.vue', () => ({
+    __esModule: true,
+    default: { template: '<div />' }
+}));
 
 import MainLayout from '../MainLayout.vue';
 

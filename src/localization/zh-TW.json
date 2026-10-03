@@ -1765,6 +1765,10 @@
                                 "label": "歡迎引導對話框",
                                 "desc": "重置已見標記並立即重新顯示歡迎對話框。"
                             },
+                            "dev_friend": {
+                                "label": "開發者好友提示對話框",
+                                "desc": "重置已見標記並立即顯示開發者好友提示（跳過好友條件）。"
+                            },
                             "whats_new": {
                                 "label": "新功能對話框",
                                 "desc": "打開最新版本的新功能對話框。"
@@ -4081,6 +4085,18 @@
             "title": "歡迎使用 VRCX-Pro",
             "subtitle": "你好，{name}，很高興見到你！",
             "cta": "開始使用"
+        },
+        "devFriend": {
+            "title": "你竟然是開發者的好友？",
+            "body": "作為雨小凌的好友，你可以直接聯絡他回饋Bug並獲取最新內部測試（IT）版本，協助小凌找Bug和問題。",
+            "contact_title": "聯絡方式",
+            "ingame_label": "遊戲內聯絡",
+            "ingame_value": "需要等小凌上線",
+            "qq_label": "QQ",
+            "qq_value": "1261914215（備註來源）",
+            "other_label": "其他聯絡方式",
+            "other_value": "yusurmount.github.io/about",
+            "cta": "知道了"
         },
         "whatsnew": {
             "title": "VRCX-Pro 的新功能",

@@ -45,6 +45,7 @@ import {
     requestWelcomeDialogShow,
     welcomeDialogShowRequest
 } from '../welcomeDialogState';
+import { devFriendDialogShowRequest } from '../devFriendDialogState';
 
 const i18n = createI18n({
     locale: 'en',
@@ -98,6 +99,7 @@ describe('WelcomeDialog.vue', () => {
         vi.clearAllMocks();
         vi.useFakeTimers();
         welcomeDialogShowRequest.value = 0;
+        devFriendDialogShowRequest.value = 0;
         mocks.whatsNewDialog.value = { visible: false, titleKey: '', subtitleKey: '', items: [] };
         // Mimic the real store: filling publishes the latest release content.
         mocks.showLatestWhatsNewDialog.mockImplementation(async () => {
@@ -174,6 +176,7 @@ describe('WelcomeDialog.vue', () => {
             true
         );
         expect(mocks.closeWhatsNewDialog).toHaveBeenCalled();
+        expect(devFriendDialogShowRequest.value).toBe(1);
         expect(wrapper.find('.dialog-stub').exists()).toBe(false);
     });
 

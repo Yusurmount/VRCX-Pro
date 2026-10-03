@@ -79,6 +79,7 @@
     import { useUserDisplay } from '../../composables/useUserDisplay';
     import { useUserStore, useVRCXUpdaterStore } from '../../stores';
     import { welcomeDialogShowRequest } from './welcomeDialogState';
+    import { requestDevFriendDialogShow } from './devFriendDialogState';
 
     const OPEN_DELAY_MS = 800;
 
@@ -184,6 +185,9 @@
         isOpen.value = false;
         await configRepository.setBool(PERSONAL_WELCOME_SEEN_KEY, true);
         closeWhatsNewDialog();
+        // The developer-friend dialog follows the welcome dialog, which
+        // re-checks its own seen flag and friend condition before showing.
+        requestDevFriendDialogShow();
     }
 </script>
 

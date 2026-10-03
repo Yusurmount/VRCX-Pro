@@ -2,6 +2,7 @@ import configRepository from './config';
 
 const OOBE_COMPLETED_KEY = 'VRCX_OobeCompleted';
 export const PERSONAL_WELCOME_SEEN_KEY = 'VRCX_onboarding_personal_welcome_seen';
+export const DEV_FRIEND_SEEN_KEY = 'VRCX_onboarding_dev_friend_seen';
 
 let completedCache = null;
 

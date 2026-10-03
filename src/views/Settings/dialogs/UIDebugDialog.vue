@@ -414,8 +414,9 @@
     import { Button } from '@/components/ui/button';
     import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
     import configRepository from '@/services/config';
-    import { PERSONAL_WELCOME_SEEN_KEY, resetOobe } from '@/services/oobe';
+    import { DEV_FRIEND_SEEN_KEY, PERSONAL_WELCOME_SEEN_KEY, resetOobe } from '@/services/oobe';
     import { requestWelcomeDialogShow } from '@/components/onboarding/welcomeDialogState';
+    import { requestDevFriendDialogShow } from '@/components/onboarding/devFriendDialogState';
     import { useAppearanceSettingsStore } from '@/stores/settings/appearance';
     import { useModalStore } from '@/stores/modal';
     import { useUserStore } from '@/stores/user';
@@ -613,6 +614,16 @@
     }
 
     /**
+     * Reset the developer-friend dialog seen flag and show it immediately,
+     * bypassing the friend-list condition so it can be previewed by anyone.
+     */
+    async function showDevFriendDialog() {
+        await configRepository.setBool(DEV_FRIEND_SEEN_KEY, false);
+        requestDevFriendDialogShow(true);
+        router.push('/feed');
+    }
+
+    /**
      * Open the What's New dialog for the latest known release. Goes through
      * the store so the welcome seen flag is reset exactly like a real
      * version announcement.
@@ -804,6 +815,12 @@
             label: t(tk('onboarding.welcome.label')),
             desc: t(tk('onboarding.welcome.desc')),
             run: showWelcomeDialog
+        },
+        {
+            id: 'dev_friend',
+            label: t(tk('onboarding.dev_friend.label')),
+            desc: t(tk('onboarding.dev_friend.desc')),
+            run: showDevFriendDialog
         },
         {
             id: 'whats_new',
