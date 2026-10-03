@@ -4,7 +4,9 @@ import { createPinia, setActivePinia } from 'pinia';
 const mocks = vi.hoisted(() => ({
     configRepository: {
         getString: vi.fn(),
-        setString: vi.fn()
+        setString: vi.fn(),
+        getBool: vi.fn(),
+        setBool: vi.fn()
     },
     toast: {
         error: vi.fn(),
@@ -56,6 +58,8 @@ describe('useVRCXUpdaterStore.setAutoUpdateVRCX', () => {
             }
         );
         mocks.configRepository.setString.mockResolvedValue(undefined);
+        mocks.configRepository.getBool.mockResolvedValue(false);
+        mocks.configRepository.setBool.mockResolvedValue(undefined);
 
         globalThis.AppApi = {
             GetVersion: vi.fn().mockResolvedValue('2026.1.0')
@@ -184,6 +188,94 @@ describe('useVRCXUpdaterStore.setAutoUpdateVRCX', () => {
 
         expect(store.latestAppVersion).toBe('v2026.2.0');
         expect(store.pendingVRCXUpdate).toBe(false);
+    });
+
+    test('prompts a release update when the current build is the same-version it build', async () => {
+        const store = useVRCXUpdaterStore();
+        store.appVersion = 'VRCX-Pro 2026.2.0-it';
+        globalThis.webApiService.execute.mockResolvedValue({
+            status: 200,
+            data: JSON.stringify([
+                {
+                    name: 'VRCX-Pro 2026.2.0',
+                    tag_name: 'v2026.2.0',
+                    body: 'Same version, release channel',
+                    assets: []
+                }
+            ])
+        });
+
+        await store.showChangeLogDialog({ prefetch: true });
+
+        expect(store.VRCXUpdateDialog.release).toBe('v2026.2.0');
+        expect(store.pendingVRCXUpdate).toBe(true);
+    });
+
+    test('keeps beta builds gated until beta testing is accepted', async () => {
+        const store = useVRCXUpdaterStore();
+        globalThis.webApiService.execute.mockResolvedValue({
+            status: 200,
+            data: JSON.stringify([
+                {
+                    prerelease: true,
+                    name: 'VRCX-Pro 2026.3.0-beta',
+                    tag_name: 'v2026.3.0-beta',
+                    body: 'Beta build',
+                    assets: []
+                },
+                {
+                    name: 'VRCX-Pro 2026.2.0',
+                    tag_name: 'v2026.2.0',
+                    body: 'Release build',
+                    assets: []
+                }
+            ])
+        });
+
+        await store.showChangeLogDialog({ prefetch: true });
+        expect(store.VRCXUpdateDialog.release).toBe('v2026.2.0');
+
+        await store.setAcceptBeta(true);
+
+        expect(store.acceptBeta).toBe(true);
+        expect(mocks.configRepository.setBool).toHaveBeenCalledWith(
+            'VRCX_acceptBeta',
+            true
+        );
+        expect(store.VRCXUpdateDialog.release).toBe('v2026.3.0-beta');
+    });
+
+    test('prefers the release channel when the same version ships it/beta builds', async () => {
+        const store = useVRCXUpdaterStore();
+        globalThis.webApiService.execute.mockResolvedValue({
+            status: 200,
+            data: JSON.stringify([
+                {
+                    prerelease: true,
+                    name: 'VRCX-Pro 2026.2.0-it',
+                    tag_name: 'v2026.2.0-it',
+                    body: 'it build',
+                    assets: []
+                },
+                {
+                    prerelease: true,
+                    name: 'VRCX-Pro 2026.2.0-beta',
+                    tag_name: 'v2026.2.0-beta',
+                    body: 'beta build',
+                    assets: []
+                },
+                {
+                    name: 'VRCX-Pro 2026.2.0',
+                    tag_name: 'v2026.2.0',
+                    body: 'release build',
+                    assets: []
+                }
+            ])
+        });
+
+        await store.setAcceptBeta(true);
+
+        expect(store.VRCXUpdateDialog.release).toBe('v2026.2.0');
     });
 
     test('only enables install after the backend confirms a complete download', async () => {

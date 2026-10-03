@@ -6,6 +6,40 @@
                     {{ t('dialog.vrcx_updater.header') }}
                 </DialogTitle>
             </DialogHeader>
+
+            <div class="absolute top-2 right-10 z-10">
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                        <Button
+                            data-testid="update-menu-trigger"
+                            variant="ghost"
+                            size="icon-sm"
+                            :aria-label="t('dialog.vrcx_updater.more_options')"
+                            class="text-muted-foreground opacity-70 transition-opacity hover:opacity-100">
+                            <Ellipsis />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent data-testid="update-menu-options" align="end">
+                        <DropdownMenuCheckboxItem
+                            data-testid="accept-beta-item"
+                            :model-value="acceptBeta"
+                            @select="setAcceptBeta(!acceptBeta)">
+                            {{ t('dialog.vrcx_updater.accept_beta') }}
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                            data-testid="notify-update-item"
+                            :model-value="notifyUpdate"
+                            @select="toggleNotifyUpdate">
+                            {{ t('dialog.vrcx_updater.notify_update') }}
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem data-testid="change-version-item" @click="openReleases">
+                            <ExternalLink class="size-4" />
+                            {{ t('dialog.vrcx_updater.change_version') }}
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
             <div class="px-6 pb-6">
                 <section
                     :data-testid="updateError ? 'update-error' : null"
@@ -66,52 +100,56 @@
             </div>
 
             <DialogFooter
+                v-if="updateInProgress || showDownload || showInstall"
                 class="border-t border-border/70 bg-muted/25 px-6 py-4 sm:items-center"
-                :class="updateInProgress ? 'sm:justify-end' : 'sm:justify-between'">
+                :class="updateInProgress ? 'sm:justify-end' : ''">
                 <Button v-if="updateInProgress" variant="outline" @click="cancelUpdate">
                     <X class="size-4" />
                     {{ t('dialog.vrcx_updater.cancel') }}
                 </Button>
-                <template v-else>
-                    <Button variant="outline" @click="openReleases">
-                        <ExternalLink class="size-4" />
-                        {{ t('dialog.vrcx_updater.change_version') }}
-                    </Button>
-                    <div class="flex items-center gap-2 sm:justify-end">
-                        <Select
-                            v-if="showDownload"
-                            :model-value="downloadRoute"
-                            :disabled="checkingForVRCXUpdate"
-                            @update:model-value="setUpdateRoute">
-                            <SelectTrigger
-                                data-testid="update-route"
-                                :aria-label="t('dialog.vrcx_updater.route')"
-                                size="sm"
-                                class="min-w-40">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="official">
-                                    {{ t('dialog.vrcx_updater.route_official') }}
-                                </SelectItem>
-                                <SelectItem value="mirror">
-                                    {{ t('dialog.vrcx_updater.route_mirror') }}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
+                <div v-else class="relative flex w-full items-center justify-center">
+                    <div class="flex items-center gap-2">
                         <Button
                             v-if="showDownload"
+                            class="min-w-44 sm:min-w-56"
                             :disabled="checkingForVRCXUpdate"
                             @click="downloadSelectedVRCXUpdate">
                             <CloudDownload class="size-4" />
                             {{ t('dialog.vrcx_updater.download') }}
                         </Button>
-                        <Button v-if="showInstall" @click="restartVRCX(true)">
+                        <Button v-if="showInstall" class="min-w-44 sm:min-w-56" @click="restartVRCX(true)">
                             <PackageCheck class="size-4" />
                             {{ t('dialog.vrcx_updater.install') }}
                         </Button>
                     </div>
-                </template>
+                    <div v-if="showDownload" class="absolute right-0">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger as-child>
+                                <Button
+                                    data-testid="route-trigger"
+                                    variant="ghost"
+                                    size="sm"
+                                    class="gap-1.5 text-muted-foreground"
+                                    :disabled="checkingForVRCXUpdate">
+                                    {{ routeLabel }}
+                                    <ChevronDown class="size-3.5" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent data-testid="route-options" align="end">
+                                <DropdownMenuCheckboxItem
+                                    :model-value="downloadRoute === 'official'"
+                                    @select="setUpdateRoute('official')">
+                                    {{ t('dialog.vrcx_updater.route_official') }}
+                                </DropdownMenuCheckboxItem>
+                                <DropdownMenuCheckboxItem
+                                    :model-value="downloadRoute === 'mirror'"
+                                    @select="setUpdateRoute('mirror')">
+                                    {{ t('dialog.vrcx_updater.route_mirror') }}
+                                </DropdownMenuCheckboxItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
             </DialogFooter>
         </DialogContent>
     </Dialog>
@@ -122,9 +160,11 @@
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
     import {
+        ChevronDown,
         CircleCheck,
         CircleAlert,
         CloudDownload,
+        Ellipsis,
         ExternalLink,
         FileText,
         Info,
@@ -135,8 +175,15 @@
 
     import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
     import { Button } from '@/components/ui/button';
+    import {
+        DropdownMenu,
+        DropdownMenuCheckboxItem,
+        DropdownMenuContent,
+        DropdownMenuItem,
+        DropdownMenuSeparator,
+        DropdownMenuTrigger
+    } from '@/components/ui/dropdown-menu';
     import { Progress } from '@/components/ui/progress';
-    import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { openExternalLink } from '@/shared/utils';
     import { compareVersionNumbers, normalizeVersion } from '@/shared/utils/version';
     import { useVRCXUpdaterStore } from '../../stores';
@@ -145,18 +192,27 @@
     const VueShowdown = defineAsyncComponent(() => import('vue-showdown').then((module) => module.VueShowdown));
 
     const {
+        acceptBeta,
         appVersion,
+        autoUpdateVRCX,
         changeLogDialog,
         checkingForVRCXUpdate,
-        VRCXUpdateDialog,
         downloadRoute,
         pendingVRCXInstall,
         updateInProgress,
         updateProgress,
-        updateError
+        updateError,
+        VRCXUpdateDialog
     } = storeToRefs(VRCXUpdaterStore);
-    const { downloadSelectedVRCXUpdate, restartVRCX, updateProgressText, cancelUpdate, setUpdateRoute } =
-        VRCXUpdaterStore;
+    const {
+        downloadSelectedVRCXUpdate,
+        restartVRCX,
+        updateProgressText,
+        cancelUpdate,
+        setAcceptBeta,
+        setAutoUpdateVRCX,
+        setUpdateRoute
+    } = VRCXUpdaterStore;
 
     const { t } = useI18n();
 
@@ -273,6 +329,16 @@
     );
 
     const openReleases = () => openExternalLink('https://github.com/Yusurmount/VRCX-Pro/releases');
+
+    const routeLabel = computed(() =>
+        downloadRoute.value === 'mirror'
+            ? t('dialog.vrcx_updater.route_mirror')
+            : t('dialog.vrcx_updater.route_official')
+    );
+
+    const notifyUpdate = computed(() => autoUpdateVRCX.value !== 'Off');
+
+    const toggleNotifyUpdate = () => setAutoUpdateVRCX(notifyUpdate.value ? 'Off' : 'Notify');
 
     const handleLinkClick = (event) => {
         const target = event.target.closest('a');

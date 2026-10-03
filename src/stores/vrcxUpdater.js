@@ -12,6 +12,7 @@ import {
 } from '../shared/constants/whatsNewReleases';
 import {
     compareVersionNumbers,
+    getVersionChannel,
     normalizeVersion
 } from '../shared/utils/version';
 
@@ -26,6 +27,30 @@ const emptyWhatsNewDialog = () => ({
     subtitleKey: '',
     items: []
 });
+
+/**
+ * GitHub returns releases newest first; among equal versions prefer the
+ * release channel over beta/it (compareVersionNumbers encodes that order).
+ * Ties keep the earlier candidate (the newer one by creation date).
+ * @param {Array<{tag_name?: string, name?: string}>} candidates
+ */
+function pickLatestRelease(candidates) {
+    let latest = null;
+    for (const candidate of candidates) {
+        if (!latest) {
+            latest = candidate;
+            continue;
+        }
+        const comparison = compareVersionNumbers(
+            candidate.tag_name || candidate.name,
+            latest.tag_name || latest.name
+        );
+        if (comparison !== null && comparison > 0) {
+            latest = candidate;
+        }
+    }
+    return latest;
+}
 
 export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
     const { t } = useI18n();
@@ -61,6 +86,7 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
     const updateProgress = ref(0);
     const updateError = ref('');
     const downloadRoute = ref('official');
+    const acceptBeta = ref(false);
     const updateToastRelease = ref('');
 
     async function initVRCXUpdaterSettings() {
@@ -73,15 +99,17 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
             noUpdater.value = true;
         }
 
-        const [VRCX_autoUpdateVRCX, VRCX_id, VRCX_updateRoute] =
-            await Promise.all([
-                configRepository.getString(
-                    'VRCX_autoUpdateVRCX',
-                    'Auto Download'
-                ),
-                configRepository.getString('VRCX_id', ''),
-                configRepository.getString('VRCX_updateRoute', 'official')
-            ]);
+        const [
+            VRCX_autoUpdateVRCX,
+            VRCX_id,
+            VRCX_updateRoute,
+            VRCX_acceptBeta
+        ] = await Promise.all([
+            configRepository.getString('VRCX_autoUpdateVRCX', 'Auto Download'),
+            configRepository.getString('VRCX_id', ''),
+            configRepository.getString('VRCX_updateRoute', 'official'),
+            configRepository.getBool('VRCX_acceptBeta', false)
+        ]);
 
         if (VRCX_autoUpdateVRCX === 'Auto Install') {
             autoUpdateVRCX.value = 'Auto Download';
@@ -91,6 +119,7 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         if (noUpdater.value) {
             autoUpdateVRCX.value = 'Off';
         }
+        acceptBeta.value = VRCX_acceptBeta === true;
 
         appVersion.value = await AppApi.GetVersion();
         vrcxId.value = VRCX_id;
@@ -157,6 +186,16 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         }
         downloadRoute.value = value;
         await configRepository.setString('VRCX_updateRoute', value);
+    }
+
+    async function setAcceptBeta(value) {
+        const next = Boolean(value);
+        if (next === acceptBeta.value) {
+            return;
+        }
+        acceptBeta.value = next;
+        await configRepository.setBool('VRCX_acceptBeta', next);
+        await checkForVRCXUpdate();
     }
 
     function getRoutedUpdateUrl(url) {
@@ -394,7 +433,7 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         }
         logWebRequest('[EXTERNAL GET]', url, `(${response.status})`, json);
         const releases = [];
-        const stableReleases = [];
+        const candidateReleases = [];
         if (typeof json !== 'object' || json === null || json.message) {
             updateError.value = t('message.vrcx_updater.failed', {
                 message:
@@ -404,10 +443,16 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
             return;
         }
         for (const release of json) {
-            if (release.prerelease) {
+            const releaseName = release.tag_name || release.name || '';
+            const isReleaseChannel =
+                getVersionChannel(releaseName) === 'release';
+            if (
+                !acceptBeta.value &&
+                (release.prerelease || !isReleaseChannel)
+            ) {
                 continue;
             }
-            stableReleases.push(release);
+            candidateReleases.push(release);
             assetLoop: for (const asset of release.assets) {
                 if (asset.state === 'uploaded') {
                     releases.push(release);
@@ -416,14 +461,11 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
             }
         }
         D.releases = releases;
-        // Latest = newest non-prerelease release, even if it has no
-        // downloadable assets yet (assets only gate the download step).
-        const latestRelease =
-            stableReleases.length > 0
-                ? stableReleases[0]
-                : json.length > 0
-                  ? json[0]
-                  : null;
+        // Latest = highest version among gated candidates (same number:
+        // release > beta > it), even if it has no downloadable assets yet
+        // (assets only gate the download step). No candidate means nothing
+        // the user is allowed to install is published.
+        const latestRelease = pickLatestRelease(candidateReleases);
         D.release = latestRelease
             ? latestRelease.tag_name || latestRelease.name
             : '';
@@ -599,9 +641,7 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
             }
             const started = await AppApi.RestartApplication(true);
             if (!started) {
-                throw new Error(
-                    t('message.vrcx_updater.install_start_failed')
-                );
+                throw new Error(t('message.vrcx_updater.install_start_failed'));
             }
             window.platform.quitApplication();
         } catch (err) {
@@ -654,10 +694,12 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         updateProgress,
         updateError,
         downloadRoute,
+        acceptBeta,
         noUpdater,
 
         setAutoUpdateVRCX,
         setUpdateRoute,
+        setAcceptBeta,
         setBranch,
 
         showWhatsNewDialog,

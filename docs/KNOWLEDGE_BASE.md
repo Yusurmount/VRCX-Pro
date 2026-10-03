@@ -807,6 +807,8 @@ tauri build (Rust 编译 + WebView 打包 + NSIS 安装程序)
 - 根目录 `Version` 保存规范版本号，`version_channel` 选择 `Release`、`Beta` 或 `It` 后缀
 - `build-scripts/sync-version.js` 将频道化版本同步到 `src-tauri/tauri.conf.json` 与 `src-tauri/Cargo.toml`
 - `package.json` 的 `version` 不是发布版本来源，文档和构建校验应以根目录 `Version` 为准
+- 更新检查（`src/stores/vrcxUpdater.js`、`src/shared/utils/version.js`）：同版本号下渠道新旧为 Release > Beta > It，`compareVersionNumbers` 在数字相同后按 `-beta`/`-it` 后缀定序，因此同版本的 it 构建会提示其 Release 更新
+- 预发布 / 非 Release 渠道构建仅在更新弹窗三点菜单勾选「接受Beta测试」（配置 `VRCX_acceptBeta`）后纳入检查；「提醒版本更新」复用 `VRCX_autoUpdateVRCX`（勾选=非 `Off`，默认回落 `Notify`）
 
 ---
 

@@ -11,6 +11,20 @@ function getVersionParts(value) {
     return match ? match[0].split('.').map(Number) : null;
 }
 
+// Build channel suffixes come from build-scripts/version-channel.cjs.
+function getVersionChannel(value) {
+    const normalized = normalizeVersion(value).toLowerCase();
+    if (/-it(?:\.|$)/.test(normalized)) {
+        return 'it';
+    }
+    if (/-beta(?:\.|$)/.test(normalized)) {
+        return 'beta';
+    }
+    return 'release';
+}
+
+const CHANNEL_RANK = { it: 0, beta: 1, release: 2 };
+
 function compareVersionNumbers(left, right) {
     const leftParts = getVersionParts(left);
     const rightParts = getVersionParts(right);
@@ -25,7 +39,11 @@ function compareVersionNumbers(left, right) {
             return Math.sign(difference);
         }
     }
-    return 0;
+    // Same version number: release is newer than beta, beta newer than it.
+    return Math.sign(
+        CHANNEL_RANK[getVersionChannel(left)] -
+            CHANNEL_RANK[getVersionChannel(right)]
+    );
 }
 
-export { compareVersionNumbers, normalizeVersion };
+export { compareVersionNumbers, getVersionChannel, normalizeVersion };
