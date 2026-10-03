@@ -849,7 +849,7 @@
                 "header": "Relationship Intimacy",
                 "refresh": "Refresh",
                 "tips": {
-                    "description": "Scores relationship intimacy from five dimensions — co-presence time, regularity, recency, trend, and initiative — combined through a λ-Choquet integral. Every dimension is an accumulating physical quantity: the absolute scale takes a log ratio against a fixed anchor with no 1000-point ceiling — 1 hour together / 26 active weeks / 1 hour in the last 90 days = the 1000-point standard line, and values keep growing logarithmically past it."
+                    "description": "Measures how close you and a friend are across five things: how long you have hung out, whether contact is regular, whether you met recently, whether things are warming or cooling, and who usually initiates. The absolute scale has no 1000-point ceiling — hitting the standard line (1 hour together / 26 active weeks / 1 hour in the last 90 days) scores 1000, and better keeps climbing."
                 },
                 "distribution": "Score Distribution",
                 "top_friends": "Top Friends by Intimacy",
@@ -865,12 +865,12 @@
                     "title": "Score Weights",
                     "reset": "Reset",
                     "explain": {
-                        "summary": "Each dimension is mapped through a nonlinear membership curve, then combined by a λ-Choquet integral — criteria constrain or substitute each other instead of a plain weighted average. Weights are relative shares and need not add up to 100; Reset restores the 35 / 15 / 20 / 12 / 18 defaults and λ=0.5.",
-                        "contact": "Total time in the same room (blocks summed, reconnects never double-counted), log-ratioed against the 1-hour standard line with no ceiling, then trimmed by freshness and session depth: deep hangs beat fragment drop-bys.",
-                        "regularity": "Accumulated active weeks — every routine week keeps counting, half a year = the 1000-point line and it grows logarithmically after that. Brand-new relationships start low instead of everyone pinning at full marks.",
-                        "recency": "Rolling 90-day co-presence log-ratioed against the 1-hour line, then modulated by time since you last met — past the window a dormant friend reads zero instead of coasting on old history.",
-                        "trend": "Signed ratio of the last 30 days versus the previous 30: 0 = flat (the bar midpoint), positive = warming, negative = cooling, saturated at ±100 — a doubling mirrors a halving exactly.",
-                        "activity": "Signed initiation direction: positive = I do the seeking, negative = they seek me, 0 = balanced — the bar is zeroed at its midpoint and saturates at ±100. The weight slider runs −100 to 100: a positive weight advantages \"I seek\" in the total, a negative one flips it to \"they seek\"; the magnitude is still this dimension’s importance and 0 opts out."
+                        "summary": "The total combines the five aspects — raise the weight of whatever matters most to you. Weights are relative shares and need not add up to 100; Reset restores the defaults (35 / 15 / 20 / 12 / 18).",
+                        "contact": "Time actually spent in the same room. Reconnects never double-count; one long session beats scattered drop-bys. Friends added later take a freshness discount to cancel out early-relationship heat.",
+                        "regularity": "How many weeks you have played together at all. Every week of contact keeps scoring and half a year reaches the line; someone you met a few weeks ago naturally starts low instead of everyone pinning at full marks.",
+                        "recency": "How much you played in the last three months and how long ago you last met. Nothing for three months reads zero — old history cannot coast.",
+                        "trend": "Last 30 days versus the previous 30: 0 = flat (the bar midpoint), positive = warming, negative = cooling, capped at ±100 — a doubling mirrors a halving exactly.",
+                        "activity": "Who usually initiates: positive = you go to them, negative = they come to you, 0 = even (the bar is zeroed at its midpoint, capped at ±100). The weight slider runs -100 to 100: positive counts \"you initiate\" into the total, negative flips it so \"they initiate\" wins; the magnitude is still how much this item matters, and 0 opts out."
                     }
                 },
                 "settings": {
@@ -880,8 +880,8 @@
                     "title": "Scoring Scale",
                     "percent": "Percent",
                     "absolute": "Absolute",
-                    "percent_hint": "The total and each dimension convert independently by relative standing (board leader = 100% total, that dimension max = 100%); the two relativizations never interact. One absolute scoring pipeline computes everything underneath — switching the scale changes display only, never the score itself.",
-                    "absolute_hint": "Each dimension is the log ratio against a fixed anchor (1 h co-presence / 26 active weeks / 1 h in 90 days) — 1000 is the standard line, not a ceiling, so values accumulate without limit; totals keep one decimal and every bar fills against the current maximum."
+                    "percent_hint": "Read it as standings: the board leader shows as a 100% total and each dimension leader as 100% for that item, independently. Scoring underneath is identical — switching scales changes the display only, never the score.",
+                    "absolute_hint": "Fixed standards: 1 hour together / 26 active weeks / 1 hour in the last 90 days = 1000 points. That is a pass line, not a cap; scores stay put as others change, keep one decimal, and each bar fills against the current maximum."
                 },
                 "excluded": {
                     "title": "Excluded Friends",
@@ -896,8 +896,8 @@
                 },
                 "lambda": {
                     "title": "Constraint λ",
-                    "explain": "λ controls how the dimensions interact. λ>0: dimensions constrain each other — one strength cannot cover a shortfall and only a balanced profile scores high. λ<0: dimensions substitute each other — one strength can cover a weak side. λ=0 degrades to a plain weighted average.",
-                    "hint": "Positive favors balanced profiles, negative favors single-strength profiles"
+                    "explain": "How the five aspects affect each other. Positive = barrel effect: one weak side drags the total and only a balanced profile scores high. Negative = one strong side can cover a weak one. 0 = a plain weighted average.",
+                    "hint": "Positive rewards balance; negative lets a standout cover a weak side"
                 }
             },
             "avatar_usage": {
