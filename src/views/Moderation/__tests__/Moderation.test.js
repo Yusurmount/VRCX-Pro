@@ -133,7 +133,8 @@ vi.mock('@/components/ui/spinner', () => ({
 }));
 
 vi.mock('lucide-vue-next', () => ({
-    RefreshCw: { template: '<span />' }
+    RefreshCw: { template: '<span />' },
+    Trash2: { template: '<span />' }
 }));
 
 vi.mock('@/components/ui/data-table', () => ({
@@ -250,7 +251,9 @@ describe('Moderation.vue', () => {
     test('refresh button triggers moderation refresh', async () => {
         const wrapper = mountModeration();
 
-        await wrapper.get('[data-testid="moderation-button"]').trigger('click');
+        const buttons = wrapper.findAll('[data-testid="moderation-button"]');
+        const refreshButton = buttons[buttons.length - 1];
+        await refreshButton.trigger('click');
 
         expect(mocks.refreshPlayerModerations).toHaveBeenCalledTimes(1);
     });

@@ -80,7 +80,7 @@
         DropdownMenuSeparator,
         DropdownMenuTrigger
     } from '@/components/ui/dropdown-menu';
-    import { computed } from 'vue';
+    import { computed, ref } from 'vue';
     import { Button } from '@/components/ui/button';
     import { InputGroupField } from '@/components/ui/input-group';
     import { RefreshCw, Trash2 } from 'lucide-vue-next';
