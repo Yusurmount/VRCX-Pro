@@ -74,7 +74,7 @@
         "resources": "RESOURCES",
         "wiki": "Wiki",
         "get_help": "GET HELP",
-        "github": "VRCX on GitHub",
+        "github": "VRCX-Pro on GitHub",
         "discord": "Join our Discord",
         "check_updates": "Check for Updates",
         "update_available": "Update available",
@@ -238,7 +238,7 @@
             "remove_tooltip": "Remove from tracking",
             "add_button": "Add +",
             "add_dialog_title": "Track a User",
-            "add_dialog_hint": "Enter the user ID manually (usr_xxx...), or open any user's profile in VRCX-jirai and use the \"⋯\" → \"Track\" option.",
+            "add_dialog_hint": "Enter the user ID manually (usr_xxx...), or open any user's profile in VRCX-Pro and use the \"⋯\" → \"Track\" option.",
             "add_input_placeholder": "usr_xxx...",
             "add_verify_error": "Could not retrieve user data. Please check the ID and try again.",
             "add_confirm_question": "Is this user \"{name}\"?",
@@ -344,7 +344,7 @@
                 "search_placeholder": "Search",
                 "filter_placeholder": "Filter",
                 "chatbox_blacklist": "Chatbox Blacklist",
-                "status_tooltip": "VRCX Companion Status"
+                "status_tooltip": "VRCX-Pro Companion Status"
             },
             "filter": {
                 "title": "Advanced Filter",
@@ -633,7 +633,7 @@
                 "next_day": "Next Day",
                 "refresh": "Refresh",
                 "tips": {
-                    "online_time": "Online time refers to the game time recorded by VRCX for the current day.",
+                    "online_time": "Online time refers to the game time recorded by VRCX-Pro for the current day.",
                     "click_Y_axis": "Click Y-axis label to navigate to the instance details or open User dialog.",
                     "click_instance_name": "Click instance name to open Previous Instance Info dialog."
                 },
@@ -1001,7 +1001,7 @@
             "export": {
                 "header": "Export",
                 "export_notes": "Export User Memos",
-                "export_notes_description": "Export VRCX user memos to VRChat notes",
+                "export_notes_description": "Export VRCX-Pro user memos to VRChat notes",
                 "discord_names": "Discord Names"
             },
             "redirect_message": "This feature is now available on this page.",
@@ -1022,8 +1022,8 @@
             },
             "shortcuts": {
                 "header": "Shortcuts",
-                "vrcx_data": "VRCX Data",
-                "vrcx_data_description": "Open the VRCX data folder",
+                "vrcx_data": "VRCX-Pro Data",
+                "vrcx_data_description": "Open the VRCX-Pro data folder",
                 "vrchat_data": "VRChat Data",
                 "vrchat_data_description": "Open the VRChat data folder",
                 "crash_dumps": "Crash Dumps",
@@ -1162,7 +1162,7 @@
                 "mcp_server": {
                     "header": "MCP Server",
                     "enable": "Enable MCP Server",
-                    "enable_description": "Start a local Model Context Protocol (MCP) server that allows AI assistants to query your VRCX data.",
+                    "enable_description": "Start a local Model Context Protocol (MCP) server that allows AI assistants to query your VRCX-Pro data.",
                     "server_port": "Server Port",
                     "server_port_description": "The port the MCP server listens on (default: 3001).",
                     "port_button": "Port: {port}",
@@ -1170,12 +1170,12 @@
                     "status_running": "Running",
                     "status_stopped": "Stopped",
                     "database_path": "Database Path",
-                    "database_path_description": "Path to the VRCX SQLite database file.",
+                    "database_path_description": "Path to the VRCX-Pro SQLite database file.",
                     "database_path_default": "Default",
                     "port_dialog_title": "MCP Server Port",
                     "port_dialog_description": "Enter the port number for the MCP server (1024-65535).",
                     "port_dialog_error": "Please enter a valid port number (1024-65535).",
-                    "db_dialog_title": "Select VRCX Database",
+                    "db_dialog_title": "Select VRCX-Pro Database",
                     "ai_tools": "AI Tools",
                     "ai_tools_description": "Tools available to connected AI assistants. Call them from Claude Desktop, Cursor, or any MCP client.",
                     "tool_social_insights": "Social analytics: active friends, online time distribution, top worlds.",
@@ -1217,7 +1217,7 @@
                     "support": "Support"
                 },
                 "vrcx_updater": {
-                    "header": "VRCX Updater",
+                    "header": "VRCX-Pro Updater",
                     "change_build": "Change Build",
                     "update_action": "Update Action",
                     "auto_update_off": "Off",
@@ -1232,10 +1232,10 @@
                     "minimized": "Start Minimized at System Startup",
                     "tray": "Minimize to Tray When Closing",
                     "disable_gpu_acceleration": "Disable GPU Acceleration",
-                    "disable_gpu_acceleration_tooltip": "Only change this option if you know what you're doing, may fix issues with UI, requires restarting VRCX",
+                    "disable_gpu_acceleration_tooltip": "Only change this option if you know what you're doing, may fix issues with UI, requires restarting VRCX-Pro",
                     "disable_vr_overlay_gpu_acceleration": "Disable VR Overlay GPU Acceleration",
                     "proxy": "Proxy Settings",
-                    "startup_linux": "Add \"--startup\" arg to startup VRCX.desktop file to start VRCX minimized at system startup",
+                    "startup_linux": "Add \"--startup\" arg to startup VRCX.desktop file to start VRCX-Pro minimized at system startup",
                     "restore_defaults": "Restore Default Settings",
                     "restore_defaults_confirm_title": "Restore Default Settings",
                     "restore_defaults_confirm_description": "Are you sure you want to restore all preference settings to their default values? This will not affect your user data or other settings.",
@@ -1281,9 +1281,9 @@
                 },
                 "legal_notice": {
                     "header": "Legal Notice",
-                    "info": "VRCX is an assistant application for VRChat that provides information about and managing friendship. This application makes use of the unofficial VRChat API SDK.",
-                    "disclaimer1": "VRCX is not endorsed by VRChat and does not reflect the views or opinions of VRChat or anyone officially involved in producing or managing VRChat properties. VRChat and all associated properties are trademarks or registered trademarks of VRChat Inc. VRChat © VRChat Inc.",
-                    "disclaimer2": "pypy, Natsumi & Yusurmount and all contributors are not responsible for any problems caused by VRCX. Use at your own risk!",
+                    "info": "VRCX-Pro is an assistant application for VRChat that provides information about and managing friendship. This application makes use of the unofficial VRChat API SDK.",
+                    "disclaimer1": "VRCX-Pro is not endorsed by VRChat and does not reflect the views or opinions of VRChat or anyone officially involved in producing or managing VRChat properties. VRChat and all associated properties are trademarks or registered trademarks of VRChat Inc. VRChat © VRChat Inc.",
+                    "disclaimer2": "pypy, Natsumi & Yusurmount and all contributors are not responsible for any problems caused by VRCX-Pro. Use at your own risk!",
                     "open_source_software_notice": "Open Source Software Notice"
                 },
                 "contributors": {
@@ -1398,8 +1398,8 @@
                     "header": "User Dialog",
                     "vrchat_notes": "VRChat Notes",
                     "vrchat_notes_description": "Shows notes stored in VRChat",
-                    "vrcx_memos": "VRCX Memos",
-                    "vrcx_memos_description": "Shows notes saved locally in VRCX",
+                    "vrcx_memos": "VRCX-Pro Memos",
+                    "vrcx_memos_description": "Shows notes saved locally in VRCX-Pro",
                     "recent_action_cooldown": "Recent Action Icon",
                     "recent_action_cooldown_description": "Show a clock icon on recent invite and request actions.",
                     "recent_action_cooldown_minutes": "Cooldown (Minutes)"
@@ -1566,7 +1566,7 @@
                 "rpc": {
                     "vr": "VR",
                     "desktop": "Desktop",
-                    "powered_by_vrcx": "Powered by VRCX",
+                    "powered_by_vrcx": "Powered by VRCX-Pro",
                     "private_world": "Private World"
                 }
             },
@@ -1584,7 +1584,7 @@
                         "header": "VRChat"
                     },
                     "vrcx_settings": {
-                        "header": "VRCX"
+                        "header": "VRCX-Pro"
                     },
                     "api_request_interval": {
                         "header": "VRChat API Request Interval Protection",
@@ -1613,11 +1613,11 @@
                     },
                     "anonymous_error_reporting": {
                         "header": "Anonymous Error Reporting (Nightly Only)",
-                        "description": "Help improve VRCX by sending anonymous crash and error reports. No personal or VRChat data is collected.",
+                        "description": "Help improve VRCX-Pro by sending anonymous crash and error reports. No personal or VRChat data is collected.",
                         "consent_title": "Anonymous Error Reporting",
-                        "consent_description": "Allow anonymous error reporting to help improve VRCX?\n\n• Crash and error data only\n• No personal or VRChat data\n• Nightly builds only\n• Can be disabled in Advanced Settings",
-                        "enabled_restart_description": "Error reporting enabled. Restart VRCX to apply changes?",
-                        "disabled_restart_description": "Error reporting disabled. Restart VRCX to apply changes?"
+                        "consent_description": "Allow anonymous error reporting to help improve VRCX-Pro?\n\n• Crash and error data only\n• No personal or VRChat data\n• Nightly builds only\n• Can be disabled in Advanced Settings",
+                        "enabled_restart_description": "Error reporting enabled. Restart VRCX-Pro to apply changes?",
+                        "disabled_restart_description": "Error reporting disabled. Restart VRCX-Pro to apply changes?"
                     },
                     "save_instance_prints_to_file": {
                         "header": "Save Instance Prints to File",
@@ -1638,7 +1638,7 @@
                     },
                     "delete_all_screenshot_metadata": {
                         "button": "Remove Screenshot Metadata",
-                        "ask": "Are you sure you want to delete all VRC & VRCX screenshot metadata from your VRChat Pictures folder?",
+                        "ask": "Are you sure you want to delete all VRC & VRCX-Pro screenshot metadata from your VRChat Pictures folder?",
                         "confirm": "Deleting all screenshot metadata is a very destructive action and cannot be undone! This includes all prints, sub folders and other unrelated images in your VRChat Pictures folder, if these photos are precious to you, please make a backup before proceeding.",
                         "confirm_yes": "Yes",
                         "confirm_no": "No"
@@ -1671,7 +1671,7 @@
                         "header": "Launch Commands (Deep Links)",
                         "docs": "Launch Command Docs",
                         "show_confirmation_on_switch_avatar_enable": "Confirm Before Switching Avatars",
-                        "show_confirmation_on_switch_avatar_tooltip": "When disabled, VRCX will not ask for confirmation before switching avatars.",
+                        "show_confirmation_on_switch_avatar_tooltip": "When disabled, VRCX-Pro will not ask for confirmation before switching avatars.",
                         "website_userscript": "VRC Website Userscript"
                     },
                     "screenshot_helper": {
@@ -1701,7 +1701,7 @@
                             "previews": "Previews"
                         },
                         "gallery": {
-                            "hint": "A visual showcase of the component library used throughout VRCX."
+                            "hint": "A visual showcase of the component library used throughout VRCX-Pro."
                         },
                         "toast": {
                             "title": "Test Toast",
@@ -1812,8 +1812,8 @@
                                 "desc": "Show a recovery OTP prompt."
                             },
                             "update": {
-                                "label": "VRCX Update Dialog",
-                                "desc": "Show the VRCX update dialog."
+                                "label": "VRCX-Pro Update Dialog",
+                                "desc": "Show the VRCX-Pro update dialog."
                             }
                         },
                         "app_state": {
@@ -1865,7 +1865,7 @@
                         }
                     },
                     "cache_debug": {
-                        "header": "VRCX Instance Cache/Debug",
+                        "header": "VRCX-Pro Instance Cache/Debug",
                         "udon_exception_logging": "Udon Exception Logging",
                         "disable_gamelog": "Disable GameLog",
                         "disable_gamelog_notice": "(will likely break things)",
@@ -1915,7 +1915,7 @@
                         "purge_confirm_title": "Purge Avatar Feed Data",
                         "purge_confirm_description_1": "This will permanently delete avatar change records from the database and reclaim disk space.",
                         "purge_confirm_description_2": "This action cannot be undone!",
-                        "purge_confirm_description_3": "VRCX will restart after the operation completes.",
+                        "purge_confirm_description_3": "VRCX-Pro will restart after the operation completes.",
                         "purge_confirm_alert": "It is strongly recommended to back up your database file before proceeding!",
                         "purge_confirm_button": "Purge & Restart",
                         "purge_in_progress": "Purging avatar data...",
@@ -1963,7 +1963,7 @@
                         "wizard_file_title": "Choose a backup file",
                         "wizard_next": "Next",
                         "wizard_done_title": "Restore complete",
-                        "wizard_done_desc": "Your data has been restored. Restart VRCX to apply the changes.",
+                        "wizard_done_desc": "Your data has been restored. Restart VRCX-Pro to apply the changes.",
                         "strategy_conflict_label": "For existing records (conflict)",
                         "strategy_overwrite": "Overwrite",
                         "strategy_overwrite_desc": "Replace existing data with data from the backup file",
@@ -1997,13 +1997,13 @@
                         "report_skipped_tables": "The following tables were skipped (not present in the current database):",
                         "error": "Restore failed: {error}",
                         "error_cancelled": "Restore cancelled.",
-                        "error_invalid_format": "Invalid file format. Please select a valid VRCX database backup file.",
-                        "error_missing_metadata": "File is missing metadata. It may be corrupted or not a valid VRCX backup.",
+                        "error_invalid_format": "Invalid file format. Please select a valid VRCX-Pro database backup file.",
+                        "error_missing_metadata": "File is missing metadata. It may be corrupted or not a valid VRCX-Pro backup.",
                         "error_version_mismatch": "Unsupported file version. Expected version {version}.",
                         "error_missing_tables": "File contains no table data.",
                         "error_user_mismatch": "This backup file belongs to a different account and cannot be restored.",
                         "error_user_mismatch_hint": "This backup was created from a different account. Go back and enable \"Allow different account\" in the compatibility options to restore it anyway.",
-                        "error_invalid_json": "Invalid JSON file. Please select a valid VRCX database backup file.",
+                        "error_invalid_json": "Invalid JSON file. Please select a valid VRCX-Pro database backup file.",
                         "import_log_title": "Restore Log",
                         "import_log_empty": "No restore records."
                     },
@@ -2153,8 +2153,8 @@
                 "header": "Info",
                 "current_instance": "Current Instance",
                 "instance_role_restricted": "Instance Role Restricted",
-                "vrcx_info": "VRCX Info",
-                "vrcx_info_tooltip": "This user's profile is using a VRCX placeholder image.",
+                "vrcx_info": "VRCX-Pro Info",
+                "vrcx_info_tooltip": "This user's profile is using a VRCX-Pro placeholder image.",
                 "launch_invite_tooltip": "Launch/Invite",
                 "self_invite_tooltip": "Invite Yourself",
                 "open_in_vrchat_tooltip": "Open in VRChat",
@@ -2987,14 +2987,14 @@
         },
         "note_export": {
             "header": "Note Export",
-            "description1": "This process will export all of your VRCX memos and import them into VRChat notes.",
+            "description1": "This process will export all of your VRCX-Pro memos and import them into VRChat notes.",
             "description2": "Be warned of the following limitations:",
             "description3": "- API endpoint has a rate limit that requires a large delay between requests.",
             "description4": "- Character limit of 256 per note.",
             "description5": "- Swear words filter (no fun allowed).",
             "description6": "- No new lines (they will replaced with a space).",
             "description7": "- This will overwrite any existing VRChat notes for these users.",
-            "description8": "- Any edits made here wont affect VRCX memos but will affect VRChat notes once exported.",
+            "description8": "- Any edits made here wont affect VRCX-Pro memos but will affect VRChat notes once exported.",
             "refresh": "Refresh",
             "export": "Export",
             "cancel": "Cancel",
@@ -3324,15 +3324,15 @@
             "add_item": "Add Item"
         },
         "vrcx_updater": {
-            "header": "VRCX Updater",
+            "header": "VRCX-Pro Updater",
             "checking": "Checking for updates",
             "checking_description": "Fetching the latest release information.",
             "downloading": "Downloading update",
             "current_version": "Current version",
             "update_available": "A new version is available.",
             "unpublished_version": "This version is not publicly available. Make sure you are using a published Release version.",
-            "latest_version": "VRCX is up to date.",
-            "ready_for_update": "Ready for install, restart VRCX to apply.",
+            "latest_version": "VRCX-Pro is up to date.",
+            "ready_for_update": "Ready for install, restart VRCX-Pro to apply.",
             "change_version": "Change Version",
             "download": "Download",
             "install": "Install",
@@ -3345,14 +3345,14 @@
         "change_log": {
             "header": "Change Log",
             "loading": "Loading update notes from GitHub Releases...",
-            "description": "Consider donating to support future development of VRCX",
+            "description": "Consider donating to support future development of VRCX-Pro",
             "close": "Close",
             "donate": "Donate",
             "github": "GitHub"
         },
         "open_source": {
             "header": "Open Source Software Notice",
-            "description": "VRCX is based on open source software. It was possible because of their contribution.",
+            "description": "VRCX-Pro is based on open source software. It was possible because of their contribution.",
             "loading": "Loading generated third-party notices...",
             "unavailable": "No generated third-party notice manifest is available in this build. Run a production build to regenerate it.",
             "search_placeholder": "Search packages, versions, or licenses",
@@ -3384,7 +3384,7 @@
             "action": "Action",
             "auto_backup": "Auto backup every 3 days (deletes after 2 weeks)",
             "ask_to_restore": "Ask to restore when no VRC registry settings are present",
-            "restore_prompt": "VRCX has noticed auto backup of VRChat registry settings is enabled but this computer doesn't have any, if you'd like to restore from backup you can do so from here."
+            "restore_prompt": "VRCX-Pro has noticed auto backup of VRChat registry settings is enabled but this computer doesn't have any, if you'd like to restore from backup you can do so from here."
         },
         "avatar_database_provider": {
             "header": "Avatar Database Provider",
@@ -3588,7 +3588,7 @@
             "input_error": "Valid number is required"
         },
         "auto_clear_cache": {
-            "header": "Clear VRCX Cache Timer",
+            "header": "Clear VRCX-Pro Cache Timer",
             "description": "Enter amount of hours, larger values may impact RAM usage and performance (default: 24, disabled: 0)",
             "cancel": "Cancel",
             "ok": "OK",
@@ -3641,7 +3641,7 @@
         },
         "table_entries_settings": {
             "header": "Table Entries Settings",
-            "description": "Limit the number of entries the VRCX logs from the database to the UI. A large number may impact RAM usage and performance",
+            "description": "Limit the number of entries the VRCX-Pro logs from the database to the UI. A large number may impact RAM usage and performance",
             "table_max_entries": "Table Max Entries",
             "table_max_entries_error": "Enter a number between {min} and {max}.",
             "table_max_entries_hint": "Valid range: {min} – {max}.",
@@ -3716,8 +3716,8 @@
         "database": {
             "upgrade_complete": "Database upgrade complete",
             "upgrade_in_progress_title": "Database upgrade in progress",
-            "upgrade_in_progress_description": "Updating database from version {from} to {to}. Please do not close VRCX.",
-            "upgrade_in_progress_initializing": "Initializing database upgrade. Please do not close VRCX.",
+            "upgrade_in_progress_description": "Updating database from version {from} to {to}. Please do not close VRCX-Pro.",
+            "upgrade_in_progress_initializing": "Initializing database upgrade. Please do not close VRCX-Pro.",
             "upgrade_in_progress_wait": "User actions are temporarily blocked until the upgrade finishes.",
             "upgrade_failed_title": "Database upgrade failed",
             "upgrade_failed_description": "Database upgrade failed. Check the console for details.",
@@ -3794,7 +3794,7 @@
             "delete_failed": "Failed to delete screenshot metadata"
         },
         "crash": {
-            "vrcx_reload": "VRCX was reloaded for stability"
+            "vrcx_reload": "VRCX-Pro was reloaded for stability"
         },
         "image": {
             "downloading": "Downloading image...",
@@ -4089,13 +4089,13 @@
             "cta": "Get Started"
         },
         "whatsnew": {
-            "title": "What's New in VRCX",
+            "title": "What's New in VRCX-Pro",
             "subtitle": "Here's what changed in this update.",
             "cta": "Got It",
             "common": {
                 "got_it": "Got It",
                 "view_changelog": "View All Changes",
-                "support": "Support VRCX"
+                "support": "Support VRCX-Pro"
             },
             "releases": {
                 "2026_05_03": {
@@ -4108,7 +4108,7 @@
                         },
                         "mcp_support": {
                             "title": "MCP Support",
-                            "description": "Expanded AI tools and resources for richer access to local VRCX data."
+                            "description": "Expanded AI tools and resources for richer access to local VRCX-Pro data."
                         },
                         "framework_optimization": {
                             "title": "Framework Optimization",

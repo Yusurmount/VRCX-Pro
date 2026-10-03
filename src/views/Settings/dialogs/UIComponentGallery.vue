@@ -541,7 +541,7 @@
                     <Button variant="link">@vrcx</Button>
                 </HoverCardTrigger>
                 <HoverCardContent>
-                    <div class="text-sm font-semibold">VRCX</div>
+                    <div class="text-sm font-semibold">VRCX-Pro</div>
                     <p class="text-sm text-muted-foreground">A desktop client for VRChat.</p>
                 </HoverCardContent>
             </HoverCard>

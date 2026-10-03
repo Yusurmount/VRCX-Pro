@@ -167,7 +167,7 @@ function feedFiltersOptions() {
             key: 'VideoPlay',
             name: 'Video Play',
             options: getOptions(['Off', 'On']),
-            tooltip: 'Requires VRCX YouTube API option enabled',
+            tooltip: 'Requires VRCX-Pro YouTube API option enabled',
             tooltipWarning: true
         },
         {

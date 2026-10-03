@@ -25,11 +25,11 @@ async function getSaveFilePath() {
     if (window.platform?.saveFileDialog) {
         return window.platform.saveFileDialog(
             defaultName,
-            'VRCX Database Backup'
+            'VRCX-Pro Database Backup'
         );
     }
     if (AppApi?.SaveFileSelectorDialog) {
-        const filter = `VRCX Database Backup (*${EXPORT_FILE_EXT})|*${EXPORT_FILE_EXT}|All files (*.*)|*.*`;
+        const filter = `VRCX-Pro Database Backup (*${EXPORT_FILE_EXT})|*${EXPORT_FILE_EXT}|All files (*.*)|*.*`;
         return AppApi.SaveFileSelectorDialog(
             defaultName,
             EXPORT_FILE_EXT,
@@ -50,7 +50,7 @@ async function getOpenFilePath() {
         return window.platform.openFileDialog();
     }
     if (AppApi?.OpenFileSelectorDialog) {
-        const filter = `VRCX Database Backup (*${EXPORT_FILE_EXT})|*${EXPORT_FILE_EXT}|All files (*.*)|*.*`;
+        const filter = `VRCX-Pro Database Backup (*${EXPORT_FILE_EXT})|*${EXPORT_FILE_EXT}|All files (*.*)|*.*`;
         return AppApi.OpenFileSelectorDialog('', EXPORT_FILE_EXT, filter);
     }
     return null;

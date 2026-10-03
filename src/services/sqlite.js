@@ -10,7 +10,7 @@ class SQLiteService {
                 if (e.message.includes('database disk image is malformed')) {
                     modal.alert({
                         description:
-                            'Your database file is corrupted. Please repair or delete your database file by renaming the "%AppData%\\VRCX" folder or deleting the database file to reset VRCX.',
+                            'Your database file is corrupted. Please repair or delete your database file by renaming the "%AppData%\\VRCX" folder or deleting the database file to reset VRCX-Pro.',
                         title: 'Your database is corrupted'
                     }).catch(() => {});
                 }

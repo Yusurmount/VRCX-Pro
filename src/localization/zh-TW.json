@@ -74,7 +74,7 @@
         "resources": "資源",
         "wiki": "Wiki",
         "get_help": "取得協助",
-        "github": "在 GitHub 上查看 VRCX",
+        "github": "在 GitHub 上查看 VRCX-Pro",
         "discord": "加入我們的 Discord",
         "check_updates": "檢查更新",
         "update_available": "有可用更新",
@@ -210,7 +210,7 @@
             "remove_tooltip": "取消追蹤",
             "add_button": "新增 +",
             "add_dialog_title": "追蹤玩家",
-            "add_dialog_hint": "手動輸入使用者 ID（usr_xxx...），或在 VRCX-jirai 中點擊任意玩家，透過右側「⋯」按鈕選擇「追蹤」。",
+            "add_dialog_hint": "手動輸入使用者 ID（usr_xxx...），或在 VRCX-Pro 中點擊任意玩家，透過右側「⋯」按鈕選擇「追蹤」。",
             "add_input_placeholder": "usr_xxx...",
             "add_verify_error": "無法取得該使用者的資料，請檢查 ID 後重試。",
             "add_confirm_question": "是否為使用者「{name}」？",
@@ -344,7 +344,7 @@
                 "search_placeholder": "搜尋",
                 "filter_placeholder": "篩選",
                 "chatbox_blacklist": "聊天框黑名單",
-                "status_tooltip": "VRCX Companion 狀態"
+                "status_tooltip": "VRCX-Pro Companion 狀態"
             },
             "filter": {
                 "title": "進階篩選",
@@ -633,7 +633,7 @@
                 "next_day": "後一天",
                 "refresh": "重新整理",
                 "tips": {
-                    "online_time": "上線時間是指 VRCX 為當天記錄的遊戲時間",
+                    "online_time": "上線時間是指 VRCX-Pro 為當天記錄的遊戲時間",
                     "click_Y_axis": "點擊 Y 軸標籤可跳轉至房間詳情或開啟使用者對話視窗",
                     "click_instance_name": "點擊房間名稱可開啟先前房間資訊視窗"
                 },
@@ -1001,7 +1001,7 @@
             "export": {
                 "header": "匯出",
                 "export_notes": "匯出使用者備註",
-                "export_notes_description": "將 VRCX 使用者備註匯出至 VRChat 備註",
+                "export_notes_description": "將 VRCX-Pro 使用者備註匯出至 VRChat 備註",
                 "discord_names": "Discord 名稱"
             },
             "redirect_message": "此功能現在已可在此頁面使用。",
@@ -1022,8 +1022,8 @@
             },
             "shortcuts": {
                 "header": "捷徑",
-                "vrcx_data": "VRCX 資料",
-                "vrcx_data_description": "開啟 VRCX 資料夾",
+                "vrcx_data": "VRCX-Pro 資料",
+                "vrcx_data_description": "開啟 VRCX-Pro 資料夾",
                 "vrchat_data": "VRChat 資料",
                 "vrchat_data_description": "開啟 VRChat 資料夾",
                 "crash_dumps": "當機傾印",
@@ -1162,7 +1162,7 @@
                 "mcp_server": {
                     "header": "MCP 伺服器",
                     "enable": "啟用 MCP 伺服器",
-                    "enable_description": "啟動本機 Model Context Protocol (MCP) 伺服器，允許 AI 助理查詢您的 VRCX 資料。",
+                    "enable_description": "啟動本機 Model Context Protocol (MCP) 伺服器，允許 AI 助理查詢您的 VRCX-Pro 資料。",
                     "server_port": "伺服器連接埠",
                     "server_port_description": "MCP 伺服器監聽的連接埠（預設：3001）。",
                     "port_button": "連接埠：{port}",
@@ -1170,12 +1170,12 @@
                     "status_running": "執行中",
                     "status_stopped": "已停止",
                     "database_path": "資料庫路徑",
-                    "database_path_description": "VRCX SQLite 資料庫檔案的路徑。",
+                    "database_path_description": "VRCX-Pro SQLite 資料庫檔案的路徑。",
                     "database_path_default": "預設",
                     "port_dialog_title": "MCP 伺服器連接埠",
                     "port_dialog_description": "請輸入 MCP 伺服器的連接埠號碼（1024-65535）。",
                     "port_dialog_error": "請輸入有效的連接埠號碼（1024-65535）。",
-                    "db_dialog_title": "選擇 VRCX 資料庫",
+                    "db_dialog_title": "選擇 VRCX-Pro 資料庫",
                     "ai_tools": "AI 工具",
                     "ai_tools_description": "已連接的 AI 助理可呼叫的工具。可在 Claude Desktop、Cursor 等 MCP 用戶端中使用。",
                     "tool_social_insights": "社交分析：活躍好友、線上時間分佈、熱門世界。",
@@ -1217,7 +1217,7 @@
                     "support": "支援"
                 },
                 "vrcx_updater": {
-                    "header": "VRCX 更新器",
+                    "header": "VRCX-Pro 更新器",
                     "change_build": "變更版本",
                     "update_action": "更新動作",
                     "auto_update_off": "關閉",
@@ -1232,10 +1232,10 @@
                     "minimized": "以最小化啟動",
                     "tray": "最小化到系統列",
                     "disable_gpu_acceleration": "停用 GPU 加速",
-                    "disable_gpu_acceleration_tooltip": "僅在你確切知道自己在做什麼的情況下變更此選項，可能會導致 SteamVR 嵌入介面無法正常運作，但可能可以解決 UI 問題，需要重新啟動 VRCX",
+                    "disable_gpu_acceleration_tooltip": "僅在你確切知道自己在做什麼的情況下變更此選項，可能會導致 SteamVR 嵌入介面無法正常運作，但可能可以解決 UI 問題，需要重新啟動 VRCX-Pro",
                     "disable_vr_overlay_gpu_acceleration": "停用 VR 嵌入介面 GPU 加速",
                     "proxy": "代理設定",
-                    "startup_linux": "在啟動 VRCX.desktop 檔案中加入「--startup/」命令，以在系統啟動時最小化啟動 VRCX",
+                    "startup_linux": "在啟動 VRCX.desktop 檔案中加入「--startup/」命令，以在系統啟動時最小化啟動 VRCX-Pro",
                     "restore_defaults": "恢復預設設定",
                     "restore_defaults_confirm_title": "恢復預設設定",
                     "restore_defaults_confirm_description": "確定要將所有偏好設定恢復為預設值嗎？此操作不會影響你的使用者資料和其他設定。",
@@ -1243,7 +1243,7 @@
                     "restore_defaults_restart_notice": "部分設定（如 GPU 加速、代理等）可能需要重新啟動應用程式才能生效。"
                 },
                 "favorites": {
-                    "header": "VRCX 最愛好友",
+                    "header": "VRCX-Pro 最愛好友",
                     "header_tooltip": "選擇哪些收藏群組要視為 VIP，以便在動態、遊戲紀錄、通知與 VR 嵌入介面中進行篩選",
                     "group_placeholder": "選擇群組"
                 },
@@ -1270,7 +1270,7 @@
                     "auto_invite_request_accept_tooltip": "自動接受來自收藏好友的邀請請求",
                     "auto_invite_request_accept_favs": "所有收藏",
                     "auto_invite_request_accept_favs_hint": "包括本地好友收藏群組",
-                    "auto_invite_request_accept_selected_favs": "VRCX 收藏好友",
+                    "auto_invite_request_accept_selected_favs": "VRCX-Pro 收藏好友",
                     "change_status_description": "覆寫狀態描述",
                     "status_description_placeholder": "狀態描述（最多 32 字）",
                     "auto_change_status_groups": "只計算來自以下群組的好友",
@@ -1281,9 +1281,9 @@
                 },
                 "legal_notice": {
                     "header": "法律聲明",
-                    "info": "VRCX 是一個提供好友管理的輔助應用程式。這個程式使用非官方的 VRChat API(VRCSDK)",
-                    "disclaimer1": "VRCX 不受 VRChat 的認可，也不反應 VRChat 或任何正式參與製作或管理 VRChat 的觀點或意見。VRChat 是 VRChat Inc.的商標 VRChat © VRChat Inc.",
-                    "disclaimer2": "pypy、Natsumi 和 Yusurmount 及本專案的全體貢獻者，均不對使用 VRCX 引起的任何問題負責。使用時請自負風險！",
+                    "info": "VRCX-Pro 是一個提供好友管理的輔助應用程式。這個程式使用非官方的 VRChat API(VRCSDK)",
+                    "disclaimer1": "VRCX-Pro 不受 VRChat 的認可，也不反應 VRChat 或任何正式參與製作或管理 VRChat 的觀點或意見。VRChat 是 VRChat Inc.的商標 VRChat © VRChat Inc.",
+                    "disclaimer2": "pypy、Natsumi 和 Yusurmount 及本專案的全體貢獻者，均不對使用 VRCX-Pro 引起的任何問題負責。使用時請自負風險！",
                     "open_source_software_notice": "開放原始碼軟體授權條款"
                 },
                 "contributors": {
@@ -1395,8 +1395,8 @@
                     "header": "用戶資訊",
                     "vrchat_notes": "VRChat 備註",
                     "vrchat_notes_description": "顯示儲存在 VRChat 中的備註",
-                    "vrcx_memos": "VRCX 備註",
-                    "vrcx_memos_description": "顯示儲存在 VRCX 本機的備註",
+                    "vrcx_memos": "VRCX-Pro 備註",
+                    "vrcx_memos_description": "顯示儲存在 VRCX-Pro 本機的備註",
                     "recent_action_cooldown": "顯示近期操作圖示",
                     "recent_action_cooldown_description": "在近期的邀請與請求操作上顯示時鐘圖示。",
                     "recent_action_cooldown_minutes": "冷卻時間（分鐘）"
@@ -1563,7 +1563,7 @@
                 "rpc": {
                     "vr": "VR 模式",
                     "desktop": "桌面模式",
-                    "powered_by_vrcx": "由 VRCX 提供",
+                    "powered_by_vrcx": "由 VRCX-Pro 提供",
                     "private_world": "私人世界"
                 }
             },
@@ -1581,7 +1581,7 @@
                         "header": "VRChat"
                     },
                     "vrcx_settings": {
-                        "header": "VRCX"
+                        "header": "VRCX-Pro"
                     },
                     "api_request_interval": {
                         "header": "VRChat API 請求間隔下限保護",
@@ -1610,11 +1610,11 @@
                     },
                     "anonymous_error_reporting": {
                         "header": "匿名錯誤回報（僅限測試版）",
-                        "description": "透過傳送匿名的當機與錯誤回報來協助改善 VRCX。不會收集任何個人或 VRChat 資料",
+                        "description": "透過傳送匿名的當機與錯誤回報來協助改善 VRCX-Pro。不會收集任何個人或 VRChat 資料",
                         "consent_title": "匿名錯誤回報",
-                        "consent_description": "是否允許匿名錯誤回報以協助改善 VRCX？\n\n• 僅包含當機與錯誤資料\n• 不包含任何個人或 VRChat 資料 \n• 僅適用於測試版 \n• 可於進階設定中停用",
-                        "enabled_restart_description": "已啟用錯誤回報。是否重新啟動 VRCX 以套用變更？",
-                        "disabled_restart_description": "已停用錯誤回報。是否重新啟動 VRCX 以套用變更？"
+                        "consent_description": "是否允許匿名錯誤回報以協助改善 VRCX-Pro？\n\n• 僅包含當機與錯誤資料\n• 不包含任何個人或 VRChat 資料 \n• 僅適用於測試版 \n• 可於進階設定中停用",
+                        "enabled_restart_description": "已啟用錯誤回報。是否重新啟動 VRCX-Pro 以套用變更？",
+                        "disabled_restart_description": "已停用錯誤回報。是否重新啟動 VRCX-Pro 以套用變更？"
                     },
                     "save_instance_prints_to_file": {
                         "header": "將房間拍立得保存到檔案",
@@ -1635,7 +1635,7 @@
                     },
                     "delete_all_screenshot_metadata": {
                         "button": "刪除截圖附加資料",
-                        "ask": "你確定要刪除 VRChat 圖片資料夾中所有的 VRC & VRCX 螢幕截圖 metadata？",
+                        "ask": "你確定要刪除 VRChat 圖片資料夾中所有的 VRC & VRCX-Pro 螢幕截圖 metadata？",
                         "confirm": "刪除所有螢幕截圖附加資料是非常具破壞性的動作，且無法撤銷！這包括你 VRChat 圖片資料夾中的所有列印、子資料夾和其他不相關的圖片，如果這些照片對你來說很珍貴，請在繼續之前先做備份",
                         "confirm_yes": "確定",
                         "confirm_no": "稍等一下"
@@ -1668,12 +1668,12 @@
                         "header": "啟動指令（Deep Links）",
                         "docs": "啟動指令文件",
                         "show_confirmation_on_switch_avatar_enable": "切換虛擬形象前顯示確認對話框",
-                        "show_confirmation_on_switch_avatar_tooltip": "停用時，切換虛擬形象時 VRCX 不會跳出並要求確認",
+                        "show_confirmation_on_switch_avatar_tooltip": "停用時，切換虛擬形象時 VRCX-Pro 不會跳出並要求確認",
                         "website_userscript": "VRC 網站用戶腳本"
                     },
                     "screenshot_helper": {
                         "header": "螢幕截圖助理",
-                        "description": "當你在遊戲中拍照時，VRCX 會將一些額外的資訊自動保存到照片檔案中，包括你所在的遊戲世界 ID、世界名稱以及當時遊戲中的用戶數量",
+                        "description": "當你在遊戲中拍照時，VRCX-Pro 會將一些額外的資訊自動保存到照片檔案中，包括你所在的遊戲世界 ID、世界名稱以及當時遊戲中的用戶數量",
                         "description_tooltip": "不幸的是，Windows 沒有本身支援查看 PNG 圖片的文字塊（很少有程式支援），但你可以使用命令列工具如 exiftool、PNG 文字塊檢查器或十六進位編輯器來查看",
                         "enable": "啟用",
                         "modify_filename": "修改檔案名稱",
@@ -1698,7 +1698,7 @@
                             "previews": "預覽"
                         },
                         "gallery": {
-                            "hint": "VRCX 組件庫的視覺化展示。"
+                            "hint": "VRCX-Pro 組件庫的視覺化展示。"
                         },
                         "toast": {
                             "title": "測試提示通知",
@@ -1809,8 +1809,8 @@
                                 "desc": "顯示回復密碼 OTP 提示。"
                             },
                             "update": {
-                                "label": "VRCX 更新對話框",
-                                "desc": "顯示 VRCX 更新對話框。"
+                                "label": "VRCX-Pro 更新對話框",
+                                "desc": "顯示 VRCX-Pro 更新對話框。"
                             }
                         },
                         "app_state": {
@@ -1862,7 +1862,7 @@
                         }
                     },
                     "cache_debug": {
-                        "header": "VRCX 世界快取/除錯",
+                        "header": "VRCX-Pro 世界快取/除錯",
                         "udon_exception_logging": "Udon 異常紀錄",
                         "disable_gamelog": "關閉遊戲紀錄",
                         "disable_gamelog_notice": "（可能會弄壞很多東西）",
@@ -1912,7 +1912,7 @@
                         "purge_confirm_title": "清除角色動態資料",
                         "purge_confirm_description_1": "這將永久刪除資料庫中的角色變更紀錄，並釋放磁碟空間。",
                         "purge_confirm_description_2": "此操作無法撤消！",
-                        "purge_confirm_description_3": "操作完成後，VRCX 將會重新啟動。",
+                        "purge_confirm_description_3": "操作完成後，VRCX-Pro 將會重新啟動。",
                         "purge_confirm_alert": "強烈建議在繼續之前備份你的資料庫檔案！",
                         "purge_confirm_button": "清除並重新啟動",
                         "purge_in_progress": "清除角色資料…",
@@ -1943,7 +1943,7 @@
                         "wizard_file_title": "選擇備份檔案",
                         "wizard_next": "下一步",
                         "wizard_done_title": "還原完成",
-                        "wizard_done_desc": "資料已還原，重啟 VRCX 後生效。",
+                        "wizard_done_desc": "資料已還原，重啟 VRCX-Pro 後生效。",
                         "strategy_conflict_label": "對於已存在的資料（衝突）",
                         "strategy_overwrite": "覆寫",
                         "strategy_overwrite_desc": "用備份檔案中的資料取代現有資料",
@@ -1972,12 +1972,12 @@
                         "report_details": "依資料表檢視詳細資料",
                         "error": "還原失敗：{error}",
                         "error_cancelled": "還原已取消。",
-                        "error_invalid_format": "無效的檔案格式，請選擇有效的 VRCX 資料庫備份檔案。",
-                        "error_missing_metadata": "檔案缺少中繼資料，可能已損毀或不是有效的 VRCX 備份檔案。",
+                        "error_invalid_format": "無效的檔案格式，請選擇有效的 VRCX-Pro 資料庫備份檔案。",
+                        "error_missing_metadata": "檔案缺少中繼資料，可能已損毀或不是有效的 VRCX-Pro 備份檔案。",
                         "error_version_mismatch": "不支援的檔案版本，預期版本 {version}。",
                         "error_missing_tables": "檔案中不包含任何資料表資料。",
                         "error_user_mismatch": "此備份檔案屬於不同的帳號，無法還原。",
-                        "error_invalid_json": "無效的 JSON 檔案，請選擇有效的 VRCX 資料庫備份檔案。",
+                        "error_invalid_json": "無效的 JSON 檔案，請選擇有效的 VRCX-Pro 資料庫備份檔案。",
                         "import_log_title": "還原日誌",
                         "import_log_empty": "暫無還原紀錄。"
                     },
@@ -2159,8 +2159,8 @@
                 "header": "資訊",
                 "current_instance": "目前房間",
                 "instance_role_restricted": "身分限制",
-                "vrcx_info": "VRCX 資訊",
-                "vrcx_info_tooltip": "此用戶的個人資料正在使用 VRCX 佔位圖。",
+                "vrcx_info": "VRCX-Pro 資訊",
+                "vrcx_info_tooltip": "此用戶的個人資料正在使用 VRCX-Pro 佔位圖。",
                 "launch_invite_tooltip": "啟動 / 邀請",
                 "self_invite_tooltip": "自我邀請",
                 "open_in_vrchat_tooltip": "在 VRChat 中開啟",
@@ -2875,14 +2875,14 @@
         },
         "note_export": {
             "header": "備註匯出",
-            "description1": "此程序會將你所有的 VRCX 備忘錄匯出，並匯入至 VRChat 備註中",
+            "description1": "此程序會將你所有的 VRCX-Pro 備忘錄匯出，並匯入至 VRChat 備註中",
             "description2": "請注意以下限制：",
             "description3": "- API 端點有速率限制，請求之間需要長時間延遲",
             "description4": "- 每則備註最多 256 個字元",
             "description5": "- 含有髒話的內容將被過濾（禁止不雅用語）",
             "description6": "- 不支援換行（將以空格取代）",
             "description7": "- 這將覆蓋這些使用者現有的 VRChat 備註",
-            "description8": "- 在此所做的編輯不會影響 VRCX 備忘錄，但匯出後會影響 VRChat 備註",
+            "description8": "- 在此所做的編輯不會影響 VRCX-Pro 備忘錄，但匯出後會影響 VRChat 備註",
             "refresh": "重新整理",
             "export": "匯出",
             "cancel": "取消",
@@ -3212,15 +3212,15 @@
             "add_item": "新增項目"
         },
         "vrcx_updater": {
-            "header": "VRCX 更新器",
+            "header": "VRCX-Pro 更新器",
             "checking": "正在檢查更新",
             "checking_description": "正在取得最新版本資訊，請稍候。",
             "downloading": "正在下載更新",
             "current_version": "目前版本",
             "update_available": "發現新版本",
             "unpublished_version": "目前版本未公開，請確保使用的是 Release 已發佈的版本",
-            "latest_version": "VRCX 已是最新版本",
-            "ready_for_update": "已準備好安裝更新，重新啟動 VRCX 來套用更新",
+            "latest_version": "VRCX-Pro 已是最新版本",
+            "ready_for_update": "已準備好安裝更新，重新啟動 VRCX-Pro 來套用更新",
             "change_version": "變更版本",
             "download": "下載",
             "install": "安裝",
@@ -3233,14 +3233,14 @@
         "change_log": {
             "header": "更新日誌",
             "loading": "正在從 GitHub Releases 取得更新日誌……",
-            "description": "考慮捐款來支持未來 VRCX 的開發：",
+            "description": "考慮捐款來支持未來 VRCX-Pro 的開發：",
             "close": "關閉",
             "donate": "贊助",
             "github": "GitHub"
         },
         "open_source": {
             "header": "開放原始碼軟體授權條款",
-            "description": "VRCX 是基於開放原始碼軟體上開發的。沒有他們的貢獻的話，這個程式是不可能開發出來的",
+            "description": "VRCX-Pro 是基於開放原始碼軟體上開發的。沒有他們的貢獻的話，這個程式是不可能開發出來的",
             "loading": "正在載入已產生的第三方通知…",
             "unavailable": "此版本未包含已產生的第三方通知清單。請執行正式建置以重新產生。",
             "search_placeholder": "搜尋套件、版本或授權",
@@ -3272,7 +3272,7 @@
             "action": "操作",
             "auto_backup": "每週自動備份",
             "ask_to_restore": "當沒有 VRC 登錄設定時，要求還原",
-            "restore_prompt": "VRCX 已注意到 VRC 註冊表設定的自動備份已啟用，但這台電腦沒有任何備份，如果你想從備份還原，可以從這裡還原"
+            "restore_prompt": "VRCX-Pro 已注意到 VRC 註冊表設定的自動備份已啟用，但這台電腦沒有任何備份，如果你想從備份還原，可以從這裡還原"
         },
         "avatar_database_provider": {
             "header": "角色資料庫提供方",
@@ -3581,7 +3581,7 @@
             "input_error": "請輸入有效的秒數"
         },
         "auto_clear_cache": {
-            "header": "VRCX 快取清除間隔",
+            "header": "VRCX-Pro 快取清除間隔",
             "description": "輸入小時數，較大的數值可能會影響記憶體用量和性能 （預設：24，關閉：0）",
             "cancel": "取消",
             "ok": "確定",
@@ -3709,8 +3709,8 @@
         "database": {
             "upgrade_complete": "資料庫升級完成",
             "upgrade_in_progress_title": "資料庫升級中",
-            "upgrade_in_progress_description": "正在將資料庫從版本 {from} 更新至 {to}，請勿關閉 VRCX。",
-            "upgrade_in_progress_initializing": "初始化資料庫升級。請勿關閉 VRCX。",
+            "upgrade_in_progress_description": "正在將資料庫從版本 {from} 更新至 {to}，請勿關閉 VRCX-Pro。",
+            "upgrade_in_progress_initializing": "初始化資料庫升級。請勿關閉 VRCX-Pro。",
             "upgrade_in_progress_wait": "在升級完成前，用戶操作將暫時被停用。",
             "upgrade_failed_title": "資料庫升級失敗",
             "upgrade_failed_description": "資料庫升級失敗。檢查主控台以瞭解詳細資訊。",
@@ -3787,7 +3787,7 @@
             "delete_failed": "刪除截圖附加資料失敗"
         },
         "crash": {
-            "vrcx_reload": "為確保穩定性，已重新載入 VRCX"
+            "vrcx_reload": "為確保穩定性，已重新載入 VRCX-Pro"
         },
         "image": {
             "downloading": "正在下載圖片...",
@@ -4082,13 +4082,13 @@
             "cta": "開始使用"
         },
         "whatsnew": {
-            "title": "VRCX 的新功能",
+            "title": "VRCX-Pro 的新功能",
             "subtitle": "以下為本次更新的內容變更。",
             "cta": "了解",
             "common": {
                 "got_it": "了解",
                 "view_changelog": "查看所有變更",
-                "support": "支援 VRCX"
+                "support": "支援 VRCX-Pro"
             },
             "releases": {
                 "2026_05_03": {
@@ -4101,7 +4101,7 @@
                         },
                         "mcp_support": {
                             "title": "MCP 支援",
-                            "description": "擴充 AI 工具與 Resource，讓 AI 助理更靈活查詢本機 VRCX 資料。"
+                            "description": "擴充 AI 工具與 Resource，讓 AI 助理更靈活查詢本機 VRCX-Pro 資料。"
                         },
                         "framework_optimization": {
                             "title": "框架最佳化",
