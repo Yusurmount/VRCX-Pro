@@ -68,17 +68,17 @@ const TREND_TAU = 1.2;
 // quantity. The old coverage/0.3 formula pinned everyone at 1000 whenever
 // the relationship was younger than ~3 weeks (coverage collapses to 1).
 // This anchor is "active for half a year", the standard-line for routine
-// contact. Trend and activity use ratio anchors of 1 (balanced = 1000).
+// contact. Trend and activity skip anchors entirely: they are signed tanh
+// values in (−1, 1), self-scaled to ±100.
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
 
-// 'percent' normalizes each physical quantity against the cohort's p90 and
-// caps at 1; 'absolute' uses fixed anchors instead (so a score never moves
-// when unrelated friends appear or grow) and stays UNCAPPED — every
-// dimension can exceed its anchor's 1000 points. Anchors are calibrated
-// against the real database: true co-presence p90 ≈ 1.1 h, so 1 h is the
-// contact/recency standard line and 26 active weeks the regularity one.
+// Anchors feed the one absolute pipeline (log1p ratio, uncapped — a
+// dimension can exceed its 1000-point standard line). Anchors are
+// calibrated against the real database: true co-presence p90 ≈ 1.1 h, so
+// 1 h is the contact/recency standard line and 26 active weeks the
+// regularity one. Percent mode only relativizes these results for display.
 const SCORE_SCALES = { percent: 100, absolute: 1000 };
 const ABSOLUTE_ANCHORS = {
     contactHours: 1,
@@ -86,7 +86,6 @@ const ABSOLUTE_ANCHORS = {
     activeWeeks: 26,
     recencyHours: 1
 };
-const RATIO_ANCHOR = 1;
 
 function clamp01(value) {
     return Math.min(1, Math.max(0, value));
@@ -163,13 +162,14 @@ function trendTheta(metric) {
     return Math.tanh(Math.log(trendRatio(metric)) / TREND_TAU);
 }
 
-// Laplace-smoothed initiation ratio: 1 = balanced (1000 pts), >1 they come
-// to you, <1 you do all the travelling. The +1 priors keep an empty history
-// at neutral instead of dividing by zero.
-function activityRatio(metric) {
+// Signed activity with the SAME squashing as trend: positive = I do the
+// seeking, negative = they do, 0 = balanced (including an empty history).
+// ln of the smoothed initiation ratio keeps my-seeks vs their-seeks exactly
+// mirrored; the weight's SIGN decides which side of 0.5 wins in the score.
+function activityTheta(metric) {
     const theirs = Math.max(0, metric.friendInitiated || 0);
     const mine = Math.max(0, metric.selfInitiated || 0);
-    return (theirs + 1) / (mine + 1);
+    return Math.tanh(Math.log((mine + 1) / (theirs + 1)) / TREND_TAU);
 }
 
 function depthHoursOf(metric) {
@@ -233,13 +233,16 @@ function choquetIntegral(memberships, densities, lambda) {
     return result;
 }
 
+// Densities are magnitudes — direction lives in the weight's SIGN (an
+// activity weight below zero makes "they seek me" the advantaged side).
+// All-zero |weights| still returns null so the score collapses to 0.
 function weightDensities(weightMap) {
     let sum = 0;
-    for (const key of CRITERIA) sum += Math.max(0, weightMap[key] || 0);
+    for (const key of CRITERIA) sum += Math.abs(weightMap[key] || 0);
     if (sum <= 0) return null;
     const densities = [];
     for (const key of CRITERIA) {
-        densities.push(Math.max(0, weightMap[key] || 0) / sum);
+        densities.push(Math.abs(weightMap[key] || 0) / sum);
     }
     return densities;
 }
@@ -338,8 +341,9 @@ export function useRelationshipScoring() {
 
         // Single calculation pipeline: every dimension is scored by the
         // absolute anchors (log1p ratio, uncapped) regardless of display
-        // mode. Trend is the one signed exception (tanh of the log-ratio).
-        // The score mode only decides how results are *displayed*:
+        // mode. Trend and activity are the two signed exceptions (tanh of
+        // an antisymmetric log-ratio). The score mode only decides how
+        // results are *displayed*:
         //   absolute — raw anchored values, 1000 = standard line
         //   percent  — independent relative displays: each dimension against
         //              that dimension's cohort maximum, total against the
@@ -349,15 +353,13 @@ export function useRelationshipScoring() {
             contact: Math.log1p(ABSOLUTE_ANCHORS.contactHours),
             depth: Math.log1p(ABSOLUTE_ANCHORS.depthHours),
             regularity: Math.log1p(ABSOLUTE_ANCHORS.activeWeeks),
-            recency: Math.log1p(ABSOLUTE_ANCHORS.recencyHours),
-            activity: Math.log1p(RATIO_ANCHOR)
+            recency: Math.log1p(ABSOLUTE_ANCHORS.recencyHours)
         };
 
         const contactRaw = scoredMetrics.map(contactHoursOf);
         const depthRaw = scoredMetrics.map(depthHoursOf);
         const weeksRaw = scoredMetrics.map(activeWeeksOf);
         const recencyRaw = scoredMetrics.map(recencyHoursOf);
-        const activityRaw = scoredMetrics.map(activityRatio);
 
         // Shrinkage target: the fixed anchor, so scores stay put when the
         // cohort moves.
@@ -421,25 +423,34 @@ export function useRelationshipScoring() {
                     logRatio(recencyRaw[idx], refs.recency) *
                     recencyModulation(metric, now),
                 trend: trendTheta(metric),
-                activity: logRatio(activityRaw[idx], refs.activity)
+                activity: activityTheta(metric)
             };
 
-            // Trend lives in (−1, 1): it enters the integral shifted to
-            // [0, 1] with 0.5 = flat, so a cooling friend pulls the
-            // composite down instead of scoring as a positive anchor value.
-            const m = CRITERIA.map((key) =>
-                key === 'trend' ? 0.5 + 0.5 * z.trend : z[key]
-            );
+            // Trend and activity live in (−1, 1): they enter the integral
+            // shifted to [0, 1] with 0.5 = neutral. Activity's shift is
+            // signed by the weight — positive weight makes "I seek" the
+            // advantaged side, negative weight flips it to "they seek".
+            const activitySign = weights.value.activity < 0 ? -1 : 1;
+            const m = CRITERIA.map((key) => {
+                if (key === 'trend') return 0.5 + 0.5 * z.trend;
+                if (key === 'activity') {
+                    return 0.5 + 0.5 * activitySign * z.activity;
+                }
+                return z[key];
+            });
             const integral = choquetIntegral(m, densities, lambda.value);
             stage.push({ metric, z, integral });
         }
 
         // Display references for the two independent relativizations.
-        const fourKeys = ['contact', 'regularity', 'recency', 'activity'];
-        const dimMax = { contact: 0, regularity: 0, recency: 0, activity: 0 };
+        // Signed dimensions (trend, activity) are self-scaled to ±100 and
+        // never relativize against the cohort.
+        const signedKeys = ['trend', 'activity'];
+        const relKeys = ['contact', 'regularity', 'recency'];
+        const dimMax = { contact: 0, regularity: 0, recency: 0 };
         let absMax = 0;
         for (const entry of stage) {
-            for (const key of fourKeys) {
+            for (const key of relKeys) {
                 if (entry.z[key] > dimMax[key]) dimMax[key] = entry.z[key];
             }
             const absScore = entry.integral * SCORE_SCALES.absolute;
@@ -449,13 +460,14 @@ export function useRelationshipScoring() {
         // Pass 2: emit per display mode.
         const scores = new Map();
         for (const { metric, z, integral } of stage) {
-            const dims = {
-                // Signed display: ±100 max, 0 = flat (bar midpoint).
-                trend: absolute
-                    ? Math.round(z.trend * SCORE_SCALES.absolute) / 10
-                    : Math.round(z.trend * SCORE_SCALES.percent)
-            };
-            for (const key of fourKeys) {
+            const dims = {};
+            // Signed display: ±100 max, 0 = neutral (bar midpoint).
+            for (const key of signedKeys) {
+                dims[key] = absolute
+                    ? Math.round(z[key] * SCORE_SCALES.absolute) / 10
+                    : Math.round(z[key] * SCORE_SCALES.percent);
+            }
+            for (const key of relKeys) {
                 dims[key] = absolute
                     ? Math.round(z[key] * SCORE_SCALES.absolute * 10) / 10
                     : dimMax[key] > 0

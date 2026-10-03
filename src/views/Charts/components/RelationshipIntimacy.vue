@@ -112,7 +112,7 @@
                                                 <Slider
                                                     class="flex-1"
                                                     :model-value="[weights[dim.key]]"
-                                                    :min="0"
+                                                    :min="dim.key === 'activity' ? -100 : 0"
                                                     :max="100"
                                                     :step="5"
                                                     :aria-label="dim.label"
@@ -318,13 +318,13 @@
                                     <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                                         <div v-for="dim in dimensionList" :key="dim.key" class="flex flex-col gap-1.5">
                                             <span class="text-xs text-muted-foreground">{{ dim.label }}</span>
-                                            <div class="h-2 rounded-full bg-muted overflow-hidden">
+                                            <div class="relative h-2 rounded-full bg-muted overflow-hidden">
                                                 <div
-                                                    class="h-full rounded-full transition-all"
-                                                    :style="{
-                                                        width: dimensionPercent(friend.userId, dim.key) + '%',
-                                                        backgroundColor: dim.color
-                                                    }" />
+                                                    v-if="isSignedDim(dim.key)"
+                                                    class="absolute inset-y-0 left-1/2 w-px bg-border" />
+                                                <div
+                                                    class="absolute inset-y-0 transition-all"
+                                                    :style="dimensionBarStyle(friend.userId, dim.key, dim.color)" />
                                             </div>
                                             <span class="text-xs tabular-nums text-right">
                                                 {{ formatDimension(getScoreForFriend(friend.userId).dimensions[dim.key], dim.key) }}
@@ -433,11 +433,6 @@
         const entry = getScoreForFriend(userId);
         if (!entry) return 0;
         const dims = entry.dimensions;
-        // Signed trend: 0 sits at the bar's midpoint, ±100 at its ends.
-        if (dimKey === 'trend') {
-            const theta = Math.max(-1, Math.min(1, dims.trend / 100));
-            return Math.round(50 + 50 * theta);
-        }
         if (scoreMode.value !== 'absolute') {
             return Math.min(100, Math.round((dims[dimKey] / (scoreMax.value || 1)) * 100));
         }
@@ -450,12 +445,42 @@
         return Math.min(100, Math.round((dims[dimKey] / max) * 100));
     }
 
+    // Trend and activity are signed (±100, 0 = neutral): their bars grow
+    // from the midpoint outward instead of filling from the left edge.
+    const SIGNED_DIMS = new Set(['trend', 'activity']);
+
+    function isSignedDim(dimKey) {
+        return SIGNED_DIMS.has(dimKey);
+    }
+
+    function dimensionBarStyle(userId, dimKey, color) {
+        const entry = getScoreForFriend(userId);
+        if (!entry) return { left: '0%', width: '0%', backgroundColor: color };
+        if (isSignedDim(dimKey)) {
+            const theta = Math.max(
+                -1,
+                Math.min(1, entry.dimensions[dimKey] / 100)
+            );
+            return {
+                // Positive grows right from 50%, negative grows left.
+                left: theta >= 0 ? '50%' : `${50 + 50 * theta}%`,
+                width: `${50 * Math.abs(theta)}%`,
+                backgroundColor: color
+            };
+        }
+        return {
+            left: '0%',
+            width: `${dimensionPercent(userId, dimKey)}%`,
+            backgroundColor: color
+        };
+    }
+
     function formatScore(value) {
         return scoreMode.value === 'absolute' ? value.toFixed(1) : String(value);
     }
 
     function formatDimension(value, dimKey) {
-        if (dimKey === 'trend') {
+        if (isSignedDim(dimKey)) {
             const text =
                 scoreMode.value === 'absolute'
                     ? value.toFixed(1)

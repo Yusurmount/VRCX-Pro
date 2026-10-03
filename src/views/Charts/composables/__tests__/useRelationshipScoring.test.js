@@ -101,8 +101,9 @@ describe('useRelationshipScoring', () => {
                 time30d: 60 * HOUR,
                 timePrev30d: 0,
                 time90d: 100 * HOUR,
-                friendInitiated: 5,
-                selfInitiated: 0
+                // Strong my-side initiative: the signed dimension reads +100.
+                friendInitiated: 0,
+                selfInitiated: 40
             })
         ]);
         const entry = scoring.friendScores.value.get('only');
@@ -462,7 +463,7 @@ describe('useRelationshipScoring trend and activity', () => {
         expect(dormant).toBeGreaterThanOrEqual(-100);
     });
 
-    it('reads initiative direction with a neutral 1000 when balanced or absent', async () => {
+    it('shows my-seeks positive, their-seeks negative, balanced as zero', async () => {
         const scoring = await loadWith(
             [
                 metric({
@@ -484,14 +485,41 @@ describe('useRelationshipScoring trend and activity', () => {
         const they = scoring.friendScores.value.get('they-come').dimensions.activity;
         const iGo = scoring.friendScores.value.get('i-go').dimensions.activity;
         const unknown = scoring.friendScores.value.get('unknown').dimensions.activity;
-        // (4/2)=2 -> 1585, (2/4)=0.5 -> 585, (1/1) -> 1000, all uncapped.
-        expect(they).toBeGreaterThan(1500);
-        expect(they).toBeLessThan(1650);
-        expect(iGo).toBeGreaterThan(550);
-        expect(iGo).toBeLessThan(620);
-        expect(unknown).toBeCloseTo(1000, -1);
-        expect(they).toBeGreaterThan(unknown);
-        expect(unknown).toBeGreaterThan(iGo);
+        // Signed scale: positive = I seek, negative = they seek, 0 = neutral.
+        expect(iGo).toBeGreaterThan(0);
+        expect(they).toBeLessThan(0);
+        expect(unknown).toBe(0);
+        // Mirrored ln ratios: my-seeks vs their-seeks are exact opposites.
+        expect(Math.abs(iGo + they)).toBeLessThanOrEqual(0.2);
+        expect(Math.abs(iGo)).toBeLessThanOrEqual(100);
+    });
+
+    it('flips which side advantages when the activity weight goes negative', async () => {
+        const scoring = await loadWith([
+            metric({
+                userId: 'they-come',
+                lastSeen: daysAgo(1),
+                time90d: HOUR,
+                friendInitiated: 5,
+                selfInitiated: 0
+            }),
+            metric({
+                userId: 'i-go',
+                lastSeen: daysAgo(1),
+                time90d: HOUR,
+                friendInitiated: 0,
+                selfInitiated: 5
+            })
+        ]);
+        // Positive weight (default): my-seeks is the advantaged side.
+        expect(scoring.friendScores.value.get('i-go').score).toBeGreaterThan(
+            scoring.friendScores.value.get('they-come').score
+        );
+        // Negative weight flips the advantage; |weight| still sets magnitude.
+        scoring.setWeight('activity', -18);
+        expect(scoring.friendScores.value.get('they-come').score).toBeGreaterThan(
+            scoring.friendScores.value.get('i-go').score
+        );
     });
 });
 

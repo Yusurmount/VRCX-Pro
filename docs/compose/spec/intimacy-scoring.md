@@ -50,6 +50,17 @@ logistic）入 Choquet，降温者拉低总分而非读成正锚点分。trend �
 `dimensionPercent`/`formatDimension` 走专属分支；trend explain 三语同步
 （49/49 PASS）。
 
+**Follow-up：主动性带符号 + 权重符号定向 + 对称条** — activity 与趋势
+同构化：θ = `tanh(ln((我方+1)/(对方+1))/1.2)` ∈ (−1,1)，**正=我主动、
+负=对方主动、0=均衡**（方向相对旧版取反），展示 ±100、进度条 0 在中点。
+权重滑块扩为 **−100～100**（仅 activity 维）：**符号决定占优方向**——正值
+时 `0.5+0.5θ`（我主动加分）、负值时 `0.5−0.5θ`（反转为对方主动加分），
+绝对值仍经 |w| 归一为密度（`weightDensities` 改 `Math.abs`）。trend 与
+activity 的进度条统一升级为**中点对称生长条**（正从中点向右伸、负向左伸、
+中线为零刻度），`dimensionBarStyle` 返回 {left,width}，非符号维仍左起填充。
+Choquet/λ/数据层结构不动（局部同构化）；activity explain 三语同步，
+新增方向断言与负权重翻转用例（50/50 PASS）。
+
 **Follow-up：非好友过滤 + 全名单基底** — 真实库核对发现 40 个共位条目中
 30 个不在 `_friend_log_current` 名单（路人/测试账号/已解好友的 feed 历史，
 名单本身与 `mutual_graph_friends` 一致可信）。第一步：聚合循环按名单过滤

@@ -870,7 +870,7 @@
                         "regularity": "Accumulated active weeks — every routine week keeps counting, half a year = the 1000-point line and it grows logarithmically after that. Brand-new relationships start low instead of everyone pinning at full marks.",
                         "recency": "Rolling 90-day co-presence log-ratioed against the 1-hour line, then modulated by time since you last met — past the window a dormant friend reads zero instead of coasting on old history.",
                         "trend": "Signed ratio of the last 30 days versus the previous 30: 0 = flat (the bar midpoint), positive = warming, negative = cooling, saturated at ±100 — a doubling mirrors a halving exactly.",
-                        "activity": "Initiation ratio (them+1)/(you+1): balanced = 1000, them always seeking you climbs above, one-way chasing drops below; neutral without direction data."
+                        "activity": "Signed initiation direction: positive = I do the seeking, negative = they seek me, 0 = balanced — the bar is zeroed at its midpoint and saturates at ±100. The weight slider runs −100 to 100: a positive weight advantages \"I seek\" in the total, a negative one flips it to \"they seek\"; the magnitude is still this dimension’s importance and 0 opts out."
                     }
                 },
                 "settings": {
