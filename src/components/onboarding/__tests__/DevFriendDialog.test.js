@@ -172,6 +172,8 @@ describe('DevFriendDialog.vue', () => {
         expect(text).toContain(en.onboarding.devFriend.cta);
         expect(mocks.getUser).not.toHaveBeenCalled();
         expect(confetti).toHaveBeenCalled();
+        // Above the dialog portal stacking context (BASE_Z_INDEX 10000).
+        expect(confetti).toHaveBeenCalledWith(expect.objectContaining({ zIndex: 20000 }));
     });
 
     test('stays closed when the developer is not a friend', async () => {

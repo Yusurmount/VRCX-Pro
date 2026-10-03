@@ -1,7 +1,9 @@
 const MODAL_PORTAL_ROOT_ID = 'vrcx-modal-portal-root';
 const APP_PORTAL_ROOT_ID = 'x-dialog-portal';
 
-const BASE_Z_INDEX = 10000;
+// Exported so overlays that must sit above the dialog stack (e.g. the
+// confetti canvas) can pick a z-index outside this range.
+export const BASE_Z_INDEX = 10000;
 const Z_STEP = 10;
 
 let nextLayerIndex = 0;

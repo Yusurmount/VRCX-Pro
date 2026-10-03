@@ -60,6 +60,7 @@
     import { useUserDisplay } from '../../composables/useUserDisplay';
     import { useFriendStore, useUserStore } from '../../stores';
     import { openExternalLink } from '../../shared/utils/appActions';
+    import { BASE_Z_INDEX } from '../../lib/modalPortalLayers';
     import {
         DEV_FRIEND_USER_ID,
         devFriendDialogForce,
@@ -121,11 +122,21 @@
      * @returns {void}
      */
     function fireConfetti() {
-        const cannon = { particleCount: 50, spread: 55, startVelocity: 38, scalar: 0.9 };
+        // Dialogs live in a portal stacking context at BASE_Z_INDEX (10000+);
+        // the default confetti z-index (100) would render behind the overlay.
+        const zIndex = BASE_Z_INDEX * 2;
+        const cannon = { particleCount: 50, spread: 55, startVelocity: 38, scalar: 0.9, zIndex };
         confetti({ ...cannon, angle: 60, origin: { x: 0, y: 0.9 } });
         confetti({ ...cannon, angle: 120, origin: { x: 1, y: 0.9 } });
         setTimeout(() => {
-            confetti({ particleCount: 90, spread: 110, decay: 0.92, scalar: 1.1, origin: { y: 0.55 } });
+            confetti({
+                particleCount: 90,
+                spread: 110,
+                decay: 0.92,
+                scalar: 1.1,
+                origin: { y: 0.55 },
+                zIndex
+            });
         }, 220);
     }
 
