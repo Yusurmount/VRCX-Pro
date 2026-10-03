@@ -142,9 +142,10 @@
 
     /**
      * Open the dialog after a short delay unless it has already been seen.
-     * Without `force`, the developer must be in the friend list — the check
-     * waits (bounded) for the friend list to finish loading first, because
-     * the welcome dialog can be dismissed before that happens.
+     * Without `force`, the developer must be in the friend list — or the
+     * current user must be the developer themself — the friend check waits
+     * (bounded) for the friend list to finish loading first, because the
+     * welcome dialog can be dismissed before that happens.
      * @param {boolean} force
      * @returns {Promise<void>}
      */
@@ -157,9 +158,12 @@
             return;
         }
         if (!force) {
-            await waitFriendsLoaded();
-            if (!friendStore.friends.has(DEV_FRIEND_USER_ID)) {
-                return;
+            const isDeveloperSelf = userStore.currentUser?.id === DEV_FRIEND_USER_ID;
+            if (!isDeveloperSelf) {
+                await waitFriendsLoaded();
+                if (!friendStore.friends.has(DEV_FRIEND_USER_ID)) {
+                    return;
+                }
             }
         }
         await ensureDevProfile();

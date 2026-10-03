@@ -11,7 +11,8 @@ const mocks = vi.hoisted(() => ({
     openExternalLink: vi.fn(),
     getUser: vi.fn(),
     friends: null,
-    cachedUsers: null
+    cachedUsers: null,
+    currentUser: null
 }));
 
 vi.mock('../../../services/config', () => ({
@@ -37,7 +38,7 @@ vi.mock('../../../composables/useUserDisplay', () => ({
 
 vi.mock('../../../stores', () => ({
     useFriendStore: () => ({ friends: mocks.friends }),
-    useUserStore: () => ({ cachedUsers: mocks.cachedUsers })
+    useUserStore: () => ({ cachedUsers: mocks.cachedUsers, currentUser: mocks.currentUser })
 }));
 
 vi.mock('../../../shared/utils/appActions', () => ({
@@ -136,6 +137,7 @@ describe('DevFriendDialog.vue', () => {
         watchState.isFriendsLoaded = false;
         mocks.friends = reactive(new Map());
         mocks.cachedUsers = reactive(new Map());
+        mocks.currentUser = { id: 'usr_me' };
         // Mimic the real API: applyUser caches the fetched profile.
         mocks.getUser.mockImplementation(async () => {
             mocks.cachedUsers.set(DEV_FRIEND_USER_ID, {
@@ -188,6 +190,20 @@ describe('DevFriendDialog.vue', () => {
         expect(mocks.setBool).not.toHaveBeenCalled();
         expect(mocks.getUser).not.toHaveBeenCalled();
         expect(confetti).not.toHaveBeenCalled();
+    });
+
+    test('opens for the developer\'s own account without being in the friend list', async () => {
+        mocks.getBool.mockResolvedValue(false);
+        watchState.isFriendsLoaded = true;
+        mocks.currentUser = { id: DEV_FRIEND_USER_ID };
+
+        const wrapper = mountDialog();
+        requestDevFriendDialogShow();
+        await passOpenDelay(wrapper);
+
+        expect(wrapper.find('.dialog-stub').exists()).toBe(true);
+        // No local profile data for self either → fetches it for the avatar.
+        expect(mocks.getUser).toHaveBeenCalledWith({ userId: DEV_FRIEND_USER_ID });
     });
 
     test('waits for the friend list to load before deciding', async () => {
