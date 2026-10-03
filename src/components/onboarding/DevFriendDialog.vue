@@ -52,11 +52,12 @@
     import { Button } from '@/components/ui/button';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import { Panel } from '@/components/ui/panel';
+    import { userRequest } from '@/api';
     import configRepository from '../../services/config';
     import { DEV_FRIEND_SEEN_KEY } from '../../services/oobe';
     import { watchState } from '../../services/watchState';
     import { useUserDisplay } from '../../composables/useUserDisplay';
-    import { useFriendStore } from '../../stores';
+    import { useFriendStore, useUserStore } from '../../stores';
     import { openExternalLink } from '../../shared/utils/appActions';
     import {
         DEV_FRIEND_USER_ID,
@@ -74,7 +75,12 @@
     let openTimer = null;
 
     const friendStore = useFriendStore();
+    const userStore = useUserStore();
     const { userImage } = useUserDisplay();
+
+    // One in-flight (or settled) profile fetch per app session; a failed
+    // fetch clears it so the next show request can retry.
+    let profilePromise = null;
 
     const contactRows = [
         { labelKey: 'onboarding.devFriend.ingame_label', valueKey: 'onboarding.devFriend.ingame_value' },
@@ -87,8 +93,13 @@
     ];
 
     const devFriend = computed(() => friendStore.friends.get(DEV_FRIEND_USER_ID));
-    const developerName = computed(() => devFriend.value?.ref?.displayName ?? devFriend.value?.name ?? '');
-    const avatarUrl = computed(() => userImage(devFriend.value?.ref ?? null, true));
+    // Prefer the friend entry, then any cached user (e.g. a debug preview
+    // where the developer is not in the local friend list).
+    const devUser = computed(
+        () => devFriend.value?.ref ?? userStore.cachedUsers.get(DEV_FRIEND_USER_ID) ?? null
+    );
+    const developerName = computed(() => devUser.value?.displayName ?? devFriend.value?.name ?? '');
+    const avatarUrl = computed(() => userImage(devUser.value, true));
     const avatarInitial = computed(() => developerName.value.trim().charAt(0) || '?');
 
     // UI debug tool / welcome dismissal: re-read the seen flag, then show.
@@ -118,10 +129,32 @@
                 return;
             }
         }
+        await ensureDevProfile();
         openTimer = setTimeout(() => {
             openTimer = null;
             isOpen.value = true;
         }, OPEN_DELAY_MS);
+    }
+
+    /**
+     * Make sure the developer's user object (avatar + name) is available —
+     * the friend entry alone is not enough for debug previews, and a friend
+     * entry can exist without a resolved user ref. Resolves either way so
+     * a failed fetch never blocks the dialog.
+     * @returns {Promise<void>}
+     */
+    function ensureDevProfile() {
+        if (devUser.value) {
+            return Promise.resolve();
+        }
+        if (!profilePromise) {
+            profilePromise = userRequest
+                .getUser({ userId: DEV_FRIEND_USER_ID })
+                .catch(() => {
+                    profilePromise = null;
+                });
+        }
+        return profilePromise;
     }
 
     /**

@@ -9,13 +9,21 @@ const mocks = vi.hoisted(() => ({
     getBool: vi.fn(),
     setBool: vi.fn(),
     openExternalLink: vi.fn(),
-    friends: null
+    getUser: vi.fn(),
+    friends: null,
+    cachedUsers: null
 }));
 
 vi.mock('../../../services/config', () => ({
     default: {
         getBool: (...a) => mocks.getBool(...a),
         setBool: (...a) => mocks.setBool(...a)
+    }
+}));
+
+vi.mock('@/api', () => ({
+    userRequest: {
+        getUser: (...a) => mocks.getUser(...a)
     }
 }));
 
@@ -26,7 +34,8 @@ vi.mock('../../../composables/useUserDisplay', () => ({
 }));
 
 vi.mock('../../../stores', () => ({
-    useFriendStore: () => ({ friends: mocks.friends })
+    useFriendStore: () => ({ friends: mocks.friends }),
+    useUserStore: () => ({ cachedUsers: mocks.cachedUsers })
 }));
 
 vi.mock('../../../shared/utils/appActions', () => ({
@@ -123,6 +132,16 @@ describe('DevFriendDialog.vue', () => {
         devFriendDialogForce.value = false;
         watchState.isFriendsLoaded = false;
         mocks.friends = reactive(new Map());
+        mocks.cachedUsers = reactive(new Map());
+        // Mimic the real API: applyUser caches the fetched profile.
+        mocks.getUser.mockImplementation(async () => {
+            mocks.cachedUsers.set(DEV_FRIEND_USER_ID, {
+                id: DEV_FRIEND_USER_ID,
+                displayName: '雨小凌',
+                thumbnailUrl: 'https://example.com/dev.png'
+            });
+            return {};
+        });
     });
 
     afterEach(() => {
@@ -148,6 +167,7 @@ describe('DevFriendDialog.vue', () => {
             'https://example.com/dev.png'
         );
         expect(text).toContain(en.onboarding.devFriend.cta);
+        expect(mocks.getUser).not.toHaveBeenCalled();
     });
 
     test('stays closed when the developer is not a friend', async () => {
@@ -160,6 +180,7 @@ describe('DevFriendDialog.vue', () => {
 
         expect(wrapper.find('.dialog-stub').exists()).toBe(false);
         expect(mocks.setBool).not.toHaveBeenCalled();
+        expect(mocks.getUser).not.toHaveBeenCalled();
     });
 
     test('waits for the friend list to load before deciding', async () => {
@@ -191,7 +212,7 @@ describe('DevFriendDialog.vue', () => {
         expect(wrapper.find('.dialog-stub').exists()).toBe(false);
     });
 
-    test('force opens without the developer in the friend list', async () => {
+    test('force fetches the developer profile when no local data exists', async () => {
         mocks.getBool.mockResolvedValue(false);
         watchState.isFriendsLoaded = true;
 
@@ -199,9 +220,12 @@ describe('DevFriendDialog.vue', () => {
         requestDevFriendDialogShow(true);
         await passOpenDelay(wrapper);
 
+        expect(mocks.getUser).toHaveBeenCalledWith({ userId: DEV_FRIEND_USER_ID });
         expect(wrapper.find('.dialog-stub').exists()).toBe(true);
-        expect(wrapper.find('.avatar-image-stub').attributes('src')).toBe('');
-        expect(wrapper.find('.avatar-fallback-stub').text()).toBe('?');
+        expect(wrapper.find('.avatar-image-stub').attributes('src')).toBe(
+            'https://example.com/dev.png'
+        );
+        expect(wrapper.find('.avatar-fallback-stub').text()).toBe('雨');
     });
 
     test('dismiss marks the dialog as seen', async () => {
