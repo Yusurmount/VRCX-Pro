@@ -21,6 +21,8 @@ vi.mock('../../../services/config', () => ({
     }
 }));
 
+vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
+
 vi.mock('@/api', () => ({
     userRequest: {
         getUser: (...a) => mocks.getUser(...a)
@@ -43,6 +45,7 @@ vi.mock('../../../shared/utils/appActions', () => ({
 }));
 
 import DevFriendDialog from '../DevFriendDialog.vue';
+import confetti from 'canvas-confetti';
 import {
     DEV_FRIEND_USER_ID,
     devFriendDialogForce,
@@ -168,6 +171,7 @@ describe('DevFriendDialog.vue', () => {
         );
         expect(text).toContain(en.onboarding.devFriend.cta);
         expect(mocks.getUser).not.toHaveBeenCalled();
+        expect(confetti).toHaveBeenCalled();
     });
 
     test('stays closed when the developer is not a friend', async () => {
@@ -181,6 +185,7 @@ describe('DevFriendDialog.vue', () => {
         expect(wrapper.find('.dialog-stub').exists()).toBe(false);
         expect(mocks.setBool).not.toHaveBeenCalled();
         expect(mocks.getUser).not.toHaveBeenCalled();
+        expect(confetti).not.toHaveBeenCalled();
     });
 
     test('waits for the friend list to load before deciding', async () => {

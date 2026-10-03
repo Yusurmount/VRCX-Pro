@@ -47,6 +47,7 @@
 <script setup>
     import { computed, ref, watch } from 'vue';
     import { useI18n } from 'vue-i18n';
+    import confetti from 'canvas-confetti';
 
     import { Dialog, DialogContent } from '@/components/ui/dialog';
     import { Button } from '@/components/ui/button';
@@ -106,6 +107,27 @@
     watch(devFriendDialogShowRequest, () => {
         maybeOpen(Boolean(devFriendDialogForce.value));
     });
+
+    // Celebration cannons every time the dialog opens.
+    watch(isOpen, (open) => {
+        if (open) {
+            fireConfetti();
+        }
+    });
+
+    /**
+     * Two corner cannons plus a center bloom, staggered so the burst reads
+     * as a "confetti cannon blooming" rather than one flat explosion.
+     * @returns {void}
+     */
+    function fireConfetti() {
+        const cannon = { particleCount: 50, spread: 55, startVelocity: 38, scalar: 0.9 };
+        confetti({ ...cannon, angle: 60, origin: { x: 0, y: 0.9 } });
+        confetti({ ...cannon, angle: 120, origin: { x: 1, y: 0.9 } });
+        setTimeout(() => {
+            confetti({ particleCount: 90, spread: 110, decay: 0.92, scalar: 1.1, origin: { y: 0.55 } });
+        }, 220);
+    }
 
     /**
      * Open the dialog after a short delay unless it has already been seen.
