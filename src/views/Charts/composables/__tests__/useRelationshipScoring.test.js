@@ -116,17 +116,30 @@ describe('useRelationshipScoring', () => {
 
     it('scores a friend with no volume evidence near zero', async () => {
         const now = new Date().toISOString();
+        // Percent scores are relative, so a hollow friend must be compared
+        // against someone who actually played: the leader defines 100.
         const scoring = await loadWith([
             metric({
                 userId: 'hollow',
                 firstSeen: new Date(Date.now() - 40 * DAY).toISOString(),
                 lastSeen: now
+            }),
+            metric({
+                userId: 'rich',
+                totalTime: 40 * HOUR,
+                joinCount: 12,
+                firstSeen: new Date(Date.now() - 40 * DAY).toISOString(),
+                lastSeen: now,
+                activeWeeks: 5,
+                time90d: 40 * HOUR,
+                time30d: 20 * HOUR
             })
         ]);
         const entry = scoring.friendScores.value.get('hollow');
         expect(entry.dimensions.contact).toBe(0);
         expect(entry.dimensions.regularity).toBe(0);
         expect(entry.score).toBeLessThan(40);
+        expect(scoring.friendScores.value.get('rich').score).toBe(100);
     });
 
     it('does not let an outlier friend flatten the others', async () => {
@@ -136,7 +149,7 @@ describe('useRelationshipScoring', () => {
             metrics.push(
                 metric({
                     userId: `normal-${i}`,
-                    totalTime: i + 1,
+                    totalTime: (i + 1) * HOUR,
                     joinCount: 1,
                     distinctDays: 1,
                     lastSeen: now
@@ -146,7 +159,7 @@ describe('useRelationshipScoring', () => {
         metrics.push(
             metric({
                 userId: 'whale',
-                totalTime: 1e9,
+                totalTime: 30 * HOUR,
                 joinCount: 1,
                 distinctDays: 1,
                 lastSeen: now
@@ -154,8 +167,8 @@ describe('useRelationshipScoring', () => {
         );
         const scoring = await loadWith(metrics);
 
-        // log1p + p90 on hours keeps the smallest friend positive but far
-        // below the whale — no flattening to zero, no ceiling either.
+        // Relative display: the smallest friend stays positive (not crushed
+        // to a rounding zero by the whale) but far below the leader.
         const smallest = scoring.friendScores.value.get('normal-0');
         expect(smallest.dimensions.contact).toBeGreaterThan(0);
         expect(smallest.dimensions.contact).toBeLessThan(30);
@@ -220,8 +233,9 @@ describe('useRelationshipScoring', () => {
     });
 
     it('separates a barely-different cohort on the percent scale', async () => {
-        // Nine friends at 1 active week and one at 2: p90 log-normalization
-        // pinned everyone at 100 because the reference landed on the mode.
+        // Nine friends at 1 active week and one at 2: the anchor z values
+        // (log1p(1) vs log1p(2) over the 26-week line) differ, so the
+        // relative display separates them instead of pinning everyone.
         const now = new Date().toISOString();
         const metrics = Array.from({ length: 9 }, (_, i) =>
             metric({ userId: `w1-${i}`, activeWeeks: 1, lastSeen: now })
@@ -231,7 +245,8 @@ describe('useRelationshipScoring', () => {
         expect(
             scoring.friendScores.value.get('w1-0').dimensions.regularity
         ).toBeLessThan(100);
-        expect(scoring.friendScores.value.get('w1-0').dimensions.regularity).toBe(90);
+        // log1p(1) / log1p(2) ≈ 63% of the two-week leader.
+        expect(scoring.friendScores.value.get('w1-0').dimensions.regularity).toBe(63);
         expect(
             scoring.friendScores.value.get('w2').dimensions.regularity
         ).toBe(100);
@@ -293,11 +308,11 @@ describe('useRelationshipScoring recency and regularity', () => {
         ]);
         const week = scoring.friendScores.value.get('week').dimensions.recency;
         const month = scoring.friendScores.value.get('month').dimensions.recency;
-        // Same volume, different freshness: 0.74 vs 0.38 of the anchor score.
-        expect(week).toBeGreaterThanOrEqual(70);
-        expect(week).toBeLessThanOrEqual(77);
-        expect(month).toBeGreaterThanOrEqual(35);
-        expect(month).toBeLessThanOrEqual(41);
+        // Same volume, different freshness: the fresher friend defines the
+        // 100% bar; the month-old one sits at 0.38/0.74 ≈ 52% of it.
+        expect(week).toBe(100);
+        expect(month).toBeGreaterThanOrEqual(45);
+        expect(month).toBeLessThanOrEqual(55);
         expect(week - month).toBeGreaterThanOrEqual(30);
     });
 
@@ -543,7 +558,11 @@ describe('useRelationshipScoring weights and lambda', () => {
         });
 
     it('recomputes scores from custom weights', async () => {
-        const scoring = await loadWith([balanced()]);
+        // Percent of a single-sample cohort is always 100 (relative to
+        // itself), so assert on the absolute score, where weights bite.
+        const scoring = await loadWith([balanced()], {
+            afterLoad: (s) => s.setScoreMode('absolute')
+        });
         const before = scoring.friendScores.value.get('balanced').score;
         scoring.setWeight('recency', 100);
         scoring.setWeight('contact', 0);

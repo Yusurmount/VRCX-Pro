@@ -102,35 +102,6 @@ function hill(value, ref, n) {
     return vn / (vn + Math.pow(ref, n));
 }
 
-// Percent-mode normalization: top percentile rank. Values are ordered
-// ascending and every member receives the share of the cohort not strictly
-// above it. Ties all get the best tied position, so a cohort that barely
-// differs (everyone active 1–2 weeks) still separates, while a perfectly
-// homogeneous cohort reads 100 — there is no information to separate anyone
-// and nobody should be punished for it. A zero observation means "no
-// presence at all" and stays 0 rather than riding a tie to the top. Rank is
-// immune to whales by construction, which is what p90 log-normalization was
-// doing before.
-function topPercentileRanks(values) {
-    const n = values.length;
-    if (!n) return [];
-    const order = values
-        .map((v, i) => i)
-        .sort((a, b) => values[a] - values[b]);
-    const out = new Array(n);
-    let i = 0;
-    while (i < n) {
-        let j = i;
-        while (j + 1 < n && values[order[j + 1]] === values[order[i]]) j++;
-        const rank = (j + 1) / n;
-        for (let k = i; k <= j; k++) {
-            out[order[k]] = values[order[k]] > 0 ? rank : 0;
-        }
-        i = j + 1;
-    }
-    return out;
-}
-
 function logRatio(value, reference) {
     if (reference <= 0) return 0;
     return Math.log1p(value) / reference;
@@ -222,19 +193,6 @@ function freshnessDiscount(s) {
     const hi = sigmoid(FRESHNESS_K * 0.5);
     const t = (sigmoid(FRESHNESS_K * (s - 0.5)) - lo) / (hi - lo);
     return FRESHNESS_FLOOR + (1 - FRESHNESS_FLOOR) * t;
-}
-
-// Soft-threshold membership for the percent scale: identity at the ends and
-// mid-point, S-shape in between, so middling factors neither dominate nor
-// vanish inside the integral.
-const MEMBERSHIP_KAPPA = 6;
-
-function membership(z) {
-    const lo = sigmoid(-MEMBERSHIP_KAPPA * 0.5);
-    const hi = sigmoid(MEMBERSHIP_KAPPA * 0.5);
-    return clamp01(
-        (sigmoid(MEMBERSHIP_KAPPA * (z - 0.5)) - lo) / (hi - lo)
-    );
 }
 
 // Sugeno lambda-measure normalized to g(X)=1 so lambda can be dialled
@@ -377,49 +335,33 @@ export function useRelationshipScoring() {
 
         const scoredMetrics = scoringMetrics.value;
         const absolute = scoreMode.value === 'absolute';
-        const scale = SCORE_SCALES[scoreMode.value];
 
-        // Absolute mode anchors every physical quantity at its fixed
-        // standard line (log1p ratio, uncapped). Percent mode maps each
-        // quantity to its top percentile rank inside this cohort. Trend is
-        // exempt: it is already a self-scaled signed value (tanh of the
-        // log-ratio), so neither an anchor nor a cohort rank applies.
+        // Single calculation pipeline: every dimension is scored by the
+        // absolute anchors (log1p ratio, uncapped) regardless of display
+        // mode. Trend is the one signed exception (tanh of the log-ratio).
+        // The score mode only decides how results are *displayed*:
+        //   absolute — raw anchored values, 1000 = standard line
+        //   percent  — independent relative displays: each dimension against
+        //              that dimension's cohort maximum, total against the
+        //              board leader. The two relativizations never feed each
+        //              other and never re-enter the calculation.
+        const refs = {
+            contact: Math.log1p(ABSOLUTE_ANCHORS.contactHours),
+            depth: Math.log1p(ABSOLUTE_ANCHORS.depthHours),
+            regularity: Math.log1p(ABSOLUTE_ANCHORS.activeWeeks),
+            recency: Math.log1p(ABSOLUTE_ANCHORS.recencyHours),
+            activity: Math.log1p(RATIO_ANCHOR)
+        };
+
         const contactRaw = scoredMetrics.map(contactHoursOf);
         const depthRaw = scoredMetrics.map(depthHoursOf);
         const weeksRaw = scoredMetrics.map(activeWeeksOf);
         const recencyRaw = scoredMetrics.map(recencyHoursOf);
         const activityRaw = scoredMetrics.map(activityRatio);
 
-        const refs = absolute
-            ? {
-                  contact: Math.log1p(ABSOLUTE_ANCHORS.contactHours),
-                  depth: Math.log1p(ABSOLUTE_ANCHORS.depthHours),
-                  regularity: Math.log1p(ABSOLUTE_ANCHORS.activeWeeks),
-                  recency: Math.log1p(ABSOLUTE_ANCHORS.recencyHours),
-                  activity: Math.log1p(RATIO_ANCHOR)
-              }
-            : null;
-
-        // Percent: one rank array per physical quantity, indexed like
-        // scoredMetrics. Zero observations stay 0 (no presence, no rank).
-        const ranks = absolute
-            ? null
-            : {
-                  contact: topPercentileRanks(contactRaw),
-                  depth: topPercentileRanks(depthRaw),
-                  regularity: topPercentileRanks(weeksRaw),
-                  recency: topPercentileRanks(recencyRaw),
-                  activity: topPercentileRanks(activityRaw)
-              };
-
-        // Shrinkage target: the cohort mean rank on the relative scale (what
-        // a "typical" friend looks like), the anchor on the absolute one (so
-        // scores stay put when the cohort moves).
-        let depthTarget = 1;
-        if (!absolute) {
-            depthTarget =
-                ranks.depth.reduce((s, v) => s + v, 0) / ranks.depth.length;
-        }
+        // Shrinkage target: the fixed anchor, so scores stay put when the
+        // cohort moves.
+        const depthTarget = 1;
 
         let maxFriendNumber = 0;
         for (const m of scoredMetrics) {
@@ -431,10 +373,10 @@ export function useRelationshipScoring() {
         const densities = weightDensities(weights.value);
         const now = Date.now();
 
-        const scores = new Map();
         if (!densities) {
+            const zeroScores = new Map();
             for (const metric of scoredMetrics) {
-                scores.set(metric.userId, {
+                zeroScores.set(metric.userId, {
                     score: 0,
                     dimensions: Object.fromEntries(
                         CRITERIA.map((key) => [key, 0])
@@ -443,9 +385,11 @@ export function useRelationshipScoring() {
                     displayName: metric.displayName
                 });
             }
-            return scores;
+            return zeroScores;
         }
 
+        // Pass 1: score everyone through the one anchor pipeline.
+        const stage = [];
         for (const [idx, metric] of scoredMetrics.entries()) {
             // Coherence: 0.5 at DEPTH_REF_MS, saturating slowly past it.
             const coherence = hill(
@@ -454,76 +398,80 @@ export function useRelationshipScoring() {
                 DEPTH_HILL_N
             );
 
-            const vContact = absolute
-                ? logRatio(contactRaw[idx], refs.contact)
-                : ranks.contact[idx];
-            const vDepth = absolute
-                ? logRatio(depthRaw[idx], refs.depth)
-                : ranks.depth[idx];
+            const vContact = logRatio(contactRaw[idx], refs.contact);
+            const vDepth = logRatio(depthRaw[idx], refs.depth);
 
             // James-Stein style shrinkage: fragmented presence pulls its
-            // noisy depth estimate back toward typical instead of trusting a
-            // reconnect-shredded average. Depth alone carries the structure
-            // (count and depth are not independent: N = T / D).
+            // noisy depth estimate back toward the anchor instead of
+            // trusting a reconnect-shredded average. Depth alone carries the
+            // structure (count and depth are not independent: N = T / D).
             const structure =
                 depthTarget +
                 (vDepth - depthTarget) * Math.pow(coherence, SHRINK_EXP);
 
             const s = seniority(metric.friendNumber, maxFriendNumber);
             const delta = freshnessDiscount(s);
-            const contact =
-                delta *
-                vContact *
-                (STRUCTURE_FLOOR + (1 - STRUCTURE_FLOOR) * structure);
-
             const z = {
-                contact,
-                regularity: absolute
-                    ? logRatio(weeksRaw[idx], refs.regularity)
-                    : ranks.regularity[idx],
+                contact:
+                    delta *
+                    vContact *
+                    (STRUCTURE_FLOOR + (1 - STRUCTURE_FLOOR) * structure),
+                regularity: logRatio(weeksRaw[idx], refs.regularity),
                 recency:
-                    (absolute
-                        ? logRatio(recencyRaw[idx], refs.recency)
-                        : ranks.recency[idx]) * recencyModulation(metric, now),
+                    logRatio(recencyRaw[idx], refs.recency) *
+                    recencyModulation(metric, now),
                 trend: trendTheta(metric),
-                activity: absolute
-                    ? logRatio(activityRaw[idx], refs.activity)
-                    : ranks.activity[idx]
+                activity: logRatio(activityRaw[idx], refs.activity)
             };
 
-            // Percent scale feeds the integral soft memberships; the absolute
-            // scale passes the log-ratio scores through so they stay
-            // uncapped — a dimension can read past its 1000-point anchor.
-            // Trend is the exception on both sides: it lives in (−1, 1) and
-            // enters the integral shifted to [0, 1] with 0.5 = flat, so a
-            // cooling friend pulls the composite down instead of reading as
-            // a positive anchor score.
-            const m = CRITERIA.map((key) => {
-                if (key === 'trend') {
-                    const shifted = 0.5 + 0.5 * z.trend;
-                    return absolute ? shifted : membership(shifted);
-                }
-                return absolute ? z[key] : membership(z[key]);
-            });
+            // Trend lives in (−1, 1): it enters the integral shifted to
+            // [0, 1] with 0.5 = flat, so a cooling friend pulls the
+            // composite down instead of scoring as a positive anchor value.
+            const m = CRITERIA.map((key) =>
+                key === 'trend' ? 0.5 + 0.5 * z.trend : z[key]
+            );
             const integral = choquetIntegral(m, densities, lambda.value);
-            const dims = {};
-            for (const key of CRITERIA) {
-                if (key === 'trend') {
-                    // Signed display: ±100 max, 0 = flat (bar midpoint).
-                    dims.trend = absolute
-                        ? Math.round(z.trend * 1000) / 10
-                        : Math.round(z.trend * 100);
-                    continue;
-                }
-                dims[key] = absolute
-                    ? Math.round(z[key] * scale * 10) / 10
-                    : Math.round(clamp01(z[key]) * scale);
-            }
+            stage.push({ metric, z, integral });
+        }
 
+        // Display references for the two independent relativizations.
+        const fourKeys = ['contact', 'regularity', 'recency', 'activity'];
+        const dimMax = { contact: 0, regularity: 0, recency: 0, activity: 0 };
+        let absMax = 0;
+        for (const entry of stage) {
+            for (const key of fourKeys) {
+                if (entry.z[key] > dimMax[key]) dimMax[key] = entry.z[key];
+            }
+            const absScore = entry.integral * SCORE_SCALES.absolute;
+            if (absScore > absMax) absMax = absScore;
+        }
+
+        // Pass 2: emit per display mode.
+        const scores = new Map();
+        for (const { metric, z, integral } of stage) {
+            const dims = {
+                // Signed display: ±100 max, 0 = flat (bar midpoint).
+                trend: absolute
+                    ? Math.round(z.trend * SCORE_SCALES.absolute) / 10
+                    : Math.round(z.trend * SCORE_SCALES.percent)
+            };
+            for (const key of fourKeys) {
+                dims[key] = absolute
+                    ? Math.round(z[key] * SCORE_SCALES.absolute * 10) / 10
+                    : dimMax[key] > 0
+                      ? Math.round((z[key] / dimMax[key]) * SCORE_SCALES.percent)
+                      : 0;
+            }
+            const score = absolute
+                ? Math.round(integral * SCORE_SCALES.absolute * 10) / 10
+                : absMax > 0
+                  ? Math.round(
+                        ((integral * SCORE_SCALES.absolute) / absMax) *
+                            SCORE_SCALES.percent
+                    )
+                  : 0;
             scores.set(metric.userId, {
-                score: absolute
-                    ? Math.round(integral * scale * 10) / 10
-                    : Math.round(integral * scale),
+                score,
                 dimensions: dims,
                 raw: rawOf(metric),
                 displayName: metric.displayName

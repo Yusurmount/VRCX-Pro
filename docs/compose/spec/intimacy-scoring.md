@@ -68,6 +68,18 @@ activeWeeks [1×7, 2×3]）验证规律度条 70/100 两档分离。absolute 路
 新增 3 个回归用例（同质分离、全同满分、零值归零），48/48 PASS；i18n
 `percent_hint` 三语同步。
 
+**Follow-up：单一计算管线（取代百分位秩）** — 用户确立口径语义：「各因素
+取相对、总分取相对，两个互不干扰；计算结果由绝对评分决定」。percent 的秩
+归一废除（秩只是一种相对化，却让百分制重算了一遍总分、与绝对口径分道扬镳）：
+`friendScores` 改为**两段式**——Pass 1 恒走绝对锚点管线（四维 logRatio +
+trend θ，Choquet 输入去掉 logistic 隶属整形，`membership`/`topPercentileRanks`
+删除），Pass 2 按口径出结果：absolute 输出原始值；percent 输出两个独立
+相对化（四维 ÷ 各维队列 max ×100、总分 ÷ 榜一 ×100，trend 保持 ±100 符号
+展示）。相对化只在出口、从不回流。组件维度条天然兼容（percent 分支 dims
+已是相对值、absolute 分支除 `dimensionMax`）。测试按新语义修复 5 处
+（单样本相对恒 100 → 改双样本/绝对断言、小时级离群夹具、63/100/52 相对
+期望），49/49 PASS；`percent_hint` 三语改为「双相对化、互不干扰」。
+
 ### λ-Choquet 五维重写（分支 `feature/intimacy-choquet`）
 
 **What was built** — 评分模型从「四维加权平均」重写为「五维 λ-Choquet」：

@@ -880,7 +880,7 @@
                     "title": "Scoring Scale",
                     "percent": "Percent",
                     "absolute": "Absolute",
-                    "percent_hint": "Each dimension maps to 0-100 by its percentile rank among all friends: ties share the top position, a perfectly homogeneous cohort reads full marks, and zero stays zero; the 0-100 total shows relative standing among friends.",
+                    "percent_hint": "The total and each dimension convert independently by relative standing (board leader = 100% total, that dimension max = 100%); the two relativizations never interact. One absolute scoring pipeline computes everything underneath — switching the scale changes display only, never the score itself.",
                     "absolute_hint": "Each dimension is the log ratio against a fixed anchor (1 h co-presence / 26 active weeks / 1 h in 90 days) — 1000 is the standard line, not a ceiling, so values accumulate without limit; totals keep one decimal and every bar fills against the current maximum."
                 },
                 "excluded": {
