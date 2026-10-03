@@ -49,15 +49,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="mt-2 flex justify-center">
-                    <Button
-                        variant="link"
-                        class="h-auto p-0 text-xs text-muted-foreground/70 hover:text-foreground"
-                        @click="handleViewChangelog">
-                        {{ t('onboarding.whatsnew.common.view_changelog') }} →
-                    </Button>
-                </div>
             </template>
 
             <!-- CTA -->
@@ -101,7 +92,7 @@
 
     const vrcxUpdaterStore = useVRCXUpdaterStore();
     const { whatsNewDialog } = storeToRefs(vrcxUpdaterStore);
-    const { closeWhatsNewDialog, openChangeLogDialogOnly, showLatestWhatsNewDialog } = vrcxUpdaterStore;
+    const { closeWhatsNewDialog, showLatestWhatsNewDialog } = vrcxUpdaterStore;
 
     const displayName = computed(() => userStore.currentUser?.displayName ?? '');
     const avatarUrl = computed(() => userImage(userStore.currentUser, true));
@@ -193,16 +184,6 @@
         isOpen.value = false;
         await configRepository.setBool(PERSONAL_WELCOME_SEEN_KEY, true);
         closeWhatsNewDialog();
-    }
-
-    /**
-     * Close the dialog, then open the changelog dialog.
-     * @returns {Promise<void>}
-     */
-    async function handleViewChangelog() {
-        isOpen.value = false;
-        closeWhatsNewDialog();
-        await openChangeLogDialogOnly();
     }
 </script>
 

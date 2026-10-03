@@ -282,10 +282,6 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         whatsNewDialog.value.visible = false;
     }
 
-    async function openChangeLogDialogOnly() {
-        changeLogDialog.value.visible = true;
-        await ensureChangeLogReady();
-    }
     async function loadVrcxId() {
         if (!vrcxId.value) {
             vrcxId.value = crypto.randomUUID();
@@ -667,7 +663,6 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         showWhatsNewDialog,
         showLatestWhatsNewDialog,
         closeWhatsNewDialog,
-        openChangeLogDialogOnly,
         checkForVRCXUpdate,
         loadBranchVersions,
         downloadSelectedVRCXUpdate,

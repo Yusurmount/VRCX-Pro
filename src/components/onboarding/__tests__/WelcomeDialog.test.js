@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
     getBool: vi.fn(),
     setBool: vi.fn(),
     closeWhatsNewDialog: vi.fn(),
-    openChangeLogDialogOnly: vi.fn(),
     showLatestWhatsNewDialog: vi.fn(),
     whatsNewDialog: null
 }));
@@ -36,7 +35,6 @@ vi.mock('../../../stores', async () => {
         useVRCXUpdaterStore: () => ({
             whatsNewDialog,
             closeWhatsNewDialog: (...a) => mocks.closeWhatsNewDialog(...a),
-            openChangeLogDialogOnly: (...a) => mocks.openChangeLogDialogOnly(...a),
             showLatestWhatsNewDialog: (...a) => mocks.showLatestWhatsNewDialog(...a)
         })
     };
