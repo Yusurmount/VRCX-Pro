@@ -50,6 +50,15 @@ activity/regularity 测试组按新语义重写：超窗归零、比值方向、
 firstSeen=null），榜单覆盖全部当前好友、无数据者排榜尾；mock 三列
 `[user_id, display_name, friend_number]`，新增零行用例（46/46 PASS）。
 
+**Follow-up：百分制改百分位秩** — 用户实测百分制下规律性又全员 100：
+log1p÷P90 的参考值落在众数上（真实队列 activeWeeks 全 1–2 周），大众封顶
+且 P90 对「仅 10% 高值」不敏感。percent 归一改为 top-percentile rank——
+并列同给最高位、队列全同值→100（无信息不惩罚）、零值→0（不借并列上位）；
+rank 天然免疫离群，替代原 P90 的防鲸职能。真实队列（过滤后 10 好友，
+activeWeeks [1×7, 2×3]）验证规律度条 70/100 两档分离。absolute 路径不变。
+新增 3 个回归用例（同质分离、全同满分、零值归零），48/48 PASS；i18n
+`percent_hint` 三语同步。
+
 ### λ-Choquet 五维重写（分支 `feature/intimacy-choquet`）
 
 **What was built** — 评分模型从「四维加权平均」重写为「五维 λ-Choquet」：

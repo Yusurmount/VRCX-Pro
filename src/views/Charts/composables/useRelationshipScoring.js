@@ -99,18 +99,33 @@ function hill(value, ref, n) {
     return vn / (vn + Math.pow(ref, n));
 }
 
-// log1p + nearest-rank p90 keeps a single whale friend from flattening
-// everyone else the way max-normalization did.
-function logPercentileReference(values) {
-    if (!values.length) return 0;
-    const sorted = [...values].sort((a, b) => a - b);
-    const index = Math.ceil(0.9 * sorted.length) - 1;
-    return sorted[Math.max(0, index)];
-}
-
-function logNormalize(value, reference) {
-    if (reference <= 0) return 0;
-    return Math.min(1, Math.log1p(value) / reference);
+// Percent-mode normalization: top percentile rank. Values are ordered
+// ascending and every member receives the share of the cohort not strictly
+// above it. Ties all get the best tied position, so a cohort that barely
+// differs (everyone active 1–2 weeks) still separates, while a perfectly
+// homogeneous cohort reads 100 — there is no information to separate anyone
+// and nobody should be punished for it. A zero observation means "no
+// presence at all" and stays 0 rather than riding a tie to the top. Rank is
+// immune to whales by construction, which is what p90 log-normalization was
+// doing before.
+function topPercentileRanks(values) {
+    const n = values.length;
+    if (!n) return [];
+    const order = values
+        .map((v, i) => i)
+        .sort((a, b) => values[a] - values[b]);
+    const out = new Array(n);
+    let i = 0;
+    while (i < n) {
+        let j = i;
+        while (j + 1 < n && values[order[j + 1]] === values[order[i]]) j++;
+        const rank = (j + 1) / n;
+        for (let k = i; k <= j; k++) {
+            out[order[k]] = values[order[k]] > 0 ? rank : 0;
+        }
+        i = j + 1;
+    }
+    return out;
 }
 
 function logRatio(value, reference) {
@@ -140,9 +155,9 @@ function recencyModulation(metric, now) {
     return recencyBase(daysSince);
 }
 
-// Physical quantities feeding the shared log-ratio pipeline. Each one is an
-// unbounded real-world measurement; the log1p transform keeps them tame and
-// the anchor (absolute) or cohort p90 (percent) turns them into 0..1000.
+// Physical quantities feeding the shared pipeline. Each one is an
+// unbounded real-world measurement; absolute mode turns it into a log ratio
+// against its anchor, percent mode into a cohort percentile rank.
 function contactHoursOf(metric) {
     return Math.max(0, metric.totalTime || 0) / MS_PER_HOUR;
 }
@@ -354,13 +369,9 @@ export function useRelationshipScoring() {
         const absolute = scoreMode.value === 'absolute';
         const scale = SCORE_SCALES[scoreMode.value];
 
-        // Reference = log1p(anchor) in absolute mode (fixed standard line),
-        // log1p(p90) of the cohort in percent mode (relative standing).
-        const refOf = (rawValues, anchor) =>
-            absolute
-                ? Math.log1p(anchor)
-                : logPercentileReference(rawValues.map((v) => Math.log1p(v)));
-
+        // Absolute mode anchors every physical quantity at its fixed
+        // standard line (log1p ratio, uncapped). Percent mode maps each
+        // quantity to its top percentile rank inside this cohort.
         const contactRaw = scoredMetrics.map(contactHoursOf);
         const depthRaw = scoredMetrics.map(depthHoursOf);
         const weeksRaw = scoredMetrics.map(activeWeeksOf);
@@ -368,24 +379,37 @@ export function useRelationshipScoring() {
         const trendRaw = scoredMetrics.map(trendRatio);
         const activityRaw = scoredMetrics.map(activityRatio);
 
-        const refs = {
-            contact: refOf(contactRaw, ABSOLUTE_ANCHORS.contactHours),
-            depth: refOf(depthRaw, ABSOLUTE_ANCHORS.depthHours),
-            regularity: refOf(weeksRaw, ABSOLUTE_ANCHORS.activeWeeks),
-            recency: refOf(recencyRaw, ABSOLUTE_ANCHORS.recencyHours),
-            trend: refOf(trendRaw, RATIO_ANCHOR),
-            activity: refOf(activityRaw, RATIO_ANCHOR)
-        };
+        const refs = absolute
+            ? {
+                  contact: Math.log1p(ABSOLUTE_ANCHORS.contactHours),
+                  depth: Math.log1p(ABSOLUTE_ANCHORS.depthHours),
+                  regularity: Math.log1p(ABSOLUTE_ANCHORS.activeWeeks),
+                  recency: Math.log1p(ABSOLUTE_ANCHORS.recencyHours),
+                  trend: Math.log1p(RATIO_ANCHOR),
+                  activity: Math.log1p(RATIO_ANCHOR)
+              }
+            : null;
 
-        const norm = absolute ? logRatio : logNormalize;
-        // Shrinkage target: the cohort mean on the relative scale (what a
-        // "typical" friend looks like), the anchor on the absolute one (so
+        // Percent: one rank array per physical quantity, indexed like
+        // scoredMetrics. Zero observations stay 0 (no presence, no rank).
+        const ranks = absolute
+            ? null
+            : {
+                  contact: topPercentileRanks(contactRaw),
+                  depth: topPercentileRanks(depthRaw),
+                  regularity: topPercentileRanks(weeksRaw),
+                  recency: topPercentileRanks(recencyRaw),
+                  trend: topPercentileRanks(trendRaw),
+                  activity: topPercentileRanks(activityRaw)
+              };
+
+        // Shrinkage target: the cohort mean rank on the relative scale (what
+        // a "typical" friend looks like), the anchor on the absolute one (so
         // scores stay put when the cohort moves).
         let depthTarget = 1;
         if (!absolute) {
             depthTarget =
-                depthRaw.reduce((s, v) => s + norm(v, refs.depth), 0) /
-                depthRaw.length;
+                ranks.depth.reduce((s, v) => s + v, 0) / ranks.depth.length;
         }
 
         let maxFriendNumber = 0;
@@ -413,7 +437,7 @@ export function useRelationshipScoring() {
             return scores;
         }
 
-        for (const metric of scoredMetrics) {
+        for (const [idx, metric] of scoredMetrics.entries()) {
             // Coherence: 0.5 at DEPTH_REF_MS, saturating slowly past it.
             const coherence = hill(
                 metric.joinCount > 0 ? (metric.totalTime || 0) / metric.joinCount : 0,
@@ -421,8 +445,12 @@ export function useRelationshipScoring() {
                 DEPTH_HILL_N
             );
 
-            const vContact = norm(contactHoursOf(metric), refs.contact);
-            const vDepth = norm(depthHoursOf(metric), refs.depth);
+            const vContact = absolute
+                ? logRatio(contactRaw[idx], refs.contact)
+                : ranks.contact[idx];
+            const vDepth = absolute
+                ? logRatio(depthRaw[idx], refs.depth)
+                : ranks.depth[idx];
 
             // James-Stein style shrinkage: fragmented presence pulls its
             // noisy depth estimate back toward typical instead of trusting a
@@ -441,12 +469,19 @@ export function useRelationshipScoring() {
 
             const z = {
                 contact,
-                regularity: norm(activeWeeksOf(metric), refs.regularity),
+                regularity: absolute
+                    ? logRatio(weeksRaw[idx], refs.regularity)
+                    : ranks.regularity[idx],
                 recency:
-                    norm(recencyHoursOf(metric), refs.recency) *
-                    recencyModulation(metric, now),
-                trend: norm(trendRatio(metric), refs.trend),
-                activity: norm(activityRatio(metric), refs.activity)
+                    (absolute
+                        ? logRatio(recencyRaw[idx], refs.recency)
+                        : ranks.recency[idx]) * recencyModulation(metric, now),
+                trend: absolute
+                    ? logRatio(trendRaw[idx], refs.trend)
+                    : ranks.trend[idx],
+                activity: absolute
+                    ? logRatio(activityRaw[idx], refs.activity)
+                    : ranks.activity[idx]
             };
 
             // Percent scale feeds the integral soft memberships; the absolute
