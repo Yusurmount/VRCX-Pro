@@ -417,6 +417,7 @@
     import { DEV_FRIEND_SEEN_KEY, PERSONAL_WELCOME_SEEN_KEY, resetOobe } from '@/services/oobe';
     import { requestWelcomeDialogShow } from '@/components/onboarding/welcomeDialogState';
     import { requestDevFriendDialogShow } from '@/components/onboarding/devFriendDialogState';
+    import { requestRestoreProgressPreview } from '@/views/Tools/restoreProgressPreviewState';
     import { useAppearanceSettingsStore } from '@/stores/settings/appearance';
     import { useModalStore } from '@/stores/modal';
     import { useUserStore } from '@/stores/user';
@@ -637,6 +638,15 @@
      */
     async function showChangeLogDialog() {
         await vrcxUpdater.showChangeLogDialog();
+    }
+
+    /**
+     * Open the database restore wizard in progress-preview mode so the
+     * step-4 progress UI can be exercised without a backup file.
+     */
+    function showRestoreProgressPreview() {
+        requestRestoreProgressPreview();
+        router.push('/tools/database');
     }
 
     // --- Global dialogs ---
@@ -890,6 +900,12 @@
             label: t(tk('dialogs.update.label')),
             desc: t(tk('dialogs.update.desc')),
             run: showVrcxUpdateDialog
+        },
+        {
+            id: 'restore_progress',
+            label: t(tk('dialogs.restore_progress.label')),
+            desc: t(tk('dialogs.restore_progress.desc')),
+            run: showRestoreProgressPreview
         }
     ]);
 </script>

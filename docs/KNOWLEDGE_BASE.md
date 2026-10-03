@@ -459,6 +459,7 @@ vue-i18n + 静态 JSON 文件，支持语言：
 - **概览**：数据库文件信息、数据库版本、各表行数
 - **表数据预览**：选择表后浏览数据
 - **备份 / 恢复**：数据库备份导出、恢复导入（OOBE 数据恢复复用同一套导入逻辑，冲突时采用覆盖 + 新增策略）
+- **恢复进度**：`executeImport` 先建「导入计划」（过滤掉永不导入的行：`cookies`、`sqlite_*`、敏感 configs、full 模式下的 `table_missing`），进度分母 = 清空表数 + 计划行数，因此完成时恰为 100%。`onProgress` 发出 `ImportProgressState`：`percent` 为 0–100 整数，是进度条宽度与文案百分比的唯一来源（两者不可能不一致）；同时携带当前表 `table` / `tableIndex` / `tableCount` 与行计数（`tableRowsDone`/`tableRowsTotal`/`processedRows`/`totalRows`），恢复向导第 4 步在进度条下渲染（`db_import.progress_detail_*`，三语）。界面调试工具「对话框 > 数据库恢复进度」经 `src/views/Tools/restoreProgressPreviewState.js` 通知本页以 `debugProgressPreview` 打开向导模拟进度（不写数据库、不进入重启步骤）。
 
 ---
 

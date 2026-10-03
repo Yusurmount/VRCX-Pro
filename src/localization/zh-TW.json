@@ -1816,6 +1816,10 @@
                             "update": {
                                 "label": "VRCX-Pro 更新對話框",
                                 "desc": "顯示 VRCX-Pro 更新對話框。"
+                            },
+                            "restore_progress": {
+                                "label": "資料庫還原進度",
+                                "desc": "開啟資料庫還原精靈的進度預覽（模擬資料，不寫入資料庫）。"
                             }
                         },
                         "app_state": {
@@ -1967,6 +1971,8 @@
                         "summary_records": "總紀錄數",
                         "reading": "正在讀取備份檔案...",
                         "importing": "正在還原資料... ({progress}%)",
+                        "progress_detail_clearing": "正在清空 {table}（第 {tableIndex}/{tableCount} 張表）",
+                        "progress_detail_importing": "正在匯入 {table}（第 {tableIndex}/{tableCount} 張表）· 本表 {tableRowsDone}/{tableRowsTotal} 筆 · 累計 {processedRows}/{totalRows} 筆",
                         "success": "還原成功完成。\n共還原 {importedCount} 筆紀錄，涉及 {tablesProcessed} 個資料表。",
                         "report_title": "還原結果",
                         "report_overwritten": "覆寫",

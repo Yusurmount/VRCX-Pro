@@ -148,4 +148,43 @@ describe('executeImport restore modes', () => {
         expect(result.report.overwritten).toBe(1);
         expect(result.report.added).toBe(2);
     });
+
+    test('progress ends at exactly 100 and names the table being imported', async () => {
+        const states = [];
+        const result = await executeImport(
+            buildPackage(),
+            { conflictStrategy: 'overwrite', newDataStrategy: 'add', mode: 'full' },
+            (state) => states.push(state)
+        );
+
+        expect(result.success).toBe(true);
+        expect(states.length).toBeGreaterThan(0);
+
+        for (const state of states) {
+            expect(Number.isInteger(state.percent)).toBe(true);
+            expect(state.percent).toBeGreaterThanOrEqual(0);
+            expect(state.percent).toBeLessThanOrEqual(100);
+        }
+        for (let i = 1; i < states.length; i++) {
+            expect(states[i].percent).toBeGreaterThanOrEqual(states[i - 1].percent);
+        }
+
+        // Rows that are never imported (cookies, sqlite_sequence, credential
+        // config rows) are excluded from the denominator, so a finished
+        // import lands on exactly 100 instead of stalling below it.
+        expect(states[states.length - 1].percent).toBe(100);
+
+        const clearing = states.filter((s) => s.phase === 'clearing');
+        expect(clearing.length).toBeGreaterThan(0);
+        expect(clearing[0].table).toBeTruthy();
+        expect(clearing[0].tableCount).toBe(2); // configs + feed_post
+
+        const importing = states.filter((s) => s.phase === 'importing');
+        expect(importing[0].table).toBeTruthy();
+        const last = importing[importing.length - 1];
+        expect(last.tableCount).toBe(2);
+        expect(last.totalRows).toBe(3); // theme config + 2 feed rows
+        expect(last.processedRows).toBe(3);
+        expect(last.tableRowsDone).toBe(last.tableRowsTotal);
+    });
 });
