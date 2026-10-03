@@ -442,7 +442,7 @@ vue-i18n + 静态 JSON 文件，支持语言：
 - **λ-Choquet 合成**：五维先经 κ=6 的 logistic 隶属映射（绝对口径直接透传无界值），再对权重归一化密度做 Sugeno λ-测度的 Choquet 积分。λ>0 相互制约、λ<0 互相替代、λ=0 退化加权平均；λ ∈ [-0.9, 2]，默认 0.5（键 `intimacyLambda`）
 - **权重可调**：五维权重 0–100 可调（键 `intimacyWeights`，旧形状不匹配时回落默认 35/15/20/12/18）；全零权重得 0
 - **好友排除**：完全排除 / 仅隐藏显示（`intimacyExcludedFriends` / `intimacyExcludeMode`），支持一键恢复
-- **评分口径**（键 `intimacyScoreMode`）：百分制按 P90 归一得 0–100；绝对评分按上表固定锚点，**各维与总分均无 1000 上限**，进度条以榜内最高值为满格
+- **评分口径**（键 `intimacyScoreMode`）：百分制按 P90 归一得 0–100；绝对评分按上表固定锚点，**各维与总分均无 1000 上限**，详情维度条以该维的队列最大值为满格（0 为空条），总分进度条以榜内最高值为满格
 - **排行**：`topFriends` 全量展示，`scoreMax` 为榜内最高分
 - **管理函数**：`setWeight` / `resetWeights`（连 λ 一并重置）、`setLambda`、排除管理、`setExcludeMode` / `setScoreMode`
 - 权重、λ、评分口径与排除管理 UI 位于页头设置入口打开的右侧 Sheet 抽屉
