@@ -195,6 +195,14 @@ export function request(endpoint, options) {
                         }
                         $throw(401, t('api.status_code.401'), endpoint);
                     }
+                    // 2FA / 新设备邮件验证码：VRChat 以 401 返回带 requiresTwoFactorAuth
+                    // 的响应体，需交由调用方弹出验证码窗口，而不是直接抛出错误。
+                    if (
+                        endpoint === 'auth/user' &&
+                        Array.isArray(parsed.data.requiresTwoFactorAuth)
+                    ) {
+                        return parsed;
+                    }
                 }
                 $throw(
                     parsed.data.error.status_code || 0,
@@ -242,6 +250,15 @@ export function request(endpoint, options) {
                 if (text) {
                     toast.success(options.customMsg ? options.customMsg : text);
                 }
+                return data;
+            }
+            // 2FA / 新设备邮件验证码：将带有 requiresTwoFactorAuth 的 401 挑战
+            // 原样返回给调用方，由其弹出验证码窗口。
+            if (
+                status === 401 &&
+                endpoint === 'auth/user' &&
+                Array.isArray(data?.requiresTwoFactorAuth)
+            ) {
                 return data;
             }
             if (

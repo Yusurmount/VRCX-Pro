@@ -4,10 +4,54 @@ vi.mock('../../plugins/router.js', () => ({
     initRouter: vi.fn()
 }));
 
+const requestMocks = vi.hoisted(() => ({
+    authStore: {
+        handleAutoLogin: vi.fn(),
+        handleLogoutEvent: vi.fn(),
+        twoFactorAuthDialogVisible: false
+    },
+    modalStore: { alert: vi.fn() },
+    notificationStore: { expireNotification: vi.fn() },
+    updateLoopStore: {
+        applyRateLimitBackoff: vi.fn(),
+        setNextGroupInstanceRefresh: vi.fn()
+    },
+    advancedSettingsStore: { pollMinInterval: 60 },
+    getCurrentUser: vi.fn(),
+    watchState: { isLoggedIn: false, isAuthenticated: false },
+    webApiService: { execute: vi.fn() },
+    toast: { error: vi.fn(), success: vi.fn() }
+}));
+
+vi.mock('../../stores', () => ({
+    useAuthStore: () => requestMocks.authStore,
+    useModalStore: () => requestMocks.modalStore,
+    useNotificationStore: () => requestMocks.notificationStore,
+    useUpdateLoopStore: () => requestMocks.updateLoopStore,
+    useAdvancedSettingsStore: () => requestMocks.advancedSettingsStore
+}));
+
+vi.mock('../../coordinators/userCoordinator', () => ({
+    getCurrentUser: (...args) => requestMocks.getCurrentUser(...args)
+}));
+
+vi.mock('../appConfig.js', () => ({
+    AppDebug: { endpointDomain: 'https://api.vrchat.cloud/api/1' },
+    isApiLogSuppressed: () => true,
+    logWebRequest: vi.fn()
+}));
+
+vi.mock('../watchState', () => ({ watchState: requestMocks.watchState }));
+
+vi.mock('../webapi.js', () => ({ default: requestMocks.webApiService }));
+
+vi.mock('vue-sonner', () => ({ toast: requestMocks.toast }));
+
 import {
     buildRequestInit,
     parseResponse,
     processBulk,
+    request,
     shouldIgnoreError
 } from '../request.js';
 
@@ -301,5 +345,34 @@ describe('processBulk', () => {
 
         expect(fn).toHaveBeenCalledTimes(2);
         expect(done).toHaveBeenCalledWith(true);
+    });
+});
+
+describe('request two-factor challenge on auth/user', () => {
+    beforeEach(() => {
+        requestMocks.watchState.isLoggedIn = false;
+        requestMocks.watchState.isAuthenticated = false;
+        requestMocks.webApiService.execute.mockReset();
+        requestMocks.getCurrentUser.mockReset();
+        requestMocks.toast.error.mockReset();
+    });
+
+    test('resolves with the requiresTwoFactorAuth body instead of throwing', async () => {
+        const body = {
+            error: {
+                message: 'Requires two-factor authentication',
+                status_code: 401
+            },
+            requiresTwoFactorAuth: ['emailOtp']
+        };
+        requestMocks.webApiService.execute.mockResolvedValue({
+            status: 401,
+            data: JSON.stringify(body)
+        });
+
+        const result = await request('auth/user', { method: 'GET' });
+
+        expect(result).toEqual(body);
+        expect(requestMocks.toast.error).not.toHaveBeenCalled();
     });
 });
