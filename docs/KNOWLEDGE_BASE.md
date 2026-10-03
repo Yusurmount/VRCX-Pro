@@ -437,7 +437,7 @@ vue-i18n + 静态 JSON 文件，支持语言：
 
 锚点由真实数据库分布校准（真共位 p90 ≈ 1.1h；旧锚 500h/覆盖率 0.3 在小时级数据上会让接触面垫底、规律性在关系龄 ≤3 周时全员顶格 1000——该两问题为本次重写动机）。规律性用**活跃周数积累**替代覆盖率：新关系天然低分、随周数对数增长不封顶；趋势/主动性用比值锚点，新库首月全员 >1000 是「升温期」的事实读数，数据成熟后回归双向分布。低频虚高由结构封杀：低频者 contact/recency 趋 0、regularity 仅 ~210，λ>0 木桶效应下 trend/activity（默认权重合计 30%）无法补位。
 
-- **数据口径（真共存）**：原始指标来自 `gameLog.getFriendshipMetrics()`，只统计同一实例内的真共存——游戏日志（`gamelog_join_leave`）里出现过的好友会话直接计入；feed 来源（`_feed_gps` / `_feed_online_offline`）必须与我的游戏日志会话在同 `location` 上做时间求交后才计入，随后按好友合并重叠区间。`totalTime` 是**分块求和**（Σ exit−enter，重进房间不重复计），`joinCount` 是 4 分钟链结后的会话数；一并返回 `activeWeeks` / `time30d` / `timePrev30d` / `time90d` / `friendNumber` / `friendInitiated` / `selfInitiated`
+- **数据口径（真共存）**：原始指标来自 `gameLog.getFriendshipMetrics()`，只统计同一实例内的真共存——游戏日志（`gamelog_join_leave`）里出现过的好友会话直接计入；feed 来源（`_feed_gps` / `_feed_online_offline`）必须与我的游戏日志会话在同 `location` 上做时间求交后才计入，随后按好友合并重叠区间。**仅保留当前好友**：不在 `_friend_log_current` 名单内的共位者（路人、已解除好友的 feed 历史）一律过滤。`totalTime` 是**分块求和**（Σ exit−enter，重进房间不重复计），`joinCount` 是 4 分钟链结后的会话数；一并返回 `activeWeeks` / `time30d` / `timePrev30d` / `time90d` / `friendNumber` / `friendInitiated` / `selfInitiated`
 - **接触面**：`δ(s)·v(T)·(0.35+0.65·structure)`，`structure` 为会话深度的 James-Stein 收缩（碎片化数据向队列均值收拢）；`δ` 为 `friend_number` 新鲜感 S 型折价 ∈ [0.6, 1]（编号缺失不罚）。次数与深度共线（N=T/D），深度独立承担结构信号
 - **λ-Choquet 合成**：五维先经 κ=6 的 logistic 隶属映射（绝对口径直接透传无界值），再对权重归一化密度做 Sugeno λ-测度的 Choquet 积分。λ>0 相互制约、λ<0 互相替代、λ=0 退化加权平均；λ ∈ [-0.9, 2]，默认 0.5（键 `intimacyLambda`）
 - **权重可调**：五维权重 0–100 可调（键 `intimacyWeights`，旧形状不匹配时回落默认 35/15/20/12/18）；全零权重得 0

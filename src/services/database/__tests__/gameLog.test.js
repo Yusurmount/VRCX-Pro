@@ -105,12 +105,21 @@ describe('gameLog.getFriendshipMetrics', () => {
     function mockSessionQueries({
         mySessions = [],
         friendSessions = [],
-        friendNumbers = []
+        friendNumbers
     }) {
+        // Default: every co-presence uid counts as a current friend; tests
+        // that exercise the friend filter pass an explicit friendNumbers row.
+        const friendRows =
+            friendNumbers !== undefined
+                ? friendNumbers
+                : [...new Set(friendSessions.map((r) => r[0]))].map((uid) => [
+                      uid,
+                      1
+                  ]);
         mocks.execute.mockImplementation(async (callback, sql) => {
             let rows;
             if (sql.includes('friend_log_current')) {
-                rows = friendNumbers;
+                rows = friendRows;
             } else if (sql.includes('AS src')) {
                 rows = friendSessions;
             } else {
@@ -283,6 +292,21 @@ describe('gameLog.getFriendshipMetrics', () => {
         expect(row.time90d).toBe(row.totalTime);
         // Ends at days 1, 10, 40, 80: four distinct weeks.
         expect(row.activeWeeks).toBe(4);
+    });
+
+    test('drops a co-presence passer-by who is not in the current friend log', async () => {
+        mockSessionQueries({
+            mySessions: [[MY_LOC, '2026-10-01T10:30:00.000Z', 1800000]],
+            friendSessions: [
+                ['usr_f1', 'Friend One', MY_LOC, '2026-10-01T10:15:00.000Z', 1800000, 1],
+                ['usr_stranger', 'Passer-by', MY_LOC, '2026-10-01T10:15:00.000Z', 1800000, 1]
+            ],
+            // Only Friend One is on the current friend list.
+            friendNumbers: [['usr_f1', 3]]
+        });
+
+        const rows = await gameLog.getFriendshipMetrics();
+        expect(rows.map((r) => r.userId)).toEqual(['usr_f1']);
     });
 
     test('returns nothing without a user context', async () => {

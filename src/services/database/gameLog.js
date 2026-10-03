@@ -2094,12 +2094,13 @@ const gameLog = {
      * @returns {Promise<Array<{id: number, created_at: string, location: string, worldId: string, worldName: string, time: number, groupName: string}>>}
      */
     /**
-     * Get aggregated friendship metrics for all friends.
+     * Get aggregated friendship metrics for current friends only.
      * Counts only true co-presence: a friend session is included when it is in
      * my game log (they were in my instance) or when it overlaps one of my own
      * logged sessions in the same location. Feed rows describe where the friend
      * was on their own, so without that clipping they measure how much the
-     * friend plays, not how often we meet.
+     * friend plays, not how often we meet. Users missing from the current
+     * friend log (passers-by, since-unfriended accounts) are dropped.
      * joinCount is the meeting count after 4-minute gap-chaining so a network
      * reconnect does not inflate frequency or flatten session depth.
      * time90d feeds the recency dimension (rolling 90-day co-presence).
@@ -2203,6 +2204,10 @@ const gameLog = {
         const now = Date.now();
         const results = [];
         for (const [userId, friend] of friends) {
+            // Only current friends rank here: game-log rows include every
+            // passer-by who shared an instance, and feed rows keep history
+            // for people since unfriended.
+            if (!friendNumbers.has(userId)) continue;
             const merged = mergeIntervals(friend.intervals);
             if (!merged.length) continue;
             let totalTime = 0;

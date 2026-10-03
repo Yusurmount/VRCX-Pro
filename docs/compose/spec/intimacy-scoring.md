@@ -41,6 +41,11 @@ activity/regularity 测试组按新语义重写：超窗归零、比值方向、
 1000 中性、活跃周独立于 firstSeen）。oxlint + eslint 改动文件 0 问题。
 真实库 Python 复算脚本确认三现象修复（见上）。
 
+**Follow-up：非好友过滤** — 真实库核对发现 40 个共位条目中 30 个不在
+`_friend_log_current` 名单（路人/测试账号/已解好友的 feed 历史）。聚合循环
+增加好友名单过滤（`friendNumbers.has(userId)`），榜单只留当前好友；测试
+mock 默认按共位 uid 自动认好友，新增显式过滤用例（45/45 PASS）。
+
 ### λ-Choquet 五维重写（分支 `feature/intimacy-choquet`）
 
 **What was built** — 评分模型从「四维加权平均」重写为「五维 λ-Choquet」：
