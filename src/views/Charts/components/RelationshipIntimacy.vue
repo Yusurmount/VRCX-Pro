@@ -253,14 +253,23 @@
                 <template v-if="topFriends.length">
                     <div class="rounded-lg border bg-card p-4">
                         <h3 class="mb-3 text-sm font-medium">{{ t('view.charts.intimacy.distribution') }}</h3>
-                        <div class="flex items-end gap-1 h-20">
+                        <div class="flex items-end gap-1 h-24">
                             <div
                                 v-for="(bucket, idx) in scoreDistribution"
                                 :key="idx"
                                 class="flex-1 flex flex-col items-center gap-1">
-                                <div
-                                    class="w-full rounded-t bg-primary/70 transition-all"
-                                    :style="{ height: bucket.percent + '%', minHeight: bucket.count > 0 ? '4px' : '0' }" />
+                                <!-- Definite-height track: a percentage bar only
+                                     resolves against a fixed-height parent,
+                                     otherwise every column collapses to the
+                                     4px floor no matter the headcount. -->
+                                <div class="relative h-20 w-full">
+                                    <div
+                                        class="absolute inset-x-0 bottom-0 rounded-t bg-primary/70 transition-all"
+                                        :style="{
+                                            height: bucket.percent + '%',
+                                            minHeight: bucket.count > 0 ? '4px' : '0'
+                                        }" />
+                                </div>
                                 <span class="text-[10px] whitespace-nowrap text-muted-foreground">{{ bucket.range }}</span>
                             </div>
                         </div>
