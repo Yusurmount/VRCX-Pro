@@ -348,7 +348,7 @@
 </template>
 
 <script setup>
-    import { ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
     import { useI18n } from 'vue-i18n';
     import {
         RefreshCcw,
@@ -436,13 +436,11 @@
         if (scoreMode.value !== 'absolute') {
             return Math.min(100, Math.round((dims[dimKey] / (scoreMax.value || 1)) * 100));
         }
-        const max = Math.max(
-            dims.contact,
-            dims.regularity,
-            dims.recency,
-            dims.trend,
-            dims.activity
-        );
+        // Absolute dimensions are uncapped, so each bar fills against the
+        // cohort maximum for that dimension — not against the friend's own
+        // other dimensions (which made bars incomparable across friends) and
+        // not against a fixed 1000. Zero reads as an empty bar.
+        const max = dimensionMax.value[dimKey] || 0;
         if (max <= 0) return 0;
         return Math.min(100, Math.round((dims[dimKey] / max) * 100));
     }
@@ -487,6 +485,22 @@
             color: '#9a60b4'
         }
     ];
+
+    // Per-dimension cohort maximum (hidden-excluded friends stay out, same
+    // roster as topFriends/scoreMax) — the full-bar reference in absolute
+    // mode, where dimension values are uncapped.
+    const dimensionMax = computed(() => {
+        const max = Object.fromEntries(
+            dimensionList.map((dim) => [dim.key, 0])
+        );
+        for (const friend of topFriends.value) {
+            for (const dim of dimensionList) {
+                const value = friend.dimensions[dim.key];
+                if (value > max[dim.key]) max[dim.key] = value;
+            }
+        }
+        return max;
+    });
 
     watch(
         () => userStore.currentUser?.id,
