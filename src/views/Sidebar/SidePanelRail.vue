@@ -1,5 +1,15 @@
 <template>
     <div class="flex w-12 shrink-0 flex-col items-center gap-1 border-l border-sidebar-border bg-sidebar py-2">
+        <TooltipWrapper side="left" :content="t('side_panel.expand_tooltip')">
+            <Button
+                class="rounded-full"
+                variant="ghost"
+                size="icon-sm"
+                :ariaLabel="t('side_panel.expand_tooltip')"
+                @click="expand">
+                <PanelRightOpen />
+            </Button>
+        </TooltipWrapper>
         <TooltipWrapper side="left" :content="t('side_panel.search_placeholder')">
             <Button
                 class="rounded-full"
@@ -8,16 +18,6 @@
                 :ariaLabel="t('side_panel.search_placeholder')"
                 @click="handleSearch">
                 <Search />
-            </Button>
-        </TooltipWrapper>
-        <TooltipWrapper side="left" :content="t('side_panel.friends')">
-            <Button
-                class="rounded-full"
-                variant="ghost"
-                size="icon-sm"
-                :ariaLabel="t('side_panel.friends')"
-                @click="handleTab('friends')">
-                <Users />
             </Button>
         </TooltipWrapper>
         <TooltipWrapper v-if="hasGroupsTab" side="left" :content="t('side_panel.groups')">
@@ -52,7 +52,7 @@
 <script setup>
     import { computed } from 'vue';
     import { storeToRefs } from 'pinia';
-    import { Bell, Search, Users, UsersRound } from 'lucide-vue-next';
+    import { Bell, PanelRightOpen, Search, UsersRound } from 'lucide-vue-next';
     import { useI18n } from 'vue-i18n';
 
     import { Button } from '@/components/ui/button';

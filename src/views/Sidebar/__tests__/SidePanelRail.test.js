@@ -41,8 +41,8 @@ vi.mock('@/components/ui/tooltip', () => ({
 }));
 vi.mock('lucide-vue-next', () => ({
     Bell: { template: '<i />' },
+    PanelRightOpen: { template: '<i />' },
     Search: { template: '<i />' },
-    Users: { template: '<i />' },
     UsersRound: { template: '<i />' }
 }));
 
@@ -59,16 +59,23 @@ describe('SidePanelRail.vue', () => {
         activeSidePanelTab.value = 'friends';
     });
 
-    it('expands the side panel and switches tab when a tab icon is clicked', async () => {
+    it('expands the side panel when the expand icon is clicked', async () => {
         activeSidePanelTab.value = 'tracked';
         const wrapper = mount(SidePanelRail);
 
         await wrapper
-            .find('[aria-label="side_panel.friends"]')
+            .find('[aria-label="side_panel.expand_tooltip"]')
             .trigger('click');
 
         expect(mocks.setSidePanelCollapsed).toHaveBeenCalledWith(false);
-        expect(activeSidePanelTab.value).toBe('friends');
+        expect(activeSidePanelTab.value).toBe('tracked');
+    });
+
+    it('does not show the friends icon', () => {
+        const wrapper = mount(SidePanelRail);
+        expect(wrapper.find('[aria-label="side_panel.friends"]').exists()).toBe(
+            false
+        );
     });
 
     it('opens quick search without expanding when the search icon is clicked', async () => {

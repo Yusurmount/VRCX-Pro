@@ -193,6 +193,7 @@
         "search_result_more": "Search More:",
         "refresh_tooltip": "Refresh friends",
         "collapse_tooltip": "Collapse side panel",
+        "expand_tooltip": "Expand side panel",
         "groups": "Groups",
         "friends": "Friends",
         "me": "ME",
