@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     setBool: vi.fn(),
     closeWhatsNewDialog: vi.fn(),
     openChangeLogDialogOnly: vi.fn(),
+    showLatestWhatsNewDialog: vi.fn(),
     whatsNewDialog: null
 }));
 
@@ -35,7 +36,8 @@ vi.mock('../../../stores', async () => {
         useVRCXUpdaterStore: () => ({
             whatsNewDialog,
             closeWhatsNewDialog: (...a) => mocks.closeWhatsNewDialog(...a),
-            openChangeLogDialogOnly: (...a) => mocks.openChangeLogDialogOnly(...a)
+            openChangeLogDialogOnly: (...a) => mocks.openChangeLogDialogOnly(...a),
+            showLatestWhatsNewDialog: (...a) => mocks.showLatestWhatsNewDialog(...a)
         })
     };
 });
@@ -99,6 +101,25 @@ describe('WelcomeDialog.vue', () => {
         vi.useFakeTimers();
         welcomeDialogShowRequest.value = 0;
         mocks.whatsNewDialog.value = { visible: false, titleKey: '', subtitleKey: '', items: [] };
+        // Mimic the real store: filling publishes the latest release content.
+        mocks.showLatestWhatsNewDialog.mockImplementation(async () => {
+            mocks.whatsNewDialog.value = {
+                visible: true,
+                titleKey: 'onboarding.whatsnew.releases.2026_05_03.title',
+                subtitleKey: 'onboarding.whatsnew.releases.2026_05_03.subtitle',
+                items: [
+                    {
+                        key: 'chart_analysis',
+                        icon: 'chart-no-axes-combined',
+                        titleKey:
+                            'onboarding.whatsnew.releases.2026_05_03.items.chart_analysis.title',
+                        descriptionKey:
+                            'onboarding.whatsnew.releases.2026_05_03.items.chart_analysis.description'
+                    }
+                ]
+            };
+            return true;
+        });
         currentUser.value = {
             id: 'usr_123',
             displayName: 'TestUser',
@@ -209,6 +230,21 @@ describe('WelcomeDialog.vue', () => {
             text.indexOf(featureTitle)
         );
         expect(text).toContain(en.onboarding.welcome.cta);
+        expect(mocks.showLatestWhatsNewDialog).not.toHaveBeenCalled();
+    });
+
+    test('fills the latest release content when opening without an announcement', async () => {
+        mocks.getBool.mockResolvedValue(false);
+
+        const wrapper = mountDialog();
+        await passOpenDelay(wrapper);
+
+        expect(mocks.showLatestWhatsNewDialog).toHaveBeenCalled();
+        const featureTitle =
+            en.onboarding.whatsnew.releases['2026_05_03'].items.chart_analysis.title;
+        expect(wrapper.text()).toContain(en.onboarding.welcome.title);
+        expect(wrapper.text()).toContain(featureTitle);
+        expect(wrapper.text()).toContain(en.onboarding.welcome.cta);
     });
 
     test('stays closed when the welcome has been seen even with release content', async () => {
