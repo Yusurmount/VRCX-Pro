@@ -107,15 +107,19 @@ describe('gameLog.getFriendshipMetrics', () => {
         friendSessions = [],
         friendNumbers
     }) {
-        // Default: every co-presence uid counts as a current friend; tests
-        // that exercise the friend filter pass an explicit friendNumbers row.
+        // Default: every co-presence uid counts as a current friend, keyed
+        // [user_id, display_name, friend_number] like the production query.
         const friendRows =
             friendNumbers !== undefined
                 ? friendNumbers
-                : [...new Set(friendSessions.map((r) => r[0]))].map((uid) => [
-                      uid,
-                      1
-                  ]);
+                : [
+                      ...new Map(
+                          friendSessions.map((r) => [
+                              r[0],
+                              [r[0], r[1], 1]
+                          ])
+                      ).values()
+                  ];
         mocks.execute.mockImplementation(async (callback, sql) => {
             let rows;
             if (sql.includes('friend_log_current')) {
@@ -144,7 +148,11 @@ describe('gameLog.getFriendshipMetrics', () => {
             ]
         });
 
-        await expect(gameLog.getFriendshipMetrics()).resolves.toEqual([]);
+        // The session is dropped, but the roster friend stays listed at zero.
+        const rows = await gameLog.getFriendshipMetrics();
+        expect(rows).toHaveLength(1);
+        expect(rows[0].userId).toBe('usr_f1');
+        expect(rows[0].totalTime).toBe(0);
     });
 
     test('clips a feed session to the time I was actually there', async () => {
@@ -277,7 +285,7 @@ describe('gameLog.getFriendshipMetrics', () => {
                 m.theirs[1],
                 2
             ]),
-            friendNumbers: [['usr_f6', 7]]
+            friendNumbers: [['usr_f6', 'Friend Six', 7]]
         });
 
         const [row] = await gameLog.getFriendshipMetrics();
@@ -302,11 +310,37 @@ describe('gameLog.getFriendshipMetrics', () => {
                 ['usr_stranger', 'Passer-by', MY_LOC, '2026-10-01T10:15:00.000Z', 1800000, 1]
             ],
             // Only Friend One is on the current friend list.
-            friendNumbers: [['usr_f1', 3]]
+            friendNumbers: [['usr_f1', 'Friend One', 3]]
         });
 
         const rows = await gameLog.getFriendshipMetrics();
         expect(rows.map((r) => r.userId)).toEqual(['usr_f1']);
+    });
+
+    test('lists a roster friend with no co-presence as a zero row', async () => {
+        mockSessionQueries({
+            mySessions: [[MY_LOC, '2026-10-01T10:30:00.000Z', 1800000]],
+            friendSessions: [
+                ['usr_f1', 'Friend One', MY_LOC, '2026-10-01T10:15:00.000Z', 1800000, 2]
+            ],
+            friendNumbers: [
+                ['usr_f1', 'Friend One', 3],
+                ['usr_ghost', 'Ghost Friend', 9]
+            ]
+        });
+
+        const rows = await gameLog.getFriendshipMetrics();
+        expect(rows).toHaveLength(2);
+        const ghost = rows.find((r) => r.userId === 'usr_ghost');
+        expect(ghost).toBeDefined();
+        expect(ghost.displayName).toBe('Ghost Friend');
+        expect(ghost.friendNumber).toBe(9);
+        expect(ghost.totalTime).toBe(0);
+        expect(ghost.joinCount).toBe(0);
+        expect(ghost.firstSeen).toBeNull();
+        expect(ghost.lastSeen).toBeNull();
+        // Real data still sorts ahead of the zero row.
+        expect(rows[0].userId).toBe('usr_f1');
     });
 
     test('returns nothing without a user context', async () => {

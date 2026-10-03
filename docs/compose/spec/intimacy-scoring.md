@@ -41,10 +41,14 @@ activity/regularity 测试组按新语义重写：超窗归零、比值方向、
 1000 中性、活跃周独立于 firstSeen）。oxlint + eslint 改动文件 0 问题。
 真实库 Python 复算脚本确认三现象修复（见上）。
 
-**Follow-up：非好友过滤** — 真实库核对发现 40 个共位条目中 30 个不在
-`_friend_log_current` 名单（路人/测试账号/已解好友的 feed 历史）。聚合循环
-增加好友名单过滤（`friendNumbers.has(userId)`），榜单只留当前好友；测试
-mock 默认按共位 uid 自动认好友，新增显式过滤用例（45/45 PASS）。
+**Follow-up：非好友过滤 + 全名单基底** — 真实库核对发现 40 个共位条目中
+30 个不在 `_friend_log_current` 名单（路人/测试账号/已解好友的 feed 历史，
+名单本身与 `mutual_graph_friends` 一致可信）。第一步：聚合循环按名单过滤
+（`friendNumbers.has(userId)`）。用户随后反馈列表仅剩 10 人——名单内 50 个
+真好友因无真共位数据而隐形。第二步：改为**名单为基底**——`roster` 查询带
+`display_name`，聚合后为未出现的名单好友补全零指标行（totalTime=0、
+firstSeen=null），榜单覆盖全部当前好友、无数据者排榜尾；mock 三列
+`[user_id, display_name, friend_number]`，新增零行用例（46/46 PASS）。
 
 ### λ-Choquet 五维重写（分支 `feature/intimacy-choquet`）
 

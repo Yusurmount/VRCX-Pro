@@ -2094,13 +2094,15 @@ const gameLog = {
      * @returns {Promise<Array<{id: number, created_at: string, location: string, worldId: string, worldName: string, time: number, groupName: string}>>}
      */
     /**
-     * Get aggregated friendship metrics for current friends only.
+     * Get aggregated friendship metrics for every current friend.
      * Counts only true co-presence: a friend session is included when it is in
      * my game log (they were in my instance) or when it overlaps one of my own
      * logged sessions in the same location. Feed rows describe where the friend
      * was on their own, so without that clipping they measure how much the
      * friend plays, not how often we meet. Users missing from the current
-     * friend log (passers-by, since-unfriended accounts) are dropped.
+     * friend log (passers-by, since-unfriended accounts) are dropped; roster
+     * friends with no co-presence yet return a zero-metric row instead of
+     * vanishing from the list.
      * joinCount is the meeting count after 4-minute gap-chaining so a network
      * reconnect does not inflate frequency or flatten session depth.
      * time90d feeds the recency dimension (rolling 90-day co-presence).
@@ -2125,12 +2127,17 @@ const gameLog = {
             { '@currentUserId': dbVars.userId }
         );
 
-        const friendNumbers = new Map();
+        const roster = new Map();
         await sqliteService.execute(
             (row) => {
-                if (row[0]) friendNumbers.set(row[0], Number(row[1]) || 0);
+                if (row[0]) {
+                    roster.set(row[0], {
+                        displayName: row[1] || row[0],
+                        friendNumber: Number(row[2]) || 0
+                    });
+                }
             },
-            `SELECT user_id, friend_number
+            `SELECT user_id, display_name, friend_number
              FROM ${dbVars.userPrefix}_friend_log_current`
         );
 
@@ -2203,13 +2210,16 @@ const gameLog = {
 
         const now = Date.now();
         const results = [];
+        const seen = new Set();
         for (const [userId, friend] of friends) {
             // Only current friends rank here: game-log rows include every
             // passer-by who shared an instance, and feed rows keep history
             // for people since unfriended.
-            if (!friendNumbers.has(userId)) continue;
+            const entry = roster.get(userId);
+            if (!entry) continue;
             const merged = mergeIntervals(friend.intervals);
             if (!merged.length) continue;
+            seen.add(userId);
             let totalTime = 0;
             let time30d = 0;
             let timePrev30d = 0;
@@ -2246,9 +2256,30 @@ const gameLog = {
                 time30d,
                 timePrev30d,
                 time90d,
-                friendNumber: friendNumbers.get(userId) || 0,
+                friendNumber: entry.friendNumber,
                 friendInitiated: friend.friendInitiated,
                 selfInitiated: friend.selfInitiated
+            });
+        }
+        // Every current friend stays on the roster: friends with no true
+        // co-presence yet rank at zero instead of vanishing from the list.
+        for (const [userId, entry] of roster) {
+            if (seen.has(userId)) continue;
+            results.push({
+                userId,
+                displayName: entry.displayName,
+                totalTime: 0,
+                joinCount: 0,
+                firstSeen: null,
+                lastSeen: null,
+                distinctDays: 0,
+                activeWeeks: 0,
+                time30d: 0,
+                timePrev30d: 0,
+                time90d: 0,
+                friendNumber: entry.friendNumber,
+                friendInitiated: 0,
+                selfInitiated: 0
             });
         }
         results.sort((a, b) => b.totalTime - a.totalTime);
