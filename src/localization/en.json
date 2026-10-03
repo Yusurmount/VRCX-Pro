@@ -869,7 +869,7 @@
                         "contact": "Total time in the same room (blocks summed, reconnects never double-counted), log-ratioed against the 1-hour standard line with no ceiling, then trimmed by freshness and session depth: deep hangs beat fragment drop-bys.",
                         "regularity": "Accumulated active weeks — every routine week keeps counting, half a year = the 1000-point line and it grows logarithmically after that. Brand-new relationships start low instead of everyone pinning at full marks.",
                         "recency": "Rolling 90-day co-presence log-ratioed against the 1-hour line, then modulated by time since you last met — past the window a dormant friend reads zero instead of coasting on old history.",
-                        "trend": "This 30 days versus the previous 30: flat = 1000, warming climbs above, cooling drops below — no ceiling and no floor squeeze.",
+                        "trend": "Signed ratio of the last 30 days versus the previous 30: 0 = flat (the bar midpoint), positive = warming, negative = cooling, saturated at ±100 — a doubling mirrors a halving exactly.",
                         "activity": "Initiation ratio (them+1)/(you+1): balanced = 1000, them always seeking you climbs above, one-way chasing drops below; neutral without direction data."
                     }
                 },

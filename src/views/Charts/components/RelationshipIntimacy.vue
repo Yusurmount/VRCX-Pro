@@ -327,7 +327,7 @@
                                                     }" />
                                             </div>
                                             <span class="text-xs tabular-nums text-right">
-                                                {{ formatDimension(getScoreForFriend(friend.userId).dimensions[dim.key]) }}
+                                                {{ formatDimension(getScoreForFriend(friend.userId).dimensions[dim.key], dim.key) }}
                                             </span>
                                         </div>
                                     </div>
@@ -433,6 +433,11 @@
         const entry = getScoreForFriend(userId);
         if (!entry) return 0;
         const dims = entry.dimensions;
+        // Signed trend: 0 sits at the bar's midpoint, ±100 at its ends.
+        if (dimKey === 'trend') {
+            const theta = Math.max(-1, Math.min(1, dims.trend / 100));
+            return Math.round(50 + 50 * theta);
+        }
         if (scoreMode.value !== 'absolute') {
             return Math.min(100, Math.round((dims[dimKey] / (scoreMax.value || 1)) * 100));
         }
@@ -449,7 +454,14 @@
         return scoreMode.value === 'absolute' ? value.toFixed(1) : String(value);
     }
 
-    function formatDimension(value) {
+    function formatDimension(value, dimKey) {
+        if (dimKey === 'trend') {
+            const text =
+                scoreMode.value === 'absolute'
+                    ? value.toFixed(1)
+                    : String(Math.round(value));
+            return value > 0 ? `+${text}` : text;
+        }
         return scoreMode.value === 'absolute' ? value.toFixed(1) : `${value}%`;
     }
 

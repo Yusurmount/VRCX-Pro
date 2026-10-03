@@ -58,8 +58,11 @@ const FRESHNESS_K = 6;
 
 // Trend windows compare this 30 days against the previous one as a ratio;
 // the epsilon swamps sub-half-hour noise so a brand-new database does not
-// explode the ratio when the prior window is empty.
+// explode the ratio when the prior window is empty. The signed display value
+// is tanh(ln(ratio)/tau): 0 = flat, positive = warming, negative = cooling,
+// saturating at ±1 so the bar's midpoint is zero and its ends are ±100%.
 const TREND_EPS_HOURS = 0.5;
+const TREND_TAU = 1.2;
 
 // Regularity counts accumulated active weeks — an unbounded physical
 // quantity. The old coverage/0.3 formula pinned everyone at 1000 whenever
@@ -180,6 +183,13 @@ function trendRatio(metric) {
     const recent = Math.max(0, metric.time30d || 0) / MS_PER_HOUR;
     const prior = Math.max(0, metric.timePrev30d || 0) / MS_PER_HOUR;
     return (recent + TREND_EPS_HOURS) / (prior + TREND_EPS_HOURS);
+}
+
+// Signed trend: ln(ratio) is perfectly antisymmetric (doubling = −halving),
+// tanh squashes it to (−1, 1) so |value| saturates at the bar's ends. The
+// mid value 0.5 (from 0.5 + 0.5·theta) feeds the integral as "flat".
+function trendTheta(metric) {
+    return Math.tanh(Math.log(trendRatio(metric)) / TREND_TAU);
 }
 
 // Laplace-smoothed initiation ratio: 1 = balanced (1000 pts), >1 they come
@@ -371,12 +381,13 @@ export function useRelationshipScoring() {
 
         // Absolute mode anchors every physical quantity at its fixed
         // standard line (log1p ratio, uncapped). Percent mode maps each
-        // quantity to its top percentile rank inside this cohort.
+        // quantity to its top percentile rank inside this cohort. Trend is
+        // exempt: it is already a self-scaled signed value (tanh of the
+        // log-ratio), so neither an anchor nor a cohort rank applies.
         const contactRaw = scoredMetrics.map(contactHoursOf);
         const depthRaw = scoredMetrics.map(depthHoursOf);
         const weeksRaw = scoredMetrics.map(activeWeeksOf);
         const recencyRaw = scoredMetrics.map(recencyHoursOf);
-        const trendRaw = scoredMetrics.map(trendRatio);
         const activityRaw = scoredMetrics.map(activityRatio);
 
         const refs = absolute
@@ -385,7 +396,6 @@ export function useRelationshipScoring() {
                   depth: Math.log1p(ABSOLUTE_ANCHORS.depthHours),
                   regularity: Math.log1p(ABSOLUTE_ANCHORS.activeWeeks),
                   recency: Math.log1p(ABSOLUTE_ANCHORS.recencyHours),
-                  trend: Math.log1p(RATIO_ANCHOR),
                   activity: Math.log1p(RATIO_ANCHOR)
               }
             : null;
@@ -399,7 +409,6 @@ export function useRelationshipScoring() {
                   depth: topPercentileRanks(depthRaw),
                   regularity: topPercentileRanks(weeksRaw),
                   recency: topPercentileRanks(recencyRaw),
-                  trend: topPercentileRanks(trendRaw),
                   activity: topPercentileRanks(activityRaw)
               };
 
@@ -476,9 +485,7 @@ export function useRelationshipScoring() {
                     (absolute
                         ? logRatio(recencyRaw[idx], refs.recency)
                         : ranks.recency[idx]) * recencyModulation(metric, now),
-                trend: absolute
-                    ? logRatio(trendRaw[idx], refs.trend)
-                    : ranks.trend[idx],
+                trend: trendTheta(metric),
                 activity: absolute
                     ? logRatio(activityRaw[idx], refs.activity)
                     : ranks.activity[idx]
@@ -487,12 +494,27 @@ export function useRelationshipScoring() {
             // Percent scale feeds the integral soft memberships; the absolute
             // scale passes the log-ratio scores through so they stay
             // uncapped — a dimension can read past its 1000-point anchor.
-            const m = CRITERIA.map((key) =>
-                absolute ? z[key] : membership(z[key])
-            );
+            // Trend is the exception on both sides: it lives in (−1, 1) and
+            // enters the integral shifted to [0, 1] with 0.5 = flat, so a
+            // cooling friend pulls the composite down instead of reading as
+            // a positive anchor score.
+            const m = CRITERIA.map((key) => {
+                if (key === 'trend') {
+                    const shifted = 0.5 + 0.5 * z.trend;
+                    return absolute ? shifted : membership(shifted);
+                }
+                return absolute ? z[key] : membership(z[key]);
+            });
             const integral = choquetIntegral(m, densities, lambda.value);
             const dims = {};
             for (const key of CRITERIA) {
+                if (key === 'trend') {
+                    // Signed display: ±100 max, 0 = flat (bar midpoint).
+                    dims.trend = absolute
+                        ? Math.round(z.trend * 1000) / 10
+                        : Math.round(z.trend * 100);
+                    continue;
+                }
                 dims[key] = absolute
                     ? Math.round(z[key] * scale * 10) / 10
                     : Math.round(clamp01(z[key]) * scale);

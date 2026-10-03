@@ -385,7 +385,7 @@ describe('useRelationshipScoring recency and regularity', () => {
 describe('useRelationshipScoring trend and activity', () => {
     const daysAgo = (days) => new Date(Date.now() - days * DAY).toISOString();
 
-    it('ranks a doubling month above flat above a halving one', async () => {
+    it('shows warming as positive, cooling as negative, flat as zero', async () => {
         const scoring = await loadWith([
             metric({
                 userId: 'rising',
@@ -409,13 +409,18 @@ describe('useRelationshipScoring trend and activity', () => {
         const rising = scoring.friendScores.value.get('rising').dimensions.trend;
         const flat = scoring.friendScores.value.get('flat').dimensions.trend;
         const falling = scoring.friendScores.value.get('falling').dimensions.trend;
-        expect(rising).toBeGreaterThan(flat);
-        expect(flat).toBeGreaterThan(falling);
-        expect(rising).toBeGreaterThanOrEqual(95);
-        expect(falling).toBeLessThan(50);
+        // Signed scale: 0 = flat (bar midpoint), ±100 at the ends.
+        expect(flat).toBe(0);
+        expect(rising).toBeGreaterThan(0);
+        expect(falling).toBeLessThan(0);
+        expect(rising).toBeGreaterThanOrEqual(40);
+        expect(falling).toBeLessThanOrEqual(-40);
+        // ln(ratio) is antisymmetric, so doubling and halving mirror exactly.
+        expect(Math.abs(rising + falling)).toBeLessThanOrEqual(1);
+        expect(Math.abs(rising)).toBeLessThanOrEqual(100);
     });
 
-    it('reads a prior-window-only friend as cooling on the absolute scale', async () => {
+    it('reads a prior-window-only friend as strongly negative on absolute', async () => {
         const scoring = await loadWith(
             [
                 metric({
@@ -435,9 +440,11 @@ describe('useRelationshipScoring trend and activity', () => {
         );
         const dormant = scoring.friendScores.value.get('dormant').dimensions.trend;
         const steady = scoring.friendScores.value.get('steady').dimensions.trend;
-        // Flat = 1000 exactly; a collapsed window reads well below it.
-        expect(steady).toBeCloseTo(1000, -1);
-        expect(dormant).toBeLessThan(100);
+        // Flat sits exactly at 0 (one decimal on the absolute scale); a
+        // collapsed window saturates toward −100.
+        expect(steady).toBe(0);
+        expect(dormant).toBeLessThan(-90);
+        expect(dormant).toBeGreaterThanOrEqual(-100);
     });
 
     it('reads initiative direction with a neutral 1000 when balanced or absent', async () => {

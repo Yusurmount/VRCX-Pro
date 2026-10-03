@@ -41,6 +41,15 @@ activity/regularity 测试组按新语义重写：超窗归零、比值方向、
 1000 中性、活跃周独立于 firstSeen）。oxlint + eslint 改动文件 0 问题。
 真实库 Python 复算脚本确认三现象修复（见上）。
 
+**Follow-up：趋势带符号显示** — trend 改为唯一带符号维度：内部值
+θ = `tanh(ln(ratio)/1.2)` ∈ (−1,1)（ln 比值天然反对称，翻倍与减半镜像），
+展示 ±100（percent 整数、absolute 一位小数、正数带 `+`），进度条
+`width = 50% + 50%·θ`（0=中点、|θ|=1 到端点）。两口径共用 θ——趋势自量纲，
+不再走锚点/百分位秩；合成时以 0.5+0.5θ 平移进 [0,1]（percent 再过
+logistic）入 Choquet，降温者拉低总分而非读成正锚点分。trend 维度条
+`dimensionPercent`/`formatDimension` 走专属分支；trend explain 三语同步
+（49/49 PASS）。
+
 **Follow-up：非好友过滤 + 全名单基底** — 真实库核对发现 40 个共位条目中
 30 个不在 `_friend_log_current` 名单（路人/测试账号/已解好友的 feed 历史，
 名单本身与 `mutual_graph_friends` 一致可信）。第一步：聚合循环按名单过滤
