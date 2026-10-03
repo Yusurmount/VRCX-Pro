@@ -309,7 +309,7 @@ export function request(endpoint, options) {
             $throw(status, data, endpoint);
         });
     if (init.method === 'GET') {
-        req.finally(() => {
+        req.catch(() => {}).finally(() => {
             pendingGetRequests.delete(init.url);
         });
         pendingGetRequests.set(init.url, {

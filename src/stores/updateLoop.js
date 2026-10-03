@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { watch } from 'vue';
+import { reactive, toRefs, watch } from 'vue';
 
 import { database } from '../services/database';
 import { groupRequest } from '../api';
@@ -32,7 +32,7 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
     const discordPresenceSettingsStore = useDiscordPresenceSettingsStore();
     const vrcxUpdaterStore = useVRCXUpdaterStore();
     const vrStore = useVrStore();
-    const state = {
+    const state = reactive({
         nextCurrentUserRefresh: 300,
         nextFriendsRefresh: 3600,
         nextGroupInstanceRefresh: 0,
@@ -44,7 +44,7 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
         nextGetLogCheck: 0,
         nextGameRunningCheck: 0,
         nextDatabaseOptimize: 3600
-    };
+    });
 
     watch(
         () => watchState.isLoggedIn,
@@ -55,14 +55,6 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
         },
         { flush: 'sync' }
     );
-
-    const nextGroupInstanceRefresh = state.nextGroupInstanceRefresh;
-
-    const nextCurrentUserRefresh = state.nextCurrentUserRefresh;
-
-    const nextDiscordUpdate = state.nextDiscordUpdate;
-
-    const ipcTimeout = state.ipcTimeout;
 
     /**
      *
@@ -205,12 +197,7 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
     }
 
     return {
-        // state,
-
-        nextGroupInstanceRefresh,
-        nextCurrentUserRefresh,
-        nextDiscordUpdate,
-        ipcTimeout,
+        ...toRefs(state),
         updateLoop,
         setIpcTimeout,
         setNextCurrentUserRefresh,

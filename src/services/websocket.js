@@ -120,6 +120,7 @@ function connectWebSocket(token) {
     const userStore = useUserStore();
     const notificationStore = useNotificationStore();
     const friendStore = useFriendStore();
+    const notificationRulesStore = useNotificationRulesStore();
     if (webSocket !== null) {
         return;
     }
