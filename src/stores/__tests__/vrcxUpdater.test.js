@@ -380,6 +380,10 @@ describe('useVRCXUpdaterStore.setAutoUpdateVRCX', () => {
         };
         store.VRCXUpdateDialog.releases = [release];
         store.VRCXUpdateDialog.release = release.tag_name;
+        globalThis.webApiService.execute.mockResolvedValue({
+            status: 200,
+            data: JSON.stringify([release])
+        });
         globalThis.AppApi.DownloadUpdate = vi.fn().mockResolvedValue(true);
         globalThis.AppApi.GetUpdateStatus = vi.fn().mockResolvedValue({
             state: 'complete',
@@ -395,15 +399,29 @@ describe('useVRCXUpdaterStore.setAutoUpdateVRCX', () => {
         );
 
         await store.setUpdateRoute('mirror');
+        expect(mocks.configRepository.setString).toHaveBeenCalledWith(
+            'VRCX_updateRoute',
+            'mirror'
+        );
+        // Switching routes re-runs the check through the chosen route.
+        expect(globalThis.webApiService.execute).toHaveBeenCalledWith(
+            expect.objectContaining({
+                url: 'https://gh-proxy.org/https://api.github.com/repos/Yusurmount/VRCX-Pro/releases'
+            })
+        );
+
         await store.downloadSelectedVRCXUpdate();
         expect(globalThis.AppApi.DownloadUpdate).toHaveBeenLastCalledWith(
             `https://gh-proxy.org/${release.assets[0].browser_download_url}`,
             'abcdef',
             1234
         );
-        expect(mocks.configRepository.setString).toHaveBeenCalledWith(
-            'VRCX_updateRoute',
-            'mirror'
+
+        await store.setUpdateRoute('official');
+        expect(globalThis.webApiService.execute).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                url: 'https://api.github.com/repos/Yusurmount/VRCX-Pro/releases'
+            })
         );
     });
 

@@ -186,6 +186,9 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         }
         downloadRoute.value = value;
         await configRepository.setString('VRCX_updateRoute', value);
+        // Re-run the check so the release list comes from the chosen route
+        // (official api.github.com is unreachable in some regions).
+        await checkForVRCXUpdate();
     }
 
     async function setAcceptBeta(value) {
@@ -206,6 +209,7 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
             const parsedUrl = new URL(url);
             const supportedHosts = [
                 'github.com',
+                'api.github.com',
                 'raw.githubusercontent.com',
                 'objects.githubusercontent.com',
                 'release-assets.githubusercontent.com'
@@ -400,7 +404,7 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
 
     async function loadBranchVersions() {
         const D = VRCXUpdateDialog.value;
-        const url = branches[branch.value].urlReleases;
+        const url = getRoutedUpdateUrl(branches[branch.value].urlReleases);
         checkingForVRCXUpdate.value = true;
         updateError.value = '';
         let response;

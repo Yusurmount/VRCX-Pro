@@ -175,6 +175,28 @@ describe('VRCXUpdateDialog.vue', () => {
         );
     });
 
+    test('offers the route selector beside the title in every state', async () => {
+        mocks.state.VRCXUpdateDialog.value.release = 'v3.3.0';
+        const wrapper = mountComponent();
+        const routeTrigger = wrapper.find('[data-testid="route-trigger"]');
+
+        expect(routeTrigger.exists()).toBe(true);
+        expect(routeTrigger.attributes('disabled')).toBeUndefined();
+        expect(routeTrigger.text()).toContain(
+            'dialog.vrcx_updater.route_official'
+        );
+        // The selector sits in the header row next to the dialog title.
+        expect(routeTrigger.element.closest('.flex').textContent).toContain(
+            'dialog.vrcx_updater.header'
+        );
+
+        const routeOptions = wrapper.find('[data-testid="route-options"]');
+        await routeOptions
+            .findAll('[data-testid="check-item"]')[1]
+            .trigger('click');
+        expect(mocks.actions.setUpdateRoute).toHaveBeenCalledWith('mirror');
+    });
+
     test('offers beta opt-in and update notify toggles in the header menu', async () => {
         const wrapper = mountComponent();
         const betaItem = wrapper.find('[data-testid="accept-beta-item"]');

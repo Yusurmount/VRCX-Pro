@@ -2,44 +2,67 @@
     <Dialog v-model:open="VRCXUpdateDialog.visible">
         <DialogContent class="gap-0 overflow-hidden p-0 shadow-2xl sm:max-w-xl">
             <DialogHeader class="px-6 pt-6 text-left">
-                <DialogTitle class="text-xl tracking-tight">
-                    {{ t('dialog.vrcx_updater.header') }}
-                </DialogTitle>
+                <div class="flex items-center gap-2 pr-24">
+                    <DialogTitle class="text-xl tracking-tight">
+                        {{ t('dialog.vrcx_updater.header') }}
+                    </DialogTitle>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                            <Button
+                                data-testid="route-trigger"
+                                variant="ghost"
+                                size="sm"
+                                class="gap-1.5 text-muted-foreground"
+                                :aria-label="t('dialog.vrcx_updater.route')">
+                                {{ routeLabel }}
+                                <ChevronDown class="size-3.5" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent data-testid="route-options" align="start">
+                            <DropdownMenuCheckboxItem
+                                :model-value="downloadRoute === 'official'"
+                                @select="setUpdateRoute('official')">
+                                {{ t('dialog.vrcx_updater.route_official') }}
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem
+                                :model-value="downloadRoute === 'mirror'"
+                                @select="setUpdateRoute('mirror')">
+                                {{ t('dialog.vrcx_updater.route_mirror') }}
+                            </DropdownMenuCheckboxItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </DialogHeader>
 
-            <div class="absolute top-2 right-10 z-10">
-                <DropdownMenu>
-                    <DropdownMenuTrigger as-child>
-                        <Button
-                            data-testid="update-menu-trigger"
-                            variant="ghost"
-                            size="icon-sm"
-                            :aria-label="t('dialog.vrcx_updater.more_options')"
-                            class="text-muted-foreground opacity-70 transition-opacity hover:opacity-100">
-                            <Ellipsis />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent data-testid="update-menu-options" align="end">
-                        <DropdownMenuCheckboxItem
-                            data-testid="accept-beta-item"
-                            :model-value="acceptBeta"
-                            @select="setAcceptBeta(!acceptBeta)">
-                            {{ t('dialog.vrcx_updater.accept_beta') }}
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem
-                            data-testid="notify-update-item"
-                            :model-value="notifyUpdate"
-                            @select="toggleNotifyUpdate">
-                            {{ t('dialog.vrcx_updater.notify_update') }}
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem data-testid="change-version-item" @click="openReleases">
-                            <ExternalLink class="size-4" />
-                            {{ t('dialog.vrcx_updater.change_version') }}
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
+            <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                    <button
+                        data-testid="update-menu-trigger"
+                        :aria-label="t('dialog.vrcx_updater.more_options')"
+                        class="absolute top-4 right-10 z-10 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-ring focus:ring-offset-background focus:ring-2 focus:ring-offset-2 focus:outline-hidden data-[state=open]:bg-accent data-[state=open]:text-muted-foreground cursor-pointer [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
+                        <Ellipsis />
+                    </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent data-testid="update-menu-options" align="end">
+                    <DropdownMenuCheckboxItem
+                        data-testid="accept-beta-item"
+                        :model-value="acceptBeta"
+                        @select="setAcceptBeta(!acceptBeta)">
+                        {{ t('dialog.vrcx_updater.accept_beta') }}
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                        data-testid="notify-update-item"
+                        :model-value="notifyUpdate"
+                        @select="toggleNotifyUpdate">
+                        {{ t('dialog.vrcx_updater.notify_update') }}
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem data-testid="change-version-item" @click="openReleases">
+                        <ExternalLink class="size-4" />
+                        {{ t('dialog.vrcx_updater.change_version') }}
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
             <div class="px-6 pb-6">
                 <section
                     :data-testid="updateError ? 'update-error' : null"
@@ -107,48 +130,19 @@
                     <X class="size-4" />
                     {{ t('dialog.vrcx_updater.cancel') }}
                 </Button>
-                <div v-else class="relative flex w-full items-center justify-center">
-                    <div class="flex items-center gap-2">
-                        <Button
-                            v-if="showDownload"
-                            class="min-w-44 sm:min-w-56"
-                            :disabled="checkingForVRCXUpdate"
-                            @click="downloadSelectedVRCXUpdate">
-                            <CloudDownload class="size-4" />
-                            {{ t('dialog.vrcx_updater.download') }}
-                        </Button>
-                        <Button v-if="showInstall" class="min-w-44 sm:min-w-56" @click="restartVRCX(true)">
-                            <PackageCheck class="size-4" />
-                            {{ t('dialog.vrcx_updater.install') }}
-                        </Button>
-                    </div>
-                    <div v-if="showDownload" class="absolute right-0">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger as-child>
-                                <Button
-                                    data-testid="route-trigger"
-                                    variant="ghost"
-                                    size="sm"
-                                    class="gap-1.5 text-muted-foreground"
-                                    :disabled="checkingForVRCXUpdate">
-                                    {{ routeLabel }}
-                                    <ChevronDown class="size-3.5" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent data-testid="route-options" align="end">
-                                <DropdownMenuCheckboxItem
-                                    :model-value="downloadRoute === 'official'"
-                                    @select="setUpdateRoute('official')">
-                                    {{ t('dialog.vrcx_updater.route_official') }}
-                                </DropdownMenuCheckboxItem>
-                                <DropdownMenuCheckboxItem
-                                    :model-value="downloadRoute === 'mirror'"
-                                    @select="setUpdateRoute('mirror')">
-                                    {{ t('dialog.vrcx_updater.route_mirror') }}
-                                </DropdownMenuCheckboxItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
+                <div v-else class="flex w-full items-center justify-center gap-2">
+                    <Button
+                        v-if="showDownload"
+                        class="min-w-44 sm:min-w-56"
+                        :disabled="checkingForVRCXUpdate"
+                        @click="downloadSelectedVRCXUpdate">
+                        <CloudDownload class="size-4" />
+                        {{ t('dialog.vrcx_updater.download') }}
+                    </Button>
+                    <Button v-if="showInstall" class="min-w-44 sm:min-w-56" @click="restartVRCX(true)">
+                        <PackageCheck class="size-4" />
+                        {{ t('dialog.vrcx_updater.install') }}
+                    </Button>
                 </div>
             </DialogFooter>
         </DialogContent>
