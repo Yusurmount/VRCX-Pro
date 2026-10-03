@@ -93,18 +93,25 @@ export const useSearchStore = defineStore('Search', () => {
     }
 
     async function directAccessPaste() {
+        // 剪贴板读取失败（无文本内容、被占用等）不能中断流程：
+        // 回落到空剪贴板，仍然弹出输入对话框
         let cbText = '';
-        if (true) {
-            cbText = await window.platform.getClipboardText();
-        } else {
-            cbText = await AppApi.GetClipboard().catch((e) => {
-                console.log(e);
-                return '';
-            });
+        try {
+            cbText = (await window.platform.getClipboardText()) ?? '';
+        } catch (e) {
+            console.log(e);
         }
 
-        let trimemd = cbText.trim();
-        if (!directAccessParse(trimemd)) {
+        const trimmed = cbText.trim();
+        let parsed = false;
+        try {
+            parsed = directAccessParse(trimmed);
+        } catch (e) {
+            // 解析器内部（如 new URL）对畸形输入会抛错，同样回落到输入对话框
+            console.log(e);
+        }
+
+        if (!parsed) {
             promptOmniDirectDialog();
         } else {
             toast.success(

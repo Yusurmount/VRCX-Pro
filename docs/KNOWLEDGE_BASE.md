@@ -511,6 +511,8 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
 | `setCloseToTray` | 关闭时最小化到托盘 |
 | `getOverlayWindow` / `updateVr` | VR Overlay（占位） |
 
+> **注意**：`getClipboardText` 底层是 Tauri `readText()`，剪贴板无文本内容或被占用时会 reject（不像 `call()` 那样吞错返回 `null`）。调用方必须自行兜底——`search.js` 的 `directAccessPaste()`（左菜单「直接打开」/ Ctrl+D 入口）对剪贴板读取和 `directAccessParse()` 均做了 try/catch，失败时回落到 `promptOmniDirectDialog()` 输入对话框，保证入口始终有响应。回归测试见 `src/stores/__tests__/directAccessPaste.test.js`。
+
 ### 7.3 Boot 流程
 
 [platform/bootReady.js](../src/platform/bootReady.js) 管理启动就绪信号：
