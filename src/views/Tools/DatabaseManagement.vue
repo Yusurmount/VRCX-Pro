@@ -254,12 +254,15 @@
         </div>
 
         <DatabaseManagementDialog :visible="dialogVisible" :operation="dialogOperation" @close="handleDialogClose" />
-        <DatabaseRestoreWizard :visible="restoreWizardVisible" @close="handleWizardClose" />
+        <DatabaseRestoreWizard
+            :visible="restoreWizardVisible"
+            :debug-progress-preview="restoreWizardPreview"
+            @close="handleWizardClose" />
     </div>
 </template>
 
 <script setup>
-    import { computed, onActivated, onMounted, reactive, ref, shallowRef } from 'vue';
+    import { computed, onActivated, onMounted, reactive, ref, shallowRef, watch } from 'vue';
     import { useRouter } from 'vue-router';
     import { useI18n } from 'vue-i18n';
     import { toast } from 'vue-sonner';
@@ -273,6 +276,10 @@
 
     import DatabaseManagementDialog from './dialogs/DatabaseManagementDialog.vue';
     import DatabaseRestoreWizard from './DatabaseRestoreWizard.vue';
+    import {
+        consumeRestoreProgressPreview,
+        restoreProgressPreviewRequest
+    } from './restoreProgressPreviewState';
 
     const PREVIEW_LIMIT = 50;
 
@@ -310,6 +317,16 @@
     const dialogVisible = ref(false);
     const dialogOperation = ref('');
     const restoreWizardVisible = ref(false);
+    const restoreWizardPreview = ref(false);
+
+    /**
+     * UI debug tool: open the restore wizard directly in progress-preview mode.
+     */
+    function maybeOpenProgressPreview() {
+        if (!consumeRestoreProgressPreview()) return;
+        restoreWizardPreview.value = true;
+        restoreWizardVisible.value = true;
+    }
 
     function goBack() {
         router.push({ name: 'tools' });
@@ -466,6 +483,7 @@
 
     async function handleWizardClose() {
         restoreWizardVisible.value = false;
+        restoreWizardPreview.value = false;
         await refreshAll();
     }
 
@@ -483,6 +501,10 @@
         }
     }
 
-    onMounted(refreshAll);
+    onMounted(() => {
+        refreshAll();
+        maybeOpenProgressPreview();
+    });
     onActivated(refreshAll);
+    watch(restoreProgressPreviewRequest, maybeOpenProgressPreview);
 </script>

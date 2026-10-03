@@ -1817,6 +1817,10 @@
                             "update": {
                                 "label": "VRCX-Pro 更新对话框",
                                 "desc": "显示 VRCX-Pro 更新对话框。"
+                            },
+                            "restore_progress": {
+                                "label": "数据库恢复进度",
+                                "desc": "打开数据库恢复向导的进度预览（模拟数据，不写入数据库）。"
                             }
                         },
                         "app_state": {
@@ -1989,6 +1993,8 @@
                         "summary_records": "总记录数",
                         "reading": "正在读取备份文件...",
                         "importing": "正在恢复数据... ({progress}%)",
+                        "progress_detail_clearing": "正在清空 {table}（第 {tableIndex}/{tableCount} 张表）",
+                        "progress_detail_importing": "正在导入 {table}（第 {tableIndex}/{tableCount} 张表）· 本表 {tableRowsDone}/{tableRowsTotal} 条 · 累计 {processedRows}/{totalRows} 条",
                         "success": "恢复成功完成。\n共恢复 {importedCount} 条记录，涉及 {tablesProcessed} 个表。",
                         "report_title": "恢复结果",
                         "report_overwritten": "覆盖",

@@ -191,6 +191,14 @@
                             class="bg-primary h-2 rounded-full transition-all"
                             :style="{ width: importProgressPercent + '%' }"></div>
                     </div>
+                    <p v-if="importProgressDetailText" class="text-xs text-muted-foreground">
+                        {{ importProgressDetailText }}
+                    </p>
+                    <div v-if="previewActive" class="wiz-actions">
+                        <Button variant="ghost" @click="requestClose">
+                            {{ t('confirm.cancel_button') }}
+                        </Button>
+                    </div>
                 </template>
                 <template v-else>
                     <Alert variant="destructive">
@@ -253,7 +261,7 @@
 </template>
 
 <script setup>
-    import { computed, markRaw, nextTick, reactive, ref, shallowRef, watch } from 'vue';
+    import { computed, markRaw, nextTick, onUnmounted, reactive, ref, shallowRef, watch } from 'vue';
     import { useI18n } from 'vue-i18n';
     import { toast } from 'vue-sonner';
     import {
@@ -286,7 +294,10 @@
     const TOTAL_STEPS = 5;
 
     const props = defineProps({
-        visible: { type: Boolean, default: false }
+        visible: { type: Boolean, default: false },
+        // UI debug preview: run a simulated progress on step 4 (no file, no
+        // database writes, never reaches the restart step).
+        debugProgressPreview: { type: Boolean, default: false }
     });
 
     const emit = defineEmits(['close']);
@@ -303,9 +314,14 @@
 
     const reading = ref(false);
     const importing = ref(false);
+    // Integer 0..100 from ImportProgressState — the single source for both
+    // the percentage text and the bar width, so they can never disagree.
     const importProgressPercent = ref(0);
     // 'clearing' | 'importing' — which step the progress bar is showing
     const importProgressPhase = ref('importing');
+    // Latest ImportProgressState — current table + row counters under the bar
+    const importProgressDetail = ref(null);
+    const previewActive = ref(false);
 
     const importDataCache = shallowRef(null);
     const importFileSummary = ref(null);
@@ -331,10 +347,34 @@
     const shellRef = ref(null);
 
     const importProgressText = computed(() => {
-        const progress = Math.round(importProgressPercent.value);
+        const progress = importProgressPercent.value;
         return importProgressPhase.value === 'clearing'
             ? t('view.settings.advanced.advanced.db_import.clearing', { progress })
             : t('view.settings.advanced.advanced.db_import.importing', { progress });
+    });
+
+    function formatCount(n) {
+        return Number(n ?? 0).toLocaleString();
+    }
+
+    const importProgressDetailText = computed(() => {
+        const detail = importProgressDetail.value;
+        if (!detail?.table) return '';
+        const args = {
+            table: detail.table,
+            tableIndex: detail.tableIndex,
+            tableCount: detail.tableCount
+        };
+        if (importProgressPhase.value === 'clearing') {
+            return t('view.settings.advanced.advanced.db_import.progress_detail_clearing', args);
+        }
+        return t('view.settings.advanced.advanced.db_import.progress_detail_importing', {
+            ...args,
+            tableRowsDone: formatCount(detail.tableRowsDone),
+            tableRowsTotal: formatCount(detail.tableRowsTotal),
+            processedRows: formatCount(detail.processedRows),
+            totalRows: formatCount(detail.totalRows)
+        });
     });
 
     watch(
@@ -343,6 +383,9 @@
             if (open) {
                 resetWizard();
                 nextTick(() => shellRef.value?.playOpenAnimation());
+                if (props.debugProgressPreview) startProgressPreview();
+            } else {
+                stopProgressPreview();
             }
         }
     );
@@ -368,6 +411,7 @@
         importing.value = false;
         importProgressPercent.value = 0;
         importProgressPhase.value = 'importing';
+        importProgressDetail.value = null;
         importDataCache.value = null;
         importFileSummary.value = null;
         importDiagnostics.value = null;
@@ -383,8 +427,13 @@
     const closing = ref(false);
 
     async function requestClose() {
-        // No leaving mid-restore: the import cannot be cancelled.
-        if (closing.value || (step.value === 4 && !importError.value)) return;
+        // No leaving mid-restore: the import cannot be cancelled. The debug
+        // preview has no real import behind it, so it may be left any time.
+        if (
+            closing.value ||
+            (step.value === 4 && !importError.value && !previewActive.value)
+        )
+            return;
         closing.value = true;
         await shellRef.value?.playCloseAnimation();
         emit('close');
@@ -432,6 +481,7 @@
         importError.value = '';
         importProgressPercent.value = 0;
         importProgressPhase.value = 'importing';
+        importProgressDetail.value = null;
         importing.value = true;
 
         const result = await executeImport(
@@ -442,10 +492,9 @@
                 mode: restoreMode.value
             },
             (state) => {
-                if (state.phase === 'importing' || state.phase === 'clearing') {
-                    importProgressPhase.value = state.phase;
-                    importProgressPercent.value = state.progress * 100;
-                }
+                importProgressPhase.value = state.phase;
+                importProgressPercent.value = state.percent;
+                importProgressDetail.value = state;
             }
         );
 
@@ -476,6 +525,127 @@
     function handleRestart() {
         vrcxUpdaterStore.restartVRCX(false);
     }
+
+    // --- Progress preview (UI debug tool) ---
+    // Simulated progress so the step-4 progress UI (percent, bar, table
+    // detail) can be exercised without a backup file. Never touches the
+    // database and never reaches the restart step.
+    let previewTimer = null;
+
+    const PREVIEW_TABLES = [
+        { table: 'feed_post', rows: 12000 },
+        { table: 'gamelog_join_leave', rows: 8000 },
+        { table: 'user_notes', rows: 3500 },
+        { table: 'world_favorite', rows: 1200 },
+        { table: 'avatar_favorite', rows: 600 }
+    ];
+
+    function previewPercent(done, total) {
+        return total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 100;
+    }
+
+    function applyProgressState(state) {
+        importProgressPhase.value = state.phase;
+        importProgressPercent.value = state.percent;
+        importProgressDetail.value = state;
+    }
+
+    function stopPreviewTimer() {
+        if (previewTimer) {
+            clearInterval(previewTimer);
+            previewTimer = null;
+        }
+    }
+
+    function stopProgressPreview() {
+        stopPreviewTimer();
+        previewActive.value = false;
+    }
+
+    function startProgressPreview() {
+        stopProgressPreview();
+        previewActive.value = true;
+        step.value = 4;
+        importError.value = '';
+
+        // Always simulate both phases so the clearing detail line is reachable
+        // regardless of the selected restore mode.
+        const clearTotal = 6;
+        const prefixRows = [];
+        let rowsSoFar = 0;
+        for (const entry of PREVIEW_TABLES) {
+            prefixRows.push(rowsSoFar);
+            rowsSoFar += entry.rows;
+        }
+        const totalRows = rowsSoFar;
+        const workTotal = clearTotal + totalRows;
+
+        let phase = 'clearing';
+        let cleared = 0;
+        let tableIdx = 0;
+        let rowInTable = 0;
+
+        applyProgressState({
+            phase: 'clearing',
+            percent: 0,
+            table: null,
+            tableIndex: 0,
+            tableCount: clearTotal,
+            tableRowsDone: 0,
+            tableRowsTotal: 0,
+            processedRows: 0,
+            totalRows
+        });
+
+        previewTimer = setInterval(() => {
+            if (phase === 'clearing') {
+                cleared += 1;
+                applyProgressState({
+                    phase: 'clearing',
+                    percent: previewPercent(cleared, workTotal),
+                    table: `table_${cleared}`,
+                    tableIndex: cleared,
+                    tableCount: clearTotal,
+                    tableRowsDone: 0,
+                    tableRowsTotal: 0,
+                    processedRows: 0,
+                    totalRows
+                });
+                if (cleared >= clearTotal) phase = 'importing';
+                return;
+            }
+
+            const entry = PREVIEW_TABLES[tableIdx];
+            if (!entry) {
+                stopPreviewTimer();
+                return;
+            }
+            rowInTable = Math.min(
+                entry.rows,
+                rowInTable + Math.max(1, Math.ceil(entry.rows / 25))
+            );
+            const processedRows = prefixRows[tableIdx] + rowInTable;
+            applyProgressState({
+                phase: 'importing',
+                percent: previewPercent(cleared + processedRows, workTotal),
+                table: entry.table,
+                tableIndex: tableIdx + 1,
+                tableCount: PREVIEW_TABLES.length,
+                tableRowsDone: rowInTable,
+                tableRowsTotal: entry.rows,
+                processedRows,
+                totalRows
+            });
+            if (rowInTable >= entry.rows) {
+                tableIdx += 1;
+                rowInTable = 0;
+            }
+        }, 130);
+    }
+
+    onUnmounted(() => {
+        stopProgressPreview();
+    });
 </script>
 
 <style scoped>

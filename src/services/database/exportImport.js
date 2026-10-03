@@ -387,6 +387,33 @@ function validateImportData(data, currentUserId, allowUserMismatch = false) {
  */
 
 /**
+ * @typedef {Object} ImportProgressState
+ * @property {'clearing'|'importing'} phase
+ * @property {number} percent - Integer 0..100; the single source for both the
+ *   progress bar width and the percentage shown in text, so they can never
+ *   disagree. Reaches 100 exactly when the phase's work is done.
+ * @property {string|null} table - Table currently cleared/imported
+ * @property {number} tableIndex - 1-based index among the phase's tables
+ * @property {number} tableCount - Tables in the current phase
+ * @property {number} tableRowsDone - Rows finished in `table` (importing)
+ * @property {number} tableRowsTotal - Rows to import in `table`
+ * @property {number} processedRows - Rows imported so far across all tables
+ * @property {number} totalRows - Rows that will actually be imported
+ */
+
+/**
+ * Map completed work to an integer percentage. `toPercent(n, n)` always lands
+ * on 100, and skipped rows never count as work so a finished import ends at 100.
+ * @param {number} done
+ * @param {number} total
+ * @returns {number} 0..100
+ */
+function toPercent(done, total) {
+    if (total <= 0) return 100;
+    return Math.min(100, Math.round((done / total) * 100));
+}
+
+/**
  * Read and validate an import file
  * @param {string} currentUserId
  * @param {{allowUserMismatch?: boolean}} [options] - Import options
@@ -457,7 +484,7 @@ export async function readImportFile(currentUserId, options = {}) {
  * Only writes run inside the transaction - the backend deadlocks on reads
  * issued while a transaction is open.
  *
- * @param {function} [onProgress] - (cleared, total)
+ * @param {function} [onProgress] - (cleared, total, tableName)
  * @returns {Promise<number>} Number of cleared tables
  */
 async function clearForFullRestore(onProgress) {
@@ -490,7 +517,7 @@ async function clearForFullRestore(onProgress) {
                     `DELETE FROM "${tableName}"`
                 );
             }
-            onProgress?.(i + 1, total);
+            onProgress?.(i + 1, total, tableName);
         }
         await sqliteService.executeNonQuery('COMMIT');
     } catch (e) {
@@ -523,18 +550,15 @@ async function clearForFullRestore(onProgress) {
  *
  * @param {ExportPackage} data
  * @param {ImportStrategies} strategies
- * @param {function} onProgress
+ * @param {function} onProgress - (state: ImportProgressState) => void
  * @returns {Promise<{success: boolean, report?: ImportReport, error?: string, tablesProcessed?: number}>}
  */
 export async function executeImport(data, strategies, onProgress) {
     const mode = strategies.mode === 'full' ? 'full' : 'incremental';
     const tableNames = Object.keys(data.tables);
-    const totalRows = tableNames.reduce(
-        (sum, name) => sum + data.tables[name].length,
-        0
-    );
     let processedRows = 0;
     let clearedTables = 0;
+    let totalRows = 0;
 
     /** @type {ImportReport} */
     const report = {
@@ -548,17 +572,12 @@ export async function executeImport(data, strategies, onProgress) {
     };
 
     try {
-        if (mode === 'full') {
-            clearedTables = await clearForFullRestore((cleared, total) => {
-                const workTotal = total + totalRows;
-                onProgress?.({
-                    phase: 'clearing',
-                    progress: workTotal > 0 ? cleared / workTotal : 0
-                });
-            });
-        }
-        const workTotal = Math.max(clearedTables + totalRows, 1);
-
+        // Decide up front which tables and rows will actually be written.
+        // Progress percentages are derived from this plan so rows that are
+        // never imported (login state, SQLite internals, credential configs)
+        // cannot drag the progress below 100 when the import has finished.
+        /** @type {Array<{tableName: string, rows: Array<Record<string, any>>, columns: string[], pkColumns: string[]}>} */
+        const plan = [];
         for (const tableName of tableNames) {
             let rows = data.tables[tableName];
             if (!Array.isArray(rows) || rows.length === 0) continue;
@@ -595,7 +614,6 @@ export async function executeImport(data, strategies, onProgress) {
 
             // Previous logic: use the backup columns verbatim.
             const columns = Object.keys(rows[0]);
-            const quotedColumns = columns.map((c) => `"${c}"`).join(', ');
             const tableColumns = await getTableColumnInfo(tableName);
             if (mode === 'full' && tableColumns.length === 0) {
                 // The file has a table this database doesn't - no schema to
@@ -607,8 +625,69 @@ export async function executeImport(data, strategies, onProgress) {
             const pkColumns = tableColumns
                 .filter((c) => c.pk > 0)
                 .map((c) => c.name);
+            plan.push({ tableName, rows, columns, pkColumns });
+        }
+        totalRows = plan.reduce((sum, entry) => sum + entry.rows.length, 0);
 
-            for (const row of rows) {
+        if (mode === 'full') {
+            clearedTables = await clearForFullRestore(
+                (cleared, total, tableName) => {
+                    onProgress?.({
+                        phase: 'clearing',
+                        percent: toPercent(cleared, total + totalRows),
+                        table: tableName,
+                        tableIndex: cleared,
+                        tableCount: total,
+                        tableRowsDone: 0,
+                        tableRowsTotal: 0,
+                        processedRows: 0,
+                        totalRows
+                    });
+                }
+            );
+        }
+        const workTotal = clearedTables + totalRows;
+
+        for (let tableIndex = 0; tableIndex < plan.length; tableIndex++) {
+            const { tableName, rows, columns, pkColumns } = plan[tableIndex];
+
+            /** @type {TableReportEntry} */
+            const tableReport = {
+                tableName,
+                overwritten: 0,
+                added: 0,
+                skippedExisting: 0,
+                skippedNew: 0,
+                skipped: null,
+                droppedColumns: 0
+            };
+            const quotedColumns = columns.map((c) => `"${c}"`).join(', ');
+
+            const emitRowProgress = (doneInTable) => {
+                onProgress?.({
+                    phase: 'importing',
+                    percent: toPercent(
+                        clearedTables + processedRows,
+                        workTotal
+                    ),
+                    table: tableName,
+                    tableIndex: tableIndex + 1,
+                    tableCount: plan.length,
+                    tableRowsDone: doneInTable,
+                    tableRowsTotal: rows.length,
+                    processedRows,
+                    totalRows
+                });
+            };
+
+            emitRowProgress(0);
+
+            for (
+                let rowIndex = 0;
+                rowIndex < rows.length;
+                rowIndex++
+            ) {
+                const row = rows[rowIndex];
                 const values = columns.map((c) =>
                     row[c] === undefined ? null : normalizeImportValue(row[c])
                 );
@@ -682,13 +761,26 @@ export async function executeImport(data, strategies, onProgress) {
                 }
 
                 processedRows++;
-                onProgress?.({
-                    phase: 'importing',
-                    progress: (clearedTables + processedRows) / workTotal
-                });
+                emitRowProgress(rowIndex + 1);
             }
 
             report.tables.push(tableReport);
+        }
+
+        if (plan.length === 0) {
+            // Nothing to write (e.g. an all-skipped file): finish at 100 so
+            // the UI never shows a partial bar when the import is already done.
+            onProgress?.({
+                phase: 'importing',
+                percent: 100,
+                table: null,
+                tableIndex: 0,
+                tableCount: 0,
+                tableRowsDone: 0,
+                tableRowsTotal: 0,
+                processedRows: 0,
+                totalRows: 0
+            });
         }
 
         report.success = true;

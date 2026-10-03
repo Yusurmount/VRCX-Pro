@@ -1819,6 +1819,10 @@
                             "update": {
                                 "label": "VRCX-Pro Update Dialog",
                                 "desc": "Show the VRCX-Pro update dialog."
+                            },
+                            "restore_progress": {
+                                "label": "Database Restore Progress",
+                                "desc": "Open the restore wizard progress preview (simulated, no database writes)."
                             }
                         },
                         "app_state": {
@@ -1991,6 +1995,8 @@
                         "summary_records": "Total Records",
                         "reading": "Reading backup file...",
                         "importing": "Restoring data... ({progress}%)",
+                        "progress_detail_clearing": "Clearing {table} (table {tableIndex}/{tableCount})",
+                        "progress_detail_importing": "Importing {table} (table {tableIndex}/{tableCount}) · this table {tableRowsDone}/{tableRowsTotal} rows · total {processedRows}/{totalRows} rows",
                         "success": "Restore completed successfully.\n{importedCount} records restored across {tablesProcessed} tables.",
                         "report_title": "Restore Results",
                         "report_overwritten": "Overwritten",
