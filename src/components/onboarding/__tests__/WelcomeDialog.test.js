@@ -211,7 +211,7 @@ describe('WelcomeDialog.vue', () => {
         expect(text).toContain(en.onboarding.welcome.cta);
     });
 
-    test("opens for What's New even when the welcome has already been seen", async () => {
+    test('stays closed when the welcome has been seen even with release content', async () => {
         mocks.getBool.mockResolvedValue(true);
         mocks.whatsNewDialog.value = {
             visible: true,
@@ -231,11 +231,42 @@ describe('WelcomeDialog.vue', () => {
         const wrapper = mountDialog();
         await passOpenDelay(wrapper);
 
+        expect(wrapper.find('.dialog-stub').exists()).toBe(false);
+    });
+
+    test('opens when a release announcement clears the seen flag after mount', async () => {
+        mocks.getBool.mockResolvedValue(true);
+
+        const wrapper = mountDialog();
+        await passOpenDelay(wrapper);
+        expect(wrapper.find('.dialog-stub').exists()).toBe(false);
+
+        // The store clears the seen flag first, then publishes release content.
+        mocks.getBool.mockResolvedValue(false);
+        mocks.whatsNewDialog.value = {
+            visible: true,
+            titleKey: 'onboarding.whatsnew.releases.2026_05_03.title',
+            subtitleKey: 'onboarding.whatsnew.releases.2026_05_03.subtitle',
+            items: [
+                {
+                    key: 'chart_analysis',
+                    icon: 'chart-no-axes-combined',
+                    titleKey: 'onboarding.whatsnew.releases.2026_05_03.items.chart_analysis.title',
+                    descriptionKey:
+                        'onboarding.whatsnew.releases.2026_05_03.items.chart_analysis.description'
+                }
+            ]
+        };
+        await wrapper.vm.$nextTick();
+        await passOpenDelay(wrapper);
+
         expect(wrapper.find('.dialog-stub').exists()).toBe(true);
-        expect(wrapper.text()).toContain(en.onboarding.welcome.title);
+        const featureTitle =
+            en.onboarding.whatsnew.releases['2026_05_03'].items.chart_analysis.title;
+        expect(wrapper.text()).toContain(featureTitle);
         const cta = wrapper
             .findAll('button')
-            .find((b) => b.text() === en.onboarding.whatsnew.common.got_it);
+            .find((b) => b.text() === en.onboarding.welcome.cta);
         expect(cta).toBeTruthy();
     });
 });

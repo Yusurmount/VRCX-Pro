@@ -416,7 +416,6 @@
     import configRepository from '@/services/config';
     import { PERSONAL_WELCOME_SEEN_KEY, resetOobe } from '@/services/oobe';
     import { requestWelcomeDialogShow } from '@/components/onboarding/welcomeDialogState';
-    import { getLatestWhatsNewRelease } from '@/shared/constants/whatsNewReleases';
     import { useAppearanceSettingsStore } from '@/stores/settings/appearance';
     import { useModalStore } from '@/stores/modal';
     import { useUserStore } from '@/stores/user';
@@ -614,19 +613,12 @@
     }
 
     /**
-     * Open the What's New dialog for the latest known release.
+     * Open the What's New dialog for the latest known release. Goes through
+     * the store so the welcome seen flag is reset exactly like a real
+     * version announcement.
      */
     function showLatestWhatsNewDialog() {
-        const release = getLatestWhatsNewRelease();
-        if (!release) {
-            return;
-        }
-        vrcxUpdater.whatsNewDialog = {
-            visible: true,
-            titleKey: release.titleKey,
-            subtitleKey: release.subtitleKey,
-            items: release.items.map((item) => ({ ...item }))
-        };
+        vrcxUpdater.showLatestWhatsNewDialog();
     }
 
     /**

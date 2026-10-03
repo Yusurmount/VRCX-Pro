@@ -67,7 +67,7 @@
                     :class="hasFeatures ? 'h-11' : ''"
                     size="lg"
                     @click="handleDismiss">
-                    {{ t(ctaKey) }}
+                    {{ t('onboarding.welcome.cta') }}
                 </Button>
             </div>
         </DialogContent>
@@ -94,7 +94,6 @@
     const { t } = useI18n();
 
     const isOpen = ref(false);
-    const welcomePending = ref(false);
     let openTimer = null;
 
     const userStore = useUserStore();
@@ -113,9 +112,6 @@
     );
     const releaseSubtitleKey = computed(
         () => whatsNewDialog.value.subtitleKey || 'onboarding.whatsnew.subtitle'
-    );
-    const ctaKey = computed(() =>
-        welcomePending.value ? 'onboarding.welcome.cta' : 'onboarding.whatsnew.common.got_it'
     );
 
     const iconMap = {
@@ -150,8 +146,9 @@
         maybeOpen();
     });
 
-    // What's New content may be announced after mount; open the merged
-    // dialog then as well.
+    // A What's New announcement clears the seen flag first, then publishes
+    // release content; re-evaluate the welcome rules when it arrives so the
+    // dialog opens regardless of mount ordering.
     watch(
         () => whatsNewDialog.value.visible,
         (visible) => {
@@ -162,8 +159,9 @@
     );
 
     /**
-     * Open the dialog after a short delay when the personalized welcome has
-     * not been seen yet or a What's New release is pending.
+     * Open the dialog after a short delay unless the personalized welcome
+     * has already been seen — the single gate for this dialog, whether or
+     * not What's New content accompanies it.
      * @returns {Promise<void>}
      */
     async function maybeOpen() {
@@ -171,8 +169,7 @@
             return;
         }
         const seen = await configRepository.getBool(PERSONAL_WELCOME_SEEN_KEY, false);
-        welcomePending.value = !seen;
-        if (!welcomePending.value && !whatsNewDialog.value.visible) {
+        if (seen) {
             return;
         }
         openTimer = setTimeout(() => {
@@ -182,13 +179,13 @@
     }
 
     /**
-     * Close the dialog and mark both the personalized welcome and the
-     * What's New announcement as handled.
+     * Close the dialog and mark the personalized welcome as seen so it
+     * never shows again until the next What's New announcement resets
+     * the flag.
      * @returns {Promise<void>}
      */
     async function handleDismiss() {
         isOpen.value = false;
-        welcomePending.value = false;
         await configRepository.setBool(PERSONAL_WELCOME_SEEN_KEY, true);
         closeWhatsNewDialog();
     }

@@ -16,6 +16,7 @@ import {
 } from '../shared/utils/version';
 
 import configRepository from '../services/config';
+import { PERSONAL_WELCOME_SEEN_KEY } from '../services/oobe';
 
 import * as workerTimers from 'worker-timers';
 
@@ -240,16 +241,19 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
     }
 
     /**
+     * Present a What's New release through the merged welcome dialog: reset
+     * the personalized-welcome seen flag so the dialog becomes due under
+     * welcome semantics, then expose the release content for display.
+     * @param {{titleKey: string, subtitleKey: string, items: Array<{key: string, icon: string, titleKey: string, descriptionKey: string}>} | null} release
      * @returns {Promise<boolean>}
      */
-    async function showWhatsNewDialog() {
-        const release = getWhatsNewRelease(currentVersion.value);
-
+    async function presentWhatsNewRelease(release) {
         if (!release) {
             whatsNewDialog.value = emptyWhatsNewDialog();
             return false;
         }
 
+        await configRepository.setBool(PERSONAL_WELCOME_SEEN_KEY, false);
         whatsNewDialog.value = {
             visible: true,
             titleKey: release.titleKey,
@@ -260,22 +264,19 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         return true;
     }
 
-    // function showLatestWhatsNewDialog() {
-    //     const release = getLatestWhatsNewRelease();
+    /**
+     * @returns {Promise<boolean>}
+     */
+    async function showWhatsNewDialog() {
+        return presentWhatsNewRelease(getWhatsNewRelease(currentVersion.value));
+    }
 
-    //     if (!release) {
-    //         return false;
-    //     }
-
-    //     whatsNewDialog.value = {
-    //         visible: true,
-    //         titleKey: release.titleKey,
-    //         subtitleKey: release.subtitleKey,
-    //         items: release.items.map((item) => ({ ...item }))
-    //     };
-
-    //     return true;
-    // }
+    /**
+     * @returns {Promise<boolean>}
+     */
+    async function showLatestWhatsNewDialog() {
+        return presentWhatsNewRelease(getLatestWhatsNewRelease());
+    }
 
     function closeWhatsNewDialog() {
         whatsNewDialog.value.visible = false;
@@ -664,6 +665,7 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
         setBranch,
 
         showWhatsNewDialog,
+        showLatestWhatsNewDialog,
         closeWhatsNewDialog,
         openChangeLogDialogOnly,
         checkForVRCXUpdate,
