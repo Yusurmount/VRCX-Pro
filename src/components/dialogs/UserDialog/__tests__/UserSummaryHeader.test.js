@@ -112,7 +112,13 @@ const noop = () => {};
 
 const SlotStub = { template: '<div><slot /></div>' };
 
-function mountHeader() {
+// 透出 src 的 MediaImage stub，用于断言头像数据源
+const MediaImageSrcStub = {
+    props: ['src'],
+    template: '<img class="media-image-src-stub" :src="src" />'
+};
+
+function mountHeader(stubs = {}) {
     return shallowMount(UserSummaryHeader, {
         props: {
             getUserStateText: noop,
@@ -130,6 +136,7 @@ function mountHeader() {
                 PopoverTrigger: SlotStub,
                 PopoverContent: SlotStub,
                 MediaImage: SlotStub,
+                ...stubs,
                 IconFrame: SlotStub,
                 Badge: SlotStub,
                 Checkbox: SlotStub,
@@ -229,5 +236,66 @@ describe('UserSummaryHeader statusDotClass', () => {
         const dot = wrapper.find('.x-user-status');
         expect(dot.classes()).toContain('offline');
         expect(dot.classes()).not.toContain('online');
+    });
+});
+
+describe('UserSummaryHeader 大头像回退', () => {
+    beforeEach(() => {
+        pinia = createTestingPinia({
+            initialState: {
+                User: {
+                    currentUser: { id: 'usr_self' },
+                    userDialog: {
+                        visible: true,
+                        loading: false,
+                        id: 'usr_stranger',
+                        ref: {
+                            id: 'usr_stranger',
+                            displayName: 'Stranger',
+                            isFriend: false
+                        },
+                        publicProfileRef: {},
+                        theme: {}
+                    }
+                },
+                Location: {
+                    lastLocation: {
+                        date: null,
+                        location: '',
+                        name: '',
+                        playerList: new Map(),
+                        friendList: new Map()
+                    }
+                },
+                Game: { isGameRunning: false }
+            }
+        });
+    });
+
+    test('publicProfile.iconUrl 为空时回退到用户头像链', async () => {
+        const userStore = useUserStore();
+        userStore.$patch({
+            userDialog: {
+                ref: {
+                    id: 'usr_stranger',
+                    displayName: 'Stranger',
+                    isFriend: false,
+                    thumbnailUrl: 'https://api.vrchat.cloud/api/1/image/file_x/1/256'
+                }
+            }
+        });
+        const wrapper = mountHeader({ MediaImage: MediaImageSrcStub });
+        await wrapper.vm.$nextTick();
+        const media = wrapper.find('img.media-image-src-stub');
+        expect(media.exists()).toBe(true);
+        expect(media.attributes('src')).toBe(
+            'https://api.vrchat.cloud/api/1/image/file_x/1/256'
+        );
+    });
+
+    test('完全没有头像数据时显示占位而不是空 src', async () => {
+        const wrapper = mountHeader({ MediaImage: MediaImageSrcStub });
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('img.media-image-src-stub').exists()).toBe(false);
     });
 });

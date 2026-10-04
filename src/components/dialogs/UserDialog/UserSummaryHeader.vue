@@ -29,13 +29,13 @@
                         drop-shadow(0 2px 8px rgb(0 0 0 / 0.55));
                 ">
                 <Image
-                    v-if="userDialog.loading || userIconError"
+                    v-if="userDialog.loading || userIconError || !userIconSrc"
                     class="w-full! h-full! object-cover text-muted-foreground bg-accent" />
                 <MediaImage
                     v-else
                     class="w-full h-full object-cover cursor-pointer"
-                    :src="userImage(userDialog.publicProfileRef, true, '256')"
-                    @click.stop="showFullscreenImageDialog(userDialog.publicProfileRef?.iconUrl)"
+                    :src="userIconSrc"
+                    @click.stop="showFullscreenImageDialog(userDialog.publicProfileRef?.iconUrl || userIconSrc)"
                     @error="userIconError = true"
                     loading="lazy" />
                 <IconFrame :icon-frame="userDialog.ref.iconFrame" class="z-2" />
@@ -516,6 +516,13 @@
 
     const profileImageError = ref(false);
     const userIconError = ref(false);
+    // 资料页图标（publicProfile.iconUrl）很多用户未设置；为空时回退到用户资料自带的头像链，
+    // 避免左侧大头像因 src 为空既无占位图也无法触发 @error
+    const userIconSrc = computed(
+        () =>
+            userImage(userDialog.value.publicProfileRef, true, '256') ||
+            userImage(userDialog.value.ref, true, '256')
+    );
 
     watch(
         () => userDialog.value.id,

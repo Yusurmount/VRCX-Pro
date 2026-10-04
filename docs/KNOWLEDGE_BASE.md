@@ -488,6 +488,8 @@ VRChat `GET /users/{userId}` 对非好友可能把 `state` / `status` / `locatio
 
 JSON 标签页始终显示接口**原始** ref，不经派生。测试：`src/shared/utils/__tests__/user.test.js`（`resolveUserPresence` / `isPresenceOnline`）、`src/composables/__tests__/useUserPresence.test.js`、`src/components/dialogs/UserDialog/__tests__/UserSummaryHeader.test.js`（状态圆点离线灰 / 在线绿 / 好友灰）。
 
+**大头像数据源回退（2026-10 修复）**：`UserSummaryHeader.vue` 左侧 96×96 圆角矩形头像的数据源是 `publicProfileRef.iconUrl`（`profile/{userId}` 公开资料接口的「资料页图标」），很多用户从未设置过该字段——`userImage()` 对无图标的 `publicProfileRef` 会返回空串，`MediaImage` 对空 src 既不渲染占位图也不触发 `@error`，于是头像永久空白而其他圆形头像（走 `userDialog.ref` 的 `thumbnailUrl` → `currentAvatarThumbnailImageUrl` 回退链）正常。修复：`userIconSrc` 计算属性取 `userImage(publicProfileRef) || userImage(ref)`，`userIconSrc` 为空时渲染 `Image` 占位。回归测试见 `UserSummaryHeader.test.js`「大头像回退」。
+
 ---
 
 ## 7. 平台桥接层
