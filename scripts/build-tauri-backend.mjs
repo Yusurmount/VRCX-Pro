@@ -1,11 +1,17 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 const rootDir = process.cwd();
 const project = path.join(rootDir, 'Dotnet', 'TauriBackend', 'VRCX-TauriBackend.csproj');
 const outputDir = path.join(rootDir, 'build', 'TauriBackend');
-const version = fs.readFileSync(path.join(rootDir, 'Version'), 'utf8').trim();
+// Channel-aware version (e.g. 3.7.2-beta) so the sidecar's reported version
+// matches the app; a bare base version ranks as the release channel and makes
+// the updater treat same-number beta/it builds as unpublished.
+const require = createRequire(import.meta.url);
+const { readBuildVersion } = require('../build-scripts/version-channel.cjs');
+const version = readBuildVersion(rootDir).version;
 const ridByPlatform = {
     win32: { x64: 'win-x64', arm64: 'win-arm64' },
     darwin: { x64: 'osx-x64', arm64: 'osx-arm64' },
