@@ -3,11 +3,99 @@ import { convertFileUrlToImageUrl } from './common';
 import { languageMappings } from '../constants/language';
 import { removeEmojis } from './base/string';
 import { timeToText } from './base/format';
+import { parseLocation } from './locationParser';
 
 const THEME_COLOR_LIMITS = Object.freeze({
     darkMinLuminance: 0.42,
     lightMaxLuminance: 0.74
 });
+
+const ONLINE_STATUSES = Object.freeze([
+    'active',
+    'join me',
+    'ask me',
+    'busy'
+]);
+
+/**
+ * 生成「展示用」的在线版用户对象（浅拷贝，不改动原 ref）。
+ * @param {object} user
+ * @param {string} location 真实位置
+ * @param {number} [joinTime] 本地在场证据的进入时间
+ * @returns {object}
+ */
+function deriveOnlinePresence(user, location, joinTime) {
+    const L = parseLocation(location);
+    const derived = {
+        ...user,
+        state: 'online',
+        status: ONLINE_STATUSES.includes(user.status) ? user.status : 'active',
+        location,
+        worldId: L.worldId,
+        instanceId: L.instanceId,
+        $location: L
+    };
+    if (joinTime) {
+        derived.$online_for = joinTime;
+        derived.$location_at = joinTime;
+    }
+    return derived;
+}
+
+/**
+ * 解析用于展示的用户在线状态。
+ *
+ * VRChat 的 GET /users/{userId} 对非好友可能把 state/status/location 一律
+ * 返回 offline（即使对方在线）。游戏日志的当前实例玩家列表能证明对方就在我
+ * 的房间里，此时用本地在场证据补全展示值。好友与本人一律返回原值，
+ * 避免绕过 pendingOffline 等好友状态机。
+ *
+ * @param {object} user 用户 ref
+ * @param {{isSelf?: boolean, gameRunning?: boolean, inMyInstance?: boolean, myLocation?: string, joinTime?: number}} evidence 本地在场证据
+ * @returns {object} 展示用用户对象（有派生时为浅拷贝，否则原样返回）
+ */
+function resolveUserPresence(user, evidence = {}) {
+    if (!user || user.isFriend || evidence.isSelf) {
+        return user;
+    }
+    const state = user.state || '';
+    const location = user.location || '';
+    if (state === 'online' || state === 'active') {
+        return user;
+    }
+    if (location && location !== 'offline') {
+        // 位置是真实的 → 说明在线，修正可能被门控成 offline 的 state/status
+        if (state === 'offline' || !state) {
+            return deriveOnlinePresence(user, location);
+        }
+        return user;
+    }
+    // 接口整段返回 offline → 用本地在场证据兜底
+    const { gameRunning, inMyInstance, myLocation, joinTime } = evidence;
+    if (!gameRunning || !inMyInstance || !myLocation) {
+        return user;
+    }
+    const L = parseLocation(myLocation);
+    if (L.isOffline || L.isTraveling) {
+        return user;
+    }
+    return deriveOnlinePresence(user, myLocation, joinTime);
+}
+
+/**
+ * 判断（展示解析后的）用户是否在线。
+ * @param {object} user
+ * @returns {boolean}
+ */
+function isPresenceOnline(user) {
+    if (!user) {
+        return false;
+    }
+    if (user.state === 'online' || user.state === 'active') {
+        return true;
+    }
+    return Boolean(user.location) && user.location !== 'offline';
+}
 
 /**
  *
@@ -442,5 +530,7 @@ export {
     userImage,
     userImageFull,
     parseUserUrl,
-    findUserByDisplayName
+    findUserByDisplayName,
+    resolveUserPresence,
+    isPresenceOnline
 };

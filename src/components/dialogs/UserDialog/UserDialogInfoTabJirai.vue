@@ -1,8 +1,8 @@
 <template>
-    <template v-if="isFriendOnline(userDialog.friend) || currentUser.id === userDialog.id">
+    <template v-if="showPresenceBlock">
         <div
             class="mb-2 pb-2 border-b border-border"
-            v-if="userDialog.ref.location"
+            v-if="presence.location"
             style="display: flex; flex-direction: column">
             <div style="flex: none">
                 <template v-if="isRealInstance(userDialog.$location.tag)">
@@ -18,8 +18,8 @@
                 </template>
                 <Location
                     class="text-sm"
-                    :location="userDialog.ref.location"
-                    :traveling="userDialog.ref.travelingToLocation" />
+                    :location="presence.location"
+                    :traveling="presence.travelingToLocation" />
             </div>
             <div class="flex flex-wrap items-start" style="flex: 1; margin-top: 8px; max-height: 150px; overflow: auto">
                 <div
@@ -302,18 +302,18 @@
         <div class="box-border flex items-center p-1.5 text-[13px] cursor-default w-[167px]">
             <TooltipWrapper :side="currentUser.id !== userDialog.id ? 'bottom' : 'top'">
                 <template #content>
-                    <span>{{ formatDateFilter(userOnlineForTimestamp(userDialog), 'short') }}</span>
+                    <span>{{ formatDateFilter(userOnlineForTimestamp({ ref: presence }), 'short') }}</span>
                 </template>
                 <div class="flex-1 overflow-hidden">
                     <span
-                        v-if="userDialog.ref.state === 'online' && userDialog.ref.$online_for"
+                        v-if="presence.state === 'online' && presence.$online_for"
                         class="block truncate font-medium leading-[18px]">
                         {{ t('dialog.user.info.online_for') }}
                     </span>
                     <span v-else class="block truncate font-medium leading-[18px]">
                         {{ t('dialog.user.info.offline_for') }}
                     </span>
-                    <span class="block truncate text-xs">{{ userOnlineFor(userDialog.ref) }}</span>
+                    <span class="block truncate text-xs">{{ userOnlineFor(presence) }}</span>
                 </div>
             </TooltipWrapper>
         </div>
@@ -504,7 +504,7 @@
     } from '@/components/ui/dropdown-menu';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import MediaImage from '../../MediaImage.vue';
-    import { ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
     import { Button } from '@/components/ui/button';
     import { Spinner } from '@/components/ui/spinner';
     import { storeToRefs } from 'pinia';
@@ -516,6 +516,7 @@
         formatDateFilter,
         getFaviconUrl,
         isFriendOnline,
+        isPresenceOnline,
         isRealInstance,
         openExternalLink,
         timeToText,
@@ -523,6 +524,7 @@
         userOnlineForTimestamp
     } from '../../../shared/utils';
     import { useUserDisplay } from '../../../composables/useUserDisplay';
+    import { useUserPresence } from '../../../composables/useUserPresence';
     import { refreshInstancePlayerCount } from '../../../coordinators/instanceCoordinator';
     import {
         useAdvancedSettingsStore,
@@ -561,6 +563,16 @@
     const { lastLocation } = storeToRefs(useLocationStore());
     const { showFullscreenImageDialog } = useGalleryStore();
     const { userImage, userStatusClass } = useUserDisplay();
+    const { resolveFor } = useUserPresence();
+
+    const presence = computed(() => resolveFor(userDialog.value.ref) || {});
+    // 位置区块原先只对好友开放；非好友被接口门控成 offline 时，用本地在场证据兜底
+    const showPresenceBlock = computed(() => {
+        if (isFriendOnline(userDialog.value.friend) || currentUser.value.id === userDialog.value.id) {
+            return true;
+        }
+        return !userDialog.value.ref.isFriend && isPresenceOnline(presence.value);
+    });
 
     const bioCache = ref({
         userId: null,
