@@ -246,19 +246,6 @@
             "add_back": "返回"
         }
     },
-    "settings": {
-        "general": {
-            "user_colors": {
-                "trust_levels": {
-                    "visitor": "访客",
-                    "new_user": "新用户",
-                    "user": "用户",
-                    "known_user": "已知用户",
-                    "trusted_user": "受信任用户"
-                }
-            }
-        }
-    },
     "view": {
         "login": {
             "savedAccounts": "已保存的账号",

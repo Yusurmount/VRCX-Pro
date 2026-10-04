@@ -448,12 +448,14 @@
     );
 
     const levelOptions = computed(() => [
-        { key: 'Visitor', label: t('settings.general.user_colors.trust_levels.visitor') },
-        { key: 'NewUser', label: t('settings.general.user_colors.trust_levels.new_user') },
-        { key: 'User', label: t('settings.general.user_colors.trust_levels.user') },
-        { key: 'Known', label: t('settings.general.user_colors.trust_levels.known_user') },
-        { key: 'Trusted', label: t('settings.general.user_colors.trust_levels.trusted_user') },
-        { key: 'Unknown', label: t('view.player_list.filter.level_unknown') }
+        { key: 'untrusted', label: t('view.settings.appearance.user_colors.trust_levels.visitor') },
+        { key: 'basic', label: t('view.settings.appearance.user_colors.trust_levels.new_user') },
+        { key: 'known', label: t('view.settings.appearance.user_colors.trust_levels.user') },
+        { key: 'trusted', label: t('view.settings.appearance.user_colors.trust_levels.known_user') },
+        { key: 'veteran', label: t('view.settings.appearance.user_colors.trust_levels.trusted_user') },
+        { key: 'vip', label: t('view.settings.appearance.user_colors.trust_levels.vrchat_team') },
+        { key: 'troll', label: t('view.settings.appearance.user_colors.trust_levels.nuisance') },
+        { key: 'unknown', label: t('view.player_list.filter.level_unknown') }
     ]);
 
     const platformOptions = computed(() => [
