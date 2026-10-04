@@ -505,9 +505,10 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
 
 **并发模型（按 id 多路复用）：** `dotnet_call` 在 Rust 侧为每个请求分配自增 id，写入 stdin 后即释放锁并等待对应响应；独立读线程按响应 id 将结果路由回等待方（错误响应回显原请求 id）。.NET 侧读循环按类别分流：本地短请求（SQLite/KV/LogWatcher/AppApi）在读循环处取 `SemaphoreSlim(32)` 背压，WebApi HTTP（VRChat API，单请求最长 60s）改在任务内部取独立 `SemaphoreSlim(32)`，**读循环不等待 HTTP**——否则慢 HTTP 占满共享闸门后读循环停止读取 stdin，排在后面的 `LogWatcher.Get()`/SQLite 会被拖到 HTTP 超时（回归实验：40 个慢 HTTP 下 `LogWatcher.Get` 旧实现阻塞 ~15s、分流后 20ms；复现脚本思路：向不可路由地址连发 40 个 `WebApi.ExecuteJson`，再测 `LogWatcher.Get` 延迟）。EOF 按在途计数排空响应。SQLite 仍为单连接 + `ReaderWriterLockSlim`（前端事务跨多次 RPC，BEGIN/COMMIT 分行发送，单连接是事务语义基础）。
 
-**游戏日志轮询独立于 updateLoop：** `LogWatcher.Get()` 在 `updateLoop` 内的独立循环（`startGameLogPolling`/`pollGameLog`）中轮询，不与其它轮询共用同一条 `await` 链——否则 `getUsersGroupInstances()`（VRChat API，最长 60s）或游戏状态检测会把整轮拖住，表现为换房后房间信息/玩家列表/好友栏长时间不刷新。上游 VRCX 的 LogWatcher 同样是独立线程轮询。
+**游戏日志轮询独立于 updateLoop：** `LogWatcher.Get()` 在 `updateLoop` 内的独立循环（`startGameLogPolling`/`pollGameLog`）中轮询，不与其它轮询共用同一条 `await` 链——否则 `getUsersGroupInstances()`（VRChat API，最长 60s）或游戏状态检测会把整轮拖住，表现为换房后房间信息/玩家列表/好友栏长时间不刷新。上游 VRCX 的 LogWatcher 同样是独立线程轮询。轮询循环必须**先调度下一轮再处理本批**（`pollGameLog` 的 `workerTimers.setTimeout` 在函数开头），并用在途守卫 + 10s 超时竞速包住 `LogWatcher.Get()`、逐事件 try/catch——否则一次挂起的 IPC 或单个抛错事件就可能终止循环或丢掉同批剩余事件，表现为房间/玩家列表彻底冻结、只能 Ctrl+F5 重放恢复（2026-10 加固）。
 
-**LogWatcher 只消费完整行（残行留待下次拼接）：** 每秒轮询可能撞上 VRChat 正在写入的半行（一行日志常被拆成多次 `write`）。`Dotnet/TauriBackend/LogWatcher.cs` 的 `ReadNewLines` 按字节读取、只解析以 `\n` 结尾的完整行，`Position` 只推进到最后一个换行符之后，残行字节保存在 `LogContext.LineTail` 下次拼接（整行一次 UTF-8 解码，多字节字符不截断）。旧实现用 `StreamReader.ReadLine()`，会把半行当完整行消费并推进 `Position`，后半段永远匹配不上事件标记——丢的若是切房间的 `[Behaviour] Joining wrld_...`，房间玩家列表、我的资料位置、地图页实例列表全部停留在旧房间，Ctrl+F5 后启动重放（`SetDateTill` 清空上下文重读文件）才恢复。改动此逻辑时保持「Position 不越过未完整行」这一不变量；文件截断重置 `Position` 时须同步清空 `LineTail`。
+**LogWatcher 只消费完整行（Position 停在残行开头）：** 每秒轮询可能撞上 VRChat 正在写入的半行（一行日志常被拆成多次 `write`）。`Dotnet/TauriBackend/LogWatcher.cs` 的 `ReadNewLines` 按字节读取、只解析以 `
+` 结尾的完整行，`Position` 只推进到最后一个换行符之后；**残行不进缓存**，下次读取从 `Position` 重新读到（曾试过把残行存 `LineTail` 拼接，因 Position 同样指向残行开头导致字节被计两次、首行损坏被丢弃，在连续写入下事件近乎全灭——2026-10 二次修复，对照 harness：旧版 14/15 且连续写入时趋近全丢，新版 15/15 零重复）。若用 `StreamReader.ReadLine()`（上游写法），半行会被当完整行消费并推进 `Position`，该行永久丢失——丢的若是切房间的 `[Behaviour] Joining wrld_...`，房间玩家列表、我的资料位置、地图页实例列表全部停留在旧房间，Ctrl+F5 后启动重放（`SetDateTill` 清空上下文重读文件）才恢复。改动此逻辑时保持「Position 不越过未完整行、残行不双读」的不变量。
 
 全局绑定通过 [plugins/interopApi.js](../src/plugins/interopApi.js) 初始化：
 - `window.WebApi` — HTTP 请求代理
