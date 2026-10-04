@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia';
 import { reactive, toRefs, watch } from 'vue';
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
 import { database } from '../services/database';
 import { groupRequest } from '../api';
 import { runRefreshFriendsListFlow } from '../coordinators/friendSyncCoordinator';
 import { runUpdateIsGameRunningFlow } from '../coordinators/gameCoordinator';
+import { addGameLogEvent } from '../coordinators/gameLogCoordinator';
 import { runRefreshPlayerModerationsFlow } from '../coordinators/moderationCoordinator';
 import { clearVRCXCache } from '../coordinators/vrcxCoordinator';
 import { useAuthStore } from './auth';
@@ -56,11 +58,122 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
         { flush: 'sync' }
     );
 
+    /**
+     * 日志获取由 Rust 原生线程的 1s 滴答（`start_gamelog_tick` →
+     * `gamelog-tick` 事件）驱动：WebView2 渲染器在窗口最小化/被完全遮挡时
+     * 会冻结，webview 侧一切定时器（含 worker-timers）停摆，原生线程不受
+     * 影响；渲染器恢复的瞬间积压滴答立即送达，看窗口即刷新。滴答不带数据，
+     * 前端收到后自行 Get——事件留在 sidecar 队列直到真正处理，冻结期间不丢。
+     * worker-timers 循环保留为兜底；轮询均先调度下一轮、在途守卫、超时竞速，
+     * 单次 Get 挂起/单个事件抛错不终止处理。
+     */
+    let gameLogLoopStarted = false;
+    let gameLogGetInFlight = false;
+
+    /**
+     *
+     */
+    function startGameLogPolling() {
+        if (gameLogLoopStarted) {
+            return;
+        }
+        gameLogLoopStarted = true;
+        pollGameLog();
+        window.platform?.ready
+            .then(() =>
+                Promise.all([
+                    invoke('start_gamelog_tick'),
+                    listen('gamelog-tick', () => {
+                        if (!gameLogGetInFlight) {
+                            pollGameLogOnce();
+                        }
+                    })
+                ])
+            )
+            .catch(console.error);
+        // 渲染器从冻结中恢复后，worker-timers 的 worker 定时链可能已死
+        // （worker 死亡会让下方循环永久停摆）；窗口重新可见时用主线程直接
+        // 补拉一次，保证看到窗口即刷新，不依赖 worker 存活。
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && !gameLogGetInFlight) {
+                pollGameLogOnce();
+            }
+        });
+    }
+
+    /**
+     * 单次 Get+处理，不经过 worker 定时链（用于渲染器恢复后的立即补拉）。
+     */
+    async function pollGameLogOnce() {
+        if (!watchState.isLoggedIn) {
+            return;
+        }
+        gameLogGetInFlight = true;
+        try {
+            const rawLogs = await LogWatcher.Get();
+            if (rawLogs) {
+                rawLogs.forEach((rawLog) => {
+                    try {
+                        addGameLogEvent(JSON.stringify(rawLog));
+                    } catch (err) {
+                        console.error('gameLog event failed', rawLog, err);
+                    }
+                });
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            gameLogGetInFlight = false;
+        }
+    }
+
+    /**
+     * 先调度下一轮再处理本批：任何一次 Get 挂起/事件抛错都只影响当前一轮，
+     * 不会终止轮询循环（循环死亡后房间/玩家列表只能靠 Ctrl+F5 重放恢复）。
+     */
+    async function pollGameLog() {
+        workerTimers.setTimeout(() => pollGameLog(), 1000);
+        try {
+            if (
+                watchState.isLoggedIn &&
+                --state.nextGetLogCheck <= 0 &&
+                !gameLogGetInFlight
+            ) {
+                state.nextGetLogCheck = 4;
+                gameLogGetInFlight = true;
+                let rawLogs;
+                try {
+                    // 挂起的 Get 超时后放弃该批响应（属异常路径），保住循环；
+                    // 在途守卫避免重复入队堆积 sidecar 阻塞线程。
+                    rawLogs = await Promise.race([
+                        LogWatcher.Get(),
+                        new Promise((resolve) =>
+                            workerTimers.setTimeout(() => resolve(undefined), 10000)
+                        )
+                    ]);
+                } finally {
+                    gameLogGetInFlight = false;
+                }
+                if (rawLogs) {
+                    rawLogs.forEach((rawLog) => {
+                        try {
+                            addGameLogEvent(JSON.stringify(rawLog));
+                        } catch (err) {
+                            console.error('gameLog event failed', rawLog, err);
+                        }
+                    });
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
     /**
      *
      */
     async function updateLoop() {
+        startGameLogPolling();
         try {
             if (watchState.isLoggedIn) {
                 if (--state.nextCurrentUserRefresh <= 0) {

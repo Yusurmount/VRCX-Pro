@@ -64,21 +64,6 @@ internal static class Program
 
         using var reader = new StreamReader(Console.OpenStandardInput());
         await using var writer = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
-        var writerLock = new object();
-        // Upstream LogWatcher pushes parsed events to the webview from its own
-        // dedicated thread (CEF ExecuteScriptAsync). Here that thread writes a
-        // spontaneous notification line to stdout; Rust forwards it to the
-        // webview as a script. writerLock keeps stdout lines atomic.
-        LogWatcher.StartThread(row =>
-        {
-            // row is one serialized log item (JSON); embed it as a JS string
-            // literal, matching upstream's addGameLogEvent(json) contract.
-            var script = $"window.$pinia.gameLog.addGameLogEvent({row})";
-            var line = JsonSerializer.Serialize(new { @event = "eval", script });
-            lock (writerLock)
-                writer.WriteLine(line);
-        });
-
         // Concurrent dispatch with two lanes:
         //   - local short calls (SQLite / KV / LogWatcher / AppApi) take
         //     dispatchGate in the read loop, so overload still backpressures
@@ -91,6 +76,7 @@ internal static class Program
         //     player list — queues for the whole HTTP timeout.
         var dispatchGate = new SemaphoreSlim(32);
         var httpGate = new SemaphoreSlim(32);
+        var writerLock = new object();
         var inFlight = 0;
         while (await reader.ReadLineAsync() is { } line)
         {
