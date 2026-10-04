@@ -1,0 +1,4 @@
+interface:
+  display_name: "VRCX-Pro Development"
+  short_description: "Work on the VRCX-Pro Tauri, Vue and .NET app"
+  default_prompt: "Use $vrcx-pro-dev to implement and verify a change in the VRCX-Pro repository."
