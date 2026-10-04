@@ -2078,7 +2078,7 @@
         },
         "user": {
             "status": {
-                "active": "Active",
+                "active": "Online",
                 "offline": "Offline",
                 "online": "Online",
                 "join_me": "Join Me",

@@ -2072,7 +2072,7 @@
         },
         "user": {
             "status": {
-                "active": "活跃中",
+                "active": "在线",
                 "offline": "离线",
                 "online": "在线",
                 "join_me": "欢迎加入",
