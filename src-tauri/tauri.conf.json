@@ -22,8 +22,7 @@
         "decorations": true,
         "transparent": false,
         "visible": false,
-        "focus": false,
-        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,IntensiveWakeUpThrottling --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding"
+        "focus": false
       }
     ],
     "security": {
