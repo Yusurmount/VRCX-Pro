@@ -15,12 +15,10 @@ bun.lock
 TESTING.md
 !docs/TESTING.md
 .env.sentry-build-plugin
-AGENTS.md
 AI_GUIDE.md
 CLAUDE.md
 coverage/
 VRCX-Pro-Previous/
-AGENTS.md
 .dbg/
 *_CHANGELOG.md
 .trae/
