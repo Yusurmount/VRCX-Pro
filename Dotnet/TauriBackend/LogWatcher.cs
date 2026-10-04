@@ -27,7 +27,10 @@ internal sealed partial class LogWatcher
         {
             _tillDate = dateParsed ? value : DateTime.MinValue;
             _dateSet = dateParsed;
-            _contexts.Clear();
+            // 只推进时间下界，不重置读取位置：SetDateTill 在启动 backfill 时被调用，
+            // 若在此 _contexts.Clear()，会把所有日志文件的读取位置归零，下一轮 Get()
+            // 会对全部日志文件（最大 35MB）做全量重读，阻塞数分钟，期间玩家/房间事件
+            // 完全追不上。需要全量重读时由 Reset() 负责。
             _pending.Clear();
         }
     }
@@ -106,11 +109,10 @@ internal sealed partial class LogWatcher
                 _contexts[file.Name] = context;
             }
 
-            if (file.Length < context.Position)
-                context.Position = 0;
-            if (file.Length == context.Position)
-                continue;
-
+            // 不在 Update() 里用 FileInfo.Length 预判是否有新增：该长度来自
+            // DirectoryInfo.GetFiles() 的目录项缓存，文件被外部进程持续写入时会
+            // 滞后偏小，导致误判“文件被截断”并把读取位置归零、或误判“无增长”而
+            // 跳过仍在增长的文件。真实长度在 ReadNewLines 打开流后判断。
             ReadNewLines(file, context);
         }
     }
@@ -127,6 +129,14 @@ internal sealed partial class LogWatcher
                 65536,
                 FileOptions.SequentialScan
             );
+
+            // 用打开流后的真实长度判断增长。
+            var trueLength = stream.Length;
+            if (trueLength < context.Position)
+                context.Position = 0;
+            if (trueLength == context.Position)
+                return;
+
             stream.Position = context.Position;
 
             // 把 Position 之后的新增字节一次性读入内存，再按换行符切分。
