@@ -138,7 +138,7 @@ fn dotnet_status(state: State<'_, DotnetSidecar>) -> bool {
 /// waiting caller by response id, so concurrent `dotnet_call`s can share the
 /// pipe. An unparsable line is skipped; EOF fails every pending caller instead
 /// of hanging.
-fn spawn_response_reader(stdout: BufReader<ChildStdout>, pending: PendingResponses) {
+fn spawn_response_reader(app: tauri::AppHandle, stdout: BufReader<ChildStdout>, pending: PendingResponses) {
     std::thread::spawn(move || {
         let mut reader = stdout;
         let mut line = String::new();
@@ -150,7 +150,16 @@ fn spawn_response_reader(stdout: BufReader<ChildStdout>, pending: PendingRespons
                     match serde_json::from_str::<Value>(line.trim()) {
                         Ok(mut value) => {
                             let response_id = value.get("id").and_then(Value::as_u64);
-                            if let Some(response_id) = response_id {
+                            if let Some(script) = value.get("event").and_then(Value::as_str) {
+                                // Spontaneous notification from the sidecar
+                                // (upstream: CEF ExecuteScriptAsync) — run it
+                                // in the main webview.
+                                if let Some(webview) = app.get_webview_window("main") {
+                                    if let Err(error) = webview.eval(script) {
+                                        eprintln!("[dotnet] eval failed: {error}");
+                                    }
+                                }
+                            } else if let Some(response_id) = response_id {
                                 let entry = pending
                                     .lock()
                                     .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -342,7 +351,7 @@ fn start_dotnet_sidecar(app: tauri::AppHandle, state: State<'_, DotnetSidecar>) 
         stdin: Mutex::new(stdin),
     });
     drop(guard);
-    spawn_response_reader(BufReader::new(stdout), Arc::clone(&state.pending));
+    spawn_response_reader(app.clone(), BufReader::new(stdout), Arc::clone(&state.pending));
     Ok(true)
 }
 

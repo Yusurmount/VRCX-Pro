@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace VRCX.TauriBackend;
 
@@ -13,6 +15,13 @@ internal sealed partial class LogWatcher
     private DateTime _tillDate = DateTime.MinValue;
     private bool _dateSet;
     private bool _initialized;
+    // Mirrors upstream m_FirstRun: after every reset (SetDateTill/Reset) the
+    // first Update() rebuilds state and is drained by the frontend's Get()
+    // startup replay; live pushes start only afterwards, so events are
+    // delivered exactly once.
+    private bool _firstRun = true;
+    private Action<string>? _push;
+
 
     public void SetDateTill(string date)
     {
@@ -29,6 +38,7 @@ internal sealed partial class LogWatcher
             _dateSet = dateParsed;
             _contexts.Clear();
             _pending.Clear();
+            _firstRun = true;
         }
     }
 
@@ -39,6 +49,7 @@ internal sealed partial class LogWatcher
             _contexts.Clear();
             _pending.Clear();
             _dateSet = false;
+            _firstRun = true;
         }
     }
 
@@ -84,6 +95,45 @@ internal sealed partial class LogWatcher
         }
     }
 
+    /// <summary>
+    /// Dedicated parsing thread, mirroring upstream LogWatcher.ThreadLoop: it
+    /// keeps scanning/parsing the log files and pushes every parsed event to
+    /// the host immediately, so delivery does not depend on webview timers
+    /// (which stop while the window is hidden/frozen). <paramref name="push"/>
+    /// receives one serialized batch per tick.
+    /// </summary>
+    public void StartThread(Action<string> push)
+    {
+        _push = push;
+        var thread = new Thread(ThreadLoop) { IsBackground = true };
+        thread.Start();
+    }
+
+    private void ThreadLoop()
+    {
+        while (true)
+        {
+            Thread.Sleep(1000);
+            string[]? batch = null;
+            lock (_lock)
+            {
+                Update();
+                if (!_firstRun && _pending.Count > 0)
+                {
+                    var count = Math.Min(_pending.Count, 1000);
+                    batch = new string[count];
+                    for (var index = 0; index < count; index++)
+                        batch[index] = JsonSerializer.Serialize(_pending.Dequeue());
+                }
+            }
+            if (batch != null)
+            {
+                foreach (var row in batch)
+                    _push?.Invoke(row);
+            }
+        }
+    }
+
     private void Update()
     {
         if (!_dateSet || !_initialized || string.IsNullOrWhiteSpace(_logDirectory) || !Directory.Exists(_logDirectory))
@@ -113,6 +163,8 @@ internal sealed partial class LogWatcher
 
             ReadNewLines(file, context);
         }
+
+        _firstRun = false;
     }
 
     private void ReadNewLines(FileInfo file, LogContext context)
