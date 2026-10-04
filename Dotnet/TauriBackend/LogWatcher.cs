@@ -107,7 +107,10 @@ internal sealed partial class LogWatcher
             }
 
             if (file.Length < context.Position)
+            {
                 context.Position = 0;
+                context.LineTail.Clear();
+            }
             if (file.Length == context.Position)
                 continue;
 
@@ -128,21 +131,48 @@ internal sealed partial class LogWatcher
                 FileOptions.SequentialScan
             );
             stream.Position = context.Position;
-            using var reader = new StreamReader(stream, Encoding.UTF8);
 
-            while (reader.ReadLine() is { } line)
+            // 只处理以换行结束的完整行：轮询可能撞上正在写入的半行，
+            // ReadLine 会把半行当完整行消费并推进 Position，导致该行
+            // （如切房间的 "Joining wrld_..."）永久丢失、房间状态停在旧房间。
+            // 残行字节留在 context.LineTail，下次拼接后再解析；
+            // Position 只推进到最后一个换行符之后。
+            var completeBytes = 0L;
+            var totalRead = 0L;
+            var buffer = new byte[65536];
+            int read;
+            while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
             {
-                if (!TryParseLogLine(line, out var lineDate))
-                    continue;
-                if (lineDate <= _tillDate || DateTime.UtcNow.AddMinutes(61) < lineDate)
-                    continue;
-                if (line.Length <= 34)
-                    continue;
+                var lineStart = 0;
+                for (var index = 0; index < read; index++)
+                {
+                    if (buffer[index] != (byte)'\n')
+                        continue;
 
-                ParseLogLine(file.Name, line, context, lineDate);
+                    var lineBytes = new byte[context.LineTail.Count + index - lineStart];
+                    context.LineTail.CopyTo(lineBytes, 0);
+                    Array.Copy(buffer, lineStart, lineBytes, context.LineTail.Count, index - lineStart);
+                    context.LineTail.Clear();
+                    lineStart = index + 1;
+
+                    var line = Encoding.UTF8.GetString(lineBytes).TrimEnd('\r');
+                    if (TryParseLogLine(line, out var lineDate) &&
+                        lineDate > _tillDate &&
+                        lineDate <= DateTime.UtcNow.AddMinutes(61) &&
+                        line.Length > 34)
+                    {
+                        ParseLogLine(file.Name, line, context, lineDate);
+                    }
+                }
+
+                if (lineStart > 0)
+                    completeBytes = totalRead + lineStart;
+                for (var index = lineStart; index < read; index++)
+                    context.LineTail.Add(buffer[index]);
+                totalRead += read;
             }
 
-            context.Position = stream.Position;
+            context.Position += completeBytes;
         }
         catch (IOException)
         {
@@ -289,6 +319,7 @@ internal sealed partial class LogWatcher
     private sealed class LogContext
     {
         public long Position;
+        public List<byte> LineTail = [];
         public string LocationDestination = string.Empty;
         public string RecentWorldName = string.Empty;
     }
