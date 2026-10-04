@@ -107,7 +107,10 @@ internal sealed partial class LogWatcher
             }
 
             if (file.Length < context.Position)
+            {
                 context.Position = 0;
+                context.LineTail.Clear();
+            }
             if (file.Length == context.Position)
                 continue;
 
@@ -129,11 +132,11 @@ internal sealed partial class LogWatcher
             );
             stream.Position = context.Position;
 
-            // 只处理以换行结束的完整行：轮询可能撞上 VRChat 正在写入的半行，
+            // 只处理以换行结束的完整行：轮询可能撞上正在写入的半行，
             // ReadLine 会把半行当完整行消费并推进 Position，导致该行
             // （如切房间的 "Joining wrld_..."）永久丢失、房间状态停在旧房间。
-            // Position 只推进到最后一个换行符之后；残行字节不入缓存，
-            // 下次读取从 Position 重新读到，避免与残行缓存拼接造成重复。
+            // 残行字节留在 context.LineTail，下次拼接后再解析；
+            // Position 只推进到最后一个换行符之后。
             var completeBytes = 0L;
             var totalRead = 0L;
             var buffer = new byte[65536];
@@ -146,10 +149,13 @@ internal sealed partial class LogWatcher
                     if (buffer[index] != (byte)'\n')
                         continue;
 
-                    var line = Encoding.UTF8.GetString(buffer, lineStart, index - lineStart)
-                        .TrimEnd('\r');
+                    var lineBytes = new byte[context.LineTail.Count + index - lineStart];
+                    context.LineTail.CopyTo(lineBytes, 0);
+                    Array.Copy(buffer, lineStart, lineBytes, context.LineTail.Count, index - lineStart);
+                    context.LineTail.Clear();
                     lineStart = index + 1;
 
+                    var line = Encoding.UTF8.GetString(lineBytes).TrimEnd('\r');
                     if (TryParseLogLine(line, out var lineDate) &&
                         lineDate > _tillDate &&
                         lineDate <= DateTime.UtcNow.AddMinutes(61) &&
@@ -161,6 +167,8 @@ internal sealed partial class LogWatcher
 
                 if (lineStart > 0)
                     completeBytes = totalRead + lineStart;
+                for (var index = lineStart; index < read; index++)
+                    context.LineTail.Add(buffer[index]);
                 totalRead += read;
             }
 
@@ -311,6 +319,7 @@ internal sealed partial class LogWatcher
     private sealed class LogContext
     {
         public long Position;
+        public List<byte> LineTail = [];
         public string LocationDestination = string.Empty;
         public string RecentWorldName = string.Empty;
     }

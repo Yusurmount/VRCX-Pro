@@ -63,7 +63,6 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
      * 上游 VRCX 的 LogWatcher 同样是独立线程轮询，与其它 IPC 互不阻塞。
      */
     let gameLogLoopStarted = false;
-    let gameLogGetInFlight = false;
 
     /**
      *
@@ -77,45 +76,23 @@ export const useUpdateLoopStore = defineStore('UpdateLoop', () => {
     }
 
     /**
-     * 先调度下一轮再处理本批：任何一次 Get 挂起/事件抛错都只影响当前一轮，
-     * 不会终止轮询循环（循环死亡后房间/玩家列表只能靠 Ctrl+F5 重放恢复）。
+     *
      */
     async function pollGameLog() {
-        workerTimers.setTimeout(() => pollGameLog(), 1000);
         try {
-            if (
-                watchState.isLoggedIn &&
-                --state.nextGetLogCheck <= 0 &&
-                !gameLogGetInFlight
-            ) {
+            if (watchState.isLoggedIn && --state.nextGetLogCheck <= 0) {
                 state.nextGetLogCheck = 0.5;
-                gameLogGetInFlight = true;
-                let rawLogs;
-                try {
-                    // 挂起的 Get 超时后放弃该批响应（属异常路径），保住循环；
-                    // 在途守卫避免重复入队堆积 sidecar 阻塞线程。
-                    rawLogs = await Promise.race([
-                        LogWatcher.Get(),
-                        new Promise((resolve) =>
-                            workerTimers.setTimeout(() => resolve(undefined), 10000)
-                        )
-                    ]);
-                } finally {
-                    gameLogGetInFlight = false;
-                }
+                const rawLogs = await LogWatcher.Get();
                 if (rawLogs) {
                     rawLogs.forEach((rawLog) => {
-                        try {
-                            addGameLogEvent(JSON.stringify(rawLog));
-                        } catch (err) {
-                            console.error('gameLog event failed', rawLog, err);
-                        }
+                        addGameLogEvent(JSON.stringify(rawLog));
                     });
                 }
             }
         } catch (err) {
             console.error(err);
         }
+        workerTimers.setTimeout(() => pollGameLog(), 1000);
     }
 
     /**
