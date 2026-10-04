@@ -449,6 +449,7 @@
     import {
         copyToClipboard,
         formatDateFilter,
+        isPresenceOnline,
         languageClass,
         openDiscordProfile,
         statusClass
@@ -499,11 +500,15 @@
     const { userImage, userStatusClass } = useUserDisplay();
     const { resolveFor } = useUserPresence();
     const presence = computed(() => resolveFor(userDialog.value.ref) || {});
-    // 非好友的 state/status 可能被接口门控成 offline，圆点改用解析后的 status
+    // 非好友的 state/status 可能被接口门控成 offline，圆点改用解析后的 status；
+    // 接口对离线陌生人仍会返回 status，须先确认在场状态为在线，否则显示灰色
     const statusDotClass = computed(() => {
         const ref = userDialog.value.ref;
         if (ref?.isFriend || ref?.id === currentUser.value.id) {
             return userStatusClass(ref);
+        }
+        if (!isPresenceOnline(presence.value)) {
+            return { 'status-icon': true, offline: true };
         }
         return statusClass(presence.value.status);
     });
