@@ -2084,7 +2084,7 @@
         },
         "user": {
             "status": {
-                "active": "活躍",
+                "active": "線上",
                 "offline": "離線",
                 "online": "上線",
                 "join_me": "加入我",
