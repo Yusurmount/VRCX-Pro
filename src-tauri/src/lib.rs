@@ -1,6 +1,6 @@
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Child, ChildStdout, ChildStdin, Command, Stdio};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -245,6 +245,28 @@ async fn dotnet_call(
     .map_err(|error| error.to_string())?
 }
 
+/// Native-thread 1s ticker driving the frontend game-log poll. The WebView2
+/// renderer freezes while the window is minimized / fully occluded, killing
+/// every webview-side timer (worker-timers included); a native thread keeps
+/// ticking and the queued events are delivered the moment the renderer
+/// resumes, so the backlog is drained as soon as the window is looked at.
+/// The tick carries no data: the frontend still pulls `LogWatcher.Get()`
+/// itself, so events stay in the sidecar queue until actually processed.
+static GAMELOG_TICK_STARTED: AtomicBool = AtomicBool::new(false);
+
+/// True once the native game-log tick thread has been started.
+#[tauri::command]
+fn start_gamelog_tick(app: tauri::AppHandle) -> bool {
+    if GAMELOG_TICK_STARTED.swap(true, Ordering::SeqCst) {
+        return true;
+    }
+    std::thread::spawn(move || loop {
+        std::thread::sleep(std::time::Duration::from_millis(1000));
+        let _ = app.emit_to("main", "gamelog-tick", ());
+    });
+    true
+}
+
 #[tauri::command]
 fn read_file(file_path: String) -> Result<Vec<u8>, String> {
     fs::read(file_path).map_err(|error| error.to_string())
@@ -470,6 +492,7 @@ pub fn run() {
             get_arch,
             dotnet_status,
             start_dotnet_sidecar,
+        start_gamelog_tick,
             dotnet_call,
             read_file,
             write_file,
