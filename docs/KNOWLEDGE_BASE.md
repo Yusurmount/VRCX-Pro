@@ -492,7 +492,9 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
 - `window.AppApi` — 应用 API 代理
 - `window.LogWatcher` — 日志监听代理（stub）
 - `window.Discord` — Discord 集成代理（stub）
-- `window.AssetBundleManager` — 资源管理代理（stub）
+- `window.AssetBundleManager` — 资源管理代理；`GetCacheSize` / `DeleteAllCache` / `SweepCache` 由后端真实实现（config.json 对话框的「总缓存 x/30GB」、清空缓存、清理过期缓存），其余方法仍返回 `true` 的 stub
+
+这三个方法由 `Dotnet/TauriBackend/Program.cs` 的 `AssetBundleManagerMethod` 分发，作用于 VRChat 的资源包缓存目录 `<VRChat LocalLow>\Cache-WindowsPlayer`（`config.json` 的 `cache_directory` 覆盖其根目录）：`GetCacheSize` 汇总目录字节数作为「已用」；`SweepCache` 删除 `__data` 写入时间早于 `cache_expiry_delay` 天的条目（未配置时 30 天——VRChat 自己的使用时间索引在进程外读不到，所以只能按写入时间老化）；`DeleteAllCache` 清空并重建该目录（重建是必须的，否则下次 `GetCacheSize` 会退回到整个 VRChat 数据目录）。`AppApi.GetVRChatCacheLocation()` 返回的也是这个目录。
 
 ### 7.2 Platform Runtime
 
