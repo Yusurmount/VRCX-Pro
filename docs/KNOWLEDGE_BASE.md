@@ -392,6 +392,8 @@ TanStack Vue Query 集成层，提供声明式数据获取。
 | `/tools/database` | `Tools/DatabaseManagement.vue` | 数据库管理（概览、表预览、备份/恢复） |
 | `/settings` | `Settings/` | 设置页 |
 
+**玩家列表高级筛选「信任等级」按昵称颜色算法判定：** `PlayerList/playerListFilters.js` 的 `getPlayerLevelKey()` 调用 `computeTrustLevel(tags, developerType).trustColorKey`（与设置 > 界面 > 好友名称显示颜色同一算法，见 `src/shared/utils/userTransforms.js`），选项键为 `untrusted/basic/known/trusted/veteran/vip/troll` 加 `unknown`（行无 `tags` 数组 = 无缓存用户数据）；选项文案复用 `view.settings.appearance.user_colors.trust_levels.*`（三语）。不能用 `$trustLevel` 直接判等级：其显示值是 `Known User`/`Trusted User` 等长名，且 troll/vip 覆盖只体现在 `trustColorKey`。旧预设的 `Visitor/NewUser/User/Known/Trusted/Unknown` 等级键在 `cloneFilterState()` 里迁移到颜色键。测试：`src/views/PlayerList/__tests__/playerListFilters.test.js`。
+
 ### 6.8 Components（组件）
 
 `src/components/` 包含可复用组件，其中 `ui/` 是基础组件库（50+ 目录），包含：

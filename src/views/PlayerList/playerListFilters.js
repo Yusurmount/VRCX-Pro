@@ -3,13 +3,20 @@
  * No Vue / DOM dependencies — kept unit-testable.
  */
 
-/** Trust level display values mapped to state keys */
-const TRUST_LEVEL_TO_KEY = {
-    Visitor: 'Visitor',
-    'New User': 'NewUser',
-    User: 'User',
-    Known: 'Known',
-    Trusted: 'Trusted'
+import { computeTrustLevel } from '../../shared/utils/userTransforms';
+
+/**
+ * Legacy preset level keys (pre colour-key rewrite) mapped to the trust
+ * colour keys produced by computeTrustLevel — the same algorithm that
+ * drives 好友名称显示颜色 (设置 > 界面).
+ */
+const LEGACY_LEVEL_KEYS = {
+    Visitor: 'untrusted',
+    NewUser: 'basic',
+    User: 'known',
+    Known: 'trusted',
+    Trusted: 'veteran',
+    Unknown: 'unknown'
 };
 
 /** Player platform values mapped to state keys */
@@ -35,12 +42,14 @@ export function createDefaultFilterState() {
         level: {
             enabled: false,
             levels: {
-                Visitor: false,
-                NewUser: false,
-                User: false,
-                Known: false,
-                Trusted: false,
-                Unknown: false
+                untrusted: false,
+                basic: false,
+                known: false,
+                trusted: false,
+                veteran: false,
+                vip: false,
+                troll: false,
+                unknown: false
             }
         },
         keyword: {
@@ -90,13 +99,24 @@ export function createDefaultFilterState() {
 }
 
 /**
- * Deep clone a filter state (preset save/load).
+ * Deep clone a filter state (preset save/load). Also migrates level keys
+ * saved by older versions to the trust colour keys.
  *
  * @param {object} state
  * @returns {object}
  */
 export function cloneFilterState(state) {
-    return JSON.parse(JSON.stringify(state ?? null));
+    const cloned = JSON.parse(JSON.stringify(state ?? null));
+    const levels = cloned?.level?.levels;
+    if (levels) {
+        for (const [legacyKey, colorKey] of Object.entries(LEGACY_LEVEL_KEYS)) {
+            if (levels[legacyKey]) {
+                levels[colorKey] = true;
+            }
+            delete levels[legacyKey];
+        }
+    }
+    return cloned;
 }
 
 /**
@@ -212,13 +232,19 @@ function getPlayerPlatformKey(row) {
 }
 
 /**
- * Map a player row's trust level to a filter key.
+ * Map a player row to a trust colour key via the same algorithm that colours
+ * friend names (computeTrustLevel → trustColorKey). Rows without cached user
+ * data (no tags array) have no colour and map to 'unknown'.
  *
  * @param {object} row
  * @returns {string}
  */
 function getPlayerLevelKey(row) {
-    return TRUST_LEVEL_TO_KEY[row?.ref?.$trustLevel] ?? 'Unknown';
+    const ref = row?.ref;
+    if (!ref || !Array.isArray(ref.tags)) {
+        return 'unknown';
+    }
+    return computeTrustLevel(ref.tags, ref.developerType).trustColorKey;
 }
 
 /**

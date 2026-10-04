@@ -246,19 +246,6 @@
             "no_unseen_notifications": "沒有未讀通知"
         }
     },
-    "settings": {
-        "general": {
-            "user_colors": {
-                "trust_levels": {
-                    "visitor": "訪客",
-                    "new_user": "新用戶",
-                    "user": "用戶",
-                    "known_user": "已知用戶",
-                    "trusted_user": "受信任用戶"
-                }
-            }
-        }
-    },
     "view": {
         "login": {
             "savedAccounts": "已儲存的帳號",

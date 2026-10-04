@@ -59,6 +59,23 @@ describe('createDefaultFilterState / cloneFilterState / createPreset', () => {
         expect(cloneFilterState(null)).toBe(null);
     });
 
+    test('cloneFilterState migrates legacy preset level keys to colour keys', () => {
+        const legacy = {
+            level: {
+                enabled: true,
+                levels: { Visitor: false, NewUser: true, Known: true, Trusted: false, Unknown: true }
+            }
+        };
+        const cloned = cloneFilterState(legacy);
+        expect(cloned.level.levels.NewUser).toBeUndefined();
+        expect(cloned.level.levels.Known).toBeUndefined();
+        expect(cloned.level.levels.Unknown).toBeUndefined();
+        expect(cloned.level.levels.basic).toBe(true);
+        expect(cloned.level.levels.trusted).toBe(true);
+        expect(cloned.level.levels.unknown).toBe(true);
+        expect(cloned.level.levels.veteran).toBeUndefined();
+    });
+
     test('createPreset snapshots the filter state', () => {
         const state = createDefaultFilterState();
         state.keyword.text = 'abc';
@@ -213,52 +230,107 @@ describe('matchesPlayerFilters — relationship', () => {
 });
 
 describe('matchesPlayerFilters — level', () => {
-    test('matches exact trust level', () => {
+    test('matches veteran colour for system_trust_veteran tags', () => {
         const state = createDefaultFilterState();
         state.level.enabled = true;
-        state.level.levels.Trusted = true;
+        state.level.levels.veteran = true;
         expect(
             matchesPlayerFilters(
-                makeRow({ ref: { id: 'a', $trustLevel: 'Trusted' } }),
+                makeRow({
+                    ref: { id: 'a', tags: ['system_trust_veteran'], developerType: 'none' }
+                }),
                 state
             )
         ).toBe(true);
         expect(
             matchesPlayerFilters(
-                makeRow({ ref: { id: 'a', $trustLevel: 'User' } }),
+                makeRow({
+                    ref: { id: 'a', tags: ['system_trust_known'], developerType: 'none' }
+                }),
                 state
             )
         ).toBe(false);
     });
 
-    test('maps "New User" to NewUser key', () => {
+    test('maps Known User tags to the trusted colour key', () => {
         const state = createDefaultFilterState();
         state.level.enabled = true;
-        state.level.levels.NewUser = true;
+        state.level.levels.trusted = true;
         expect(
             matchesPlayerFilters(
-                makeRow({ ref: { id: 'a', $trustLevel: 'New User' } }),
+                makeRow({
+                    ref: { id: 'a', tags: ['system_trust_trusted'], developerType: 'none' }
+                }),
                 state
             )
         ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({
+                    ref: { id: 'a', tags: ['system_trust_known'], developerType: 'none' }
+                }),
+                state
+            )
+        ).toBe(false);
     });
 
-    test('treats unknown/missing trust level as Unknown', () => {
+    test('troll tags override to the troll colour key', () => {
         const state = createDefaultFilterState();
         state.level.enabled = true;
-        state.level.levels.Unknown = true;
+        state.level.levels.troll = true;
         expect(
             matchesPlayerFilters(
-                makeRow({ ref: { id: 'a', $trustLevel: undefined } }),
+                makeRow({
+                    ref: {
+                        id: 'a',
+                        tags: ['system_trust_veteran', 'system_troll'],
+                        developerType: 'none'
+                    }
+                }),
                 state
             )
         ).toBe(true);
         expect(
             matchesPlayerFilters(
-                makeRow({ ref: { id: 'a', $trustLevel: 'WeirdLevel' } }),
+                makeRow({
+                    ref: { id: 'a', tags: ['system_trust_veteran'], developerType: 'none' }
+                }),
+                state
+            )
+        ).toBe(false);
+    });
+
+    test('moderator developerType overrides to the vip colour key', () => {
+        const state = createDefaultFilterState();
+        state.level.enabled = true;
+        state.level.levels.vip = true;
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', tags: [], developerType: 'internal' } }),
                 state
             )
         ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', tags: [], developerType: 'none' } }),
+                state
+            )
+        ).toBe(false);
+    });
+
+    test('rows without cached user data map to unknown', () => {
+        const state = createDefaultFilterState();
+        state.level.enabled = true;
+        state.level.levels.unknown = true;
+        expect(
+            matchesPlayerFilters(makeRow({ ref: { id: 'a' } }), state)
+        ).toBe(true);
+        expect(
+            matchesPlayerFilters(
+                makeRow({ ref: { id: 'a', tags: [], developerType: 'none' } }),
+                state
+            )
+        ).toBe(false);
     });
 });
 

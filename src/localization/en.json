@@ -246,19 +246,6 @@
             "add_back": "Back"
         }
     },
-    "settings": {
-        "general": {
-            "user_colors": {
-                "trust_levels": {
-                    "visitor": "Visitor",
-                    "new_user": "New User",
-                    "user": "User",
-                    "known_user": "Known User",
-                    "trusted_user": "Trusted User"
-                }
-            }
-        }
-    },
     "view": {
         "login": {
             "savedAccounts": "Saved Accounts",
