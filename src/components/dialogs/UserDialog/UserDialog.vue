@@ -102,6 +102,7 @@
     import { copyToClipboard } from '../../../shared/utils';
     import { formatJsonVars } from '../../../shared/utils/base/ui';
     import { miscRequest } from '../../../api';
+    import { useUserPresence } from '../../../composables/useUserPresence';
     import { useUserDialogCommands } from './useUserDialogCommands';
     import { showAvatarDialog, showAvatarAuthorDialog } from '../../../coordinators/avatarCoordinator';
     import { showUserDialog, refreshUserDialogAvatars } from '../../../coordinators/userCoordinator';
@@ -234,11 +235,14 @@
 
     const treeData = ref({});
 
+    const { resolveFor } = useUserPresence();
+
     /**
      *
      * @param user
      */
     function getUserStateText(user) {
+        user = resolveFor(user) || {};
         let state = '';
         if (user.state === 'active') {
             state = t('dialog.user.status.active');

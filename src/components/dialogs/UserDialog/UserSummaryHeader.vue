@@ -86,15 +86,15 @@
                             @click="copyToClipboard(currentUser.username)"></span>
                     </template>
                     <div
-                        v-if="userDialog.ref.status || userDialog.ref.statusDescription"
+                        v-if="presence.status || presence.statusDescription"
                         class="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground"
                         :class="{ 'cursor-pointer hover:text-foreground': userDialog.ref.id === currentUser.id }"
                         @click="userDialog.ref.id === currentUser.id ? showEditProfileDialog() : undefined">
-                        <TooltipWrapper v-if="userDialog.ref.status" side="top">
+                        <TooltipWrapper v-if="presence.status" side="top">
                             <template #content>
                                 <span>{{ getUserStateText(userDialog.ref) }}</span>
                             </template>
-                            <i class="x-user-status mt-0.5 flex-none" :class="userStatusClass(userDialog.ref)"></i>
+                            <i class="x-user-status mt-0.5 flex-none" :class="statusDotClass"></i>
                         </TooltipWrapper>
                         <div class="min-w-0">
                             <span v-if="!userDialog.ref.statusDescription" class="block wrap-anywhere">{{
@@ -439,15 +439,22 @@
         UserPlus,
         Users
     } from 'lucide-vue-next';
-    import { ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
     import { storeToRefs } from 'pinia';
     import { useI18n } from 'vue-i18n';
 
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import { Panel } from '@/components/ui/panel';
     import MediaImage from '../../MediaImage.vue';
-    import { copyToClipboard, formatDateFilter, languageClass, openDiscordProfile } from '../../../shared/utils';
+    import {
+        copyToClipboard,
+        formatDateFilter,
+        languageClass,
+        openDiscordProfile,
+        statusClass
+    } from '../../../shared/utils';
     import { useUserDisplay } from '../../../composables/useUserDisplay';
+    import { useUserPresence } from '../../../composables/useUserPresence';
     import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
     import { useGalleryStore, useUserStore } from '../../../stores';
     import { Badge } from '../../ui/badge';
@@ -490,6 +497,16 @@
 
     const { showFullscreenImageDialog } = useGalleryStore();
     const { userImage, userStatusClass } = useUserDisplay();
+    const { resolveFor } = useUserPresence();
+    const presence = computed(() => resolveFor(userDialog.value.ref) || {});
+    // 非好友的 state/status 可能被接口门控成 offline，圆点改用解析后的 status
+    const statusDotClass = computed(() => {
+        const ref = userDialog.value.ref;
+        if (ref?.isFriend || ref?.id === currentUser.value.id) {
+            return userStatusClass(ref);
+        }
+        return statusClass(presence.value.status);
+    });
     const { showEditProfileDialog } = useUserStore();
 
     const profileImageError = ref(false);

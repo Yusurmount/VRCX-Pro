@@ -10,7 +10,8 @@ import {
     compareByUpdatedAt,
     isRealInstance,
     parseLocation,
-    replaceBioSymbols
+    replaceBioSymbols,
+    resolveUserPresence
 } from '../shared/utils';
 import { getAllUserMemos } from '../coordinators/memoCoordinator';
 import { cosmeticsRequest, queryRequest, userRequest } from '../api';
@@ -19,6 +20,7 @@ import { database } from '../services/database';
 import { runUpdateCurrentUserLocationFlow } from '../coordinators/locationCoordinator';
 import { useAppearanceSettingsStore } from './settings/appearance';
 import { useFriendStore } from './friend';
+import { useGameStore } from './game';
 import { useInstanceStore } from './instance';
 import { useLocationStore } from './location';
 import { useModalStore } from './modal';
@@ -31,6 +33,7 @@ import * as workerTimers from 'worker-timers';
 export const useUserStore = defineStore('User', () => {
     const appearanceSettingsStore = useAppearanceSettingsStore();
     const friendStore = useFriendStore();
+    const gameStore = useGameStore();
     const locationStore = useLocationStore();
     const instanceStore = useInstanceStore();
     const modalStore = useModalStore();
@@ -518,7 +521,18 @@ export const useUserStore = defineStore('User', () => {
         if (!D.visible) {
             return;
         }
-        const L = parseLocation(D.ref.$location?.tag);
+        const subject = D.ref || {};
+        const subjectPlayer = subject.id
+            ? locationStore.lastLocation.playerList.get(subject.id)
+            : undefined;
+        const presence = resolveUserPresence(subject, {
+            isSelf: Boolean(subject.id) && subject.id === currentUser.value.id,
+            gameRunning: gameStore.isGameRunning,
+            inMyInstance: Boolean(subjectPlayer),
+            myLocation: locationStore.lastLocation.location,
+            joinTime: subjectPlayer?.joinTime ?? 0
+        });
+        const L = parseLocation(presence.$location?.tag);
         if (updateInstanceOccupants && L.isRealInstance) {
             queryRequest.fetch('instance', {
                 worldId: L.worldId,

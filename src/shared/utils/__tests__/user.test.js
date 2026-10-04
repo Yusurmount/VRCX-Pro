@@ -29,9 +29,11 @@ const storeMocks = vi.hoisted(() => ({
 vi.mock('../../../stores', () => storeMocks);
 
 import {
+    isPresenceOnline,
     languageClass,
     parseUserUrl,
     removeEmojis,
+    resolveUserPresence,
     statusClass,
     userImage,
     userImageFull,
@@ -565,6 +567,108 @@ describe('User Utils', () => {
                 currentAvatarImageUrl: 'https://img.com/avatar'
             };
             expect(userImageFull(user)).toBe('https://img.com/avatar');
+        });
+    });
+
+    describe('resolveUserPresence', () => {
+        const MY_LOCATION = 'wrld_1:12345~region(us)';
+        const evidenceOnline = {
+            gameRunning: true,
+            inMyInstance: true,
+            myLocation: MY_LOCATION,
+            joinTime: 1700000000000
+        };
+        const gatedStranger = {
+            id: 'usr_stranger',
+            isFriend: false,
+            state: 'offline',
+            status: 'offline',
+            location: 'offline',
+            $online_for: null
+        };
+
+        test('returns friends unchanged (pendingOffline state machine untouched)', () => {
+            const friend = { id: 'usr_f', isFriend: true, state: 'offline', location: 'offline' };
+            expect(resolveUserPresence(friend, evidenceOnline)).toBe(friend);
+        });
+
+        test('returns self unchanged', () => {
+            const self = { id: 'usr_me', isFriend: false, state: 'offline', location: 'offline' };
+            expect(resolveUserPresence(self, { ...evidenceOnline, isSelf: true })).toBe(self);
+        });
+
+        test('returns API-online users unchanged', () => {
+            const online = { id: 'usr_o', isFriend: false, state: 'online', status: 'active', location: MY_LOCATION };
+            expect(resolveUserPresence(online, evidenceOnline)).toBe(online);
+        });
+
+        test('returns gated offline user unchanged without local evidence', () => {
+            expect(resolveUserPresence(gatedStranger, {})).toBe(gatedStranger);
+            expect(
+                resolveUserPresence(gatedStranger, {
+                    gameRunning: false,
+                    inMyInstance: true,
+                    myLocation: MY_LOCATION
+                })
+            ).toBe(gatedStranger);
+        });
+
+        test('derives online presence from current-instance evidence', () => {
+            const resolved = resolveUserPresence(gatedStranger, evidenceOnline);
+            expect(resolved.state).toBe('online');
+            expect(resolved.status).toBe('active');
+            expect(resolved.location).toBe(MY_LOCATION);
+            expect(resolved.$location.tag).toBe(MY_LOCATION);
+            expect(resolved.$online_for).toBe(1700000000000);
+            expect(resolved.$location_at).toBe(1700000000000);
+        });
+
+        test('keeps a real status color when deriving online presence', () => {
+            const resolved = resolveUserPresence(
+                { ...gatedStranger, status: 'ask me' },
+                evidenceOnline
+            );
+            expect(resolved.status).toBe('ask me');
+        });
+
+        test('does not mutate the original ref', () => {
+            resolveUserPresence(gatedStranger, evidenceOnline);
+            expect(gatedStranger.state).toBe('offline');
+            expect(gatedStranger.location).toBe('offline');
+        });
+
+        test('ignores evidence while the game is not running or location is traveling', () => {
+            expect(
+                resolveUserPresence(gatedStranger, { ...evidenceOnline, gameRunning: false })
+            ).toBe(gatedStranger);
+            expect(
+                resolveUserPresence(gatedStranger, { ...evidenceOnline, myLocation: 'traveling' })
+            ).toBe(gatedStranger);
+        });
+
+        test('fixes gated state when the API still returns a real location', () => {
+            const withLocation = { ...gatedStranger, location: 'private', status: 'busy' };
+            const resolved = resolveUserPresence(withLocation, {});
+            expect(resolved.state).toBe('online');
+            expect(resolved.status).toBe('busy');
+            expect(resolved.location).toBe('private');
+        });
+    });
+
+    describe('isPresenceOnline', () => {
+        test('true for online/active state', () => {
+            expect(isPresenceOnline({ state: 'online' })).toBe(true);
+            expect(isPresenceOnline({ state: 'active' })).toBe(true);
+        });
+
+        test('true for a real location even with gated state', () => {
+            expect(isPresenceOnline({ state: 'offline', location: 'private' })).toBe(true);
+        });
+
+        test('false for offline location, empty data, or null', () => {
+            expect(isPresenceOnline({ state: 'offline', location: 'offline' })).toBe(false);
+            expect(isPresenceOnline({})).toBe(false);
+            expect(isPresenceOnline(null)).toBe(false);
         });
     });
 });

@@ -26,6 +26,7 @@
   - [6.10 国际化](#610-国际化)
   - [6.11 好友亲密度评分](#611-好友亲密度评分)
   - [6.12 数据库管理页面](#612-数据库管理页面)
+  - [6.13 用户资料在线状态解析](#613-用户资料在线状态解析陌生人)
 - [7. 平台桥接层](#7-平台桥接层)
   - [7.1 IPC 机制](#71-ipc-机制)
   - [7.2 Platform Runtime](#72-platform-runtime)
@@ -460,6 +461,25 @@ vue-i18n + 静态 JSON 文件，支持语言：
 - **表数据预览**：选择表后浏览数据
 - **备份 / 恢复**：数据库备份导出、恢复导入（OOBE 数据恢复复用同一套导入逻辑，冲突时采用覆盖 + 新增策略）
 - **恢复进度**：`executeImport` 先建「导入计划」（过滤掉永不导入的行：`cookies`、`sqlite_*`、敏感 configs、full 模式下的 `table_missing`），进度分母 = 清空表数 + 计划行数，因此完成时恰为 100%。`onProgress` 发出 `ImportProgressState`：`percent` 为 0–100 整数，是进度条宽度与文案百分比的唯一来源（两者不可能不一致）；同时携带当前表 `table` / `tableIndex` / `tableCount` 与行计数（`tableRowsDone`/`tableRowsTotal`/`processedRows`/`totalRows`），恢复向导第 4 步在进度条下渲染（`db_import.progress_detail_*`，三语）。界面调试工具「对话框 > 数据库恢复进度」经 `src/views/Tools/restoreProgressPreviewState.js` 通知本页以 `debugProgressPreview` 打开向导模拟进度（不写数据库、不进入重启步骤）。
+
+---
+
+### 6.13 用户资料在线状态解析（陌生人）
+
+VRChat `GET /users/{userId}` 对非好友可能把 `state` / `status` / `location` 一律返回 `offline`（即使对方在线）。资料页所有在线状态展示统一先经 `resolveUserPresence()`（`src/shared/utils/user.js`）解析：
+
+- **好友 / 本人**：原样返回，不干预 `pendingOffline` 等好友状态机。
+- **接口表明在线**（`state` 为 `online` / `active`，或 `location` 非 `offline`）：原样返回；仅当 `state` 被门控成 `offline` 而 `location` 真实时，派生 `state: 'online'`（状态色取接口真实色，否则 `active`）。
+- **接口整段 offline**：若游戏运行中（`gameStore.isGameRunning`）且对方在 `locationStore.lastLocation.playerList`（游戏日志证明就在我当前实例），派生 `state: 'online'`、真实 `location`、`$online_for` / `$location_at`（进入时间）；我的位置处于 `traveling` / `offline` 时不派生。派生为**浅拷贝**，不改写原始 ref——玩家离开列表后展示自动回落为接口值。
+
+解析结果由 `useUserPresence()`（`src/composables/useUserPresence.js`）组装本地证据，消费方：
+
+- `UserDialog.vue` `getUserStateText()`（头部状态文案 + 无障碍描述）
+- `UserSummaryHeader.vue` 状态行显隐与状态圆点（非好友圆点改用解析后 `statusClass()`，好友仍走 `userStatusClass()`）
+- `UserDialogInfoTabJirai.vue` 位置区块门控（`isPresenceOnline()`）、位置组件与「本次在线时长 / 离线时长」行
+- `stores/user.js` `applyUserDialogLocation()` 用同一解析决定 `D.$location`，使实例操作条与占领列表一致
+
+JSON 标签页始终显示接口**原始** ref，不经派生。测试：`src/shared/utils/__tests__/user.test.js`（`resolveUserPresence` / `isPresenceOnline`）、`src/composables/__tests__/useUserPresence.test.js`。
 
 ---
 
