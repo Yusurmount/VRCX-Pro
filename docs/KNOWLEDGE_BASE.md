@@ -477,11 +477,11 @@ VRChat `GET /users/{userId}` 对非好友可能把 `state` / `status` / `locatio
 解析结果由 `useUserPresence()`（`src/composables/useUserPresence.js`）组装本地证据，消费方：
 
 - `UserDialog.vue` `getUserStateText()`（头部状态文案 + 无障碍描述）
-- `UserSummaryHeader.vue` 状态行显隐与状态圆点（非好友圆点改用解析后 `statusClass()`，好友仍走 `userStatusClass()`）
+- `UserSummaryHeader.vue` 状态行显隐与状态圆点（非好友圆点先以 `isPresenceOnline()` 确认在线、再取解析后 `statusClass()`；离线陌生人返回 `offline` 灰点——接口对离线者仍会返回 `status`，直接 `statusClass(status)` 会误亮绿灯。好友仍走 `userStatusClass()`）
 - `UserDialogInfoTabJirai.vue` 位置区块门控（`isPresenceOnline()`）、位置组件与「本次在线时长 / 离线时长」行
 - `stores/user.js` `applyUserDialogLocation()` 用同一解析决定 `D.$location`，使实例操作条与占领列表一致
 
-JSON 标签页始终显示接口**原始** ref，不经派生。测试：`src/shared/utils/__tests__/user.test.js`（`resolveUserPresence` / `isPresenceOnline`）、`src/composables/__tests__/useUserPresence.test.js`。
+JSON 标签页始终显示接口**原始** ref，不经派生。测试：`src/shared/utils/__tests__/user.test.js`（`resolveUserPresence` / `isPresenceOnline`）、`src/composables/__tests__/useUserPresence.test.js`、`src/components/dialogs/UserDialog/__tests__/UserSummaryHeader.test.js`（状态圆点离线灰 / 在线绿 / 好友灰）。
 
 ---
 
