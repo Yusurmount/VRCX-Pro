@@ -297,16 +297,29 @@
     }
 
     /**
+     * TabsUnderline 是 unmount-on-hide：切入的 tab 内容要经 reka-ui Presence
+     * 延迟多个渲染 tick 才挂载，tab ref 期间为 null；轮询等待其可用，
+     * 否则加载调用会被可选链静默吞掉（切标签一直显示无数据）
+     * @param {Function} getRef
+     */
+    async function waitTabRefAvailable(getRef) {
+        for (let i = 0; i < 10; i++) {
+            await nextTick();
+            if (getRef()) {
+                return;
+            }
+        }
+    }
+
+    /**
      *
      * @param tabName
      */
     async function handleUserDialogTab(tabName) {
-        // TabsUnderline 是 unmount-on-hide：切入的 tab 内容要等下一次渲染才挂载，
-        // 必须先等 nextTick，否则 tab ref 为 null，加载调用会被可选链吞掉
-        await nextTick();
         userDialog.value.lastActiveTab = tabName;
         const userId = userDialog.value.id;
         if (tabName === 'Info') {
+            await waitTabRefAvailable(() => infoTabRef.value);
             infoTabRef.value?.onTabActivated();
         } else if (tabName === 'mutual') {
             if (userId === currentUser.value.id) {
@@ -316,14 +329,17 @@
             }
             if (props.previousIds.mutualFriend !== userId) {
                 props.updatePreviousId('mutualFriend', userId);
+                await waitTabRefAvailable(() => mutualFriendsTabRef.value);
                 mutualFriendsTabRef.value?.getUserMutualFriends(userId);
             }
         } else if (tabName === 'Groups') {
             if (props.previousIds.group !== userId) {
                 props.updatePreviousId('group', userId);
+                await waitTabRefAvailable(() => groupsTabRef.value);
                 groupsTabRef.value?.getUserGroups(userId);
             }
         } else if (tabName === 'Avatars') {
+            await waitTabRefAvailable(() => avatarsTabRef.value);
             avatarsTabRef.value?.setUserDialogAvatars(userId);
             if (props.previousIds.avatar !== userId) {
                 props.updatePreviousId('avatar', userId);
@@ -334,6 +350,7 @@
                 }
             }
         } else if (tabName === 'Worlds') {
+            await waitTabRefAvailable(() => worldsTabRef.value);
             worldsTabRef.value?.setUserDialogWorlds(userId);
             if (props.previousIds.world !== userId) {
                 props.updatePreviousId('world', userId);
@@ -342,9 +359,11 @@
         } else if (tabName === 'favorite-worlds') {
             if (props.previousIds.favoriteWorld !== userId) {
                 props.updatePreviousId('favoriteWorld', userId);
+                await waitTabRefAvailable(() => favoriteWorldsTabRef.value);
                 favoriteWorldsTabRef.value?.getUserFavoriteWorlds(userId);
             }
         } else if (tabName === 'Activity') {
+            await waitTabRefAvailable(() => activityTabRef.value);
             activityTabRef.value?.loadOnlineFrequency(userId);
         } else if (tabName === 'JSON') {
             refreshUserDialogTreeData();
