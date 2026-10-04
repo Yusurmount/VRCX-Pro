@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-    import { computed, ref, watch } from 'vue';
+    import { computed, nextTick, ref, watch } from 'vue';
     import { DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
     import { Panel } from '@/components/ui/panel';
     import { TabsUnderline } from '@/components/ui/tabs';
@@ -300,7 +300,10 @@
      *
      * @param tabName
      */
-    function handleUserDialogTab(tabName) {
+    async function handleUserDialogTab(tabName) {
+        // TabsUnderline 是 unmount-on-hide：切入的 tab 内容要等下一次渲染才挂载，
+        // 必须先等 nextTick，否则 tab ref 为 null，加载调用会被可选链吞掉
+        await nextTick();
         userDialog.value.lastActiveTab = tabName;
         const userId = userDialog.value.id;
         if (tabName === 'Info') {
