@@ -175,9 +175,23 @@ internal static class Program
         if (request.ClassName.Equals("AppApi", StringComparison.OrdinalIgnoreCase)) return AppApiMethod(request.MethodName, args);
         if (request.ClassName.Equals("WebApi", StringComparison.OrdinalIgnoreCase)) return await WebApiMethod(request.MethodName, args);
         if (request.ClassName.Equals("LogWatcher", StringComparison.OrdinalIgnoreCase)) return LogWatcherMethod(request.MethodName, args);
-        if (request.ClassName.Equals("Discord", StringComparison.OrdinalIgnoreCase) || request.ClassName.Equals("AssetBundleManager", StringComparison.OrdinalIgnoreCase)) return true;
+        if (request.ClassName.Equals("Discord", StringComparison.OrdinalIgnoreCase)) return true;
+        if (request.ClassName.Equals("AssetBundleManager", StringComparison.OrdinalIgnoreCase)) return AssetBundleManagerMethod(request.MethodName);
         return null;
     }
+
+    /// <summary>
+    /// The cache operations the config dialog actually needs. Every other
+    /// AssetBundleManager method keeps the historical stub reply of `true` so
+    /// existing callers behave as before instead of receiving `null`.
+    /// </summary>
+    private static object? AssetBundleManagerMethod(string method) => method.ToLowerInvariant() switch
+    {
+        "getcachesize" => GetVrChatCacheSize(),
+        "deleteallcache" => DeleteVrChatCache(),
+        "sweepcache" => SweepVrChatCache(),
+        _ => true
+    };
 
     private static object? StorageMethod(string method, JsonElement[] args)
     {
@@ -317,7 +331,7 @@ internal static class Program
         "getvrchatappdatalocation" => GetVrChatAppDataFolder(),
         "getvrchatphotoslocation" => GetVrChatPhotosFolder(),
         "getvrchatscreenshotslocation" => GetVrChatScreenshotsFolder(),
-        "getvrchatcachelocation" => GetVrChatCacheFolder(),
+        "getvrchatcachelocation" => GetVrChatAssetBundleCacheFolder(),
         "openvrcxappdatafolder" => OpenExplorerFolder(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCX")),
         "openvrcappdatafolder" => OpenExplorerFolder(GetVrChatAppDataFolder()),
         "openvrcphotosfolder" => OpenExplorerFolder(GetVrChatPhotosFolder()),
@@ -597,12 +611,19 @@ internal static class Program
         try
         {
             using var doc = JsonDocument.Parse(File.ReadAllText(configPath));
-            if (doc.RootElement.TryGetProperty(key, out var prop) && prop.ValueKind == JsonValueKind.String)
-                return prop.GetString() ?? string.Empty;
+            if (doc.RootElement.TryGetProperty(key, out var prop))
+            {
+                if (prop.ValueKind == JsonValueKind.String) return prop.GetString() ?? string.Empty;
+                // The dialog writes numeric settings such as cache_expiry_delay as JSON numbers.
+                if (prop.ValueKind == JsonValueKind.Number) return prop.GetRawText();
+            }
         }
         catch { }
         return string.Empty;
     }
+
+    private static int ReadVrChatConfigInt(string key, int fallback)
+        => int.TryParse(ReadVrChatConfigValue(key), out var value) && value > 0 ? value : fallback;
 
     private static string GetVrChatAppDataFolder()
     {
@@ -632,9 +653,110 @@ internal static class Program
         return GetVrChatPhotosFolder();
     }
 
-    private static string GetVrChatCacheFolder()
+    /// <summary>
+    /// Folder whose contents VRChat caps with config.json `cache_size`; a
+    /// configured `cache_directory` replaces the default cache root.
+    /// </summary>
+    private static string GetVrChatAssetBundleCacheFolder()
     {
-        return Path.Combine(GetVrChatAppDataFolder(), "CacheW");
+        var configured = ReadVrChatConfigValue("cache_directory");
+        var root = string.IsNullOrWhiteSpace(configured)
+            ? GetVrChatAppDataFolder()
+            : Environment.ExpandEnvironmentVariables(configured.Trim());
+        return Path.Combine(root, "Cache-WindowsPlayer");
+    }
+
+    /// <summary>
+    /// Total length of every readable file under <paramref name="root"/>;
+    /// directories that cannot be read are skipped instead of failing the walk.
+    /// </summary>
+    private static long GetDirectorySize(string root)
+    {
+        var total = 0L;
+        var pending = new Stack<string>();
+        pending.Push(root);
+        while (pending.Count > 0)
+        {
+            var directory = pending.Pop();
+            try
+            {
+                foreach (var file in Directory.GetFiles(directory))
+                {
+                    try { total += new FileInfo(file).Length; }
+                    catch { }
+                }
+                foreach (var subDirectory in Directory.GetDirectories(directory))
+                    pending.Push(subDirectory);
+            }
+            catch { }
+        }
+        return total;
+    }
+
+    /// <summary>
+    /// Bytes used by the asset-bundle cache — the used half of "x / 30 GB" in
+    /// the config dialog. A missing folder reads as 0.
+    /// </summary>
+    private static long GetVrChatCacheSize()
+    {
+        var cacheFolder = GetVrChatAssetBundleCacheFolder();
+        return Directory.Exists(cacheFolder) ? GetDirectorySize(cacheFolder) : 0;
+    }
+
+    /// <summary>
+    /// Empties the asset-bundle cache. Failures propagate so the dialog's
+    /// catch branch reports them instead of a success toast.
+    /// </summary>
+    private static bool DeleteVrChatCache()
+    {
+        var cacheFolder = GetVrChatAssetBundleCacheFolder();
+        if (Directory.Exists(cacheFolder))
+        {
+            Directory.Delete(cacheFolder, true);
+            // Keep the folder: it is the only path the size read resolves to,
+            // so leaving it absent would size the whole VRChat data folder.
+            Directory.CreateDirectory(cacheFolder);
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Drops cache entries VRChat has not written within `cache_expiry_delay`
+    /// days (30 when unset, the dialog's minimum). VRChat's own index is not
+    /// readable from here, so entries age by the write time of their `__data`
+    /// payload rather than by last use.
+    /// </summary>
+    private static string SweepVrChatCache()
+    {
+        var cacheFolder = GetVrChatAssetBundleCacheFolder();
+        if (!Directory.Exists(cacheFolder)) return "Cache folder does not exist";
+        var cutoff = DateTime.UtcNow.AddDays(-ReadVrChatConfigInt("cache_expiry_delay", 30));
+        var removed = 0;
+        long freed = 0;
+        foreach (var hash in Directory.GetDirectories(cacheFolder))
+        {
+            try
+            {
+                foreach (var entry in Directory.GetDirectories(hash))
+                {
+                    try
+                    {
+                        var payload = Path.Combine(entry, "__data");
+                        var written = File.Exists(payload)
+                            ? File.GetLastWriteTimeUtc(payload)
+                            : Directory.GetLastWriteTimeUtc(entry);
+                        if (written >= cutoff) continue;
+                        freed += GetDirectorySize(entry);
+                        Directory.Delete(entry, true);
+                        removed++;
+                    }
+                    catch { }
+                }
+                if (Directory.GetFileSystemEntries(hash).Length == 0) Directory.Delete(hash);
+            }
+            catch { }
+        }
+        return $"Removed {removed} entries, freed {freed / 1073741824d:0.00} GB";
     }
 
     private static bool OpenExternalLink(string url)
