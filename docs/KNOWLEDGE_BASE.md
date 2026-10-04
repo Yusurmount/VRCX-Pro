@@ -507,6 +507,10 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
 
 **游戏日志轮询独立于 updateLoop：** `LogWatcher.Get()` 在 `updateLoop` 内的独立循环（`startGameLogPolling`/`pollGameLog`）中轮询，不与其它轮询共用同一条 `await` 链——否则 `getUsersGroupInstances()`（VRChat API，最长 60s）或游戏状态检测会把整轮拖住，表现为换房后房间信息/玩家列表/好友栏长时间不刷新。上游 VRCX 的 LogWatcher 同样是独立线程轮询。
 
+**日志只消费完整行（残行不丢）：** `LogWatcher.ReadNewLines` 按字节读取，**只解析以 `\n` 结束的完整行**，`context.Position` 只推进到最后一个换行符之后；被轮询撞上的半行留在文件里，下次从同一 `Position` 重新读到完整行再解析。若改用 `StreamReader.ReadLine()` 并把 `context.Position = stream.Position`，StreamReader 会把 VRChat 正在写入的半行当完整行消费、Position 越过该行，导致该行（如切房间的 `Joining wrld_...`、`OnPlayerJoined`/`OnPlayerLeft`）永久丢失——游戏运行时房间状态完全由游戏日志驱动，丢一条 `location` 就会让房间列表、玩家列表、当前用户状态、资料卡房间全部停在旧房间（`runSetCurrentUserLocationFlow` 在游戏运行时提前返回、不采用 WebSocket `user-location`）。文件被截断（`file.Length < context.Position`）时 Position 归零重读。这是“换房后仍显示旧房间、进退人不刷新”的**偶发丢失**根因（能否命中取决于轮询是否正好撞上半行）。
+
+**WebView2 后台节流（窗口遮挡时的延迟）：** 主窗口在 VRChat 全屏/遮挡时被 Chromium 判为隐藏，`IntensiveWakeUpThrottling` 会把 webview 定时器（含 `worker-timers`）压到约 1 次/分钟，游戏日志轮询停摆、事件在 sidecar 队列积压，切回窗口才一次性处理（表现为“延迟数分钟、聚焦后突然刷新”）。`src-tauri/tauri.conf.json` 主窗口设 `additionalBrowserArgs`（整体替换 wry 默认参数，故需保留默认 `--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection` 并追加 `IntensiveWakeUpThrottling` + `--disable-background-timer-throttling`/`--disable-backgrounding-occluded-windows`/`--disable-renderer-backgrounding`）。它与上面的残行丢失是两个独立问题：残行丢失“永不恢复”，节流“看窗口才恢复”。
+
 全局绑定通过 [plugins/interopApi.js](../src/plugins/interopApi.js) 初始化：
 - `window.WebApi` — HTTP 请求代理
 - `window.SQLite` — SQLite 操作代理
