@@ -128,21 +128,43 @@ internal sealed partial class LogWatcher
                 FileOptions.SequentialScan
             );
             stream.Position = context.Position;
-            using var reader = new StreamReader(stream, Encoding.UTF8);
 
-            while (reader.ReadLine() is { } line)
+            // 只处理以换行结束的完整行：轮询可能撞上 VRChat 正在写入的半行，
+            // ReadLine 会把半行当完整行消费并推进 Position，导致该行
+            // （如切房间的 "Joining wrld_..."）永久丢失、房间状态停在旧房间。
+            // Position 只推进到最后一个换行符之后；残行字节不入缓存，
+            // 下次读取从 Position 重新读到，避免与残行缓存拼接造成重复。
+            var completeBytes = 0L;
+            var totalRead = 0L;
+            var buffer = new byte[65536];
+            int read;
+            while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
             {
-                if (!TryParseLogLine(line, out var lineDate))
-                    continue;
-                if (lineDate <= _tillDate || DateTime.UtcNow.AddMinutes(61) < lineDate)
-                    continue;
-                if (line.Length <= 34)
-                    continue;
+                var lineStart = 0;
+                for (var index = 0; index < read; index++)
+                {
+                    if (buffer[index] != (byte)'\n')
+                        continue;
 
-                ParseLogLine(file.Name, line, context, lineDate);
+                    var line = Encoding.UTF8.GetString(buffer, lineStart, index - lineStart)
+                        .TrimEnd('\r');
+                    lineStart = index + 1;
+
+                    if (TryParseLogLine(line, out var lineDate) &&
+                        lineDate > _tillDate &&
+                        lineDate <= DateTime.UtcNow.AddMinutes(61) &&
+                        line.Length > 34)
+                    {
+                        ParseLogLine(file.Name, line, context, lineDate);
+                    }
+                }
+
+                if (lineStart > 0)
+                    completeBytes = totalRead + lineStart;
+                totalRead += read;
             }
 
-            context.Position = stream.Position;
+            context.Position += completeBytes;
         }
         catch (IOException)
         {
