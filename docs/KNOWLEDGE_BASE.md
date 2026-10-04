@@ -2,7 +2,7 @@
 
 > 本文档是 VRCX-Pro 项目的全面技术参考，涵盖架构设计、代码组织、开发规范和常见任务。
 
-按任务入口见 [文档索引](../README.md)；跨层变更先读 [架构总览](架构总览.md)，开发与验证步骤见 [开发指南](../指南/开发指南.md) 和 [测试指南](../指南/测试指南.md)。
+按任务入口见 [文档索引](README.md)；跨层变更先读 [架构总览](参考/架构总览.md)，开发与验证步骤见 [开发指南](指南/开发指南.md) 和 [测试指南](指南/测试指南.md)。
 
 ---
 
@@ -175,9 +175,9 @@ VRCX-Pro/
 ├── scripts/                         # 开发工具脚本
 └── docs/                            # 项目文档
     ├── README.md                    # 文档索引
+    ├── KNOWLEDGE_BASE.md            # 架构与开发参考
     ├── 参考/                        # 系统现状参考
     │   ├── 架构总览.md              # 跨层架构与数据流
-    │   ├── 项目知识库.md            # 架构与开发参考
     │   ├── UI规范.md                # UI 组件库与样式
     │   ├── 启动参数.md              # 启动参数参考
     │   └── MCP服务器.md             # MCP Server 参考
@@ -240,7 +240,7 @@ Entity Cache (LRU) 维护本地实体缓存：
 
 ### 6.1 启动流程
 
-入口文件 [app.js](../../src/app.js) 的启动顺序：
+入口文件 [app.js](../src/app.js) 的启动顺序：
 
 1. **installRuntimeBridge()** — 安装 `window.platform` 对象
 2. **解析 Launch Args** — 读取命令行参数（`--startup`, `--debug`, `--proxy-server` 等）
@@ -410,7 +410,7 @@ TanStack Vue Query 集成层，提供声明式数据获取。
 - 数据展示：Table, Badge, Avatar, Calendar, Carousel, Tree
 
 业务 UI 优先复用 `ui/` 组件。完整选型、例外场景和扩展流程见
-[UI 组件库与样式规范](UI规范.md)。已有基础组件可直接覆盖的场景，不再新增
+[UI 组件库与样式规范](参考/UI规范.md)。已有基础组件可直接覆盖的场景，不再新增
 局部按钮、输入框或表面样式。
 
 ### 6.9 路由系统
@@ -433,7 +433,7 @@ vue-i18n + 静态 JSON 文件，支持语言：
 
 ### 6.11 好友亲密度评分
 
-[useRelationshipScoring.js](../../src/views/Charts/composables/useRelationshipScoring.js) 是亲密度评分核心，消费方为 `/charts/intimacy` 路由的 [RelationshipIntimacy.vue](../../src/views/Charts/components/RelationshipIntimacy.vue)。完整设计见 [专题规格](../规格/亲密度评分.md)。
+[useRelationshipScoring.js](../src/views/Charts/composables/useRelationshipScoring.js) 是亲密度评分核心，消费方为 `/charts/intimacy` 路由的 [RelationshipIntimacy.vue](../src/views/Charts/components/RelationshipIntimacy.vue)。完整设计见 [专题规格](规格/亲密度评分.md)。
 
 **评分模型（五维 λ-Choquet，单一计算管线 + 双展示口径）：**
 
@@ -461,7 +461,7 @@ vue-i18n + 静态 JSON 文件，支持语言：
 
 ### 6.12 数据库管理页面
 
-路由 `/tools/database`，[DatabaseManagement.vue](../../src/views/Tools/DatabaseManagement.vue)，旧的导出/导入对话框（[DatabaseManagementDialog.vue](../../src/views/Tools/dialogs/DatabaseManagementDialog.vue)）仍作为对话框入口保留。
+路由 `/tools/database`，[DatabaseManagement.vue](../src/views/Tools/DatabaseManagement.vue)，旧的导出/导入对话框（[DatabaseManagementDialog.vue](../src/views/Tools/dialogs/DatabaseManagementDialog.vue)）仍作为对话框入口保留。
 
 **功能分区：**
 - **概览**：数据库文件信息、数据库版本、各表行数
@@ -494,7 +494,7 @@ JSON 标签页始终显示接口**原始** ref，不经派生。测试：`src/sh
 
 ### 7.1 IPC 机制
 
-[InteropApi](../../src/ipc/interopApi.js) 是核心 IPC 桥接，使用 JavaScript Proxy 动态代理：
+[InteropApi](../src/ipc/interopApi.js) 是核心 IPC 桥接，使用 JavaScript Proxy 动态代理：
 
 ```javascript
 // 前端调用
@@ -523,7 +523,7 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
 
 **WebView2 后台节流（窗口遮挡时的延迟）：** 主窗口在 VRChat 全屏/遮挡时被 Chromium 判为隐藏，`IntensiveWakeUpThrottling` 会把 webview 定时器（含 `worker-timers`）压到约 1 次/分钟，游戏日志轮询停摆、事件在 sidecar 队列积压，切回窗口才一次性处理（表现为“延迟数分钟、聚焦后突然刷新”）。`src-tauri/tauri.conf.json` 主窗口设 `additionalBrowserArgs`（整体替换 wry 默认参数，故需保留默认 `--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection` 并追加 `IntensiveWakeUpThrottling` + `--disable-background-timer-throttling`/`--disable-backgrounding-occluded-windows`/`--disable-renderer-backgrounding`）。它与上面的残行丢失是两个独立问题：残行丢失“永不恢复”，节流“看窗口才恢复”。
 
-全局绑定通过 [plugins/interopApi.js](../../src/plugins/interopApi.js) 初始化：
+全局绑定通过 [plugins/interopApi.js](../src/plugins/interopApi.js) 初始化：
 - `window.WebApi` — HTTP 请求代理
 - `window.SQLite` — SQLite 操作代理
 - `window.VRCXStorage` — KV 存储代理
@@ -536,7 +536,7 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
 
 ### 7.2 Platform Runtime
 
-[platform/runtime.js](../../src/platform/runtime.js) 提供 `window.platform` 对象，封装 Tauri 原生命令：
+[platform/runtime.js](../src/platform/runtime.js) 提供 `window.platform` 对象，封装 Tauri 原生命令：
 
 | 方法 | 功能 |
 |------|------|
@@ -560,7 +560,7 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
 
 ### 7.3 Boot 流程
 
-[platform/bootReady.js](../../src/platform/bootReady.js) 管理启动就绪信号：
+[platform/bootReady.js](../src/platform/bootReady.js) 管理启动就绪信号：
 
 ```
 backendReadyPromise (数据库初始化完成) ─┐
@@ -576,7 +576,7 @@ router.isReady() + window.load ─────────┘
 
 ### 8.1 Rust 层职责
 
-[src-tauri/src/lib.rs](../../src-tauri/src/lib.rs) 是 Tauri 应用的核心：
+[src-tauri/src/lib.rs](../src-tauri/src/lib.rs) 是 Tauri 应用的核心：
 
 **Tauri 命令：**
 - `dotnet_call` — 调用 .NET Sidecar（核心桥接）
@@ -601,11 +601,11 @@ router.isReady() + window.load ─────────┘
 **启动参数解析：**
 - 当前有效：`--startup` / `--minimized`、`--debug`、`--proxy-server=`、`--width=` / `--height=`、`--center`、`--maximized`、`--fullscreen`、`--reset-window`
 - 仅保存或部分消费：`--disable-gpu`、`--overlay`、`--config=`、`vrcx://`
-- 参数的实际状态、持久化和限制见 [启动参数文档](启动参数.md)
+- 参数的实际状态、持久化和限制见 [启动参数文档](参考/启动参数.md)
 
 ### 8.2 .NET Sidecar
 
-[Dotnet/TauriBackend/](../../Dotnet/TauriBackend/) 是 .NET 9 控制台程序，通过 stdin/stdout JSON-RPC 通信。
+[Dotnet/TauriBackend/](../Dotnet/TauriBackend/) 是 .NET 9 控制台程序，通过 stdin/stdout JSON-RPC 通信。
 
 **Program.cs** 入口分发：
 
@@ -630,7 +630,7 @@ router.isReady() + window.load ─────────┘
 
 ### 8.3 MCP Server
 
-[src-tauri/src/mcp.rs](../../src-tauri/src/mcp.rs) 实现了本地 MCP (Model Context Protocol) 服务器。
+[src-tauri/src/mcp.rs](../src-tauri/src/mcp.rs) 实现了本地 MCP (Model Context Protocol) 服务器。
 
 **技术选型：** axum + rusqlite + tokio，直接读取 SQLite，不依赖 .NET Sidecar。
 
@@ -777,11 +777,11 @@ npm run verify:tauri
 
 ### 10.5 新增 API 模块
 
-以 [src/api/user.js](../../src/api/user.js) 为参考：每个函数封装一个 VRChat 端点并调用 `request()`；Mutation 完成后使用 `queryKeys` 工厂失效对应缓存。不要直接使用 `fetch()`，也不要绕过 `request()` 的限流、去重和错误语义。
+以 [src/api/user.js](../src/api/user.js) 为参考：每个函数封装一个 VRChat 端点并调用 `request()`；Mutation 完成后使用 `queryKeys` 工厂失效对应缓存。不要直接使用 `fetch()`，也不要绕过 `request()` 的限流、去重和错误语义。
 
 ### 10.6 新增 Coordinator
 
-以 [src/coordinators/authCoordinator.js](../../src/coordinators/authCoordinator.js) 为参考：协调器导出普通函数，按顺序调用多个 Store action 和 Service，并返回结果或抛出明确错误；不要在协调器中持有第二个状态源。
+以 [src/coordinators/authCoordinator.js](../src/coordinators/authCoordinator.js) 为参考：协调器导出普通函数，按顺序调用多个 Store action 和 Service，并返回结果或抛出明确错误；不要在协调器中持有第二个状态源。
 
 协调器在 `src/coordinators/` 目录下，以函数形式导出，由 View 或 Store 调用。
 
@@ -816,7 +816,7 @@ fn my_new_command(arg: String) -> Result<String, String> {
 - `src/stores/__tests__/`、`src/coordinators/__tests__/` — 状态与跨 Store 工作流
 - `src/services/__tests__/`、`src/services/database/__tests__/` — 请求、窗口、数据库等领域服务
 
-完整验证矩阵和原生层命令见 [测试指南](../指南/测试指南.md)。
+完整验证矩阵和原生层命令见 [测试指南](指南/测试指南.md)。
 
 ```bash
 npm run test           # 运行所有测试

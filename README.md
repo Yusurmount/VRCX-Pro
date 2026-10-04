@@ -39,7 +39,7 @@ VRCX-Pro 在完全保留上游 [VRCX](https://github.com/vrcx-team/VRCX) 基础�
 - 自定义通知规则、文字转语音与邮件通知
 - **MCP Server**：内置 AI 助手数据接口，支持 Claude Desktop、Cursor、Windsurf 等客户端直接查询本地 VRCX 数据
 
-> 文档入口见 [docs/README.md](docs/README.md)；完整架构与模块参考见 [项目知识库](docs/参考/项目知识库.md)。
+> 文档入口见 [docs/README.md](docs/README.md)；完整架构与模块参考见 [项目知识库](docs/KNOWLEDGE_BASE.md)。
 
 ## 与上游的差异
 
@@ -114,7 +114,7 @@ npm run test:coverage   # 覆盖率报告
 | --- | --- |
 | 文档总入口与维护约定 | [docs/README.md](docs/README.md) |
 | 架构、数据流与变更落点 | [架构总览](docs/参考/架构总览.md) |
-| 完整模块与数据库参考 | [项目知识库](docs/参考/项目知识库.md) |
+| 完整模块与数据库参考 | [项目知识库](docs/KNOWLEDGE_BASE.md) |
 | UI 组件库与样式规范 | [UI 规范](docs/参考/UI规范.md) |
 | 开发、测试与发布 | [开发指南](docs/指南/开发指南.md)、[测试指南](docs/指南/测试指南.md)、[发布指南](docs/指南/发布指南.md) |
 | 故障排查与安全边界 | [故障排查](docs/运维/故障排查.md)、[安全与隐私](docs/运维/安全与隐私.md) |

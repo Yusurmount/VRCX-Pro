@@ -41,7 +41,7 @@ Toolchain: Node.js 24.10.0+, npm 11.5.0+, Rust stable, .NET SDK 9.x, and WebView
 | Version and build | `Version`, `version_channel`, `build-scripts/`, `scripts/` | Release channel, packaging, sidecar build, migration guard |
 | Documentation | `README.md`, `docs/`, `TAURI_MIGRATION.md` | User-facing overview, architecture, MCP, launch arguments, migration notes |
 
-`README.md` is the product overview. `docs/参考/项目知识库.md` is the project's own deep architectural reference. `docs/参考/MCP服务器.md` covers the MCP server and `docs/参考/启动参数.md` covers command-line behavior.
+`README.md` is the product overview. `docs/KNOWLEDGE_BASE.md` is the project's own deep architectural reference. `docs/参考/MCP服务器.md` covers the MCP server and `docs/参考/启动参数.md` covers command-line behavior.
 
 ## Layer Contracts
 
