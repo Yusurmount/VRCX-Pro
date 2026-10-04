@@ -507,8 +507,6 @@ Proxy → invoke('dotnet_call', { className, methodName, args })
 
 **游戏日志轮询独立于 updateLoop：** `LogWatcher.Get()` 在 `updateLoop` 内的独立循环（`startGameLogPolling`/`pollGameLog`）中轮询，不与其它轮询共用同一条 `await` 链——否则 `getUsersGroupInstances()`（VRChat API，最长 60s）或游戏状态检测会把整轮拖住，表现为换房后房间信息/玩家列表/好友栏长时间不刷新。上游 VRCX 的 LogWatcher 同样是独立线程轮询。
 
-**LogWatcher 只消费完整行（残行留待下次拼接）：** 每秒轮询可能撞上 VRChat 正在写入的半行（一行日志常被拆成多次 `write`）。`Dotnet/TauriBackend/LogWatcher.cs` 的 `ReadNewLines` 按字节读取、只解析以 `\n` 结尾的完整行，`Position` 只推进到最后一个换行符之后，残行字节保存在 `LogContext.LineTail` 下次拼接（整行一次 UTF-8 解码，多字节字符不截断）。旧实现用 `StreamReader.ReadLine()`，会把半行当完整行消费并推进 `Position`，后半段永远匹配不上事件标记——丢的若是切房间的 `[Behaviour] Joining wrld_...`，房间玩家列表、我的资料位置、地图页实例列表全部停留在旧房间，Ctrl+F5 后启动重放（`SetDateTill` 清空上下文重读文件）才恢复。改动此逻辑时保持「Position 不越过未完整行」这一不变量；文件截断重置 `Position` 时须同步清空 `LineTail`。
-
 全局绑定通过 [plugins/interopApi.js](../src/plugins/interopApi.js) 初始化：
 - `window.WebApi` — HTTP 请求代理
 - `window.SQLite` — SQLite 操作代理
