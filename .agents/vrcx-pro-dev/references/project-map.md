@@ -24,7 +24,7 @@ Toolchain: Node.js 24.10.0+, npm 11.5.0+, Rust stable, .NET SDK 9.x, and WebView
 
 | Surface | Primary locations | Put changes here when |
 | --- | --- | --- |
-| Pages and feature UI | `src/views/`, `src/components/`, `docs/UI.md` | Rendering, dialogs, page workflows, reusable UI, component-library rules |
+| Pages and feature UI | `src/views/`, `src/components/`, `docs/参考/UI规范.md` | Rendering, dialogs, page workflows, reusable UI, component-library rules |
 | UI debug tool | `src/views/Settings/dialogs/UIDebugDialog.vue` | New UI gets a debug trigger; entry: 设置 > 界面调试工具 |
 | State ownership | `src/stores/` | A feature owns reactive state or performs one atomic transition |
 | Cross-store workflows | `src/coordinators/` | Login, sync, game-log, favorites, cache, or event flows spanning stores and services |
@@ -35,13 +35,13 @@ Toolchain: Node.js 24.10.0+, npm 11.5.0+, Rust stable, .NET SDK 9.x, and WebView
 | WebSocket events | `src/services/websocket.js` | Pipeline event dispatch or reconnect behavior |
 | Desktop bridge | `src/ipc/interopApi.js`, `src/platform/runtime.js` | Frontend access to Tauri or .NET |
 | Tauri shell | `src-tauri/src/lib.rs`, `src-tauri/tauri.conf.json`, `src-tauri/capabilities/` | Commands, windows, tray, sidecar lifecycle, permissions |
-| MCP server | `src-tauri/src/mcp.rs`, `docs/MCP.md` | MCP protocol, tools, resources, local queries |
+| MCP server | `src-tauri/src/mcp.rs`, `docs/参考/MCP服务器.md` | MCP protocol, tools, resources, local queries |
 | .NET sidecar | `Dotnet/TauriBackend/` | JSON-RPC dispatch, WebApi, SQLite, AppApi, log watching |
 | Localization | `src/localization/` | User-visible strings, language behavior |
 | Version and build | `Version`, `version_channel`, `build-scripts/`, `scripts/` | Release channel, packaging, sidecar build, migration guard |
 | Documentation | `README.md`, `docs/`, `TAURI_MIGRATION.md` | User-facing overview, architecture, MCP, launch arguments, migration notes |
 
-`README.md` is the product overview. `docs/KNOWLEDGE_BASE.md` is the project's own deep architectural reference. `docs/MCP.md` covers the MCP server and `docs/LAUNCH_ARGS.md` covers command-line behavior.
+`README.md` is the product overview. `docs/参考/项目知识库.md` is the project's own deep architectural reference. `docs/参考/MCP服务器.md` covers the MCP server and `docs/参考/启动参数.md` covers command-line behavior.
 
 ## Layer Contracts
 
@@ -80,7 +80,7 @@ Toolchain: Node.js 24.10.0+, npm 11.5.0+, Rust stable, .NET SDK 9.x, and WebView
 
 - `src-tauri/src/mcp.rs` serves MCP over local HTTP from Rust and reads SQLite directly rather than going through the sidecar.
 - Bind only to loopback, keep the server disabled by default, and keep access read-oriented apart from the supported local note write.
-- Changing a tool, query, or resource means updating `docs/MCP.md` and smoke-testing `http://127.0.0.1:<port>/mcp`.
+- Changing a tool, query, or resource means updating `docs/参考/MCP服务器.md` and smoke-testing `http://127.0.0.1:<port>/mcp`.
 - Keep the documented tool count aligned with `mcp_tools()` and the resource list aligned with `resources/list`.
 
 ## Project Invariants
@@ -106,7 +106,7 @@ Toolchain: Node.js 24.10.0+, npm 11.5.0+, Rust stable, .NET SDK 9.x, and WebView
 | Tauri Rust | `cargo check` in `src-tauri`, then `npm run verify:tauri` |
 | .NET sidecar or IPC | `npm run build:tauri-backend`; add `npm run probe:tauri-backend` for call-surface changes |
 | IPC performance or large-data behavior | `python scripts/measure-ipc-latency.py` (slow-HTTP-vs-local-read key experiment) plus `python scripts/seed-performance-dataset.py` for a reproducible big dataset |
-| MCP | Rust compile, local endpoint and tool smoke test, `docs/MCP.md` consistency |
+| MCP | Rust compile, local endpoint and tool smoke test, `docs/参考/MCP服务器.md` consistency |
 | Version or build scripts | The relevant script, `npm run verify:tauri`, and `npm run prod` or a full Tauri build when packaging is affected |
 
 For a change spanning layers, run the union of the relevant checks. Start with the narrowest Vitest file that covers the behavior, then widen to `npm test` only when shared behavior is involved.

@@ -4,7 +4,7 @@
 Usage:
     python scripts/seed-performance-dataset.py --db <path-to-sqlite> [--scale <multiplier>] [--user-id <vrchat-user-id>]
 
-Behavior (see docs/compose/spec/fullstack-performance.md, S2 section 2):
+Behavior (see docs/规格/全栈性能.md, S2 section 2):
 - Schema DDL is copied verbatim from src/services/database/index.js
   (initTables / initUserTables): no new tables, no altered columns.
 - Idempotent: seed rows use the reserved primary-key segment id >= 900000000.

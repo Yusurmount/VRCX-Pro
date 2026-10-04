@@ -4,7 +4,7 @@
 Spawns the .NET sidecar directly over stdin/stdout JSON-RPC and measures
 local SQLite latency while a slow WebApi HTTP request is in flight, plus a
 parallel-burst probe. Used for before/after comparison of the IPC
-multiplexing work (docs/compose/spec/fullstack-performance.md S2 §5).
+multiplexing work (docs/规格/全栈性能.md S2 §5).
 
 Usage:
   python scripts/measure-ipc-latency.py [--backend build/TauriBackend/VRCX-Pro.Backend.exe]

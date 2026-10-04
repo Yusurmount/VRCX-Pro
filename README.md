@@ -39,7 +39,7 @@ VRCX-Pro 在完全保留上游 [VRCX](https://github.com/vrcx-team/VRCX) 基础�
 - 自定义通知规则、文字转语音与邮件通知
 - **MCP Server**：内置 AI 助手数据接口，支持 Claude Desktop、Cursor、Windsurf 等客户端直接查询本地 VRCX 数据
 
-> 文档入口见 [docs/README.md](docs/README.md)；完整架构与模块参考见 [项目知识库](docs/KNOWLEDGE_BASE.md)。
+> 文档入口见 [docs/README.md](docs/README.md)；完整架构与模块参考见 [项目知识库](docs/参考/项目知识库.md)。
 
 ## 与上游的差异
 
@@ -63,7 +63,7 @@ VRCX-Pro 绝大多数基础能力与上游 VRCX 一致，主要差异在于：
 - **UI 组件**：reka-ui + lucide-vue-next
 - **数据层**：TanStack Vue Query + TanStack Vue Table
 - **后端 sidecar**：.NET 9（C#），负责 `dotnet_call` 请求（存储、SQLite、AppApi、更新等）
-- **MCP Server**：axum（Rust），本地 AI 助手数据接口（详见 [MCP 文档](docs/MCP.md)）
+- **MCP Server**：axum（Rust），本地 AI 助手数据接口（详见 [MCP 文档](docs/参考/MCP服务器.md)）
 - **运行环境**：Node.js ≥ 24.10.0，npm ≥ 11.5.0
 - **前置依赖**：Rust、WebView2（Windows）
 
@@ -90,7 +90,7 @@ build-scripts/build-portable-package.cmd   # 便携版
 构建频道由根目录 `version_channel` 控制：`Release` 保持原版本，`Beta`
 追加 `-beta`，`It` 追加 `-it` 并启用界面水印。
 
-环境准备、分层变更步骤和验证矩阵见 [开发指南](docs/DEVELOPMENT.md)、[测试指南](docs/TESTING.md) 与 [发布指南](docs/RELEASE.md)。
+环境准备、分层变更步骤和验证矩阵见 [开发指南](docs/指南/开发指南.md)、[测试指南](docs/指南/测试指南.md) 与 [发布指南](docs/指南/发布指南.md)。
 
 ### 前端校验
 
@@ -113,12 +113,12 @@ npm run test:coverage   # 覆盖率报告
 | 主题 | 文档 |
 | --- | --- |
 | 文档总入口与维护约定 | [docs/README.md](docs/README.md) |
-| 架构、数据流与变更落点 | [架构总览](docs/ARCHITECTURE.md) |
-| 完整模块与数据库参考 | [项目知识库](docs/KNOWLEDGE_BASE.md) |
-| UI 组件库与样式规范 | [UI 规范](docs/UI.md) |
-| 开发、测试与发布 | [开发指南](docs/DEVELOPMENT.md)、[测试指南](docs/TESTING.md)、[发布指南](docs/RELEASE.md) |
-| 故障排查与安全边界 | [故障排查](docs/TROUBLESHOOTING.md)、[安全与隐私](docs/SECURITY.md) |
-| 启动参数与 MCP | [启动参数](docs/LAUNCH_ARGS.md)、[MCP Server](docs/MCP.md) |
+| 架构、数据流与变更落点 | [架构总览](docs/参考/架构总览.md) |
+| 完整模块与数据库参考 | [项目知识库](docs/参考/项目知识库.md) |
+| UI 组件库与样式规范 | [UI 规范](docs/参考/UI规范.md) |
+| 开发、测试与发布 | [开发指南](docs/指南/开发指南.md)、[测试指南](docs/指南/测试指南.md)、[发布指南](docs/指南/发布指南.md) |
+| 故障排查与安全边界 | [故障排查](docs/运维/故障排查.md)、[安全与隐私](docs/运维/安全与隐私.md) |
+| 启动参数与 MCP | [启动参数](docs/参考/启动参数.md)、[MCP Server](docs/参考/MCP服务器.md) |
 
 ## MCP Server
 
@@ -130,7 +130,7 @@ VRCX-Pro 内置了 [Model Context Protocol (MCP)](https://modelcontextprotocol.i
 
 **提供的工具**：21 项工具覆盖好友与活动查询、收藏、游戏日志、通知、数据库探索、社交分析、世界分析、用户画像、共同位置及本地备注写入；另提供 2 项 Resource。
 
-> 完整配置与工具列表请参阅 [MCP 文档](docs/MCP.md)。
+> 完整配置与工具列表请参阅 [MCP 文档](docs/参考/MCP服务器.md)。
 
 ## 版本历史
 

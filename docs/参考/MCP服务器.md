@@ -2,7 +2,7 @@
 
 VRCX-Pro 内置了 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 服务器，允许 AI 助手（如 Claude Desktop、Cursor、Windsurf 等）直接查询本地 VRCX 数据，实现更智能的 VRChat 社交管理体验。
 
-文档总入口见 [文档索引](README.md)；安全边界见 [安全与隐私](SECURITY.md)。
+文档总入口见 [文档索引](../README.md)；安全边界见 [安全与隐私](../运维/安全与隐私.md)。
 
 ---
 
