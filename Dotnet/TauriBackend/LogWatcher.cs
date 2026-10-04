@@ -129,42 +129,40 @@ internal sealed partial class LogWatcher
             );
             stream.Position = context.Position;
 
-            // 只处理以换行结束的完整行：轮询可能撞上 VRChat 正在写入的半行，
-            // ReadLine 会把半行当完整行消费并推进 Position，导致该行
-            // （如切房间的 "Joining wrld_..."）永久丢失、房间状态停在旧房间。
-            // Position 只推进到最后一个换行符之后；残行字节不入缓存，
-            // 下次读取从 Position 重新读到，避免与残行缓存拼接造成重复。
-            var completeBytes = 0L;
-            var totalRead = 0L;
-            var buffer = new byte[65536];
-            int read;
-            while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+            // 把 Position 之后的新增字节一次性读入内存，再按换行符切分。
+            // 不能分块逐块解析：日志行可能跨越 Read 的块边界，分块会导致下一块
+            // 从半行中间开始解码（丢行首日期前缀），TryParseLogLine 失败被丢弃，
+            // 且 Position 已越过该行 —— 切房间的 "Joining wrld_..." 或进出房事件
+            // 永久丢失，房间/玩家列表停在旧值。一次性读取可彻底消除跨块截断。
+            // Position 只推进到最后一个换行符之后：轮询撞上 VRChat 正在写入的
+            // 半行时不消费，下次从 Position 重读，避免半行丢失或重复。
+            using var buffer = new MemoryStream();
+            stream.CopyTo(buffer);
+            var data = buffer.GetBuffer();
+            var length = (int)buffer.Length;
+
+            var lineStart = 0;
+            var consumed = 0L;
+            for (var index = 0; index < length; index++)
             {
-                var lineStart = 0;
-                for (var index = 0; index < read; index++)
+                if (data[index] != (byte)'\n')
+                    continue;
+
+                var line = Encoding.UTF8.GetString(data, lineStart, index - lineStart)
+                    .TrimEnd('\r');
+                lineStart = index + 1;
+                consumed = lineStart;
+
+                if (TryParseLogLine(line, out var lineDate) &&
+                    lineDate > _tillDate &&
+                    lineDate <= DateTime.UtcNow.AddMinutes(61) &&
+                    line.Length > 34)
                 {
-                    if (buffer[index] != (byte)'\n')
-                        continue;
-
-                    var line = Encoding.UTF8.GetString(buffer, lineStart, index - lineStart)
-                        .TrimEnd('\r');
-                    lineStart = index + 1;
-
-                    if (TryParseLogLine(line, out var lineDate) &&
-                        lineDate > _tillDate &&
-                        lineDate <= DateTime.UtcNow.AddMinutes(61) &&
-                        line.Length > 34)
-                    {
-                        ParseLogLine(file.Name, line, context, lineDate);
-                    }
+                    ParseLogLine(file.Name, line, context, lineDate);
                 }
-
-                if (lineStart > 0)
-                    completeBytes = totalRead + lineStart;
-                totalRead += read;
             }
 
-            context.Position += completeBytes;
+            context.Position += consumed;
         }
         catch (IOException)
         {
