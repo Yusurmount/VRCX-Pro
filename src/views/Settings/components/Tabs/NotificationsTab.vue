@@ -283,16 +283,13 @@
     import { toast } from 'vue-sonner';
     import { useI18n } from 'vue-i18n';
 
-<<<<<<< HEAD
     import {
         useNotificationStore,
         useNotificationsSettingsStore,
         useNotificationRulesStore,
-        useEmailNotificationsSettingsStore
+        useEmailNotificationsSettingsStore,
+        useUserStore
     } from '@/stores';
-=======
-    import { useNotificationStore, useNotificationsSettingsStore, useUserStore } from '@/stores';
->>>>>>> 55184e4d (No notifications when on DnD text)
 
     import FeedFiltersDialog from '../../dialogs/FeedFiltersDialog.vue';
     import NotificationRulesDialog from '../../dialogs/NotificationRulesDialog.vue';
