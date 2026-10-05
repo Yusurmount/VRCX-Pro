@@ -1288,7 +1288,7 @@ export const useInstanceStore = defineStore('Instance', () => {
      */
     function updatePlayerListDebounce() {
         const users = [];
-        const pushUser = function (ref) {
+        const pushUser = function (ref, profileRef) {
             let photonId = -1;
             let isFriend = false;
             let isBlocked = false;
@@ -1361,6 +1361,7 @@ export const useInstanceStore = defineStore('Instance', () => {
             }
             users.push({
                 ref,
+                profileRef,
                 displayName: ref.displayName,
                 timer: ref.$location_at,
                 $trustSortNum: ref.$trustSortNum ?? 0,
@@ -1389,6 +1390,9 @@ export const useInstanceStore = defineStore('Instance', () => {
                 );
             }
             let ref = userStore.cachedUsers.get(userStore.currentUser.id);
+            let profileRef = userStore.cachedProfiles.get(
+                userStore.currentUser.id
+            );
             const hasCurrentLocation =
                 Boolean(locationStore.lastLocation.location) &&
                 locationStore.lastLocation.date > 0;
@@ -1404,11 +1408,14 @@ export const useInstanceStore = defineStore('Instance', () => {
                         currentPlayer?.displayName ||
                         userStore.currentUser.displayName
                 };
-                pushUser({
-                    ...ref,
-                    $location_at: joinTime,
-                    $online_for: joinTime
-                });
+                pushUser(
+                    {
+                        ...ref,
+                        $location_at: joinTime,
+                        $online_for: joinTime
+                    },
+                    profileRef
+                );
             }
             for (const player of playersInInstance.values()) {
                 // if friend isn't in instance add them
@@ -1424,8 +1431,9 @@ export const useInstanceStore = defineStore('Instance', () => {
                 });
                 if (addUser) {
                     ref = userStore.cachedUsers.get(player.userId);
+                    profileRef = userStore.cachedProfiles.get(player.userId);
                     if (typeof ref !== 'undefined') {
-                        pushUser(ref);
+                        pushUser(ref, profileRef);
                     } else {
                         let { joinTime } =
                             locationStore.lastLocation.playerList.get(

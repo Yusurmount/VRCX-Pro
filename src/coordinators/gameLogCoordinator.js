@@ -112,12 +112,13 @@ export async function tryLoadPlayerList() {
             }
         }
         locationStore.lastLocation.playerList.forEach((ref1) => {
-            if (
-                ref1.userId &&
-                typeof ref1.userId === 'string' &&
-                !userStore.cachedUsers.has(ref1.userId)
-            ) {
-                queryRequest.fetch('user', { userId: ref1.userId });
+            if (ref1.userId && typeof ref1.userId === 'string') {
+                if (!userStore.cachedUsers.has(ref1.userId)) {
+                    queryRequest.fetch('user', { userId: ref1.userId });
+                }
+                if (!userStore.cachedProfiles.has(ref1.userId)) {
+                    queryRequest.fetch('profile', { userId: ref1.userId });
+                }
             }
         });
 
@@ -262,6 +263,7 @@ export function addGameLogEntry(gameLog, location, isLive = false) {
                     console.log('Fetching user from gameLog:', userId);
                 }
                 queryRequest.fetch('user', { userId });
+                queryRequest.fetch('profile', { userId });
             }
             vrStore.updateVRLastLocation();
             instanceStore.getCurrentInstanceUserList();

@@ -335,6 +335,7 @@ export const useUserStore = defineStore('User', () => {
     });
 
     const cachedUsers = shallowReactive(new Map());
+    const cachedProfiles = ref(new Map());
     const cachedUserIdsByDisplayName = shallowReactive(new Map());
     const cachedProfileEffects = shallowReactive(new Map());
     const cachedIconFrames = shallowReactive(new Map());
@@ -399,8 +400,17 @@ export const useUserStore = defineStore('User', () => {
         return cachedUsers.delete(userId);
     }
 
+    function deleteCachedProfile(userId) {
+        const ref = cachedProfiles.value.get(userId);
+        if (!ref) {
+            return false;
+        }
+        return cachedProfiles.value.delete(userId);
+    }
+
     function clearCachedUsers() {
         cachedUsers.clear();
+        cachedProfiles.value.clear();
         cachedUserIdsByDisplayName.clear();
     }
 
@@ -869,12 +879,9 @@ export const useUserStore = defineStore('User', () => {
         D.status = currentUser.value.status;
         D.statusDescription = currentUser.value.statusDescription;
         D.pronouns = currentUser.value.pronouns;
-        D.bio = currentUser.value.bio;
-        D.bioLinks = currentUser.value.bioLinks.slice();
         D.bannerColor = currentUser.value.bannerColor;
         D.bannerUrl = currentUser.value.bannerUrl;
         D.bannerType = currentUser.value.bannerType;
-        D.userIcon = currentUser.value.userIcon;
         D.iconUrl = currentUser.value.iconUrl;
 
         D.themeId = '';
@@ -1043,6 +1050,7 @@ export const useUserStore = defineStore('User', () => {
         showUserDialogHistory,
         customUserTags,
         cachedUsers,
+        cachedProfiles,
         cachedUserIdsByDisplayName,
         isLocalUserVrcPlusSupporter,
         cachedProfileEffects,
@@ -1054,6 +1062,7 @@ export const useUserStore = defineStore('User', () => {
         setCachedUser,
         syncCachedUserDisplayName,
         deleteCachedUser,
+        deleteCachedProfile,
         clearCachedUsers,
         rebuildCachedUserDisplayNameIndex,
         sortUserDialogAvatars,

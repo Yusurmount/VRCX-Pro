@@ -889,6 +889,24 @@ tauri build (Rust 编译 + WebView 打包 + NSIS 安装程序)
 
 **适配模式**：UserSummaryHeader/UserDialog/EditProfileDialog 等已被我们深度定制（Panel 化、大头像回退链、cosmetics 组件），上游同类提交冲突时保留我们的模板结构、只移植行为语义；`git checkout --theirs/--ours` 会整文件覆盖，冲突必须手工编辑冲突块。
 
+### 13.2 上游同步基线（2026-10 B2 批：Profile cache）
+
+**已移植**（Worktree `upstream-b2`，分支 `task/upstream-b2`，单提交 `37006d59` + 测试修正）：`d9054837` + `3525d542` + `7953963e` + `db7cb63b` + `666a5029` 合并移植为「Profile cache」一批：
+- `userStore.cachedProfiles`（ref Map）+ `deleteCachedProfile` + `clearCachedUsers` 同步清空
+- `queryRequest` 新增 `profile` 条目（`queryKeys.profile`，policy 20s stale / 90s gc），queryFn 为 `userRequest.getPublicProfile`
+- `getPublicProfile` 注入 `json.$lastFetch` 并经 `applyPublicProfile(json)`（userCoordinator 导出）合并入缓存并注入 VRC+ Supporter 徽章（badgeId `bdg_754f9935…`，hidden）
+- `updateUserDialogProfile()` 先 `D.publicProfileRef = cachedProfiles.get(D.id)` 缓存优先，再异步刷新
+- 玩家列表行新增 `profileRef`（`pushUser(ref, profileRef)`），bioLinks 列改取 `row.original?.profileRef?.bioLinks`
+- gameLog 玩家列表与 joinLeave 两处均双通道 `fetch('user')` + `fetch('profile')`
+- `clearVRCXCache()` 同步清理 profile 缓存（同 cachedUsers 条件）
+- 移除 `D.bio/bioLinks/userIcon = currentUser.*` 回填（API 不再返回这些字段，selfProfile 获取后回填已有）
+
+**注意事项**：
+- `cachedProfiles` 的 value 是 reactive 对象，组件侧可直接读 badges/bioLinks；判空用可选链（Map.get 可能 undefined）
+- 通知布局选项按用户决策**保留**（上游 `f8f33d2f` 已删，不跟）
+- `58033a22`（insert rowId，gameLog 管道异步化）按用户决策**永久忽略**
+- B1 实机验证按用户决策忽略，并入 B2 实机验证：资料页二次打开走缓存（网络面板无重复 profile 请求）、VRC+ 用户资料页出现 Supporter 徽章、玩家列表 bioLinks 显示
+
 ---
 
 

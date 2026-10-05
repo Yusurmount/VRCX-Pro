@@ -77,8 +77,10 @@ function makeRow(overrides = {}) {
             $platform: 'standalonewindows',
             last_platform: 'standalonewindows',
             $languages: [],
-            bioLinks: [],
             note: ''
+        },
+        profileRef: {
+            bioLinks: []
         },
         ...overrides
     };
@@ -174,8 +176,7 @@ describe('views/PlayerList/columns.jsx', () => {
 
     test('bioLink cell opens external link when favicon is clicked', () => {
         const row = makeRow({
-            ref: {
-                ...makeRow().original.ref,
+            profileRef: {
                 bioLinks: ['https://example.com']
             }
         });
