@@ -1084,6 +1084,8 @@
 
     .friend-view__scroll {
         overflow: auto;
+        /* 预留滚动条空间：内容高度在视口临界振荡时滚动条反复出现/消失会改变 clientWidth，导致卡片列宽重算、左右闪动 */
+        scrollbar-gutter: stable;
         min-height: 0;
         height: 100%;
     }
