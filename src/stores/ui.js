@@ -13,7 +13,8 @@ import { useGroupStore } from './group';
 import {
     clearGroupMemberModerationDialog,
     showGroupDialog,
-    showGroupMemberModerationDialog
+    showGroupMemberModerationDialog,
+    showGroupRolesDialog
 } from '../coordinators/groupCoordinator';
 import { showWorldDialog } from '../coordinators/worldCoordinator';
 import { showAvatarDialog } from '../coordinators/avatarCoordinator';
@@ -182,6 +183,10 @@ export const useUiStore = defineStore('Ui', () => {
             showGroupMemberModerationDialog(item.id);
             return;
         }
+        if (item.type === 'group-roles') {
+            showGroupRolesDialog(item.id);
+            return;
+        }
         console.error(
             `Unknown dialog crumb type: ${item.type}, closing dialog`
         );
@@ -205,6 +210,7 @@ export const useUiStore = defineStore('Ui', () => {
         groupStore.setGroupDialogVisible(false);
         groupStore.setGroupMemberModerationVisible(false);
         clearGroupMemberModerationDialog();
+        groupStore.setGroupRolesDialogVisible(false);
         instanceStore.hidePreviousInstancesDialogs();
         clearDialogCrumbs();
 
@@ -316,6 +322,7 @@ export const useUiStore = defineStore('Ui', () => {
             avatarStore.avatarDialog.visible ||
             groupStore.groupDialog.visible ||
             groupStore.groupMemberModeration.visible ||
+            groupStore.groupRolesDialog.visible ||
             (instanceStore.previousInstancesInfoDialog.visible &&
                 !isPrevInfo) ||
             (instanceStore.previousInstancesListDialog.visible && !isPrevList);
@@ -334,6 +341,9 @@ export const useUiStore = defineStore('Ui', () => {
         }
         if (type !== 'group-member-moderation') {
             groupStore.setGroupMemberModerationVisible(false);
+        }
+        if (type !== 'group-roles') {
+            groupStore.setGroupRolesDialogVisible(false);
         }
         if (!isPrevInfo) {
             instanceStore.setPreviousInstancesInfoDialogVisible(false);
