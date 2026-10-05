@@ -451,7 +451,6 @@
     const {
         setUdonExceptionLogging,
         setLogResourceLoad,
-        setLogEmptyAvatars,
         setAutoLoginDelayEnabled,
         promptAutoLoginDelaySeconds
     } = generalSettingsStore;
