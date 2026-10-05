@@ -1453,7 +1453,8 @@
                         "use_memo_nicknames": "使用備忘錄暱稱",
                         "play": "播放",
                         "tts_test_placeholder": "測試文字轉語音"
-                    }
+                    },
+                    "busy_warning": "狀態設為勿擾時，通知將被停用。"
                 },
                 "custom_rules": {
                     "header": "自訂通知規則",

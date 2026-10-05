@@ -1454,7 +1454,8 @@
                         "use_memo_nicknames": "使用备注昵称",
                         "play": "播放",
                         "tts_test_placeholder": "测试 TTS"
-                    }
+                    },
+                    "busy_warning": "状态设为勿扰时，通知将被禁用。"
                 },
                 "custom_rules": {
                     "header": "自定义通知规则",
