@@ -60,6 +60,15 @@ export const useVrcxStore = defineStore('Vrcx', () => {
     const gameLogStore = useGameLogStore();
     const updateLoopStore = useUpdateLoopStore();
     const vrcStatusStore = useVrcStatusStore();
+    const isBrowserFocused = ref(true);
+
+    function onBrowserFocus() {
+        isBrowserFocused.value = true;
+    }
+
+    function onBrowserBlur() {
+        isBrowserFocused.value = false;
+    }
     const { t } = useI18n();
     const modalStore = useModalStore();
 
@@ -141,6 +150,9 @@ export const useVrcxStore = defineStore('Vrcx', () => {
                     window.platform.onBrowserFocus(() => {
                         vrcStatusStore.onBrowserFocus();
                     });
+
+                    window.addEventListener('focus', onBrowserFocus);
+                    window.addEventListener('blur', onBrowserBlur);
                 } catch (err) {
                     console.error(
                         'Failed to register platform IPC handlers:',
@@ -891,7 +903,10 @@ export const useVrcxStore = defineStore('Vrcx', () => {
         dragEnterFile,
         backupVrcRegistry,
         updateDatabaseVersion,
-        waitForDatabaseInit
+        waitForDatabaseInit,
+        onBrowserFocus,
+        onBrowserBlur,
+        isBrowserFocused
     };
 });
 

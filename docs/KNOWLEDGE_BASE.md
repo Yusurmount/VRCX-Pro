@@ -922,6 +922,17 @@ tauri build (Rust 编译 + WebView 打包 + NSIS 安装程序)
 
 ---
 
+### 13.4 上游同步基线（2026-10 B4 批：Cosmetics 补强）
+
+**已移植**（Worktree `upstream-b4`，分支 `task/upstream-b4`，单提交 `f2c2d76b`）：
+- `vrcx` store 新增 `isBrowserFocused`（web 标准 `window focus/blur` 监听，替代上游 Electron `onBrowserBlur` IPC / Cef 事件链；我们 `platform.onBrowserFocus` 是空 stub）
+- ProfileEffect/IconFrame/NameplateEffect 三个组件：失焦时 `clearIntroTimer` + 切换显示 `metadata.assets` 中 `base` 静态帧（`baseUrl`），聚焦恢复动画——修复 alt-tab 后动图空转的问题。注意 WebView2 最小化整体冻结与该机制无关
+- Tools/Gallery：移除已废弃的 `profilePicOverride` 设置 UI 与函数（API 变更），`setVRCPlusIcon`→`setUserIcon`，当前图标比较与保存改走 `iconUrl`/`saveProfile`，清空按钮条件 `userIcon === currentAvatarImageUrl`
+- `a57d6a10` 独立显示开关（sidebarCosmetics/showCosmetics）经核对已全部适配；仅补 zh-CN/zh-TW `vrc_profile_cosmetics`/`cosmetics_description`/`show_cosmetics` 三 key
+
+**延后**：头像相册编辑 `f06719b9`+`b34fcde0`（AvatarDialog ±171 行）与动态加载上限 `baa7b63d`（auth/gallery 动态 limits）→ 归入 B5。
+
+---
 
 ## 14. 常见问题
 
