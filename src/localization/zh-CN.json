@@ -2548,7 +2548,9 @@
                 "unsubscribe_event": "取消订阅活动",
                 "create_event": "创建活动",
                 "transfer": "转让群组",
-                "delete": "删除群组"
+                "delete": "删除群组",
+                "manage_roles": "管理角色",
+                "view_roles": "查看角色"
             },
             "info": {
                 "header": "信息",
@@ -3406,6 +3408,36 @@
             "select_image": "选择图片",
             "sending": "发送中...",
             "send": "发送公告"
+        },
+        "group_roles": {
+            "header": "管理群组角色",
+            "view_header": "群组角色",
+            "new_role": "新角色",
+            "no_roles": "未找到角色",
+            "no_role_selected": "选择要编辑的角色，或创建新角色",
+            "name": "名称",
+            "description": "描述",
+            "self_assignable": "可自行分配",
+            "self_assignable_description": "成员可以将此角色分配给自己",
+            "added_on_join": "加入时分配",
+            "added_on_join_description": "新成员加入时自动获得",
+            "requires_two_factor": "需要两步验证",
+            "requires_two_factor_description": "成员需要启用两步验证才能使用此角色",
+            "permissions": "权限",
+            "management_permissions": "管理权限",
+            "default_role": "默认角色",
+            "management_roles": "管理角色",
+            "member_roles": "成员角色",
+            "assigned_to_you": "已分配给您",
+            "delete": "删除角色",
+            "delete_confirm": "删除角色“{name}”？此操作无法撤销。",
+            "cancel": "取消",
+            "create": "创建角色",
+            "save": "保存",
+            "saved": "角色已保存",
+            "save_failed": "保存角色失败",
+            "deleted": "角色已删除",
+            "delete_failed": "删除角色失败"
         }
     },
     "confirm": {

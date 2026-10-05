@@ -2560,7 +2560,9 @@
                 "unsubscribe_event": "取消訂閱活動",
                 "create_event": "建立活動",
                 "transfer": "轉讓群組",
-                "delete": "刪除群組"
+                "delete": "刪除群組",
+                "manage_roles": "管理角色",
+                "view_roles": "檢視角色"
             },
             "info": {
                 "header": "資訊",
@@ -3405,6 +3407,36 @@
             "select_image": "選擇圖片",
             "sending": "傳送中...",
             "send": "傳送公告"
+        },
+        "group_roles": {
+            "header": "管理群組角色",
+            "view_header": "群組角色",
+            "new_role": "新角色",
+            "no_roles": "未找到角色",
+            "no_role_selected": "選擇要編輯的角色，或建立新角色",
+            "name": "名稱",
+            "description": "描述",
+            "self_assignable": "可自行分配",
+            "self_assignable_description": "成員可以將此角色分配給自己",
+            "added_on_join": "加入時分配",
+            "added_on_join_description": "新成員加入時自動獲得",
+            "requires_two_factor": "需要兩步驟驗證",
+            "requires_two_factor_description": "成員需要啟用兩步驟驗證才能使用此角色",
+            "permissions": "權限",
+            "management_permissions": "管理權限",
+            "default_role": "預設角色",
+            "management_roles": "管理角色",
+            "member_roles": "成員角色",
+            "assigned_to_you": "已分配給您",
+            "delete": "刪除角色",
+            "delete_confirm": "刪除角色「{name}」？此操作無法復原。",
+            "cancel": "取消",
+            "create": "建立角色",
+            "save": "儲存",
+            "saved": "角色已儲存",
+            "save_failed": "儲存角色失敗",
+            "deleted": "角色已刪除",
+            "delete_failed": "刪除角色失敗"
         }
     },
     "confirm": {

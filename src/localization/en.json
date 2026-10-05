@@ -2670,7 +2670,9 @@
                 "block": "Block Group",
                 "unblock": "Unblock Group",
                 "subscribe_event": "Subscribe to Event",
-                "unsubscribe_event": "Unsubscribe from Event"
+                "unsubscribe_event": "Unsubscribe from Event",
+                "manage_roles": "Manage Roles",
+                "view_roles": "View Roles"
             },
             "info": {
                 "header": "Info",
@@ -3410,6 +3412,36 @@
             "select_image": "Select Image",
             "sending": "Sending...",
             "send": "Send Announcement"
+        },
+        "group_roles": {
+            "header": "Manage Group Roles",
+            "view_header": "Group Roles",
+            "new_role": "New Role",
+            "no_roles": "No roles found",
+            "no_role_selected": "Select a role to edit, or create a new one",
+            "name": "Name",
+            "description": "Description",
+            "self_assignable": "Self Assignable",
+            "self_assignable_description": "Members can assign this role to themselves",
+            "added_on_join": "Added On Join",
+            "added_on_join_description": "Automatically given to new members",
+            "requires_two_factor": "Requires 2FA",
+            "requires_two_factor_description": "Members need two-factor authentication enabled to use this role",
+            "permissions": "Permissions",
+            "management_permissions": "Management Permissions",
+            "default_role": "Default Role",
+            "management_roles": "Management Roles",
+            "member_roles": "Member Roles",
+            "assigned_to_you": "Assigned to You",
+            "delete": "Delete Role",
+            "delete_confirm": "Delete role \"{name}\"? This cannot be undone.",
+            "cancel": "Cancel",
+            "create": "Create Role",
+            "save": "Save",
+            "saved": "Role saved",
+            "save_failed": "Failed to save role",
+            "deleted": "Role deleted",
+            "delete_failed": "Failed to delete role"
         }
     },
     "confirm": {

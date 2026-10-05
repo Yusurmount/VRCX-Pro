@@ -906,6 +906,19 @@ tauri build (Rust 编译 + WebView 打包 + NSIS 安装程序)
 - 通知布局选项按用户决策**保留**（上游 `f8f33d2f` 已删，不跟）
 - `58033a22`（insert rowId，gameLog 管道异步化）按用户决策**永久忽略**
 - B1 实机验证按用户决策忽略，并入 B2 实机验证：资料页二次打开走缓存（网络面板无重复 profile 请求）、VRC+ 用户资料页出现 Supporter 徽章、玩家列表 bioLinks 显示
+### 13.3 上游同步基线（2026-10 B3 批：群组角色对话框）
+
+**已移植**（Worktree `upstream-b3`，分支 `task/upstream-b3`，单提交 `708dd374`）：`56d655a4` Create/edit group roles dialog：
+- `api/group.js`：`createGroupRole`/`editGroupRole` 改为 body 传参（`groupId`/`roleId` 移出 query）并触发 `refetchActiveGroupScope`；新增 `deleteGroupRole`、`getGroupPermissionList`（`groups/{id}/permissions`）
+- `groupCoordinator`：`applyGroup` 对 `json.roles` 做 `sanitizeEntityJson`；新增 `showGroupRolesDialog`（打开 `group-roles` 对话框 + `group.dialog` 查询含角色）、`loadGroupRolesDialogRoles`（有权限走角色 API，无权限只读回退）、`canEditGroupRoles`（`group-roles-manage`/`group-default-role-manage`）、`loadViewOnlyGroupPermissions`（借用自己管理的其他群组拉权限列表的 jank 回退）
+- `stores/group.js`：`groupRolesDialog` 状态（visible/loading/id/groupRef/roles/permissions/selectedRoleId）+ `setGroupRolesDialogVisible`；`stores/ui.js`：crumb 路由 `group-roles`、openDialog/closeMainDialog 集成
+- 新组件 `GroupRolesDialog.vue`（编辑/创建/删除角色 + `@dnd-kit/vue` 拖拽排序 + 权限复选）与 `SortableGroupRoleItem.vue`
+- GroupDialog 菜单：有 `group-roles-manage` → 「管理角色」，成员在群但无权限 → 「查看角色」（命令 `Manage Roles`）
+- 三语新增 `dialog.group_roles.*` 与 `dialog.group.actions.{manage_roles,view_roles}`
+
+**注意事项**：`@dnd-kit/vue`/`@dnd-kit-abstract` 已在依赖中（`@dnd-kit/abstract/modifiers` 子路径）；`group_roles` key 在 `dialog` 直下（与上游一致），不在 `dialog.group` 下。本入口与 GroupMemberModerationDialog 同类，未加 UIDebugDialog 入口（现有调试工具均为预览卡，无群组对话框开启器）。
+
+**实机验证清单**：加入的群组菜单出现「查看角色」；有管理权限的群出现「管理角色」；创建/编辑/删除角色、拖拽排序保存后刷新顺序正确。
 
 ---
 
