@@ -169,6 +169,22 @@ describe('useVRCXUpdaterStore.setAutoUpdateVRCX', () => {
         expect(store.pendingVRCXUpdate).toBe(true);
     });
 
+    test('clears the pending flag when no eligible release is published', async () => {
+        const store = useVRCXUpdaterStore();
+        store.pendingVRCXUpdate = true;
+        store.latestAppVersion = 'v2026.2.0';
+        globalThis.webApiService.execute.mockResolvedValue({
+            status: 200,
+            data: JSON.stringify([])
+        });
+
+        await store.showChangeLogDialog({ prefetch: true });
+
+        expect(store.VRCXUpdateDialog.release).toBe('');
+        expect(store.latestAppVersion).toBe('');
+        expect(store.pendingVRCXUpdate).toBe(false);
+    });
+
     test('does not mark an update when the current version exceeds the release', async () => {
         const store = useVRCXUpdaterStore();
         store.appVersion = 'VRCX-Pro 2026.3.0';

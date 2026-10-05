@@ -250,7 +250,19 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
             'VRCX_lastVRCXVersion',
             ''
         );
-        return lastVersion !== currentVersion.value;
+        if (!lastVersion) {
+            return Boolean(currentVersion.value);
+        }
+        // Channel-aware: only a real version/channel change counts, not a
+        // formatting difference of the same version number.
+        const comparison = compareVersionNumbers(
+            lastVersion,
+            currentVersion.value
+        );
+        if (comparison === null) {
+            return lastVersion !== currentVersion.value;
+        }
+        return comparison !== 0;
     }
 
     async function markCurrentVersionAsSeen() {
@@ -378,18 +390,23 @@ export const useVRCXUpdaterStore = defineStore('VRCXUpdater', () => {
 
     function applyLatestVersionState() {
         const latestVersionName = VRCXUpdateDialog.value.release;
-        if (latestVersionName) {
-            latestAppVersion.value = latestVersionName;
-            const comparison = compareVersionNumbers(
-                currentVersion.value,
-                latestVersionName
-            );
-            pendingVRCXUpdate.value =
-                comparison === null
-                    ? normalizeVersion(currentVersion.value) !==
-                      normalizeVersion(latestVersionName)
-                    : comparison < 0;
+        if (!latestVersionName) {
+            // Nothing published the user is allowed to install: no pending
+            // update, and drop a stale "latest version" label.
+            pendingVRCXUpdate.value = false;
+            latestAppVersion.value = '';
+            return;
         }
+        latestAppVersion.value = latestVersionName;
+        const comparison = compareVersionNumbers(
+            currentVersion.value,
+            latestVersionName
+        );
+        pendingVRCXUpdate.value =
+            comparison === null
+                ? normalizeVersion(currentVersion.value) !==
+                  normalizeVersion(latestVersionName)
+                : comparison < 0;
     }
     async function showVRCXUpdateDialog() {
         VRCXUpdateDialog.value.visible = true;

@@ -855,6 +855,8 @@ tauri build (Rust 编译 + WebView 打包 + NSIS 安装程序)
 - `scripts/build-tauri-backend.mjs` 必须经 `readBuildVersion()`（`build-scripts/version-channel.cjs`）取**频道化**版本传给 `-p:Version`：sidecar 的 `AppApi.GetVersion()` 直接返回该值，是前端更新检查的 `appVersion` 来源。曾只读 `Version` 裸版本（如 `3.7.2`），导致 it/beta 构建被当成 Release 渠道——同版本号下 Release 排最前，更新弹窗误报「未公开版本」而不是提示 `vX.Y.Z-beta`
 - `package.json` 的 `version` 不是发布版本来源，文档和构建校验应以根目录 `Version` 为准
 - 更新检查（`src/stores/vrcxUpdater.js`、`src/shared/utils/version.js`）：同版本号下渠道新旧为 Release > Beta > It，`compareVersionNumbers` 在数字相同后按 `-beta`/`-it` 后缀定序，因此同版本的 it 构建会提示其 Release 更新
+- 渠道后缀识别（2026-10 完善）：`getChannelSuffix` 接受 `-beta.1`/`-beta1`/`-beta-1` 三种写法（此前 `-beta1` 无分隔符会被误判为 Release 渠道），并解析后缀构建号——同渠道下构建号大者更新（`3.7.2-beta.2 > 3.7.2-beta.1`，裸 `-beta` 视为构建号 0），`pickLatestRelease` 由此能在同版本多个 beta 之间取最新
+- 更新判定细节（2026-10 完善）：release 列表为空（无放行候选）时 `applyLatestVersionState()` 清空 `pendingVRCXUpdate` 与 `latestAppVersion`（此前残留旧值会让导航栏更新徽标滞留）；`hasVersionChanged()` 经 `compareVersionNumbers` 做渠道感知比较，同一版本号的格式差异（`v` 前缀等）不再触发版本变更/公告逻辑
 - 预发布 / 非 Release 渠道构建仅在更新弹窗三点菜单勾选「接受Beta测试」（配置 `VRCX_acceptBeta`）后纳入检查；「提醒版本更新」复用 `VRCX_autoUpdateVRCX`（勾选=非 `Off`，默认回落 `Notify`）
 - 更新线路（配置 `VRCX_updateRoute`）同时作用于更新检查与安装包下载：镜像线路下 `getRoutedUpdateUrl()` 经 `gh-proxy.org` 转发，覆盖 `github.com`、`api.github.com` 与 release 资产域名；更新弹窗大标题旁的线路选择可随时切换，切换即 `setUpdateRoute()` → `checkForVRCXUpdate()` 用新线路重新获取 releases（照顾官方线路不可达的地区）
 
