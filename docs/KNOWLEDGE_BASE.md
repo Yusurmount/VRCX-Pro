@@ -873,7 +873,24 @@ tauri build (Rust 编译 + WebView 打包 + NSIS 安装程序)
 | 数据查询 | 手动管理 | TanStack Vue Query |
 | 动画 | 简单 CSS | GSAP |
 
+### 13.1 上游同步基线（2026-10 B1 批）
+
+同步基线：`2b31a56d`（User dialog world image）→ 本次 B1 后上游剩余 176 个未合提交中的修复类已处理。
+
+**B1 已移植**（Worktree `upstream-b1`，分支 `task/upstream-b1`）：`fd921c17`（userImage 移除 profilePicOverride* 回退，API 变更）、`ee8c99e0`（avatar feed 改由 `props.iconUrl` 驱动 + getAvatarName 对 `icon` tag 短路）、`a666062a`、`bab6d519`（`avatarImageUrl` computed：看自己时取 `currentUser.currentAvatarImageUrl`）、`119199b6`（大头像全尺寸预览 `convertFileUrlToImageUrl(iconUrl, 2048)`，common.js 新增 `/image/file_` URL 模式）、`4a75426e`、`dfbc4e51`、`a43a43d8`、`fe3cf888`、`7d57c9d7`、`f740a311`、`08b52607`、`bededfff`、`6ea169cb`（移除 logEmptyAvatars 开关）、`31d1911a`（仅 treeData key 部分）等 18 笔。
+
+**B1 跳过与原因**：
+- `defa27fc`、`5e46e44f`、`e95c6a36`、`8b700645`、`8438d3ab`、`dc94cf94`、`a20c11b9`（部分）——我们已自行适配过等价改动
+- `7953963e`（VRC+ 徽章）、`db7cb63b`（playerList bioLinks）——依赖上游 Profile cache 基建（`userStore.cachedProfiles`），归入 B2 批
+- `58033a22`（insert rowId）——把 gameLog 管道改为 async 等待持久化并新增 .NET `ExecuteInsert`，与 pollGameLog/LogWatcher 不变量交互风险大，需单独评估
+- `7d3de090`、`31d1911a`（cosmetics 动画部分）——依赖 B4 cosmetics 批
+- 三语 localization 批（`841404bf` 等）——我们 locale 文件有大量自有 key，整笔合入会覆盖自定义内容；后续批次按功能逐 key 取入
+- Linux/macOS/构建脚本/`.github` 类提交一律不跟
+
+**适配模式**：UserSummaryHeader/UserDialog/EditProfileDialog 等已被我们深度定制（Panel 化、大头像回退链、cosmetics 组件），上游同类提交冲突时保留我们的模板结构、只移植行为语义；`git checkout --theirs/--ours` 会整文件覆盖，冲突必须手工编辑冲突块。
+
 ---
+
 
 ## 14. 常见问题
 
