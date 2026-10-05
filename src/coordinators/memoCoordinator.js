@@ -34,6 +34,9 @@ function applyUserMemo(userId, memo) {
     }
     const ctx = friendStore.friends.get(userId);
     if (ctx) {
+        // 兼容仍读取 friends 条目 .memo / $memo 的消费方
+        ctx.memo = text;
+        ctx.$memo = text;
         ctx.$nickName = text ? text.split('\n')[0] : '';
         syncFriendSearchIndex(ctx);
     }

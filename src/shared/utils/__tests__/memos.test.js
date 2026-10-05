@@ -26,6 +26,10 @@ vi.mock('../../../stores', () => ({
     })
 }));
 
+vi.mock('../../../coordinators/searchIndexCoordinator', () => ({
+    syncFriendSearchIndex: vi.fn()
+}));
+
 vi.mock('../../../services/database', () => ({
     database: mocks.database
 }));
