@@ -466,29 +466,17 @@ describe('User Utils', () => {
             );
         });
 
-        test('returns profilePicOverrideThumbnail when available', () => {
+        test('ignores profilePicOverrideThumbnail (API change: no longer in userImage chain)', () => {
             const user = {
-                profilePicOverrideThumbnail: 'https://img.com/pic/256/thumb'
+                profilePicOverrideThumbnail: 'https://img.com/pic/256/thumb',
+                thumbnailUrl: 'https://img.com/thumb'
             };
-            expect(userImage(user, false, '128')).toBe(
-                'https://img.com/pic/256/thumb'
-            );
+            expect(userImage(user, false, '128')).toBe('https://img.com/thumb');
         });
 
-        test('replaces resolution for icon mode with profilePicOverrideThumbnail', () => {
-            const user = {
-                profilePicOverrideThumbnail: 'https://img.com/pic/256/thumb'
-            };
-            expect(userImage(user, true, '64')).toBe(
-                'https://img.com/pic/64/thumb'
-            );
-        });
-
-        test('returns profilePicOverride when no thumbnail', () => {
+        test('ignores profilePicOverride (API change: no longer in userImage chain)', () => {
             const user = { profilePicOverride: 'https://img.com/full' };
-            expect(userImage(user, false, '128')).toBe(
-                'https://img.com/full'
-            );
+            expect(userImage(user, false, '128')).toBe('');
         });
 
         test('returns thumbnailUrl as fallback', () => {
