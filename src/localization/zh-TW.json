@@ -3905,7 +3905,8 @@
             "date": "時間",
             "user": "用戶",
             "type": "種類",
-            "detail": "詳細"
+            "detail": "詳細",
+            "memo": "備忘錄"
         },
         "friendLog": {
             "date": "時間",

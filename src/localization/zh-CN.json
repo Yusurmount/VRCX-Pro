@@ -3906,7 +3906,8 @@
             "date": "时间",
             "user": "玩家",
             "type": "种类",
-            "detail": "详细信息"
+            "detail": "详细信息",
+            "memo": "备注"
         },
         "friendLog": {
             "date": "时间",
