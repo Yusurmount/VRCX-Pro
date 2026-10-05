@@ -1,5 +1,6 @@
 import { useFriendStore, useUserStore } from '../stores';
 import { database } from '../services/database';
+import { syncFriendSearchIndex } from './searchIndexCoordinator';
 
 /**
  * @returns {Promise<void>}
@@ -21,11 +22,35 @@ async function migrateMemos() {
 /**
  *
  * @param {string} userId
+ * @param {string} memo
+ */
+function applyUserMemo(userId, memo) {
+    const userStore = useUserStore();
+    const friendStore = useFriendStore();
+    const text = String(memo || '');
+    const ref = userStore.cachedUsers.get(userId);
+    if (ref) {
+        ref.$memo = text;
+    }
+    const ctx = friendStore.friends.get(userId);
+    if (ctx) {
+        // 兼容仍读取 friends 条目 .memo / $memo 的消费方
+        ctx.memo = text;
+        ctx.$memo = text;
+        ctx.$nickName = text ? text.split('\n')[0] : '';
+        syncFriendSearchIndex(ctx);
+    }
+}
+
+/**
+ * @param {string} userId
  * @returns
  */
 async function getUserMemo(userId) {
     try {
-        return await database.getUserMemo(userId);
+        const row = await database.getUserMemo(userId);
+        applyUserMemo(userId, row.memo);
+        return row;
     } catch (err) {
         console.error(err);
         return {
@@ -42,7 +67,6 @@ async function getUserMemo(userId) {
  * @param {string} memo
  */
 async function saveUserMemo(id, memo) {
-    const friendStore = useFriendStore();
     const userStore = useUserStore();
     if (memo) {
         await database.setUserMemo({
@@ -53,16 +77,7 @@ async function saveUserMemo(id, memo) {
     } else {
         await database.deleteUserMemo(id);
     }
-    const ref = friendStore.friends.get(id);
-    if (ref) {
-        ref.memo = String(memo || '');
-        if (memo) {
-            const array = memo.split('\n');
-            ref.$nickName = array[0];
-        } else {
-            ref.$nickName = '';
-        }
-    }
+    applyUserMemo(id, memo);
     if (userStore.userDialog.id === id) {
         userStore.setUserDialogMemo(memo);
     }
@@ -72,18 +87,9 @@ async function saveUserMemo(id, memo) {
  * @returns {Promise<void>}
  */
 async function getAllUserMemos() {
-    const friendStore = useFriendStore();
     const memos = await database.getAllUserMemos();
     memos.forEach((memo) => {
-        const ref = friendStore.friends.get(memo.userId);
-        if (typeof ref !== 'undefined') {
-            ref.memo = memo.memo;
-            ref.$nickName = '';
-            if (memo.memo) {
-                const array = memo.memo.split('\n');
-                ref.$nickName = array[0];
-            }
-        }
+        applyUserMemo(memo.userId, memo.memo);
     });
 }
 

@@ -931,6 +931,19 @@ tauri build (Rust 编译 + WebView 打包 + NSIS 安装程序)
 - `a57d6a10` 独立显示开关（sidebarCosmetics/showCosmetics）经核对已全部适配；仅补 zh-CN/zh-TW `vrc_profile_cosmetics`/`cosmetics_description`/`show_cosmetics` 三 key
 
 **延后**：头像相册编辑 `f06719b9`+`b34fcde0`（AvatarDialog ±171 行）与动态加载上限 `baa7b63d`（auth/gallery 动态 limits）→ 归入 B5。
+---
+
+### 13.5 上游同步基线（2026-10 B5 批：小功能 + 相册编辑）
+
+**已移植**（Worktree `upstream-b5`，分支 `task/upstream-b5`）：
+- `7fe66e24` DND 状态提示（busy_warning，保留我们的通知布局选项）；`96fac2c8` twitchdrop 已适配跳过；`334f2dee` 搜索分页 60
+- `ab883667` ImageCropDialog 自动适配图片开关（**configRepository 须动态 import**——顶层引入 sqlite/stores 会污染轻量测试模块图，曾致 7 个测试文件崩）
+- `a3d30507` editParentEvent 已适配跳过；`228998d0` bulk unmoderate 已适配跳过
+- `33c5895d` playerList memo 列；`f06719b9`+`b34fcde0` AvatarDialog 相册编辑（owner 左右移动/删除/裁剪上传，galleryImages 变 {id,url} 对象，查询走 avatarGallery.force）；`baa7b63d` 相册/图标/emoji/sticker/prints 上限改走 `authStore.cachedPermissions` 动态值
+- **memoCoordinator 注意**：memo 同步已改 `cachedUsers.$memo` 模型（applyUserMemo），并**双写** `friends` 条目的 `.memo`/`$memo` 兼容旧消费方；quickSearchUtils 仍用 `ctx.memo`（上游 `ctx.ref.$memo` 写法不适合我们的扁平 ctx，勿照搬）
+- 测试适配：authCoordinator mock 加 getPermissions、autoPrintDeletion mock ../auth、memos mock 加 cachedUsers + searchIndexCoordinator、useSearch* 期望 n:60
+
+**实机验证清单**：玩家列表 memo 列；头像对话框相册上传/排序/删除（owner 身份）；Gallery 各 tab 上限显示动态值；DND 状态提示；裁剪对话框「自动适配图片」开关持久化。
 
 ---
 

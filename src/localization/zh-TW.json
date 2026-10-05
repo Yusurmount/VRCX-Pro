@@ -1456,7 +1456,8 @@
                         "use_memo_nicknames": "使用備忘錄暱稱",
                         "play": "播放",
                         "tts_test_placeholder": "測試文字轉語音"
-                    }
+                    },
+                    "busy_warning": "狀態設為勿擾時，通知將被停用。"
                 },
                 "custom_rules": {
                     "header": "自訂通知規則",
@@ -2934,7 +2935,8 @@
             "zoom_out": "縮小",
             "mode_fit": "切換為適應模式",
             "mode_free": "切換為自由模式",
-            "reset": "重設"
+            "reset": "重設",
+            "auto_resize": "自動適配圖片"
         },
         "gallery_select": {
             "header": "選擇圖片",
@@ -3938,7 +3940,8 @@
             "date": "時間",
             "user": "用戶",
             "type": "種類",
-            "detail": "詳細"
+            "detail": "詳細",
+            "memo": "備忘錄"
         },
         "friendLog": {
             "date": "時間",

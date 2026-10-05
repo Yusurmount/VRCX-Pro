@@ -219,6 +219,7 @@ export function createDefaultUserRef(json) {
         $mutualCount: 0,
         $mutualOptedOut: false,
         $nickName: '',
+        $memo: '',
         $previousLocation: '',
         $customTag: '',
         $customTagColour: '',

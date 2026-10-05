@@ -50,9 +50,11 @@ export async function runLogoutFlow() {
  */
 export function runLoginSuccessFlow(json) {
     const updateLoopStore = useUpdateLoopStore();
+    const authStore = useAuthStore();
 
     updateLoopStore.setNextCurrentUserRefresh(420); // 7mins
     applyCurrentUser(json);
     watchState.isAuthenticated = true;
     initWebsocket();
+    void authStore.getPermissions();
 }

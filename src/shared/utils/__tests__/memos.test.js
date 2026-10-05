@@ -21,8 +21,13 @@ vi.mock('../../../stores', () => ({
         friends: mocks.friends
     }),
     useUserStore: () => ({
+        cachedUsers: new Map(),
         setUserDialogMemo: (...args) => mocks.setUserDialogMemo(...args)
     })
+}));
+
+vi.mock('../../../coordinators/searchIndexCoordinator', () => ({
+    syncFriendSearchIndex: vi.fn()
 }));
 
 vi.mock('../../../services/database', () => ({

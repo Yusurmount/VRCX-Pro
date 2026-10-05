@@ -1,6 +1,11 @@
 <template>
     <div class="flex flex-col gap-10 py-2">
         <SettingsGroup :title="t('view.settings.notifications.notifications.header')">
+            <template #description>
+                <span :class="{ 'text-destructive': currentUser.status === 'busy' }">{{
+                    t('view.settings.notifications.notifications.busy_warning')
+                }}</span>
+            </template>
             <SettingsItem :label="t('view.settings.notifications.notifications.layout')">
                 <Select :model-value="notificationLayout" @update:modelValue="setNotificationLayout">
                     <SelectTrigger size="sm">
@@ -282,7 +287,8 @@
         useNotificationStore,
         useNotificationsSettingsStore,
         useNotificationRulesStore,
-        useEmailNotificationsSettingsStore
+        useEmailNotificationsSettingsStore,
+        useUserStore
     } from '@/stores';
 
     import FeedFiltersDialog from '../../dialogs/FeedFiltersDialog.vue';
@@ -317,6 +323,8 @@
         testNotificationTTS,
         setNotificationLayout
     } = notificationsSettingsStore;
+
+    const { currentUser } = storeToRefs(useUserStore());
 
     const { testNotification, markAllAsSeen } = useNotificationStore();
 

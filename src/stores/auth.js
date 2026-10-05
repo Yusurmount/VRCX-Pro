@@ -75,6 +75,15 @@ export const useAuthStore = defineStore('Auth', () => {
 
     const cachedConfig = ref({});
 
+    // fallback defaults
+    const cachedPermissions = ref({
+        maxUserStickers: 18,
+        maxUserEmoji: 18,
+        maxUserGallery: 64,
+        maxUserIcons: 18,
+        maxUserPrints: 64
+    });
+
     const enableCustomEndpoint = ref(false);
 
     const attemptingAutoLogin = ref(false);
@@ -1156,6 +1165,25 @@ export const useAuthStore = defineStore('Auth', () => {
         attemptingAutoLogin.value = value;
     }
 
+    async function getPermissions() {
+        const permissions = await authRequest.getPermissions();
+        if (permissions['permission-user-stickers']?.max) {
+            cachedPermissions.value.maxUserStickers = permissions['permission-user-stickers'].max;
+        }
+        if (permissions['permission-user-emoji']?.max) {
+            cachedPermissions.value.maxUserEmoji = permissions['permission-user-emoji'].max;
+        }
+        if (permissions['permission-user-gallery']?.max) {
+            cachedPermissions.value.maxUserGallery = permissions['permission-user-gallery'].max;
+        }
+        if (permissions['permission-user-icons']?.max) {
+            cachedPermissions.value.maxUserIcons = permissions['permission-user-icons'].max;
+        }
+        if (permissions['permission-user-prints']?.max) {
+            cachedPermissions.value.maxUserPrints = permissions['permission-user-prints'].max;
+        }
+    }
+
     return {
         state,
 
@@ -1164,6 +1192,7 @@ export const useAuthStore = defineStore('Auth', () => {
         credentialsToSave,
         twoFactorAuthDialogVisible,
         cachedConfig,
+        cachedPermissions,
         enableCustomEndpoint,
         attemptingAutoLogin,
 
@@ -1187,6 +1216,7 @@ export const useAuthStore = defineStore('Auth', () => {
         getAllSavedCredentials,
         getSavedCredentials,
         setCachedConfig,
-        setAttemptingAutoLogin
+        setAttemptingAutoLogin,
+        getPermissions
     };
 });

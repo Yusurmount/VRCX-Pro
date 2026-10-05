@@ -16,6 +16,18 @@ const advancedSettingsStore = {
     currentUserInventory: new Map()
 };
 
+vi.mock('../auth', () => ({
+    useAuthStore: () => ({
+        cachedPermissions: {
+            maxUserPrints: 64,
+            maxUserGallery: 64,
+            maxUserIcons: 64,
+            maxUserEmoji: 200,
+            maxUserStickers: 200
+        },
+        getPermissions: vi.fn()
+    })
+}));
 vi.mock('../../api', () => ({
     vrcPlusImageRequest: {
         getPrints: (...args) => getPrints(...args),

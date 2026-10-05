@@ -570,7 +570,8 @@
                     "report": {
                         "closed": "Moderation Report Closed"
                     },
-                    "contentrestriction": "Moderation Content Restriction"
+                    "contentrestriction": "Moderation Content Restriction",
+                    "sanction": "Moderation Sanction"
                 },
                 "instance": {
                     "closed": "Instance Closed"
@@ -1416,6 +1417,7 @@
                     "layout": "Notification View",
                     "layout_notification_center": "Notification Center",
                     "layout_table": "Notifications Page",
+                    "busy_warning": "Notifications are disabled while your status is set to Do Not Disturb.",
                     "notification_filter": "Notification Filters",
                     "test_notification": "Send Test Notification",
                     "test_message": "Test notification.",
@@ -2501,7 +2503,10 @@
                 "memo": "Memo",
                 "memo_placeholder": "Click to add a memo",
                 "listings": "Listings",
-                "gallery": "Gallery"
+                "gallery": "Gallery",
+                "gallery_move_left": "Move Left",
+                "gallery_move_right": "Move Right",
+                "gallery_delete": "Delete Image"
             },
             "json": {
                 "header": "JSON"
@@ -3030,7 +3035,9 @@
             "crop_image": "Confirm Upload",
             "drop_to_add": "Release to add",
             "drop_to_upload": "Drop to upload",
-            "drop_to_upload_hint": "Drag and drop an image into this panel to upload"
+            "drop_to_upload_hint": "Drag and drop an image into this panel to upload",
+            "reset": "Reset",
+            "auto_resize": "Auto fit image"
         },
         "image_crop": {
             "rotate_left": "Rotate Left",
@@ -3041,7 +3048,8 @@
             "zoom_out": "Zoom Out",
             "mode_fit": "Switch to Fit Mode",
             "mode_free": "Switch to Free Mode",
-            "reset": "Reset"
+            "reset": "Reset",
+            "auto_resize": "Auto fit image"
         },
         "gallery_select": {
             "header": "Select Image",
@@ -3937,6 +3945,7 @@
             "language": "Language",
             "bioLink": "Bio Links",
             "note": "Note",
+            "memo": "Memo",
             "date": "Date",
             "user": "User",
             "type": "Type",
