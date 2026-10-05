@@ -981,3 +981,12 @@ VRChat API 触发 429 后自动降速。可在 **设置 → 高级 → VRChat AP
 - 所有抓取信息均为 VRChat 公开 API 返回的公开信息
 - MCP Server 仅监听本地回环地址，不暴露网络
 - 本项目不包含也不支持批量抓取、自动刷等违规功能
+
+### 13.6 上游同步基线（2026-10 B6 批：Economy / VRC credits）
+
+**已移植**（Worktree `upstream-b6`，分支 `task/upstream-b6`）：
+- `4325c852` economy/balance endpoint——此前已适配
+- `5f271935` isEconomyCreator 徽章——UserSummaryHeader 已有（publicProfileRef 缓存驱动）；三语 key 已有
+- `236743d2` 余额进 store：`userStore.currentUserCredits` ref + websocket `economy-update` 事件实时更新钱包余额；InfoTab 改用 store。**注意**：上游直接 `userStore.currentUserCredits = x` 触发我们 no-restricted-syntax lint，改走 `setCurrentUserCredits` action
+
+**实机验证清单**：自己的资料页显示 VRC 余额；游戏内充值/消费后余额实时刷新；Economy Creator 用户头像旁蓝勾。

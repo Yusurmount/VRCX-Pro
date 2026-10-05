@@ -179,6 +179,15 @@ export const useUserStore = defineStore('User', () => {
         })
     );
 
+    const currentUserCredits = ref(null);
+
+    /**
+     * @param {number|null} value
+     */
+    function setCurrentUserCredits(value) {
+        currentUserCredits.value = value;
+    }
+
     const userDialog = ref({
         visible: false,
         loading: false,
@@ -1042,6 +1051,8 @@ export const useUserStore = defineStore('User', () => {
         state,
 
         currentUser,
+        currentUserCredits,
+        setCurrentUserCredits,
         currentTravelers,
         userDialog,
         editProfileDialog,

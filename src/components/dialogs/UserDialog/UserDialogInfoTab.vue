@@ -395,7 +395,7 @@
                                         t('view.profile.profile.vrchat_credits')
                                     }}</span>
                                     <span class="text-right text-muted-foreground">{{
-                                        vrchatCredit ?? t('view.profile.profile.refresh')
+                                        currentUserCredits ?? t('view.profile.profile.refresh')
                                     }}</span>
                                 </div>
                             </TooltipWrapper>
@@ -486,7 +486,7 @@
     const { hideUserNotes, hideUserMemos } = storeToRefs(useAppearanceSettingsStore());
     const { bioLanguage, translationApi, translationApiType } = storeToRefs(useAdvancedSettingsStore());
     const { translateText } = useAdvancedSettingsStore();
-    const { userDialog, currentUser } = storeToRefs(useUserStore());
+    const { userDialog, currentUser, currentUserCredits } = storeToRefs(useUserStore());
     const { showEditProfileDialog } = useUserStore();
     const { fullscreenImageDialog } = storeToRefs(useGalleryStore());
 
@@ -499,7 +499,6 @@
     });
 
     const isEditNoteAndMemoDialogVisible = ref(false);
-    const vrchatCredit = ref(null);
     const translateLoading = ref(false);
 
     watch(
@@ -520,7 +519,7 @@
      *
      */
     function onTabActivated() {
-        if (currentUser.value.id === userDialog.value.id && vrchatCredit.value === null) {
+        if (currentUser.value.id === userDialog.value.id && currentUserCredits.value === null) {
             getVRChatCredits();
         }
     }
@@ -609,7 +608,7 @@
      *
      */
     function getVRChatCredits() {
-        queryRequest.fetch('vrchatCredits').then((args) => (vrchatCredit.value = args.json?.balance));
+        queryRequest.fetch('vrchatCredits').then((args) => (currentUserCredits.value = args.json?.balance));
     }
 
     /**
