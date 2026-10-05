@@ -21,6 +21,7 @@ vi.mock('../../../stores', () => ({
         friends: mocks.friends
     }),
     useUserStore: () => ({
+        cachedUsers: new Map(),
         setUserDialogMemo: (...args) => mocks.setUserDialogMemo(...args)
     })
 }));
