@@ -2918,7 +2918,8 @@
             "zoom_out": "缩小",
             "mode_fit": "切换到适应模式",
             "mode_free": "切换到自由模式",
-            "reset": "重置"
+            "reset": "重置",
+            "auto_resize": "自动适配图片"
         },
         "gallery_select": {
             "header": "选择图片",

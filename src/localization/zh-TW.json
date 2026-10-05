@@ -2930,7 +2930,8 @@
             "zoom_out": "縮小",
             "mode_fit": "切換為適應模式",
             "mode_free": "切換為自由模式",
-            "reset": "重設"
+            "reset": "重設",
+            "auto_resize": "自動適配圖片"
         },
         "gallery_select": {
             "header": "選擇圖片",
