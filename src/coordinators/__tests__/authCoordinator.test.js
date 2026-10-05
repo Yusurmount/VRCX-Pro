@@ -30,7 +30,7 @@ vi.mock('../../queries', () => ({
 }));
 
 vi.mock('../../stores/auth', () => ({
-    useAuthStore: () => ({})
+    useAuthStore: () => ({ getPermissions: vi.fn() })
 }));
 
 vi.mock('../../stores/notification', () => ({

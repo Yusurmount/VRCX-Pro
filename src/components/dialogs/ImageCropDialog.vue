@@ -183,7 +183,6 @@
     import TooltipWrapper from '@/components/ui/tooltip/TooltipWrapper.vue';
 
     import { useImageCropper } from '../../composables/useImageCropper';
-    import configRepository from '../../services/config';
 
     import 'vue-advanced-cropper/dist/style.css';
 
@@ -225,11 +224,15 @@
     const { cropperRef, cropperImageSrc, resetCropState, loadImageForCrop, getCroppedBlob } = useImageCropper();
 
     const autoResize = ref(false);
+    let configRepository = null;
     onMounted(async () => {
+        // 动态导入：顶层引入会连带 sqlite/stores 模块图，污染轻量测试环境
+        configRepository = (await import('../../services/config')).default;
         autoResize.value = await configRepository.getBool('VRCX_imageCropAutoResize', false);
     });
 
-    watch(autoResize, (value) => {
+    watch(autoResize, async (value) => {
+        configRepository = configRepository || (await import('../../services/config')).default;
         configRepository.setBool('VRCX_imageCropAutoResize', value);
     });
 
